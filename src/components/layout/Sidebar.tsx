@@ -63,14 +63,6 @@ interface MenuGroup {
 
 const menuGroups: MenuGroup[] = [
   {
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    color: '#3B82F6',
-    items: [
-      { icon: BarChart2, label: 'Executivo', path: '/dashboard-executivo', moduleName: 'dashboard', adminOnly: true },
-    ],
-  },
-  {
     label: 'Planejamento',
     icon: ClipboardList,
     color: '#10B981',

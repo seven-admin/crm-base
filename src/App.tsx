@@ -109,7 +109,7 @@ const App = () => (
             
             {/* Protected routes */}
             <Route path="/" element={
-              <ProtectedRoute moduleName="dashboard">
+              <ProtectedRoute>
                 <Index />
               </ProtectedRoute>
             } />
