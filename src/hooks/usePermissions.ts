@@ -39,22 +39,19 @@ export function usePermissions() {
       }
 
       try {
-        // Parallel fetch: modules + role lookup + user overrides
+        // Parallel fetch: modules + role (with permissions) + user overrides
         const [
           { data: modules },
           { data: roleData },
           { data: userPerms },
         ] = await Promise.all([
           supabase.from('modules').select('*').eq('is_active', true),
-          supabase.from('roles').select('id').eq('name', role).maybeSingle(),
+          supabase.from('roles').select('id, role_permissions(*)').eq('name', role).maybeSingle(),
           supabase.from('user_module_permissions').select('*').eq('user_id', user.id),
         ]);
 
-        // Fetch role permissions (depends on roleData)
-        const { data: rolePerms } = await supabase
-          .from('role_permissions')
-          .select('*')
-          .eq('role_id', roleData?.id || '');
+        // Role permissions come from the joined query — no extra round-trip
+        const rolePerms = (roleData as any)?.role_permissions || [];
 
         const userPermsMap = (userPerms || []).reduce((acc, perm) => {
           acc[perm.module_id] = perm;
