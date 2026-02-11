@@ -1,0 +1,1 @@
+ALTER TABLE public.empreendimentos ADD COLUMN auto_vincular_corretor BOOLEAN NOT NULL DEFAULT true;

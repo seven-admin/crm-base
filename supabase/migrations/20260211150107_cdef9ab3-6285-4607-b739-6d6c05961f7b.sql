@@ -1,0 +1,1 @@
+ALTER TABLE public.briefings ALTER COLUMN criado_por DROP NOT NULL;
