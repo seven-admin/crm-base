@@ -35,67 +35,59 @@ export function useEmpreendimentos(filters?: EmpreendimentoFilters) {
 
       if (error) throw error;
 
-      // Fetch stats for each empreendimento
-      const empreendimentosWithStats = await Promise.all(
-        (empreendimentos || []).map(async (emp) => {
-          // Get unit stats
-          const { data: unidades } = await supabase
-            .from('unidades')
-            .select('status, valor')
-            .eq('empreendimento_id', emp.id)
-            .eq('is_active', true);
+      const empList = empreendimentos || [];
+      if (empList.length === 0) return [];
 
-          // Get cover image
-          const { data: capa } = await supabase
-            .from('empreendimento_midias')
-            .select('url')
-            .eq('empreendimento_id', emp.id)
-            .eq('is_capa', true)
-            .maybeSingle();
+      // Batch fetch all units and covers in 2 queries instead of 2*N
+      const empIds = empList.map(e => e.id);
+      const [{ data: allUnidades }, { data: allCapas }] = await Promise.all([
+        supabase.from('unidades').select('status, valor, empreendimento_id')
+          .in('empreendimento_id', empIds).eq('is_active', true),
+        supabase.from('empreendimento_midias').select('url, empreendimento_id')
+          .in('empreendimento_id', empIds).eq('is_capa', true),
+      ]);
 
-          const stats = {
-            unidades_disponiveis: 0,
-            unidades_reservadas: 0,
-            unidades_vendidas: 0,
-            unidades_bloqueadas: 0,
-            unidades_negociacao: 0,
-            valor_total: 0,
-            valor_vendido: 0,
-          };
+      // Group by empreendimento_id
+      const unidadesByEmp = (allUnidades || []).reduce((acc, u) => {
+        (acc[u.empreendimento_id] ??= []).push(u);
+        return acc;
+      }, {} as Record<string, typeof allUnidades>);
 
-          (unidades || []).forEach((u) => {
-            const valor = Number(u.valor) || 0;
-            stats.valor_total += valor;
-            
-            switch (u.status) {
-              case 'disponivel':
-                stats.unidades_disponiveis++;
-                break;
-              case 'reservada':
-                stats.unidades_reservadas++;
-                break;
-              case 'vendida':
-                stats.unidades_vendidas++;
-                stats.valor_vendido += valor;
-                break;
-              case 'bloqueada':
-                stats.unidades_bloqueadas++;
-                break;
-              case 'negociacao':
-                stats.unidades_negociacao++;
-                break;
-            }
-          });
+      const capaByEmp = (allCapas || []).reduce((acc, c) => {
+        if (!acc[c.empreendimento_id]) acc[c.empreendimento_id] = c.url;
+        return acc;
+      }, {} as Record<string, string>);
 
-          return {
-            ...emp,
-            ...stats,
-            capa_url: capa?.url,
-          } as EmpreendimentoWithStats;
-        })
-      );
+      return empList.map((emp) => {
+        const unidades = unidadesByEmp[emp.id] || [];
+        const stats = {
+          unidades_disponiveis: 0,
+          unidades_reservadas: 0,
+          unidades_vendidas: 0,
+          unidades_bloqueadas: 0,
+          unidades_negociacao: 0,
+          valor_total: 0,
+          valor_vendido: 0,
+        };
 
-      return empreendimentosWithStats;
+        unidades.forEach((u) => {
+          const valor = Number(u.valor) || 0;
+          stats.valor_total += valor;
+          switch (u.status) {
+            case 'disponivel': stats.unidades_disponiveis++; break;
+            case 'reservada': stats.unidades_reservadas++; break;
+            case 'vendida': stats.unidades_vendidas++; stats.valor_vendido += valor; break;
+            case 'bloqueada': stats.unidades_bloqueadas++; break;
+            case 'negociacao': stats.unidades_negociacao++; break;
+          }
+        });
+
+        return {
+          ...emp,
+          ...stats,
+          capa_url: capaByEmp[emp.id],
+        } as EmpreendimentoWithStats;
+      });
     },
   });
 }

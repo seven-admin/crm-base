@@ -13,9 +13,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { invalidateDashboards } from '@/lib/invalidateDashboards';
 
-// Type assertion helper for tables not yet in generated types
+// Tables exist in DB but not yet in generated types — cast only the query builder
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+const db = supabase as any; // TODO: regenerate types with `supabase gen types typescript` to remove this
 
 export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?: boolean }) {
   return useQuery({

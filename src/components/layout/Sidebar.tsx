@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -242,20 +242,19 @@ export function Sidebar() {
     );
   };
 
-  const filterItems = (items: MenuItem[]) =>
+  const filterItems = useCallback((items: MenuItem[]) =>
     items.filter((item) => {
-      // Super admin only items - check path explicitly
       if (item.path === '/marketing/etapas') return isSuperAdmin();
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
-    });
+    }), [isSuperAdmin, isAdmin, canAccessModule]);
 
-  const visibleGroups = menuGroups
+  const visibleGroups = useMemo(() => menuGroups
     .map((group) => ({
       ...group,
       items: filterItems(group.items),
     }))
-    .filter((group) => group.items.length > 0);
+    .filter((group) => group.items.length > 0), [filterItems]);
 
   const userName = profile?.full_name || 'Usuário';
   const userRole = role ? ROLE_LABELS[role] : 'Carregando...';

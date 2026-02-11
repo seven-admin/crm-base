@@ -18,42 +18,13 @@ export interface ClienteUpdateEmLoteData {
   temperatura?: ClienteTemperatura | null;
 }
 
-const upper = (value: unknown): string | undefined => {
-  if (typeof value !== 'string') return value as any;
-  const v = value.trim();
-  return v ? v.toUpperCase() : undefined;
-};
-
-const lower = (value: unknown): string | undefined => {
-  if (typeof value !== 'string') return value as any;
-  const v = value.trim();
-  return v ? v.toLowerCase() : undefined;
-};
-
 /**
- * Normalização para salvar Cliente (escopo: somente clientes)
- * - OPÇÃO A: campos de texto livres em caixa alta
- * - email sempre lowercase
+ * Normalização removida do frontend — os triggers do banco (uppercase_clientes)
+ * já fazem uppercase/lowercase automaticamente ao salvar.
+ * Mantemos apenas um pass-through para não quebrar chamadas existentes.
  */
 function normalizeClienteForSave<T extends Partial<ClienteFormData>>(data: T): T {
-  const normalized: any = { ...data };
-
-  if ('email' in normalized) normalized.email = lower(normalized.email);
-
-  // OPÇÃO A
-  if ('nome' in normalized) normalized.nome = upper(normalized.nome);
-  if ('profissao' in normalized) normalized.profissao = upper(normalized.profissao);
-  if ('nacionalidade' in normalized) normalized.nacionalidade = upper(normalized.nacionalidade);
-  if ('nome_mae' in normalized) normalized.nome_mae = upper(normalized.nome_mae);
-  if ('nome_pai' in normalized) normalized.nome_pai = upper(normalized.nome_pai);
-
-  if ('endereco_logradouro' in normalized) normalized.endereco_logradouro = upper(normalized.endereco_logradouro);
-  if ('endereco_bairro' in normalized) normalized.endereco_bairro = upper(normalized.endereco_bairro);
-  if ('endereco_cidade' in normalized) normalized.endereco_cidade = upper(normalized.endereco_cidade);
-  if ('endereco_complemento' in normalized) normalized.endereco_complemento = upper(normalized.endereco_complemento);
-  if ('endereco_uf' in normalized) normalized.endereco_uf = upper(normalized.endereco_uf);
-
-  return normalized as T;
+  return data;
 }
 
 // Helper para aplicar filtros

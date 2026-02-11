@@ -1,1 +1,28 @@
 project_id = "pizerpoxuqopekmbvohh"
+
+[functions.register-imobiliaria]
+verify_jwt = false
+
+[functions.register-corretor]
+verify_jwt = false
+
+[functions.create-corretor]
+verify_jwt = false
+
+[functions.delete-imobiliaria]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.webhook-dispatcher]
+verify_jwt = false
+
+[functions.webhook-assinatura]
+verify_jwt = false
+
+[functions.reset-user-password]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = false
