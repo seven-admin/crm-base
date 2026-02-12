@@ -271,14 +271,14 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-lg font-semibold">{isLoteamento ? 'Lotes' : 'Unidades'}</h3>
             <p className="text-sm text-muted-foreground">
               {unidades?.length || 0} {isLoteamento ? 'lotes' : 'unidades'} cadastrad{isLoteamento ? 'os' : 'as'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {selectionMode ? (
               <>
                 <span className="text-sm text-muted-foreground">
