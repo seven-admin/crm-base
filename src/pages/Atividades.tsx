@@ -28,8 +28,8 @@ import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { useClientes } from '@/hooks/useClientes';
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
-import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS } from '@/types/atividades.types';
+import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { Shield } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -343,7 +343,7 @@ export default function Atividades() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
-                  <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo })}>
+                  <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo, subtipo: v === 'all' ? undefined : filters.subtipo })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
@@ -354,6 +354,21 @@ export default function Atividades() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Filtro de subtipo - só aparece quando tipo selecionado aceita subtipo */}
+                  {filters.tipo && TIPOS_COM_SUBTIPO.includes(filters.tipo) && (
+                    <Select value={filters.subtipo || ''} onValueChange={(v) => setFilters({ ...filters, subtipo: v === 'all' ? undefined : v as AtividadeSubtipo })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Classificação" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        {Object.entries(ATIVIDADE_SUBTIPO_LABELS).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
                   <Select value={filters.status || ''} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? undefined : v as AtividadeStatus })}>
                     <SelectTrigger>
@@ -504,6 +519,11 @@ export default function Atividades() {
                               </TooltipTrigger>
                               <TooltipContent>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</TooltipContent>
                             </Tooltip>
+                            {atividade.subtipo && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                              </Badge>
+                            )}
                             <Badge variant="outline" className={STATUS_COLORS[atividade.status]}>
                               {ATIVIDADE_STATUS_LABELS[atividade.status]}
                             </Badge>
@@ -672,7 +692,14 @@ export default function Atividades() {
                               <TableCell>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                                    <div className="flex items-center gap-1.5">
+                                      <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                                      {atividade.subtipo && (
+                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                          {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </TooltipTrigger>
                                   <TooltipContent>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</TooltipContent>
                                 </Tooltip>

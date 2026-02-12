@@ -75,6 +75,7 @@ export type Database = {
           requer_followup: boolean | null
           resultado: string | null
           status: string
+          subtipo: string | null
           temperatura_cliente: string | null
           tipo: string
           titulo: string
@@ -101,6 +102,7 @@ export type Database = {
           requer_followup?: boolean | null
           resultado?: string | null
           status?: string
+          subtipo?: string | null
           temperatura_cliente?: string | null
           tipo: string
           titulo: string
@@ -127,6 +129,7 @@ export type Database = {
           requer_followup?: boolean | null
           resultado?: string | null
           status?: string
+          subtipo?: string | null
           temperatura_cliente?: string | null
           tipo?: string
           titulo?: string
