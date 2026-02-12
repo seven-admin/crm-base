@@ -140,6 +140,17 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
               </div>
             </div>
 
+            {/* Observações */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-sm font-medium">Observações</span>
+              </div>
+              <p className="text-sm bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">
+                {atividade.observacoes || <span className="text-muted-foreground italic">Sem observações</span>}
+              </p>
+            </div>
+
             <Separator />
 
             {/* Informações principais */}
@@ -228,18 +239,6 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
               </div>
             )}
 
-            {/* Observações */}
-            {atividade.observacoes && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="text-sm font-medium">Observações</span>
-                </div>
-                <p className="text-sm bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">
-                  {atividade.observacoes}
-                </p>
-              </div>
-            )}
 
             {/* Resultado (se concluída) */}
             {atividade.status === 'concluida' && atividade.resultado && (
