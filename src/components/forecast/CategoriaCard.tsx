@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
 import { ATIVIDADE_TIPO_LABELS, type AtividadeTipo } from '@/types/atividades.types';
 import type { CategoriaResumo } from '@/hooks/useResumoAtividadesPorCategoria';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface CategoriaCardProps {
@@ -15,10 +16,9 @@ interface CategoriaCardProps {
 export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-primary', bgColor = 'bg-primary/10' }: CategoriaCardProps) {
   const total = dados?.total || 0;
 
-  // Extrair tipos com contadores, ordenados por quantidade desc
   const tipos = dados
     ? (Object.entries(dados) as [string, number][])
-        .filter(([key]) => key !== 'total')
+        .filter(([key]) => !['total', 'abertas', 'fechadas', 'futuras', 'atrasadas'].includes(key))
         .sort((a, b) => b[1] - a[1])
     : [];
 
@@ -47,6 +47,28 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
           </div>
         ) : (
           <p className="text-xs text-muted-foreground italic">Nenhuma atividade</p>
+        )}
+
+        {/* Status badges */}
+        {total > 0 && (
+          <div className="grid grid-cols-2 gap-1.5 pt-1">
+            <Badge variant="info" className="justify-between text-xs px-2 py-0.5">
+              <span>Abertas</span>
+              <span className="font-bold ml-1">{dados?.abertas || 0}</span>
+            </Badge>
+            <Badge variant="success" className="justify-between text-xs px-2 py-0.5">
+              <span>Fechadas</span>
+              <span className="font-bold ml-1">{dados?.fechadas || 0}</span>
+            </Badge>
+            <Badge variant="secondary" className="justify-between text-xs px-2 py-0.5">
+              <span>Futuras</span>
+              <span className="font-bold ml-1">{dados?.futuras || 0}</span>
+            </Badge>
+            <Badge variant="destructive" className="justify-between text-xs px-2 py-0.5">
+              <span>Atrasadas</span>
+              <span className="font-bold ml-1">{dados?.atrasadas || 0}</span>
+            </Badge>
+          </div>
         )}
 
         {/* Footer total */}
