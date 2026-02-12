@@ -7,7 +7,7 @@ export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
 export type AtividadeCategoria = 'seven' | 'incorporadora' | 'imobiliaria' | 'cliente';
 
 export const ATIVIDADE_TIPO_LABELS: Record<AtividadeTipo, string> = {
-  ligacao: 'Ligação',
+  ligacao: 'Ligação/WhatsApp',
   meeting: 'Meeting',
   reuniao: 'Reunião',
   visita: 'Visita',
@@ -16,7 +16,7 @@ export const ATIVIDADE_TIPO_LABELS: Record<AtividadeTipo, string> = {
   assinatura: 'Assinatura',
   acompanhamento: 'Acompanhamento',
   treinamento: 'Treinamento',
-  administrativa: 'Adm. Seven',
+  administrativa: 'Staff Seven',
 };
 
 export const ATIVIDADE_CATEGORIA_LABELS: Record<AtividadeCategoria, string> = {
