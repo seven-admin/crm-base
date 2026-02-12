@@ -154,7 +154,7 @@ export default function AssinarContrato() {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <img src={logo} alt="Logo" className="h-10" />
+          <img src={logo} alt="Logo" className="h-10 opacity-90" />
           <Badge variant="secondary">Assinatura Digital</Badge>
         </div>
       </header>
