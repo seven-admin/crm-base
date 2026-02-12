@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, LogOut, BarChart3, TrendingUp, Palette, ArrowRight, ClipboardList } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo-full.png';
 
 const routeTitles: Record<string, { title: string; subtitle?: string }> = {
   '/portal-incorporador': { 
