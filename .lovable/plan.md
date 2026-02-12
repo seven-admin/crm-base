@@ -1,43 +1,36 @@
 
 
-# Atualizar Logos do Sistema
+# Simplificar coluna TIPO na tabela de Atividades
 
-## O que sera feito
+## Problema
 
-Substituir a logo atual por duas novas versoes:
-- **Logo completa** (Ativo_2@4x.png) — usada na sidebar, header do portal corretor e header do portal incorporador
-- **Icone "N"** (Ativo_7@4x.png) — marca d'agua centralizada na pagina inicial
+O label "Ligacao/WhatsApp" dentro de um Badge com icone esta quebrando em duas linhas na coluna TIPO da tabela, ficando visualmente ruim.
 
-## Mudancas
+## Solucao
 
-### 1. Copiar os assets para o projeto
+Remover o Badge decorativo e deixar apenas o icone + texto simples (sem fundo, sem borda). Isso dara mais espaco e evitara a quebra.
 
-- `user-uploads://Ativo_2@4x.png` -> `src/assets/logo-full.png`
-- `user-uploads://Ativo_7@4x.png` -> `src/assets/logo-icon.png`
+## Mudanca
 
-### 2. Atualizar `src/components/layout/Sidebar.tsx`
+**Arquivo:** `src/pages/Atividades.tsx`
 
-- Trocar `import logo from '@/assets/logo.png'` para `import logo from '@/assets/logo-full.png'`
-- Remover o filtro CSS `brightness-0 invert` (a nova logo ja vem em branco para fundo escuro)
+Nas linhas 671-674 (tabela desktop), trocar:
 
-### 3. Atualizar `src/components/portal/PortalLayout.tsx`
+```
+<Badge variant="outline" className={TIPO_COLORS[atividade.tipo]}>
+  <TipoIcon className="h-3 w-3 mr-1" />
+  {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
+</Badge>
+```
 
-- Mesmo ajuste: trocar import e remover filtro `brightness-0 invert`
+Por:
 
-### 4. Atualizar `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
+```
+<div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+  <TipoIcon className="h-3.5 w-3.5 shrink-0" />
+  <span>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
+</div>
+```
 
-- Mesmo ajuste: trocar import e remover filtro `brightness-0 invert`
-
-### 5. Atualizar `src/pages/Index.tsx`
-
-- Importar `logo-icon.png` no lugar de `logo.png`
-- Aumentar o tamanho da imagem para `h-48` (marca d'agua maior)
-- Manter opacidade baixa (`opacity-10`) para efeito de watermark
-
-### Arquivos alterados: 4
-
-- `src/components/layout/Sidebar.tsx`
-- `src/components/portal/PortalLayout.tsx`
-- `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
-- `src/pages/Index.tsx`
+Tambem verificar se ha outra ocorrencia similar (linha ~501, versao mobile/card) e aplicar o mesmo ajuste.
 
