@@ -11,8 +11,10 @@ import {
   ATIVIDADE_TIPO_LABELS, 
   ATIVIDADE_STATUS_LABELS,
   ATIVIDADE_STATUS_COLORS,
+  ATIVIDADE_SUBTIPO_SHORT_LABELS,
   type AtividadeTipo,
   type AtividadeStatus,
+  type AtividadeSubtipo,
   type AtividadeFilters 
 } from '@/types/atividades.types';
 import { format, isBefore, parseISO, startOfDay, endOfDay } from 'date-fns';
@@ -197,6 +199,11 @@ export function AtividadesListaPortal({ empreendimentoIds, dataSelecionada, onLi
                           <Badge variant="outline" className="text-xs flex-shrink-0">
                             {ATIVIDADE_TIPO_LABELS[atividade.tipo as AtividadeTipo]}
                           </Badge>
+                          {atividade.subtipo && (
+                            <Badge variant="secondary" className="text-xs flex-shrink-0">
+                              {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                            </Badge>
+                          )}
                           <Badge className={`text-xs flex-shrink-0 ${ATIVIDADE_STATUS_COLORS[atividade.status as AtividadeStatus]}`}>
                             {ATIVIDADE_STATUS_LABELS[atividade.status as AtividadeStatus]}
                           </Badge>

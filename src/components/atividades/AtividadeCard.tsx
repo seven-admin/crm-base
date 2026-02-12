@@ -4,8 +4,8 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Atividade, AtividadeTipo, AtividadeCategoria } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_COLORS, ATIVIDADE_CATEGORIA_LABELS } from '@/types/atividades.types';
+import type { Atividade, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_COLORS, ATIVIDADE_CATEGORIA_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS } from '@/types/atividades.types';
 import { CLIENTE_TEMPERATURA_COLORS } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
@@ -151,6 +151,11 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
                 <p className="text-xs text-muted-foreground">
                   {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
                 </p>
+                {atividade.subtipo && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                  </Badge>
+                )}
                 {atividade.categoria && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                     {ATIVIDADE_CATEGORIA_LABELS[atividade.categoria as AtividadeCategoria]}

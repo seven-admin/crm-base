@@ -12,8 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
-import type { Atividade, AtividadeTipo, AtividadeStatus } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS } from '@/types/atividades.types';
+import type { Atividade, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { AtividadeComentarios } from './AtividadeComentarios';
@@ -129,6 +129,11 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                   <TipoIcon className="h-3 w-3 mr-1" />
                   {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
                 </Badge>
+                {atividade.subtipo && (
+                  <Badge variant="secondary">
+                    {ATIVIDADE_SUBTIPO_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                  </Badge>
+                )}
                 <Badge variant="outline" className={cn('border', STATUS_COLORS[atividade.status])}>
                   {ATIVIDADE_STATUS_LABELS[atividade.status]}
                 </Badge>

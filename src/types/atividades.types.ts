@@ -5,6 +5,19 @@ import type { ClienteTemperatura } from './clientes.types';
 export type AtividadeTipo = 'ligacao' | 'meeting' | 'reuniao' | 'visita' | 'atendimento' | 'fechamento' | 'assinatura' | 'acompanhamento' | 'treinamento' | 'administrativa';
 export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
 export type AtividadeCategoria = 'seven' | 'incorporadora' | 'imobiliaria' | 'cliente';
+export type AtividadeSubtipo = 'primeiro_atendimento' | 'retorno';
+
+export const TIPOS_COM_SUBTIPO: AtividadeTipo[] = ['ligacao', 'visita', 'atendimento'];
+
+export const ATIVIDADE_SUBTIPO_LABELS: Record<AtividadeSubtipo, string> = {
+  primeiro_atendimento: 'Primeiro Atendimento',
+  retorno: 'Retorno',
+};
+
+export const ATIVIDADE_SUBTIPO_SHORT_LABELS: Record<AtividadeSubtipo, string> = {
+  primeiro_atendimento: '1º',
+  retorno: 'Ret.',
+};
 
 export const ATIVIDADE_TIPO_LABELS: Record<AtividadeTipo, string> = {
   ligacao: 'Ligação/WhatsApp',
@@ -87,6 +100,7 @@ export interface Atividade {
     id: string;
     full_name: string;
   } | null;
+  subtipo?: AtividadeSubtipo | null;
   deadline_date?: string | null;
   data_inicio: string;  // formato: 'YYYY-MM-DD'
   data_fim: string;     // formato: 'YYYY-MM-DD'
@@ -110,6 +124,7 @@ export interface AtividadeFormData {
   corretor_id?: string;
   imobiliaria_id?: string;
   empreendimento_id?: string;
+  subtipo?: AtividadeSubtipo;
   gestor_id?: string;
   data_inicio: string;  // formato: 'YYYY-MM-DD'
   data_fim: string;     // formato: 'YYYY-MM-DD'
@@ -133,6 +148,7 @@ export interface AtividadeFilters {
   tipo?: AtividadeTipo;
   categoria?: AtividadeCategoria;
   status?: AtividadeStatus;
+  subtipo?: AtividadeSubtipo;
   // legado: alguns pontos antigos do app ainda referenciam gestor_id como filtro
   // (equivalente ao responsavel_id no novo padrão)
   gestor_id?: string;

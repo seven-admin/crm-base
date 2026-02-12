@@ -38,6 +38,7 @@ export interface UseAtividadesOptions {
 function applyAtividadesFilters(query: any, filters?: AtividadeFilters) {
   let q = query as any;
   if (filters?.tipo) q = q.eq('tipo', filters.tipo);
+  if (filters?.subtipo) q = q.eq('subtipo', filters.subtipo);
   if (filters?.categoria) q = q.eq('categoria', filters.categoria);
   if (filters?.status) q = q.eq('status', filters.status);
   if (filters?.responsavel_id) q = q.eq('gestor_id', filters.responsavel_id);

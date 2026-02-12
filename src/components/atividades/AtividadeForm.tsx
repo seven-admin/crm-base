@@ -39,8 +39,8 @@ import { useGestorEmpreendimentos } from '@/hooks/useGestorEmpreendimentos';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Atividade, AtividadeFormData, AtividadeTipo, AtividadeCategoria } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS } from '@/types/atividades.types';
+import type { Atividade, AtividadeFormData, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS } from '@/types/atividades.types';
 import { CLIENTE_TEMPERATURA_LABELS, type ClienteTemperatura } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
@@ -59,6 +59,7 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
 const formSchema = z
   .object({
     tipo: z.enum(['ligacao', 'meeting', 'reuniao', 'visita', 'atendimento', 'fechamento', 'assinatura', 'acompanhamento', 'treinamento', 'administrativa']),
+    subtipo: z.enum(['primeiro_atendimento', 'retorno']).optional(),
     categoria: z.enum(['seven', 'incorporadora', 'imobiliaria', 'cliente']),
     titulo: z.string().min(1, 'Título é obrigatório'),
     cliente_id: z.string().optional(),
@@ -131,6 +132,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       tipo: initialData?.tipo || 'ligacao',
+      subtipo: (initialData?.subtipo as AtividadeSubtipo) || undefined,
       categoria: (initialData?.categoria as AtividadeCategoria) || 'seven',
       titulo: initialData?.titulo || '',
       cliente_id: initialData?.cliente_id || defaultClienteId || undefined,
@@ -162,12 +164,19 @@ export function AtividadeForm(props: AtividadeFormProps) {
 
   const tipoAtual = form.watch('tipo');
 
-  // Se remover o cliente, limpa temperatura; se mudar tipo != reuniao, limpa categoria
+  // Se remover o cliente, limpa temperatura; se tipo mudar para um sem subtipo, limpa subtipo
   useEffect(() => {
     if (!clienteId) {
       form.setValue('temperatura_cliente', undefined);
     }
   }, [clienteId, form]);
+
+  // Limpar subtipo quando tipo muda para um que não aceita
+  useEffect(() => {
+    if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
+      form.setValue('subtipo', undefined);
+    }
+  }, [tipoAtual, form]);
 
 
   // Auto-selecionar empreendimento quando gestor tem apenas 1 vinculado
@@ -180,6 +189,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const handleFormSubmit = (values: FormValues) => {
     const formData: AtividadeFormData = {
       tipo: values.tipo,
+      subtipo: TIPOS_COM_SUBTIPO.includes(values.tipo) ? values.subtipo as AtividadeSubtipo : undefined,
       categoria: values.categoria as AtividadeCategoria,
       titulo: values.titulo,
       cliente_id: values.cliente_id || undefined,
@@ -252,6 +262,32 @@ export function AtividadeForm(props: AtividadeFormProps) {
             </FormItem>
           )}
         />
+
+        {/* Subtipo (apenas para ligacao, visita, atendimento) */}
+        {TIPOS_COM_SUBTIPO.includes(tipoAtual) && (
+          <FormField
+            control={form.control}
+            name="subtipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Classificação</FormLabel>
+                <Select value={field.value || ''} onValueChange={(v) => field.onChange(v || undefined)}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Object.entries(ATIVIDADE_SUBTIPO_LABELS).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Categoria */}
         <FormField
