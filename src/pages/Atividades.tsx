@@ -498,10 +498,12 @@ export default function Atividades() {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                              <TipoIcon className="h-3.5 w-3.5 shrink-0" />
-                              <span>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</TooltipContent>
+                            </Tooltip>
                             <Badge variant="outline" className={STATUS_COLORS[atividade.status]}>
                               {ATIVIDADE_STATUS_LABELS[atividade.status]}
                             </Badge>
@@ -668,10 +670,12 @@ export default function Atividades() {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                                  <TipoIcon className="h-3.5 w-3.5 shrink-0" />
-                                  <span>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
-                                </div>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <TipoIcon className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell className="font-normal">
                                 <div className="flex items-center gap-1.5">
