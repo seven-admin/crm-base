@@ -175,7 +175,7 @@ export function ComissoesTable({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-md border">
+      <div className="hidden md:block rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>

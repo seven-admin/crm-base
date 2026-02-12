@@ -126,7 +126,7 @@ export function BlocosTab({ empreendimentoId, tipoEmpreendimento }: BlocosTabPro
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {blocos && blocos.length > 0 ? (
             <>
               <Table>

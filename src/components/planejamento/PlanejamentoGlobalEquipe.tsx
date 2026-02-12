@@ -144,7 +144,7 @@ export function PlanejamentoGlobalEquipe({ filters, limiteSobrecarga = 5 }: Prop
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <ScrollArea className="w-full">
             <Table>
               <TableHeader>

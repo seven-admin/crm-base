@@ -244,7 +244,7 @@ const Configuracoes = () => {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : webhooks && webhooks.length > 0 ? (
-              <div className="rounded-md border">
+              <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>

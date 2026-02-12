@@ -118,6 +118,7 @@ export function ClienteTelefonesEditor({ clienteId, readonly = false }: ClienteT
     <div className="space-y-4">
       {/* Lista de telefones */}
       {telefones.length > 0 && (
+        <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -209,6 +210,7 @@ export function ClienteTelefonesEditor({ clienteId, readonly = false }: ClienteT
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
 
       {telefones.length === 0 && (

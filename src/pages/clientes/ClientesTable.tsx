@@ -51,7 +51,7 @@ export function ClientesTable({
   const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;
 
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>

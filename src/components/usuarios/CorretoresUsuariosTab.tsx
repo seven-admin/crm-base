@@ -407,6 +407,7 @@ export function CorretoresUsuariosTab() {
 
       {/* Table */}
       <Card>
+        <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -530,6 +531,7 @@ export function CorretoresUsuariosTab() {
             )}
           </TableBody>
         </Table>
+        </CardContent>
       </Card>
 
       {/* Edit Dialog */}

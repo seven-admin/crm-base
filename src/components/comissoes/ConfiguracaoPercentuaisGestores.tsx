@@ -71,7 +71,7 @@ export function ConfiguracaoPercentuaisGestores() {
           Configure o percentual de comissão de cada gestor de produto. Este valor será usado automaticamente ao finalizar contratos.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
