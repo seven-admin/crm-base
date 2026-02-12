@@ -498,10 +498,10 @@ export default function Atividades() {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <Badge variant="outline" className={TIPO_COLORS[atividade.tipo]}>
-                              <TipoIcon className="h-3 w-3 mr-1" />
-                              {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
-                            </Badge>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                              <TipoIcon className="h-3.5 w-3.5 shrink-0" />
+                              <span>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
+                            </div>
                             <Badge variant="outline" className={STATUS_COLORS[atividade.status]}>
                               {ATIVIDADE_STATUS_LABELS[atividade.status]}
                             </Badge>
@@ -668,10 +668,10 @@ export default function Atividades() {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={TIPO_COLORS[atividade.tipo]}>
-                                  <TipoIcon className="h-3 w-3 mr-1" />
-                                  {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
-                                </Badge>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                                  <TipoIcon className="h-3.5 w-3.5 shrink-0" />
+                                  <span>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
+                                </div>
                               </TableCell>
                               <TableCell className="font-normal">
                                 <div className="flex items-center gap-1.5">
