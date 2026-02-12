@@ -1,77 +1,92 @@
 
 
-# Ajuste de Cores do Sidebar e Cards de Empreendimento
+# Padronizar Tabelas em Todo o Sistema
 
-## Resumo
+## Problema
 
-Restaurar o tom anterior do sidebar (cinza escuro azulado ao inves de preto puro) e harmonizar as cores dos itens/subitens com a nova paleta laranja. Alem disso, ajustar o topo dos cards de empreendimento para usar o mesmo tom do sidebar.
+Existem **7 padroes diferentes** de wrapper ao redor do componente `<Table>` no sistema. Isso causa inconsistencia visual -- algumas tabelas tem bordas arredondadas, outras nao; algumas tem fundo de card, outras ficam "soltas" na pagina.
 
-## Mudancas
+## Solucao
 
-### 1. Variaves CSS do Sidebar (`src/index.css`)
+Adotar um **unico padrao** para todas as tabelas: `<div className="rounded-lg border">`. Este padrao:
+- Tem bordas arredondadas (consistente com o design system)
+- E leve (sem card/shadow desnecessario)
+- O overflow ja e tratado pelo proprio componente `Table` internamente
 
-Restaurar o sidebar-background para o tom anterior (slate escuro) e ajustar os tons internos:
+Tabelas que estao **dentro de Cards com outros conteudos** (ex: titulo + tabela) serao mantidas dentro do Card, mas com `CardContent className="p-0"` para evitar padding duplo.
 
-| Variavel | Atual (preto puro) | Novo (slate escuro) |
-|----------|-------------------|---------------------|
-| `--sidebar-background` | `0 0% 5%` | `220 16% 12%` |
-| `--sidebar-accent` | `0 0% 14%` | `220 14% 18%` |
-| `--sidebar-border` | `0 0% 16%` | `220 12% 20%` |
+## Arquivos a alterar
 
-Isso vale tanto para o modo claro quanto para o modo escuro.
+### Grupo 1: Tabelas sem wrapper (adicionar `rounded-lg border`)
 
-### 2. Estilo dos itens ativos no Sidebar (`src/index.css`)
+| Arquivo | Situacao Atual |
+|---------|---------------|
+| `src/pages/Usuarios.tsx` | `<Table>` sem wrapper |
+| `src/pages/Atividades.tsx` | `<Table>` sem wrapper |
+| `src/pages/MetasComerciais.tsx` | `<Table>` sem wrapper |
+| `src/pages/Auditoria.tsx` | `<Table>` sem wrapper |
+| `src/pages/TiposParcela.tsx` | `<Table>` sem wrapper |
+| `src/pages/Relatorios.tsx` | Multiplas tabelas sem wrapper |
+| `src/pages/PortalEmpreendimentoDetalhe.tsx` | `<Table>` sem wrapper |
+| `src/components/empreendimentos/BlocosTab.tsx` | `<Table>` sem wrapper |
+| `src/components/clientes/ClienteTelefonesEditor.tsx` | `<Table>` sem wrapper |
+| `src/components/negociacoes/NegociacaoForm.tsx` | `<Table>` sem wrapper |
+| `src/components/propostas/PropostaForm.tsx` | `<Table>` sem wrapper |
 
-Atualizar o `.sidebar-nav-item-active` para usar um destaque laranja sutil ao inves do cinza neutro:
+### Grupo 2: Trocar `rounded-md` para `rounded-lg` (padronizar raio)
 
-- Background: laranja com 15% de opacidade (`hsl(30 91% 54% / 0.15)`)
-- Texto: laranja claro para o item ativo
-- Borda esquerda laranja de 2px para reforcar a indicacao visual
+| Arquivo | Atual |
+|---------|-------|
+| `src/pages/negociacoes/NegociacoesTable.tsx` | `rounded-md border` |
+| `src/pages/Configuracoes.tsx` | `rounded-md border` |
+| `src/pages/Eventos.tsx` | `rounded-md border` |
+| `src/components/comissoes/ComissoesTable.tsx` | `rounded-md border` |
+| `src/components/contratos/TemplatesTable.tsx` | `rounded-md border` |
+| `src/components/contratos/ContratosTable.tsx` | `rounded-md border` |
+| `src/components/atividades/PendenciasTab.tsx` | `rounded-md border` |
 
-### 3. Estilo dos subitens do Sidebar
+### Grupo 3: Remover `bg-card` extra (ja desnecessario)
 
-Adicionar classe `.sidebar-nav-item-inactive` com cor de texto mais clara (cinza claro com tom quente) para harmonizar com o laranja:
+| Arquivo | Atual |
+|---------|-------|
+| `src/pages/clientes/ClientesTable.tsx` | `rounded-lg border bg-card` |
+| `src/components/briefings/BriefingsTable.tsx` | `rounded-lg border bg-card` |
 
-- Cor padrao: `hsl(30 10% 65%)` (cinza quente)
-- Hover: texto branco
+### Grupo 4: Tabelas dentro de Cards -- padronizar para `CardContent p-0`
 
-### 4. Cards de Empreendimento (`src/components/empreendimentos/EmpreendimentoCard.tsx`)
+Estes ja estao corretos ou quase corretos. Verificar:
 
-Trocar o gradiente do topo do card de `from-slate-950 via-slate-900 to-slate-950` para usar a mesma cor do sidebar via variavel CSS:
+| Arquivo | Situacao |
+|---------|----------|
+| `src/components/usuarios/CorretoresUsuariosTab.tsx` | `<Card><Table>` -- falta `CardContent p-0` |
+| `src/components/comissoes/ConfiguracaoPercentuaisGestores.tsx` | `CardContent` com padding -- trocar para `p-0` |
+| `src/components/configuracoes/TermosEditor.tsx` | `CardContent` com padding -- trocar para `p-0` |
+| `src/components/financeiro/FinanceiroConfiguracoes.tsx` | `CardContent` com padding -- trocar para `p-0` |
+| `src/components/planejamento/PlanejamentoGlobalEquipe.tsx` | `CardContent` com padding -- trocar para `p-0` |
 
-- Background: `hsl(220 16% 12%)` -- mesmo tom do sidebar
-- Overlay de imagem: ajustar os rgba para combinar com o novo tom
+### Grupo 5: Ja corretos (nenhuma alteracao)
 
-### 5. Cores dos icones dos grupos no Sidebar (`src/components/layout/Sidebar.tsx`)
+- `src/components/contratos/VariaveisManager.tsx` -- `Card > CardContent p-0 > Table`
+- `src/components/financeiro/RelatorioRessarcimentos.tsx` -- `Card > CardContent p-0 > Table`
+- `src/components/negociacoes/NegociacaoCondicoesPagamentoInlineEditor.tsx` -- `Card > CardContent p-0 > Table`
+- `src/components/contratos/CondicoesPagamentoInlineEditor.tsx` -- `Card > CardContent p-0 > Table`
+- `src/pages/Bonificacoes.tsx` -- `Card > CardContent p-0 > Table`
+- `src/pages/portal/PortalCorretoresGestao.tsx` -- `Card > CardContent p-0 > Table`
 
-Revisar as cores dos grupos para harmonizar melhor com o fundo slate + laranja:
+## Regra Resumida
 
-| Grupo | Cor Atual | Cor Proposta |
-|-------|-----------|-------------|
-| Planejamento | `#10B981` (verde) | `#10B981` (manter) |
-| Empreendimentos | `#059669` (verde escuro) | `#10B981` (verde padrao) |
-| Clientes | `#8B5CF6` (roxo) | `#8B5CF6` (manter) |
-| Forecast | `#06B6D4` (ciano) | `#06B6D4` (manter) |
-| Comercial | `#F97316` (laranja) | `#F5941E` (laranja primario) |
-| Contratos | `#3B82F6` (azul) | `#60A5FA` (azul mais claro para contraste no fundo escuro) |
-| Financeiro | `#F59E0B` (amarelo) | `#F59E0B` (manter) |
-| Parceiros | `#EC4899` (rosa) | `#EC4899` (manter) |
-| Marketing | `#EC4899` (rosa) | `#EC4899` (manter) |
-| Eventos | `#06B6D4` (ciano) | `#06B6D4` (manter) |
-| Sistema | `#6B7280` (cinza) | `#94A3B8` (cinza mais claro para melhor visibilidade) |
+```text
+Tabela sozinha:       <div className="rounded-lg border"><Table>...</Table></div>
+Tabela dentro de Card: <Card><CardContent className="p-0"><Table>...</Table></CardContent></Card>
+```
 
 ## O que NAO muda
 
-- Cores semanticas (sucesso, erro, aviso)
-- Cor primaria (laranja)
-- Background geral da aplicacao (off-white quente)
-- Estrutura dos componentes
+- O componente `Table` base (`src/components/ui/table.tsx`) permanece inalterado
+- O espaçamento interno (padding das celulas) ja foi ajustado anteriormente
+- Tabelas dentro de dialogs/modals de selecao (NegociacaoForm, PropostaForm) podem manter wrapper mais simples se estiverem em contexto compacto
 
 ## Secao Tecnica
 
-### Arquivos alterados
-
-1. `src/index.css` -- variaveis do sidebar + estilos de itens ativos/inativos
-2. `src/components/empreendimentos/EmpreendimentoCard.tsx` -- gradiente do topo do card
-3. `src/components/layout/Sidebar.tsx` -- cores dos icones dos grupos
+Serao alterados aproximadamente **25 arquivos**, cada um com uma mudanca minima: adicionar ou ajustar a `div` wrapper ao redor do `<Table>`. Nenhuma logica de dados ou comportamento sera modificada.
 
