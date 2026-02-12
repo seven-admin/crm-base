@@ -1,32 +1,20 @@
 
 
-# Corrigir bug: meta comercial salva mas nao aparece na listagem
+# Aplicar opacidade (alfa) na logo em todos os locais
 
-## Problema identificado
+## O que sera feito
 
-A meta esta sendo salva no banco de dados com sucesso (confirmei que existe um registro). O problema e que apos salvar, a query da aba "Gerenciar Metas" nao e atualizada.
+Adicionar classe `opacity-90` em todas as imagens da logo que ainda nao possuem, para manter um visual consistente e suave em todo o sistema.
 
-No hook `useCreateMeta` (arquivo `src/hooks/useMetasComerciais.ts`), o `onSuccess` invalida apenas:
-- `metas-comerciais`
-- `historico-metas`
+## Arquivos a editar
 
-Porem **nao invalida** `todas-metas`, que e a query usada pela tabela na aba "Gerenciar Metas".
+1. **`src/components/portal-incorporador/PortalIncorporadorLayout.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 50)
 
-## Solucao
+2. **`src/pages/AssinarContrato.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 157)
 
-### Arquivo: `src/hooks/useMetasComerciais.ts`
+3. **`src/pages/PoliticaPrivacidade.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 60)
 
-Adicionar `queryClient.invalidateQueries({ queryKey: ['todas-metas'] })` no `onSuccess` do `useCreateMeta`.
+4. **`src/pages/TermosUso.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 60)
 
-### Arquivo: `src/pages/MetasComerciais.tsx`
-
-Apos salvar a meta com sucesso, mudar automaticamente para a aba "Gerenciar Metas" para que o usuario veja o resultado.
-
----
-
-### Detalhes tecnicos
-
-1. **`src/hooks/useMetasComerciais.ts`** - No `useCreateMeta`, adicionar invalidacao de `todas-metas` no `onSuccess` (igual ja existe no `useUpdateMeta` e `useDeleteMeta`)
-
-2. **`src/pages/MetasComerciais.tsx`** - Transformar a aba ativa em estado controlado e, no `handleSaveMeta`, apos sucesso, setar a aba para `"gerenciar"`
+Os demais locais (Sidebar desktop/mobile e Portal do Corretor) ja possuem `opacity-90`.
 
