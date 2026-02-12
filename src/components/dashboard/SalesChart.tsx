@@ -73,7 +73,7 @@ export function SalesChart() {
               />
               <Bar
                 dataKey="vendas"
-                fill={CORES_DASHBOARD.azul}
+                fill={CORES_DASHBOARD.laranja}
                 radius={[4, 4, 0, 0]}
                 barSize={24}
               >

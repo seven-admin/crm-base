@@ -442,7 +442,7 @@ const MetasComerciais = () => {
                       />
                       <Legend />
                       <Bar dataKey="meta" name="Meta" fill={CORES_DASHBOARD.cinza} radius={[4, 4, 0, 0]} barSize={24} />
-                      <Bar dataKey="realizado" name="Realizado" fill={CORES_DASHBOARD.azul} radius={[4, 4, 0, 0]} barSize={24}>
+                      <Bar dataKey="realizado" name="Realizado" fill={CORES_DASHBOARD.laranja} radius={[4, 4, 0, 0]} barSize={24}>
                         <LabelList
                           dataKey="realizado"
                           position="top"
@@ -543,7 +543,7 @@ const MetasComerciais = () => {
                       />
                       <Legend />
                       <Bar dataKey="meta" name="Meta" fill={CORES_DASHBOARD.cinza} radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="realizado" name="Realizado" fill={CORES_DASHBOARD.azul} radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="realizado" name="Realizado" fill={CORES_DASHBOARD.laranja} radius={[0, 4, 4, 0]}>
                         <LabelList
                           dataKey="atingimento"
                           position="right"
