@@ -175,7 +175,7 @@ export function BlocosTab({ empreendimentoId, tipoEmpreendimento }: BlocosTabPro
                 </TableBody>
               </Table>
 
-              <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+              <div className="px-4 py-3 border-t text-sm text-muted-foreground flex items-center gap-2">
                 <span>
                   Total: {blocos.length} {blocos.length === 1 ? entityLabel.toLowerCase() : entityLabelPlural.toLowerCase()}
                 </span>
