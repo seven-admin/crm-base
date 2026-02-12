@@ -1,23 +1,91 @@
 
 
-# Remover Dashboard do Sidebar e Criar Home Simples
+# Rebranding - Paleta Laranja Seven Group
 
-## O que sera feito
+## Paleta Identificada na Imagem
 
-1. **Remover o grupo "Dashboard" do sidebar** -- o bloco com o item "Executivo" (linhas 64-72 de `Sidebar.tsx`) sera removido do array `menuGroups`. A rota `/dashboard-executivo` continuara existindo e acessivel via URL direta, apenas nao aparecera mais no menu.
+| Cor | Hex Aproximado | Uso Proposto |
+|-----|---------------|--------------|
+| Preto | #0A0A0A | Sidebar, textos fortes |
+| Off-white | #F5F3F0 | Background principal |
+| Laranja | #F5941E | Cor primaria (botoes, links, destaques) |
+| Cinza quente | #A09A8E | Textos secundarios, bordas |
+| Branco | #FFFFFF | Cards, popovers |
 
-2. **Transformar a pagina Index em uma home simples com logo centralizada** -- o arquivo `src/pages/Index.tsx` sera reescrito para exibir apenas a logo do sistema centralizada na tela, sem redirecionamento automatico. A pagina usara o `MainLayout` para manter o sidebar visivel.
+## Mudancas Planejadas
 
-3. **Ajustar a rota "/" no App.tsx** -- remover o `moduleName="dashboard"` do `ProtectedRoute` da rota raiz para que qualquer usuario autenticado possa acessar a home.
+### 1. Variaves CSS (`src/index.css`)
 
-## Detalhes tecnicos
+**Modo claro:**
+- `--primary`: de azul (207 55% 51%) para laranja (~30 91% 54%)
+- `--background`: de cinza frio (0 0% 98%) para off-white quente (~30 14% 96%)
+- `--muted` e `--border`: ajustar para tons de cinza quente em vez de cinza neutro
+- `--ring`: acompanhar a primaria (laranja)
+- `--sidebar-background`: manter escuro, ajustar para preto puro (~0 0% 5%)
 
-**Sidebar.tsx (linha 64-72):** Remover o objeto do grupo Dashboard do array `menuGroups`. O import `LayoutDashboard` pode ser removido se nao for usado em outro lugar.
+**Modo escuro:**
+- `--primary`: laranja com luminosidade levemente aumentada para contraste
+- Neutros ajustados para manter consistencia com cinza quente
 
-**Index.tsx:** Substituir a logica de `Navigate` por um componente simples:
-```typescript
-import logo from '@/assets/logo.png';
-// Renderiza apenas a logo centralizada dentro do layout
+### 2. Cores de graficos (`src/lib/chartColors.ts`)
+
+- Substituir o azul principal por laranja nos arrays de cores
+- Manter as demais cores complementares que ja funcionam bem com laranja (ciano, verde, roxo)
+- Atualizar `CORES_SIDEBAR.dashboard` e outros que usavam azul como destaque
+
+### 3. Tailwind Config (`tailwind.config.ts`)
+
+- Nenhuma alteracao estrutural necessaria -- as cores ja sao consumidas via variaveis CSS
+
+### 4. Componentes Pontuais
+
+- `CORES_SIDEBAR` em `chartColors.ts`: trocar referencias de azul para laranja onde fizer sentido
+- Verificar se ha cores azuis hardcoded em componentes (ex: `text-blue-500`, `bg-blue-600`) e substituir por `text-primary` / `bg-primary`
+
+## O que NAO muda
+
+- Cores semanticas (success verde, destructive vermelho, warning amarelo) permanecem inalteradas
+- Estrutura de variaveis CSS, Tailwind e componentes UI continuam identicos
+- Modo escuro continua funcionando, apenas com os tons ajustados
+
+## Secao Tecnica
+
+### Valores HSL propostos (modo claro)
+
+```text
+--primary:            30 91% 54%    (laranja #F5941E)
+--primary-foreground: 0 0% 100%    (branco)
+--background:         30 14% 96%   (off-white quente)
+--foreground:         0 0% 4%      (preto)
+--card:               0 0% 100%    (branco)
+--muted:              30 8% 91%    (cinza quente claro)
+--muted-foreground:   30 5% 40%   (cinza quente)
+--border:             30 8% 88%    (cinza quente borda)
+--input:              30 8% 88%
+--ring:               30 91% 54%   (laranja)
+--sidebar-background: 0 0% 5%     (preto)
 ```
 
-**App.tsx (linha 111-113):** Alterar o `ProtectedRoute` da rota "/" para nao exigir modulo especifico, e renderizar Index dentro do MainLayout.
+### Valores HSL propostos (modo escuro)
+
+```text
+--primary:            30 91% 60%   (laranja mais claro)
+--ring:               30 91% 60%
+--background:         0 0% 7%
+--muted:              30 5% 15%
+--muted-foreground:   30 5% 60%
+--border:             30 5% 18%
+```
+
+### chartColors.ts - Ajustes
+
+```text
+CORES_DASHBOARD.principal: '#F5941E' (laranja ao inves de azul)
+CORES_SIDEBAR: trocar entradas que usam azul para laranja
+CORES_ARRAY[0]: laranja como primeira cor de serie
+```
+
+### Busca por cores hardcoded
+
+Sera feita uma busca por classes como `text-blue-*`, `bg-blue-*`, `border-blue-*` e hex codes azuis hardcoded para garantir consistencia completa.
+
