@@ -1,21 +1,18 @@
 
-
-# Deixar a logo branca (alfa) em todos os locais
+# Mudar cor principal dos botoes para azul
 
 ## O que sera feito
 
-Substituir a classe `opacity-90` pelo filtro CSS que torna a imagem completamente branca. Sera usado o estilo `brightness(0) invert(1)` via Tailwind (`brightness-0 invert`) em todas as tags `<img>` da logo.
+Alterar a variavel CSS `--primary` de laranja para azul, conforme a referencia da imagem (um azul medio, similar a `hsl(213 58% 45%)`).
 
-## Arquivos a editar
+## Arquivo: `src/index.css`
 
-1. **`src/components/layout/Sidebar.tsx`** - Trocar `opacity-90` por `brightness-0 invert` nas logos (desktop e mobile)
-2. **`src/components/portal/PortalLayout.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
-3. **`src/components/portal-incorporador/PortalIncorporadorLayout.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
-4. **`src/pages/AssinarContrato.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
-5. **`src/pages/PoliticaPrivacidade.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
-6. **`src/pages/TermosUso.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
+### Tema claro (`:root`)
+- `--primary: 30 91% 54%` -> `--primary: 213 58% 45%`
+- `--gradient-primary` atualizar para usar o novo azul
 
-## Observacao
+### Tema escuro (`.dark`)
+- `--primary: 30 91% 60%` -> `--primary: 213 58% 50%`
+- `--sidebar-primary: 30 91% 60%` -> `--sidebar-primary: 213 58% 50%`
 
-Como o sistema usa tema escuro, a logo branca ficara visivel sobre fundos escuros. Em telas com fundo claro (como Termos de Uso e Politica de Privacidade), pode ser necessario ajustar -- se precisar, e so avisar.
-
+Isso afetara automaticamente todos os botoes, links e elementos que usam a cor `primary` no sistema inteiro, sem precisar alterar nenhum componente individualmente.
