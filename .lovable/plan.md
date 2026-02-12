@@ -1,72 +1,64 @@
 
-# Cards Segmentados por Categoria no Forecast
 
-## O que sera feito
+# Alterar Labels de Tipos e Adicionar Status nos Cards de Categoria
 
-Substituir os 6 KPI cards atuais (Pendentes, Hoje, Concluidas, etc.) por **4 cards de categoria** (Seven, Incorporadora, Imobiliaria, Cliente). Cada card mostrara os contadores por tipo de atividade dentro daquela categoria.
+## Resumo
 
-## Layout dos Cards
-
-```text
-+---------------------+  +---------------------+  +---------------------+  +---------------------+
-| SEVEN               |  | INCORPORADORA       |  | IMOBILIARIA         |  | CLIENTE             |
-|                     |  |                     |  |                     |  |                     |
-| Visita ......... 5  |  | Treinamento ..... 5 |  | Atendimento ..... 1 |  | Visita ........ 111 |
-| Reuniao ........ 1  |  | Atendimento ..... 1 |  | Treinamento ..... 5 |  | Ligacao ........ 79 |
-| Administrativa . 1  |  |                     |  |                     |  | Atendimento .... 75 |
-|                     |  |                     |  |                     |  | Reuniao ........ 52 |
-| Total: 7            |  | Total: 6            |  | Total: 6            |  | Total: 317          |
-+---------------------+  +---------------------+  +---------------------+  +---------------------+
-```
-
-Cada card tera:
-- Icone e nome da categoria no topo
-- Lista de tipos de atividade com contadores (apenas os que existem)
-- Total no rodape
+Duas mudancas:
+1. Renomear labels de tipo de atividade: "Ligacao" vira "Ligacao/WhatsApp" e "Adm. Seven" vira "Staff Seven"
+2. Adicionar contadores de status (Abertas, Fechadas, Futuras, Atrasadas) em cada card de categoria
 
 ## Mudancas
 
-### 1. Novo hook: `useResumoAtividadesPorCategoria` (em `src/hooks/useForecast.ts`)
+### 1. Alterar labels em `src/types/atividades.types.ts`
 
-Busca atividades no periodo selecionado e agrupa por `categoria` e `tipo`, retornando um objeto com a estrutura:
+Linhas 10 e 19:
+- `ligacao: 'Ligacao'` para `ligacao: 'Ligacao/WhatsApp'`
+- `administrativa: 'Adm. Seven'` para `administrativa: 'Staff Seven'`
 
-```typescript
-{
-  seven: { visita: 5, reuniao: 1, administrativa: 1, total: 7 },
-  incorporadora: { treinamento: 5, atendimento: 1, total: 6 },
-  imobiliaria: { ... },
-  cliente: { visita: 111, ligacao: 79, ... }
-}
+Isso reflete automaticamente em todos os componentes que usam `ATIVIDADE_TIPO_LABELS`.
+
+### 2. Atualizar hook `src/hooks/useResumoAtividadesPorCategoria.ts`
+
+Passar a buscar tambem `status` e `data_inicio` de cada atividade para classificar em:
+- **Abertas**: status = `pendente` e `data_inicio <= hoje`
+- **Fechadas**: status = `concluida`
+- **Futuras**: status = `pendente` e `data_inicio > hoje`
+- **Atrasadas**: status = `pendente` e `deadline_date < hoje` (ou `data_fim < hoje` se nao tiver deadline)
+
+O tipo `CategoriaResumo` ganha campos: `abertas`, `fechadas`, `futuras`, `atrasadas`.
+
+### 3. Atualizar componente `src/components/forecast/CategoriaCard.tsx`
+
+Adicionar abaixo da lista de tipos uma secao com 4 mini-badges coloridos mostrando:
+
+```text
++---------------------+
+| SEVEN               |
+|                     |
+| Ligacao/WhatsApp  5 |
+| Reuniao           1 |
+| Staff Seven       1 |
+|                     |
+| Abertas: 3  Fechadas: 2 |
+| Futuras: 1  Atrasadas: 1 |
+|                     |
+| Total: 7            |
++---------------------+
 ```
 
-Aceita os mesmos filtros (gestorId, dataInicio, dataFim, empreendimentoIds).
-
-### 2. Novo componente: `CategoriaCard` (em `src/components/forecast/CategoriaCard.tsx`)
-
-Componente reutilizavel que recebe:
-- nome da categoria
-- icone
-- dados (contadores por tipo)
-- cor de destaque
-
-Renderiza um Card compacto com a lista de tipos e seus contadores.
-
-### 3. Atualizar `src/pages/Forecast.tsx`
-
-- Importar o novo hook e componente
-- Substituir a grid de 6 KPICardCompact por uma grid de 4 CategoriaCards
-- Manter os filtros de gestor e periodo existentes funcionando
-- Atualizar tambem o modo TV para usar os novos cards
-
-### 4. Atualizar `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`
-
-- Substituir os 4 KPI cards genericos pelos mesmos CategoriaCards segmentados
+Cada contador tera uma cor associada:
+- Abertas: azul
+- Fechadas: verde
+- Futuras: cinza
+- Atrasadas: vermelho/laranja
 
 ## Secao Tecnica
 
-- A query busca `categoria, tipo, status` das atividades no periodo e agrupa client-side
-- Atividades sem categoria (`null`) serao ignoradas nos cards
-- Os labels de tipo usam `ATIVIDADE_TIPO_LABELS` ja existente em `src/types/atividades.types.ts`
-- Os labels de categoria usam `ATIVIDADE_CATEGORIA_LABELS` ja existente
-- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`
-- Aproximadamente 3 arquivos criados/alterados
+- A query do hook precisa incluir `status, data_inicio, data_fim, deadline_date` alem de `categoria, tipo`
+- Classificacao de "atrasada": atividade pendente onde `deadline_date` (ou `data_fim` como fallback) e anterior a hoje
+- Classificacao de "futura": atividade pendente onde `data_inicio` e posterior a hoje
+- Classificacao de "aberta": atividade pendente onde `data_inicio <= hoje` e nao esta atrasada
+- Nenhuma mudanca de schema no banco necessaria
+- Arquivos alterados: 3 (`atividades.types.ts`, `useResumoAtividadesPorCategoria.ts`, `CategoriaCard.tsx`)
+
