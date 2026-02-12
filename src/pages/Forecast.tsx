@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { KPICardCompact } from '@/components/dashboard-executivo';
+import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { FunilTemperatura } from '@/components/forecast/FunilTemperatura';
 import { VisitasPorEmpreendimento } from '@/components/forecast/VisitasPorEmpreendimento';
 import { AlertasFollowup } from '@/components/forecast/AlertasFollowup';
@@ -18,6 +18,9 @@ import { AtividadeForm } from '@/components/atividades/AtividadeForm';
 import { useTVLayoutConfig } from '@/hooks/useTVLayoutConfig';
 import { TVLayoutConfigDialog } from '@/components/tv-layout';
 import { useResumoAtividades } from '@/hooks/useForecast';
+import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
+import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
+import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useCreateAtividade, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import {
@@ -47,6 +50,14 @@ export default function Forecast() {
   
   const { data: resumo, isLoading, refetch } = useResumoAtividades(gestorId, dataInicio, dataFim);
   const { data: resumoAnterior } = useResumoAtividades(gestorId, dataInicioAnterior, dataFimAnterior);
+  const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim);
+
+  const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
+    seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    incorporadora: { icon: Building2, iconColor: 'text-chart-2', bgColor: 'bg-chart-2/10' },
+    imobiliaria: { icon: Users, iconColor: 'text-chart-3', bgColor: 'bg-chart-3/10' },
+    cliente: { icon: UserCheck, iconColor: 'text-chart-4', bgColor: 'bg-chart-4/10' },
+  };
   
   // Funções de cálculo de variação
   const calcularVariacao = (atual: number, anterior: number): number | undefined => {
@@ -131,102 +142,25 @@ export default function Forecast() {
 
   // Renderizar KPIs para modo TV
   const renderTVKPIs = () => (
-    <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
-      {isLoading ? (
-        [...Array(6)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="pt-4 pb-4">
-              <Skeleton className="h-8 w-16 mb-1" />
-              <Skeleton className="h-4 w-20" />
-            </CardContent>
-          </Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {loadingCategorias ? (
+        [...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-40" />
         ))
       ) : (
-        <>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                  <Activity className="h-6 w-6 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-3xl font-bold text-foreground">{resumo?.pendentes || 0}</p>
-                  <p className="text-xs text-muted-foreground">Pendentes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-3xl font-bold text-foreground">{resumo?.hoje || 0}</p>
-                  <p className="text-xs text-muted-foreground">Hoje</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-chart-2/20 flex items-center justify-center shrink-0">
-                  <TrendingUp className="h-6 w-6 text-chart-2" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-3xl font-bold text-foreground">{resumo?.concluidasMes || 0}</p>
-                  <p className="text-xs text-muted-foreground">Concluídas (mês)</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn(resumo?.vencidas && 'ring-1 ring-destructive/50')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-destructive/20 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="h-6 w-6 text-destructive" />
-                </div>
-                <div className="min-w-0">
-                  <p className={cn("text-3xl font-bold", resumo?.vencidas ? 'text-destructive' : 'text-foreground')}>{resumo?.vencidas || 0}</p>
-                  <p className="text-xs text-muted-foreground">Vencidas</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn(resumo?.followupsPendentes && 'ring-1 ring-warning/50')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
-                  <BarChart3 className="h-6 w-6 text-warning" />
-                </div>
-                <div className="min-w-0">
-                  <p className={cn("text-3xl font-bold", resumo?.followupsPendentes ? 'text-warning' : 'text-foreground')}>{resumo?.followupsPendentes || 0}</p>
-                  <p className="text-xs text-muted-foreground">Follow-ups</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-chart-2/20 flex items-center justify-center shrink-0">
-                  <Percent className="h-6 w-6 text-chart-2" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-3xl font-bold text-foreground">{resumo?.taxaConclusao || 0}%</p>
-                  <p className="text-xs text-muted-foreground">Taxa Conclusão</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </>
+        (['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+          const cfg = CATEGORIA_CONFIG[cat];
+          return (
+            <CategoriaCard
+              key={cat}
+              nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
+              icon={cfg.icon}
+              iconColor={cfg.iconColor}
+              bgColor={cfg.bgColor}
+              dados={resumoCategorias?.[cat]}
+            />
+          );
+        })
       )}
     </div>
   );
@@ -437,74 +371,26 @@ export default function Forecast() {
           </div>
         </div>
 
-        {/* KPIs usando KPICardCompact padronizado */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {isLoading ? (
-            [...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-24" />
+        {/* Cards por Categoria */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {loadingCategorias ? (
+            [...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-40" />
             ))
           ) : (
-            <>
-              <KPICardCompact
-                title="Pendentes"
-                value={resumo?.pendentes || 0}
-                icon={Activity}
-                variacao={calcularVariacaoInversa(
-                  resumo?.pendentes || 0,
-                  resumoAnterior?.pendentes || 0
-                )}
-                subtitle="vs mês anterior"
-              />
-              <KPICardCompact
-                title="Hoje"
-                value={resumo?.hoje || 0}
-                icon={Calendar}
-              />
-              <KPICardCompact
-                title="Concluídas (mês)"
-                value={resumo?.concluidasMes || 0}
-                icon={TrendingUp}
-                iconColor="text-chart-2"
-                variacao={calcularVariacao(
-                  resumo?.concluidasMes || 0,
-                  resumoAnterior?.concluidasMes || 0
-                )}
-                subtitle="vs mês anterior"
-              />
-              <KPICardCompact
-                title="Vencidas"
-                value={resumo?.vencidas || 0}
-                icon={AlertTriangle}
-                iconColor={resumo?.vencidas ? "text-destructive" : "text-primary"}
-                variacao={calcularVariacaoInversa(
-                  resumo?.vencidas || 0,
-                  resumoAnterior?.vencidas || 0
-                )}
-                subtitle="vs mês anterior"
-              />
-              <KPICardCompact
-                title="Follow-ups"
-                value={resumo?.followupsPendentes || 0}
-                icon={BarChart3}
-                iconColor={resumo?.followupsPendentes ? "text-warning" : "text-primary"}
-                variacao={calcularVariacao(
-                  resumo?.followupsPendentes || 0,
-                  resumoAnterior?.followupsPendentes || 0
-                )}
-                subtitle="vs mês anterior"
-              />
-              <KPICardCompact
-                title="Taxa Conclusão"
-                value={`${resumo?.taxaConclusao || 0}%`}
-                icon={Percent}
-                iconColor="text-chart-2"
-                variacao={calcularVariacao(
-                  resumo?.taxaConclusao || 0,
-                  resumoAnterior?.taxaConclusao || 0
-                )}
-                subtitle="vs mês anterior"
-              />
-            </>
+            (['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+              const cfg = CATEGORIA_CONFIG[cat];
+              return (
+                <CategoriaCard
+                  key={cat}
+                  nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
+                  icon={cfg.icon}
+                  iconColor={cfg.iconColor}
+                  bgColor={cfg.bgColor}
+                  dados={resumoCategorias?.[cat]}
+                />
+              );
+            })
           )}
         </div>
 
