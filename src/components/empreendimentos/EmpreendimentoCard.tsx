@@ -44,12 +44,15 @@ export function EmpreendimentoCard({ empreendimento }: EmpreendimentoCardProps) 
     <div className="card-elevated overflow-hidden hover:shadow-elevated transition-shadow duration-300 animate-fade-in">
       {/* Dark gradient top section with wave pattern */}
       <div 
-        className="relative h-32 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden"
-        style={empreendimento.capa_url ? {
-          backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url(${empreendimento.capa_url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        } : undefined}
+        className="relative h-32 overflow-hidden"
+        style={{
+          backgroundColor: 'hsl(220 16% 12%)',
+          ...(empreendimento.capa_url ? {
+            backgroundImage: `linear-gradient(to bottom, hsla(220, 16%, 12%, 0.85), hsla(220, 16%, 12%, 0.95)), url(${empreendimento.capa_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          } : {})
+        }}
       >
         {/* Wave Pattern SVG */}
         <svg
