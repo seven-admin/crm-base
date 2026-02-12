@@ -76,7 +76,7 @@ export function PortalLayout() {
         {/* Row 1: Logo + User Info */}
         <div className="container flex h-14 items-center justify-between border-b border-sidebar-border">
           <Link to="/portal-corretor" className="flex items-center gap-2">
-            <img src={logo} alt="Logo" className="h-8 opacity-90" />
+            <img src={logo} alt="Logo" className="h-8 brightness-0 invert" />
           </Link>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">

@@ -47,7 +47,7 @@ export function PortalIncorporadorLayout() {
         <div className="container flex h-20 items-center justify-between">
           {/* Logo + Title */}
           <Link to="/portal-incorporador" className="flex flex-col">
-            <img src={logo} alt="Logo" className="h-8 opacity-90" />
+            <img src={logo} alt="Logo" className="h-8 brightness-0 invert" />
             <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
               Portal do Incorporador
             </span>
