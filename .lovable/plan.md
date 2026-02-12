@@ -1,24 +1,32 @@
 
 
-# Atualizar logo do sistema
+# Corrigir bug: meta comercial salva mas nao aparece na listagem
 
-## Resumo
+## Problema identificado
 
-Substituir o arquivo `src/assets/logo-full.png` pela nova logo (imagem 02 - "sevengroup" sem tagline). Esse arquivo e usado na Sidebar, no Portal do Corretor e no Portal do Incorporador.
+A meta esta sendo salva no banco de dados com sucesso (confirmei que existe um registro). O problema e que apos salvar, a query da aba "Gerenciar Metas" nao e atualizada.
 
-## Mudancas
+No hook `useCreateMeta` (arquivo `src/hooks/useMetasComerciais.ts`), o `onSuccess` invalida apenas:
+- `metas-comerciais`
+- `historico-metas`
 
-### 1. Copiar a nova imagem
+Porem **nao invalida** `todas-metas`, que e a query usada pela tabela na aba "Gerenciar Metas".
 
-Copiar `user-uploads://02.png` para `src/assets/logo-full.png`, substituindo o arquivo atual.
+## Solucao
 
-### 2. Arquivos impactados (nenhuma alteracao de codigo)
+### Arquivo: `src/hooks/useMetasComerciais.ts`
 
-Os seguintes componentes ja importam `src/assets/logo-full.png` e continuarao funcionando automaticamente:
+Adicionar `queryClient.invalidateQueries({ queryKey: ['todas-metas'] })` no `onSuccess` do `useCreateMeta`.
 
-- `src/components/layout/Sidebar.tsx`
-- `src/components/portal/PortalLayout.tsx`
-- `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
+### Arquivo: `src/pages/MetasComerciais.tsx`
 
-**Nenhum arquivo de codigo precisa ser editado.** Apenas a substituicao da imagem.
+Apos salvar a meta com sucesso, mudar automaticamente para a aba "Gerenciar Metas" para que o usuario veja o resultado.
+
+---
+
+### Detalhes tecnicos
+
+1. **`src/hooks/useMetasComerciais.ts`** - No `useCreateMeta`, adicionar invalidacao de `todas-metas` no `onSuccess` (igual ja existe no `useUpdateMeta` e `useDeleteMeta`)
+
+2. **`src/pages/MetasComerciais.tsx`** - Transformar a aba ativa em estado controlado e, no `handleSaveMeta`, apos sucesso, setar a aba para `"gerenciar"`
 
