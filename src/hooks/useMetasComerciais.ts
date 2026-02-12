@@ -303,6 +303,7 @@ export function useCreateMeta() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metas-comerciais'] });
       queryClient.invalidateQueries({ queryKey: ['historico-metas'] });
+      queryClient.invalidateQueries({ queryKey: ['todas-metas'] });
     },
   });
 }
