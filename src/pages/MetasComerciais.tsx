@@ -57,6 +57,7 @@ const currentYear = getYear(new Date());
 const anosOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 const MetasComerciais = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [competencia, setCompetencia] = useState(new Date());
   const [empreendimentoId, setEmpreendimentoId] = useState<string | undefined>(undefined);
   const [showEditMeta, setShowEditMeta] = useState(false);
@@ -212,6 +213,7 @@ const MetasComerciais = () => {
       });
       toast.success('Meta salva com sucesso!');
       setShowEditMeta(false);
+      setActiveTab('gerenciar');
     } catch (error) {
       toast.error('Erro ao salvar meta');
     }
@@ -261,7 +263,7 @@ const MetasComerciais = () => {
       title="Metas Comerciais"
       subtitle="Acompanhe o desempenho de vendas vs metas"
     >
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="gerenciar">Gerenciar Metas</TabsTrigger>
