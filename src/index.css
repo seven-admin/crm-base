@@ -368,7 +368,6 @@
   .sidebar-nav-item-active {
     background: hsl(30 91% 54% / 0.15);
     color: hsl(30 91% 70%);
-    border-left: 2px solid hsl(30 91% 54%);
     @apply font-semibold;
   }
 
