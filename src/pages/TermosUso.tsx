@@ -57,7 +57,7 @@ const TermosUso = () => {
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="w-10 h-10 object-contain opacity-90" />
+            <img src={logo} alt="Logo" className="w-10 h-10 object-contain brightness-0 invert" />
             <span className="font-semibold text-lg">Seven Group 360</span>
           </div>
         </div>
