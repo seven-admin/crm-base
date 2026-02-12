@@ -1,64 +1,43 @@
 
 
-# Alterar Labels de Tipos e Adicionar Status nos Cards de Categoria
+# Atualizar Logos do Sistema
 
-## Resumo
+## O que sera feito
 
-Duas mudancas:
-1. Renomear labels de tipo de atividade: "Ligacao" vira "Ligacao/WhatsApp" e "Adm. Seven" vira "Staff Seven"
-2. Adicionar contadores de status (Abertas, Fechadas, Futuras, Atrasadas) em cada card de categoria
+Substituir a logo atual por duas novas versoes:
+- **Logo completa** (Ativo_2@4x.png) — usada na sidebar, header do portal corretor e header do portal incorporador
+- **Icone "N"** (Ativo_7@4x.png) — marca d'agua centralizada na pagina inicial
 
 ## Mudancas
 
-### 1. Alterar labels em `src/types/atividades.types.ts`
+### 1. Copiar os assets para o projeto
 
-Linhas 10 e 19:
-- `ligacao: 'Ligacao'` para `ligacao: 'Ligacao/WhatsApp'`
-- `administrativa: 'Adm. Seven'` para `administrativa: 'Staff Seven'`
+- `user-uploads://Ativo_2@4x.png` -> `src/assets/logo-full.png`
+- `user-uploads://Ativo_7@4x.png` -> `src/assets/logo-icon.png`
 
-Isso reflete automaticamente em todos os componentes que usam `ATIVIDADE_TIPO_LABELS`.
+### 2. Atualizar `src/components/layout/Sidebar.tsx`
 
-### 2. Atualizar hook `src/hooks/useResumoAtividadesPorCategoria.ts`
+- Trocar `import logo from '@/assets/logo.png'` para `import logo from '@/assets/logo-full.png'`
+- Remover o filtro CSS `brightness-0 invert` (a nova logo ja vem em branco para fundo escuro)
 
-Passar a buscar tambem `status` e `data_inicio` de cada atividade para classificar em:
-- **Abertas**: status = `pendente` e `data_inicio <= hoje`
-- **Fechadas**: status = `concluida`
-- **Futuras**: status = `pendente` e `data_inicio > hoje`
-- **Atrasadas**: status = `pendente` e `deadline_date < hoje` (ou `data_fim < hoje` se nao tiver deadline)
+### 3. Atualizar `src/components/portal/PortalLayout.tsx`
 
-O tipo `CategoriaResumo` ganha campos: `abertas`, `fechadas`, `futuras`, `atrasadas`.
+- Mesmo ajuste: trocar import e remover filtro `brightness-0 invert`
 
-### 3. Atualizar componente `src/components/forecast/CategoriaCard.tsx`
+### 4. Atualizar `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
 
-Adicionar abaixo da lista de tipos uma secao com 4 mini-badges coloridos mostrando:
+- Mesmo ajuste: trocar import e remover filtro `brightness-0 invert`
 
-```text
-+---------------------+
-| SEVEN               |
-|                     |
-| Ligacao/WhatsApp  5 |
-| Reuniao           1 |
-| Staff Seven       1 |
-|                     |
-| Abertas: 3  Fechadas: 2 |
-| Futuras: 1  Atrasadas: 1 |
-|                     |
-| Total: 7            |
-+---------------------+
-```
+### 5. Atualizar `src/pages/Index.tsx`
 
-Cada contador tera uma cor associada:
-- Abertas: azul
-- Fechadas: verde
-- Futuras: cinza
-- Atrasadas: vermelho/laranja
+- Importar `logo-icon.png` no lugar de `logo.png`
+- Aumentar o tamanho da imagem para `h-48` (marca d'agua maior)
+- Manter opacidade baixa (`opacity-10`) para efeito de watermark
 
-## Secao Tecnica
+### Arquivos alterados: 4
 
-- A query do hook precisa incluir `status, data_inicio, data_fim, deadline_date` alem de `categoria, tipo`
-- Classificacao de "atrasada": atividade pendente onde `deadline_date` (ou `data_fim` como fallback) e anterior a hoje
-- Classificacao de "futura": atividade pendente onde `data_inicio` e posterior a hoje
-- Classificacao de "aberta": atividade pendente onde `data_inicio <= hoje` e nao esta atrasada
-- Nenhuma mudanca de schema no banco necessaria
-- Arquivos alterados: 3 (`atividades.types.ts`, `useResumoAtividadesPorCategoria.ts`, `CategoriaCard.tsx`)
+- `src/components/layout/Sidebar.tsx`
+- `src/components/portal/PortalLayout.tsx`
+- `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
+- `src/pages/Index.tsx`
 
