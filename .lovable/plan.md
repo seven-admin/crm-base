@@ -1,20 +1,21 @@
 
 
-# Aplicar opacidade (alfa) na logo em todos os locais
+# Deixar a logo branca (alfa) em todos os locais
 
 ## O que sera feito
 
-Adicionar classe `opacity-90` em todas as imagens da logo que ainda nao possuem, para manter um visual consistente e suave em todo o sistema.
+Substituir a classe `opacity-90` pelo filtro CSS que torna a imagem completamente branca. Sera usado o estilo `brightness(0) invert(1)` via Tailwind (`brightness-0 invert`) em todas as tags `<img>` da logo.
 
 ## Arquivos a editar
 
-1. **`src/components/portal-incorporador/PortalIncorporadorLayout.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 50)
+1. **`src/components/layout/Sidebar.tsx`** - Trocar `opacity-90` por `brightness-0 invert` nas logos (desktop e mobile)
+2. **`src/components/portal/PortalLayout.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
+3. **`src/components/portal-incorporador/PortalIncorporadorLayout.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
+4. **`src/pages/AssinarContrato.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
+5. **`src/pages/PoliticaPrivacidade.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
+6. **`src/pages/TermosUso.tsx`** - Trocar `opacity-90` por `brightness-0 invert`
 
-2. **`src/pages/AssinarContrato.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 157)
+## Observacao
 
-3. **`src/pages/PoliticaPrivacidade.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 60)
-
-4. **`src/pages/TermosUso.tsx`** - Adicionar `opacity-90` na tag `<img>` da logo (linha 60)
-
-Os demais locais (Sidebar desktop/mobile e Portal do Corretor) ja possuem `opacity-90`.
+Como o sistema usa tema escuro, a logo branca ficara visivel sobre fundos escuros. Em telas com fundo claro (como Termos de Uso e Politica de Privacidade), pode ser necessario ajustar -- se precisar, e so avisar.
 
