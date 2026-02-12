@@ -364,7 +364,7 @@ export function FinanceiroConfiguracoes() {
                 Novo Centro
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>

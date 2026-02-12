@@ -226,7 +226,7 @@ export function TermosEditor() {
                 Versões anteriores dos termos salvos
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -274,7 +274,7 @@ export function TermosEditor() {
                 Histórico de usuários que aceitaram os termos (auditoria LGPD)
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>

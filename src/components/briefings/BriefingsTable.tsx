@@ -140,7 +140,7 @@ export function BriefingsTable({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-lg border bg-card">
+      <div className="hidden md:block rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
