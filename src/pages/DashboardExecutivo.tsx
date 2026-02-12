@@ -89,7 +89,7 @@ export default function DashboardExecutivo() {
   }
 
   const unidadesData = [
-    { name: 'Disponíveis', value: data?.unidades.disponiveis || 0, color: CORES_DASHBOARD.azul },
+    { name: 'Disponíveis', value: data?.unidades.disponiveis || 0, color: CORES_DASHBOARD.laranja },
     { name: 'Reservadas', value: data?.unidades.reservadas || 0, color: CORES_DASHBOARD.amarelo },
     { name: 'Vendidas', value: data?.unidades.vendidas || 0, color: CORES_DASHBOARD.verde },
     { name: 'Bloqueadas', value: data?.unidades.bloqueadas || 0, color: CORES_DASHBOARD.cinza },

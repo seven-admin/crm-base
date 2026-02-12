@@ -1,14 +1,14 @@
 // Paleta de cores padronizada para gráficos e dashboards
-// Baseada nas referências visuais do usuário
+// Baseada no rebranding Seven Group (laranja primário)
 
 export const CORES_DASHBOARD = {
-  azul: '#3B82F6',
+  laranja: '#F5941E',
   rosa: '#EC4899',
   amarelo: '#F59E0B',
   ciano: '#06B6D4',
   verde: '#10B981',
   roxo: '#8B5CF6',
-  laranja: '#F97316',
+  azul: '#3B82F6',
   cinza: '#6B7280',
   vermelho: '#EF4444',
   prata: '#94A3B8',
@@ -16,13 +16,13 @@ export const CORES_DASHBOARD = {
 
 // Array de cores para gráficos com múltiplas séries
 export const CORES_ARRAY = [
-  '#3B82F6', // Azul
+  '#F5941E', // Laranja (primária)
   '#EC4899', // Rosa
-  '#F59E0B', // Amarelo
   '#06B6D4', // Ciano
   '#10B981', // Verde
   '#8B5CF6', // Roxo
-  '#F97316', // Laranja
+  '#F59E0B', // Amarelo
+  '#3B82F6', // Azul
 ] as const;
 
 // Cores de status para KPIs e indicadores
@@ -46,7 +46,7 @@ export const CORES_RANKING = [
   '#F59E0B', // Ouro
   '#94A3B8', // Prata
   '#F97316', // Bronze
-  '#3B82F6', // 4º
+  '#F5941E', // 4º
   '#EC4899', // 5º
 ] as const;
 
@@ -76,12 +76,12 @@ export const TOOLTIP_CURSOR_STYLE = {
 
 // Cores do Sidebar por categoria
 export const CORES_SIDEBAR = {
-  dashboard: '#3B82F6',       // Azul
+  dashboard: '#F5941E',       // Laranja (primária)
   empreendimentos: '#10B981', // Verde
   clientes: '#8B5CF6',        // Roxo
   forecast: '#06B6D4',        // Ciano
   comercial: '#F97316',       // Laranja
-  contratos: '#3B82F6',       // Azul
+  contratos: '#F5941E',       // Laranja (primária)
   financeiro: '#F59E0B',      // Amarelo
   parceiros: '#EC4899',       // Rosa
   marketing: '#EC4899',       // Rosa

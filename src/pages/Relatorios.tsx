@@ -263,7 +263,7 @@ export default function Relatorios() {
                           formatter={(value: number) => [formatCurrency(value), 'Vendas']}
                           contentStyle={TOOLTIP_STYLE}
                         />
-                        <Bar dataKey="vendas" fill={CORES_DASHBOARD.azul} radius={[4, 4, 0, 0]} barSize={24} />
+                        <Bar dataKey="vendas" fill={CORES_DASHBOARD.laranja} radius={[4, 4, 0, 0]} barSize={24} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -374,7 +374,7 @@ export default function Relatorios() {
                           formatter={(value: number) => formatCurrency(value)} 
                           contentStyle={TOOLTIP_STYLE}
                         />
-                        <Bar dataKey="vendas" fill={CORES_DASHBOARD.azul} radius={[0, 4, 4, 0]} barSize={20} />
+                        <Bar dataKey="vendas" fill={CORES_DASHBOARD.laranja} radius={[0, 4, 4, 0]} barSize={20} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -839,7 +839,7 @@ export default function Relatorios() {
                         <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
                         <Tooltip contentStyle={TOOLTIP_STYLE} />
                         <Legend />
-                        <Bar dataKey="interno" name="Interno" fill={CORES_DASHBOARD.azul} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="interno" name="Interno" fill={CORES_DASHBOARD.laranja} radius={[4, 4, 0, 0]} />
                         <Bar dataKey="externo" name="Externo" fill={CORES_DASHBOARD.verde} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -872,7 +872,7 @@ export default function Relatorios() {
                           outerRadius={80}
                           label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                         >
-                          <Cell fill={CORES_DASHBOARD.azul} />
+                          <Cell fill={CORES_DASHBOARD.laranja} />
                           <Cell fill={CORES_DASHBOARD.verde} />
                         </Pie>
                         <Tooltip />
