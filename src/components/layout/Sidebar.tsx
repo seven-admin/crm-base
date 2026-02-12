@@ -74,7 +74,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Empreendimentos',
     icon: Building2,
-    color: '#059669',
+    color: '#10B981',
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
       { icon: Map, label: 'Mapa de Unidades', path: '/mapa-unidades', moduleName: 'unidades' },
@@ -101,7 +101,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Comercial',
     icon: Target,
-    color: '#F97316',
+    color: '#F5941E',
     items: [
       { icon: Kanban, label: 'Fichas de Proposta', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitações', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
@@ -110,7 +110,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Contratos',
     icon: FileSignature,
-    color: '#3B82F6',
+    color: '#60A5FA',
     items: [
       { icon: FileCheck, label: 'Gestão de Contratos', path: '/contratos', moduleName: 'contratos' },
       { icon: FilePlus, label: 'Templates', path: '/contratos?tab=templates', moduleName: 'contratos_templates' },
@@ -164,7 +164,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Sistema',
     icon: Settings,
-    color: '#6B7280',
+    color: '#94A3B8',
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
