@@ -10,16 +10,19 @@ import { AtividadesPorTipo } from '@/components/forecast/AtividadesPorTipo';
 import { ProximasAtividades } from '@/components/forecast/ProximasAtividades';
 import { AtendimentosResumo } from '@/components/forecast/AtendimentosResumo';
 import { CalendarioCompacto } from '@/components/forecast/CalendarioCompacto';
+import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { AtividadesListaPortal } from '@/components/portal-incorporador/AtividadesListaPortal';
 import { useResumoAtividades } from '@/hooks/useForecast';
+import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
+import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
 import {
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
   BarChart3,
   ListTodo,
   Info,
+  Briefcase,
+  Building2,
+  Users,
+  UserCheck,
 } from 'lucide-react';
 
 export default function PortalIncorporadorForecast() {
@@ -27,15 +30,22 @@ export default function PortalIncorporadorForecast() {
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
   
-  // Passar empreendimentoIds para filtrar os dados do incorporador
+  const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
   const { data: resumoAtividades, isLoading: loadingResumo } = useResumoAtividades(
-    undefined, // gestorId
-    undefined, // dataInicio
-    undefined, // dataFim
-    empreendimentoIds.length > 0 ? empreendimentoIds : undefined
+    undefined, undefined, undefined, empsFilter
+  );
+  const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
+    undefined, undefined, undefined, empsFilter
   );
 
-  const isLoading = loadingEmps || loadingResumo;
+  const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
+    seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    incorporadora: { icon: Building2, iconColor: 'text-chart-2', bgColor: 'bg-chart-2/10' },
+    imobiliaria: { icon: Users, iconColor: 'text-chart-3', bgColor: 'bg-chart-3/10' },
+    cliente: { icon: UserCheck, iconColor: 'text-chart-4', bgColor: 'bg-chart-4/10' },
+  };
+
+  const isLoading = loadingEmps || loadingResumo || loadingCategorias;
 
   if (isLoading) {
     return (
@@ -94,63 +104,21 @@ export default function PortalIncorporadorForecast() {
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">
-          {/* KPIs de Atividades */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <CalendarDays className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{resumoAtividades?.total || 0}</p>
-                    <p className="text-sm text-muted-foreground">Total de Atividades</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-chart-2/10">
-                    <CheckCircle2 className="h-5 w-5 text-chart-2" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{resumoAtividades?.concluidas || 0}</p>
-                    <p className="text-sm text-muted-foreground">Concluídas</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-chart-3/10">
-                    <Clock className="h-5 w-5 text-chart-3" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{resumoAtividades?.pendentes || 0}</p>
-                    <p className="text-sm text-muted-foreground">Pendentes</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-destructive/10">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{resumoAtividades?.vencidas || 0}</p>
-                    <p className="text-sm text-muted-foreground">Vencidas</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Cards por Categoria */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {(['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+              const cfg = CATEGORIA_CONFIG[cat];
+              return (
+                <CategoriaCard
+                  key={cat}
+                  nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
+                  icon={cfg.icon}
+                  iconColor={cfg.iconColor}
+                  bgColor={cfg.bgColor}
+                  dados={resumoCategorias?.[cat]}
+                />
+              );
+            })}
           </div>
 
           {/* Funil e Visitas */}
