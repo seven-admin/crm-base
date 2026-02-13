@@ -8,7 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, ChevronRight, Plus, Trash2, Copy, MessageSquare, CalendarIcon, Loader2, Edit2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { ChevronDown, ChevronRight, Plus, Trash2, Copy, MessageSquare, CalendarIcon, Loader2, Edit2, MoreHorizontal, Zap, Palette } from 'lucide-react';
 import { format, parseISO, isBefore, isAfter, startOfDay } from 'date-fns';
 import { toast } from 'sonner';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ResponsaveisEditor } from './ResponsaveisEditor';
 import { EditarEmLoteDialog } from './EditarEmLoteDialog';
 import { ExcluirEmLoteDialog } from './ExcluirEmLoteDialog';
+import { ConverterTarefaDialog } from './ConverterTarefaDialog';
 
 interface Props {
   empreendimentoId: string;
@@ -31,7 +33,7 @@ interface Props {
 
 export function PlanejamentoPlanilha({ empreendimentoId, readOnly = false }: Props) {
   const { itens, isLoading, createItem, updateItem, deleteItem, duplicateItem, refetch } = usePlanejamentoItens({ empreendimento_id: empreendimentoId });
-  const { fases, isLoading: loadingFases } = usePlanejamentoFases();
+  const { fases, isLoading: loadingFases, createFase } = usePlanejamentoFases();
   const { statusList, isLoading: loadingStatus } = usePlanejamentoStatus();
   const { data: funcionarios } = useFuncionariosSeven();
 
@@ -43,6 +45,10 @@ export function PlanejamentoPlanilha({ empreendimentoId, readOnly = false }: Pro
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editEmLoteOpen, setEditEmLoteOpen] = useState(false);
   const [excluirEmLoteOpen, setExcluirEmLoteOpen] = useState(false);
+  const [showNewFase, setShowNewFase] = useState(false);
+  const [newFaseName, setNewFaseName] = useState('');
+  const [newFaseColor, setNewFaseColor] = useState('#6366f1');
+  const [converterItem, setConverterItem] = useState<PlanejamentoItemWithRelations | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Agrupar itens por fase
@@ -287,6 +293,7 @@ export function PlanejamentoPlanilha({ empreendimentoId, readOnly = false }: Pro
                         onDateChange={handleDateChange}
                         onDelete={() => deleteItem.mutate(item.id)}
                         onDuplicate={() => duplicateItem.mutate(item.id)}
+                        onConvert={() => setConverterItem(item)}
                       />
                     ))}
 
@@ -345,6 +352,58 @@ export function PlanejamentoPlanilha({ empreendimentoId, readOnly = false }: Pro
           </TableBody>
         </Table>
       </div>
+
+      {/* Botão Adicionar Fase */}
+      {!readOnly && (
+        <div>
+          {showNewFase ? (
+            <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/20">
+              <input
+                type="color"
+                value={newFaseColor}
+                onChange={(e) => setNewFaseColor(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border-0"
+              />
+              <Input
+                value={newFaseName}
+                onChange={(e) => setNewFaseName(e.target.value)}
+                placeholder="Nome da nova fase..."
+                className="flex-1 h-9"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newFaseName.trim()) {
+                    createFase.mutate({ nome: newFaseName.trim(), cor: newFaseColor, ordem: (fases?.length || 0) + 1 });
+                    setNewFaseName('');
+                    setShowNewFase(false);
+                  } else if (e.key === 'Escape') {
+                    setShowNewFase(false);
+                    setNewFaseName('');
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                disabled={!newFaseName.trim() || createFase.isPending}
+                onClick={() => {
+                  createFase.mutate({ nome: newFaseName.trim(), cor: newFaseColor, ordem: (fases?.length || 0) + 1 });
+                  setNewFaseName('');
+                  setShowNewFase(false);
+                }}
+              >
+                {createFase.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setShowNewFase(false); setNewFaseName(''); }}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" className="w-full gap-2" onClick={() => setShowNewFase(true)}>
+              <Plus className="h-4 w-4" />
+              Adicionar Fase
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Seção de itens sem data */}
       {itensSemData.length > 0 && (
@@ -416,6 +475,16 @@ export function PlanejamentoPlanilha({ empreendimentoId, readOnly = false }: Pro
           refetch();
         }}
       />
+
+      {/* Dialog Converter Tarefa */}
+      {converterItem && (
+        <ConverterTarefaDialog
+          open={!!converterItem}
+          onOpenChange={(open) => { if (!open) setConverterItem(null); }}
+          item={converterItem}
+          empreendimentoId={empreendimentoId}
+        />
+      )}
     </div>
   );
 }
@@ -439,6 +508,7 @@ interface ItemRowProps {
   onDateChange: (id: string, field: string, date: Date | undefined) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onConvert: () => void;
 }
 
 function ItemRow({
@@ -458,7 +528,8 @@ function ItemRow({
   onSelectChange,
   onDateChange,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  onConvert
 }: ItemRowProps) {
   const isEditingItem = editingCell?.id === item.id && editingCell?.field === 'item';
   const [obsOpen, setObsOpen] = useState(false);
@@ -618,24 +689,28 @@ function ItemRow({
       {!readOnly && (
         <TableCell className="py-1">
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onDuplicate}
-              title="Duplicar"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-destructive hover:text-destructive"
-              onClick={onDelete}
-              title="Remover"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onDuplicate}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onConvert}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Converter em Atividade/Marketing
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </TableCell>
       )}

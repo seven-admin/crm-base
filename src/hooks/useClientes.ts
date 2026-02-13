@@ -69,6 +69,7 @@ export function useClientes(filters?: ClienteFilters) {
           conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
+        .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
       .order('nome', { ascending: true });
 
       query = applyFilters(query, filters);
@@ -88,6 +89,7 @@ export function useClientes(filters?: ClienteFilters) {
             empreendimento:empreendimentos(id, nome)
           `)
           .eq('is_active', true)
+          .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
           .order('nome', { ascending: true });
 
         fallbackQuery = applyFilters(fallbackQuery, filters);
@@ -123,7 +125,8 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
       let countQuery = supabase
         .from('clientes')
         .select('id', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)');
 
       if (filters?.search) {
         countQuery = countQuery.or(`nome.ilike.%${filters.search}%,email.ilike.%${filters.search}%,cpf.ilike.%${filters.search}%,telefone.ilike.%${filters.search}%`);
@@ -148,6 +151,7 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
           conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
+        .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
       .order('nome', { ascending: true })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
@@ -168,6 +172,7 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
             empreendimento:empreendimentos(id, nome)
           `)
           .eq('is_active', true)
+          .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
           .order('nome', { ascending: true })
           .range((page - 1) * pageSize, page * pageSize - 1);
 
@@ -276,7 +281,8 @@ export function useClienteStats() {
       const { data, error } = await supabase
         .from('clientes')
         .select('fase')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)');
 
       if (error) throw error;
 

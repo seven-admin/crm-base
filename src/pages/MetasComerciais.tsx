@@ -28,6 +28,7 @@ import {
 } from '@/hooks/useMetasComerciais';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useGestoresProduto } from '@/hooks/useGestores';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { CORES_DASHBOARD, TOOLTIP_STYLE } from '@/lib/chartColors';
@@ -70,8 +71,9 @@ const MetasComerciais = () => {
   const [metaPropostas, setMetaPropostas] = useState('');
   const [metaMes, setMetaMes] = useState(format(new Date(), 'MM'));
   const [metaAno, setMetaAno] = useState(currentYear.toString());
-  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento'>('geral');
+  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'gestor'>('geral');
   const [metaEmpreendimentoId, setMetaEmpreendimentoId] = useState<string>('');
+  const [metaGestorId, setMetaGestorId] = useState<string>('');
   const [metaPeriodicidade, setMetaPeriodicidade] = useState<'mensal' | 'semanal'>('mensal');
   const [metaSemanaDate, setMetaSemanaDate] = useState<Date | undefined>(undefined);
   const [anoFiltro, setAnoFiltro] = useState(currentYear);
@@ -82,6 +84,7 @@ const MetasComerciais = () => {
 
   const { isAdmin } = usePermissions();
   const { data: empreendimentos } = useEmpreendimentos();
+  const { data: gestoresProduto = [] } = useGestoresProduto();
   
   const { data: meta, isLoading: loadingMeta } = useMetasPorMes(competencia, empreendimentoId);
   const { data: vendas, isLoading: loadingVendas } = useVendasRealizadasMes(competencia, empreendimentoId);
@@ -158,6 +161,7 @@ const MetasComerciais = () => {
     setMetaAno(currentYear.toString());
     setMetaEscopo('geral');
     setMetaEmpreendimentoId('');
+    setMetaGestorId('');
     setMetaPeriodicidade('mensal');
     setMetaSemanaDate(undefined);
     setShowEditMeta(true);
@@ -181,8 +185,9 @@ const MetasComerciais = () => {
     } else {
       setMetaSemanaDate(undefined);
     }
-    setMetaEscopo(metaItem.empreendimento_id ? 'empreendimento' : 'geral');
+    setMetaEscopo(metaItem.gestor_id ? 'gestor' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
     setMetaEmpreendimentoId(metaItem.empreendimento_id || '');
+    setMetaGestorId(metaItem.gestor_id || '');
     setShowEditMeta(true);
   };
 
@@ -203,6 +208,7 @@ const MetasComerciais = () => {
         competencia: competenciaStr,
         periodicidade: metaPeriodicidade,
         empreendimento_id: metaEscopo === 'empreendimento' ? metaEmpreendimentoId : null,
+        gestor_id: metaEscopo === 'gestor' ? metaGestorId : null,
         corretor_id: null,
         meta_valor: metaValor || 0,
         meta_unidades: parseInt(metaUnidades) || 0,
@@ -638,6 +644,8 @@ const MetasComerciais = () => {
                         <TableCell>
                           {metaItem.empreendimento ? (
                             <Badge variant="outline">{metaItem.empreendimento.nome}</Badge>
+                          ) : (metaItem as any).gestor ? (
+                            <Badge variant="outline" className="bg-primary/10">{(metaItem as any).gestor.full_name}</Badge>
                           ) : (
                             <Badge variant="secondary">GERAL</Badge>
                           )}
@@ -812,13 +820,14 @@ const MetasComerciais = () => {
             {/* Escopo */}
             <div className="space-y-2">
               <Label>Escopo</Label>
-              <Select value={metaEscopo} onValueChange={(v) => setMetaEscopo(v as 'geral' | 'empreendimento')}>
+              <Select value={metaEscopo} onValueChange={(v) => setMetaEscopo(v as 'geral' | 'empreendimento' | 'gestor')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o escopo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="geral">Meta Geral (todos empreendimentos)</SelectItem>
                   <SelectItem value="empreendimento">Por Empreendimento</SelectItem>
+                  <SelectItem value="gestor">Por Gestor de Produto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -834,6 +843,24 @@ const MetasComerciais = () => {
                     {empreendimentos?.map((emp) => (
                       <SelectItem key={emp.id} value={emp.id}>
                         {emp.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {metaEscopo === 'gestor' && (
+              <div className="space-y-2">
+                <Label>Gestor de Produto</Label>
+                <Select value={metaGestorId} onValueChange={setMetaGestorId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o gestor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gestoresProduto.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {g.full_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -915,7 +942,7 @@ const MetasComerciais = () => {
             </Button>
             <Button 
               onClick={handleSaveMeta} 
-              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId)}
+              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId) || (metaEscopo === 'gestor' && !metaGestorId)}
             >
               {createMeta.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar
