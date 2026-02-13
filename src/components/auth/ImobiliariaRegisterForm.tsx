@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
-import { CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Loader2, Building2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { validarCPF, validarCNPJ, formatarCPF, formatarCNPJ, formatarTelefone } from '@/lib/documentUtils';
 
 const UF_OPTIONS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -16,45 +18,13 @@ const UF_OPTIONS = [
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
-function formatarTelefone(value: string): string {
-  const phone = value.replace(/\D/g, '');
-  if (phone.length <= 2) return phone;
-  if (phone.length <= 6) return `(${phone.slice(0, 2)}) ${phone.slice(2)}`;
-  if (phone.length <= 10) return `(${phone.slice(0, 2)}) ${phone.slice(2, 6)}-${phone.slice(6)}`;
-  return `(${phone.slice(0, 2)}) ${phone.slice(2, 7)}-${phone.slice(7, 11)}`;
-}
+type TipoPessoa = 'fisica' | 'juridica';
 
-function formatarCNPJ(value: string): string {
-  const cnpj = value.replace(/\D/g, '');
-  if (cnpj.length <= 2) return cnpj;
-  if (cnpj.length <= 5) return `${cnpj.slice(0, 2)}.${cnpj.slice(2)}`;
-  if (cnpj.length <= 8) return `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5)}`;
-  if (cnpj.length <= 12) return `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5, 8)}/${cnpj.slice(8)}`;
-  return `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5, 8)}/${cnpj.slice(8, 12)}-${cnpj.slice(12, 14)}`;
-}
-
-function validarCNPJLocal(cnpj: string): boolean {
-  const c = cnpj.replace(/\D/g, '');
-  if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
-  const pesos1 = [5,4,3,2,9,8,7,6,5,4,3,2];
-  let soma = 0;
-  for (let i = 0; i < 12; i++) soma += parseInt(c[i]) * pesos1[i];
-  let r = soma % 11;
-  if ((r < 2 ? 0 : 11 - r) !== parseInt(c[12])) return false;
-  const pesos2 = [6,5,4,3,2,9,8,7,6,5,4,3,2];
-  soma = 0;
-  for (let i = 0; i < 13; i++) soma += parseInt(c[i]) * pesos2[i];
-  r = soma % 11;
-  if ((r < 2 ? 0 : 11 - r) !== parseInt(c[13])) return false;
-  return true;
-}
-
-const registerSchema = z.object({
-  nome_imobiliaria: z.string().min(3, 'Nome da imobiliária deve ter no mínimo 3 caracteres'),
-  cnpj: z.string().min(1, 'CNPJ é obrigatório').refine(
-    (val) => validarCNPJLocal(val),
-    { message: 'CNPJ inválido' }
-  ),
+const baseSchema = z.object({
+  tipo_pessoa: z.enum(['fisica', 'juridica']),
+  nome_imobiliaria: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  cnpj: z.string().optional(),
+  cpf: z.string().optional(),
   cidade: z.string().optional(),
   uf: z.string().optional(),
   telefone: z.string().optional(),
@@ -67,6 +37,22 @@ const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não conferem',
   path: ['confirmPassword'],
+}).refine((data) => {
+  if (data.tipo_pessoa === 'juridica') {
+    return data.cnpj && validarCNPJ(data.cnpj);
+  }
+  return true;
+}, {
+  message: 'CNPJ inválido',
+  path: ['cnpj'],
+}).refine((data) => {
+  if (data.tipo_pessoa === 'fisica') {
+    return data.cpf && validarCPF(data.cpf);
+  }
+  return true;
+}, {
+  message: 'CPF inválido',
+  path: ['cpf'],
 });
 
 interface ImobiliariaRegisterFormProps {
@@ -75,8 +61,10 @@ interface ImobiliariaRegisterFormProps {
 
 export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps) {
   const [formData, setFormData] = useState({
+    tipo_pessoa: 'juridica' as TipoPessoa,
     nome_imobiliaria: '',
     cnpj: '',
+    cpf: '',
     cidade: '',
     uf: '',
     telefone: '',
@@ -96,6 +84,8 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
     let formattedValue = value;
     if (field === 'cnpj' && typeof value === 'string') {
       formattedValue = formatarCNPJ(value);
+    } else if (field === 'cpf' && typeof value === 'string') {
+      formattedValue = formatarCPF(value);
     } else if ((field === 'telefone' || field === 'whatsapp') && typeof value === 'string') {
       formattedValue = formatarTelefone(value);
     }
@@ -108,7 +98,7 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
     e.preventDefault();
     setApiError('');
 
-    const validation = registerSchema.safeParse(formData);
+    const validation = baseSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
       validation.error.errors.forEach(err => {
@@ -124,8 +114,10 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
     try {
       const response = await supabase.functions.invoke('register-imobiliaria', {
         body: {
+          tipo_pessoa: formData.tipo_pessoa,
           nome_imobiliaria: formData.nome_imobiliaria.trim(),
-          cnpj: formData.cnpj || null,
+          cnpj: formData.tipo_pessoa === 'juridica' ? formData.cnpj : null,
+          cpf: formData.tipo_pessoa === 'fisica' ? formData.cpf : null,
           cidade: formData.cidade.trim() || null,
           uf: formData.uf || null,
           telefone: formData.telefone || null,
@@ -204,31 +196,82 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Dados da Imobiliária</h3>
           </div>
 
+          {/* Tipo Pessoa Toggle */}
+          <div className="space-y-2">
+            <Label>Tipo de Pessoa *</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleChange('tipo_pessoa', 'juridica')}
+                className={cn(
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
+                  formData.tipo_pessoa === 'juridica'
+                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                    : 'border-input hover:bg-accent'
+                )}
+              >
+                <Building2 className="h-4 w-4" />
+                Pessoa Jurídica
+              </button>
+              <button
+                type="button"
+                onClick={() => handleChange('tipo_pessoa', 'fisica')}
+                className={cn(
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
+                  formData.tipo_pessoa === 'fisica'
+                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                    : 'border-input hover:bg-accent'
+                )}
+              >
+                <User className="h-4 w-4" />
+                Pessoa Física
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="nome_imobiliaria">Nome da Imobiliária *</Label>
+              <Label htmlFor="nome_imobiliaria">
+                {formData.tipo_pessoa === 'juridica' ? 'Nome da Imobiliária' : 'Nome Fantasia'} *
+              </Label>
               <Input
                 id="nome_imobiliaria"
                 value={formData.nome_imobiliaria}
                 onChange={(e) => handleChange('nome_imobiliaria', e.target.value)}
-                placeholder="Nome da imobiliária"
+                placeholder={formData.tipo_pessoa === 'juridica' ? 'Nome da imobiliária' : 'Nome fantasia'}
                 className={errors.nome_imobiliaria ? 'border-destructive' : ''}
               />
               {errors.nome_imobiliaria && <p className="text-xs text-destructive">{errors.nome_imobiliaria}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ *</Label>
-              <Input
-                id="cnpj"
-                value={formData.cnpj}
-                onChange={(e) => handleChange('cnpj', e.target.value)}
-                placeholder="00.000.000/0000-00"
-                maxLength={18}
-                className={errors.cnpj ? 'border-destructive' : ''}
-              />
-              {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj}</p>}
-            </div>
+            {/* CNPJ (PJ) ou CPF (PF) */}
+            {formData.tipo_pessoa === 'juridica' ? (
+              <div className="space-y-2">
+                <Label htmlFor="cnpj">CNPJ *</Label>
+                <Input
+                  id="cnpj"
+                  value={formData.cnpj}
+                  onChange={(e) => handleChange('cnpj', e.target.value)}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                  className={errors.cnpj ? 'border-destructive' : ''}
+                />
+                {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj}</p>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => handleChange('cpf', e.target.value)}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={errors.cpf ? 'border-destructive' : ''}
+                />
+                {errors.cpf && <p className="text-xs text-destructive">{errors.cpf}</p>}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="cidade">Cidade</Label>
