@@ -748,6 +748,42 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                 )}
               />
 
+              {/* Temperatura */}
+              <FormField
+                control={form.control}
+                name="temperatura"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Temperatura</FormLabel>
+                    <div className="flex gap-2">
+                      {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => {
+                        const colorMap: Record<ClienteTemperatura, string> = {
+                          frio: 'border-blue-400 bg-blue-50 text-blue-700',
+                          morno: 'border-orange-400 bg-orange-50 text-orange-700',
+                          quente: 'border-red-400 bg-red-50 text-red-700',
+                        };
+                        return (
+                          <button
+                            key={temp}
+                            type="button"
+                            onClick={() => field.onChange(field.value === temp ? '' : temp)}
+                            className={cn(
+                              'flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors',
+                              field.value === temp
+                                ? colorMap[temp]
+                                : 'border-input hover:bg-accent'
+                            )}
+                          >
+                            {CLIENTE_TEMPERATURA_LABELS[temp]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}

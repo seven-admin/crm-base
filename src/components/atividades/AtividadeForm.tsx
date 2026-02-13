@@ -31,7 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useClientes } from '@/hooks/useClientes';
+import { useClientes, useUpdateCliente } from '@/hooks/useClientes';
 import { useCorretores } from '@/hooks/useCorretores';
 import { useImobiliarias } from '@/hooks/useImobiliarias';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
@@ -106,6 +106,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
   const { data: clientes = [] } = useClientes();
+  const updateClienteMutation = useUpdateCliente();
   const { corretores } = useCorretores();
   const { imobiliarias } = useImobiliarias();
   const { data: todosEmpreendimentos = [] } = useEmpreendimentos();
@@ -224,6 +225,14 @@ export function AtividadeForm(props: AtividadeFormProps) {
       data_followup: values.data_followup?.toISOString(),
       deadline_date: values.deadline_date ? format(values.deadline_date, 'yyyy-MM-dd') : undefined,
     };
+
+    // Propagar temperatura para o cliente vinculado
+    if (values.temperatura_cliente && values.cliente_id) {
+      updateClienteMutation.mutate({
+        id: values.cliente_id,
+        data: { temperatura: values.temperatura_cliente as ClienteTemperatura },
+      });
+    }
 
     if (isSuperAdmin() && atribuirParaGestores && !initialData) {
       const gestorIds = todosGestores 

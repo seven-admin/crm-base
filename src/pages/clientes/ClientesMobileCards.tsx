@@ -16,6 +16,13 @@ import {
   CLIENTE_TEMPERATURA_COLORS,
   CLIENTE_TEMPERATURA_LABELS,
 } from '@/types/clientes.types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ClipboardList, Edit, MessageSquare, MoreVertical, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +36,7 @@ type Props = {
   onQualificar: (id: string) => void;
   onMarcarPerdido: (id: string) => void;
   onReativar: (id: string) => void;
+  onUpdateTemperatura: (id: string, temperatura: ClienteTemperatura | null) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
 };
@@ -39,14 +47,6 @@ const getFaseBadge = (fase: ClienteFase) => (
   </Badge>
 );
 
-const getTemperaturaBadge = (temperatura?: ClienteTemperatura | null) => {
-  if (!temperatura) return null;
-  return (
-    <Badge variant="outline" className={cn('text-xs', CLIENTE_TEMPERATURA_COLORS[temperatura])}>
-      {CLIENTE_TEMPERATURA_LABELS[temperatura]}
-    </Badge>
-  );
-};
 
 export function ClientesMobileCards({
   clientes,
@@ -58,6 +58,7 @@ export function ClientesMobileCards({
   onQualificar,
   onMarcarPerdido,
   onReativar,
+  onUpdateTemperatura,
   selectedIds,
   onToggleSelect,
 }: Props) {
@@ -136,7 +137,30 @@ export function ClientesMobileCards({
 
           <div className="flex items-center gap-2 mt-3 flex-wrap ml-8">
             {getFaseBadge(cliente.fase)}
-            {getTemperaturaBadge(cliente.temperatura)}
+            <Select
+              value={cliente.temperatura || '_none'}
+              onValueChange={(value) => {
+                onUpdateTemperatura(
+                  cliente.id,
+                  value === '_none' ? null : (value as ClienteTemperatura)
+                );
+              }}
+            >
+              <SelectTrigger className={cn(
+                'h-7 w-[100px] text-xs',
+                cliente.temperatura && CLIENTE_TEMPERATURA_COLORS[cliente.temperatura]
+              )}>
+                <SelectValue placeholder="Temp." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">—</SelectItem>
+                {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
+                  <SelectItem key={temp} value={temp}>
+                    {CLIENTE_TEMPERATURA_LABELS[temp]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {cliente.origem && (
               <Badge variant="outline" className="text-xs">
                 {cliente.origem}
