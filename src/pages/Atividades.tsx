@@ -22,7 +22,7 @@ import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalhe
 import { PendenciasTab } from '@/components/atividades/PendenciasTab';
 import { AgendaCalendario } from '@/components/agenda/AgendaCalendario';
 import { AgendaDia } from '@/components/agenda/AgendaDia';
-import { useAtividade, useAtividades, useAtividadesStatusResumo, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesHoje, useAtividadesVencidas, useConcluirAtividadesEmLote, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
+import { useAtividade, useAtividades, useAtividadesStatusResumo, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesHoje, useAtividadesVencidas, useConcluirAtividadesEmLote, useReabrirAtividadesEmLote, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
 import { useSuperAdminIds } from '@/hooks/useSuperAdminIds';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
@@ -106,6 +106,7 @@ export default function Atividades() {
   const deleteAtividade = useDeleteAtividade();
   const cancelarAtividade = useCancelarAtividade();
   const concluirEmLote = useConcluirAtividadesEmLote();
+  const reabrirEmLote = useReabrirAtividadesEmLote();
 
   const { data: detalheAtividade, isLoading: isLoadingDetalheAtividade } = useAtividade(detalheAtividadeId ?? undefined);
 
@@ -129,8 +130,14 @@ export default function Atividades() {
     return prazo < hojeDateOnly;
   };
 
-  // Atividades pendentes para seleção
+  // Atividades pendentes para seleção (concluir em lote)
   const atividadesPendentes = atividades?.filter(a => a.status === 'pendente') || [];
+  // Atividades concluídas/canceladas para seleção (reabrir em lote)
+  const atividadesReabriveis = atividades?.filter(a => a.status === 'concluida' || a.status === 'cancelada') || [];
+  // Determinar se a seleção atual é de pendentes ou reabríveis
+  const selectedArray = Array.from(selectedIds);
+  const selectedArePendentes = selectedArray.length > 0 && atividades?.some(a => a.id === selectedArray[0] && a.status === 'pendente');
+  const selectedAreReabriveis = selectedArray.length > 0 && atividades?.some(a => a.id === selectedArray[0] && (a.status === 'concluida' || a.status === 'cancelada'));
 
   const handleNova = () => {
     setEditingAtividade(null);
@@ -228,16 +235,27 @@ export default function Atividades() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === atividadesPendentes.length) {
+    // Selecionar todas as atividades visíveis (pendentes + concluídas/canceladas)
+    const allSelectableIds = (atividades || []).map(a => a.id);
+    if (selectedIds.size === allSelectableIds.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(atividadesPendentes.map(a => a.id)));
+      setSelectedIds(new Set(allSelectableIds));
     }
   };
 
   const handleConcluirEmLote = () => {
     if (selectedIds.size === 0) return;
     concluirEmLote.mutate(Array.from(selectedIds), {
+      onSuccess: () => {
+        setSelectedIds(new Set());
+      }
+    });
+  };
+
+  const handleReabrirEmLote = () => {
+    if (selectedIds.size === 0) return;
+    reabrirEmLote.mutate(Array.from(selectedIds), {
       onSuccess: () => {
         setSelectedIds(new Set());
       }
@@ -271,7 +289,7 @@ export default function Atividades() {
             </TabsList>
           </Tabs>
           <div className="flex gap-2">
-            {selectedIds.size > 0 && (
+            {selectedIds.size > 0 && selectedArePendentes && (
               <Button 
                 variant="outline" 
                 onClick={handleConcluirEmLote}
@@ -280,6 +298,17 @@ export default function Atividades() {
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Concluir {selectedIds.size} selecionada(s)
+              </Button>
+            )}
+            {selectedIds.size > 0 && selectedAreReabriveis && (
+              <Button 
+                variant="outline" 
+                onClick={handleReabrirEmLote}
+                disabled={reabrirEmLote.isPending}
+                className="text-chart-3 border-chart-3/30 hover:bg-chart-3/10"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Reabrir {selectedIds.size} selecionada(s)
               </Button>
             )}
             <Button onClick={handleNova} className="w-full sm:w-auto">
@@ -633,7 +662,7 @@ export default function Atividades() {
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={atividadesPendentes.length > 0 && selectedIds.size === atividadesPendentes.length}
+                            checked={(atividades?.length || 0) > 0 && selectedIds.size === (atividades?.length || 0)}
                             onCheckedChange={toggleSelectAll}
                             aria-label="Selecionar todas"
                           />
@@ -680,13 +709,11 @@ export default function Atividades() {
                               )}
                             >
                               <TableCell>
-                                {atividade.status === 'pendente' && (
-                                  <Checkbox
-                                    checked={isSelected}
-                                    onCheckedChange={() => toggleSelect(atividade.id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                )}
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => toggleSelect(atividade.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
                               </TableCell>
                               <TableCell>
                                 <Tooltip>
