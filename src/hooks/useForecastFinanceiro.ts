@@ -57,33 +57,18 @@ export function useForecastFinanceiro(
         .gte('created_at', `${inicioStr}T00:00:00`)
         .lte('created_at', `${fimStr}T23:59:59`);
 
-      // 4. Unidades vendidas (vendas históricas - sem filtro de data)
-      const unidadesVendidasQuery = supabase
-        .from('unidades')
-        .select('valor')
-        .eq('status', 'vendida')
-        .eq('is_active', true);
-
-      const [comissoesRes, negRes, propRes, unidadesRes] = await Promise.all([
+      const [comissoesRes, negRes, propRes] = await Promise.all([
         comissoesQuery,
         negQuery,
         propQuery,
-        unidadesVendidasQuery,
       ]);
 
       if (comissoesRes.error) throw comissoesRes.error;
       if (negRes.error) throw negRes.error;
       if (propRes.error) throw propRes.error;
-      if (unidadesRes.error) throw unidadesRes.error;
 
-      // Calcular valor total de vendas via comissões
-      const valorVendasComissoes = (comissoesRes.data || []).reduce((sum, c: any) => sum + (c.valor_venda || 0), 0);
-
-      // Calcular valor total de vendas via unidades vendidas
-      const valorVendasUnidades = (unidadesRes.data || []).reduce((sum, u: any) => sum + (u.valor || 0), 0);
-
-      // Usar o maior valor para evitar duplicação
-      const valorVendas = Math.max(valorVendasComissoes, valorVendasUnidades);
+      // Valor de vendas apenas via comissões (exclui vendas históricas)
+      const valorVendas = (comissoesRes.data || []).reduce((sum, c: any) => sum + (c.valor_venda || 0), 0);
 
       // Agrupar comissões por gestor
       const gestorMap = new Map<string, { gestor_id: string; gestor_nome: string; valor: number }>();
