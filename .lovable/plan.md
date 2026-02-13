@@ -1,36 +1,31 @@
 
+# Calendario no Planejamento por Empreendimento
 
-# Webhook de Alteracao de Atividade nao Dispara
+## O que muda
 
-## Diagnostico
+Adicionar uma nova aba "Calendario" na visao por empreendimento do Planejamento (`/planejamento`), semelhante ao calendario ja existente na visao global mas alimentado com os itens do empreendimento selecionado.
 
-O codigo de disparo esta correto no `useUpdateAtividade`. O problema e que na tabela `webhooks` so existe um registro para o evento `atividade_criada_por_superadmin`, mas **nenhum** para `atividade_alterada_por_superadmin`.
+## Detalhes
 
-O `webhook-dispatcher` faz match exato pelo nome do evento -- se nao ha webhook cadastrado para `atividade_alterada_por_superadmin`, ele simplesmente retorna "nenhum webhook configurado" e nao dispara nada.
+### Novo componente: `src/components/planejamento/PlanejamentoCalendarioEmpreendimento.tsx`
 
-## Opcoes
+- Recebe `empreendimentoId` e `readOnly` como props
+- Usa o hook `usePlanejamentoItens` com filtro `{ empreendimento_id }` (ja existente)
+- Layout identico ao `PlanejamentoCalendario` da visao global: grid com calendario a esquerda (2/3) e painel de detalhes do dia a direita (1/3)
+- Cada dia mostra preview das tarefas com cores por fase (em vez de cores por empreendimento, ja que so ha um empreendimento)
+- Painel lateral mostra detalhes das tarefas do dia selecionado com fase, status e badge de atraso
+- Navegacao por mes com botoes anterior/proximo e botao "Hoje"
 
-Existem duas formas de resolver:
+### Alteracao: `src/pages/Planejamento.tsx`
 
-**Opcao A (Recomendada)** - Usar o mesmo evento `atividade_criada_por_superadmin` tanto para criacao quanto alteracao, adicionando um campo `acao` no payload (`"criada"` ou `"alterada"`). Assim o webhook ja cadastrado passa a receber ambos os disparos sem nenhuma configuracao adicional.
+- Importar o novo componente
+- Adicionar aba "Calendario" (com icone `Calendar`) entre "Timeline" e "Dashboard" nas tabs do modo por empreendimento
+- Renderizar `PlanejamentoCalendarioEmpreendimento` no `TabsContent` correspondente
 
-**Opcao B** - Manter eventos separados. Nesse caso, basta o usuario cadastrar um novo webhook em Configuracoes com o evento `atividade_alterada_por_superadmin` apontando para a mesma URL do n8n. Nenhuma alteracao de codigo seria necessaria.
+### Alteracao: `src/pages/portal-incorporador/PortalIncorporadorPlanejamento.tsx`
 
-## Plano (Opcao A)
+- Adicionar a mesma aba "Calendario" para consistencia com o portal do incorporador
 
-### Arquivo: `src/hooks/useAtividades.ts`
+### Nenhuma alteracao de banco ou hooks
 
-1. No `useUpdateAtividade` (linha 306): trocar o evento de `atividade_alterada_por_superadmin` para `atividade_criada_por_superadmin` e adicionar o campo `acao: 'alterada'` ao payload.
-
-2. No `useAlterarStatusAtividade`: mesma mudanca -- usar `atividade_criada_por_superadmin` com `acao: 'status_alterado'`.
-
-3. Nos hooks de criacao (`useCreateAtividade` e `useCreateAtividadesParaGestores`): adicionar `acao: 'criada'` ao payload para que o n8n consiga diferenciar.
-
-### Arquivo: `src/hooks/useWebhooks.ts`
-
-Remover o evento `atividade_alterada_por_superadmin` da lista `WEBHOOK_EVENTS`, ja que nao sera mais necessario como evento separado.
-
-### Resultado
-
-Todos os disparos (criacao, edicao, mudanca de status) usarao o mesmo evento `atividade_criada_por_superadmin` que ja esta cadastrado e ativo com a URL do n8n. O campo `acao` no payload permite ao n8n diferenciar o tipo de operacao.
-
+O hook `usePlanejamentoItens` ja retorna todos os dados necessarios (item, fase, status, datas, responsavel).
