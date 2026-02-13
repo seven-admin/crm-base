@@ -27,6 +27,7 @@ const CELL_WIDTHS: Record<ZoomLevel, number> = {
   month: 120
 };
 
+const DAY_INITIALS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const ROW_HEIGHT = 36;
 const HEADER_HEIGHT = 60;
 const FASE_ROW_HEIGHT = 32;
@@ -88,7 +89,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
       return eachDayOfInterval({ start: dateRange.start, end: dateRange.end }).map(date => ({
         date,
         label: format(date, 'd', { locale: ptBR }),
-        sublabel: format(date, 'EEE', { locale: ptBR }),
+        sublabel: DAY_INITIALS[date.getDay()],
         isWeekend: date.getDay() === 0 || date.getDay() === 6,
         isToday: format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
       }));
