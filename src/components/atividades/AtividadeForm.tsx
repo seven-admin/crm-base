@@ -177,13 +177,29 @@ export function AtividadeForm(props: AtividadeFormProps) {
     }
   }, [gestorData?.autoSelectedId, form, initialData]);
 
+  const [stepErrors, setStepErrors] = useState<Record<string, boolean>>({});
+
   const handleNextStep = () => {
     const tipo = form.getValues('tipo');
     const categoria = form.getValues('categoria');
-    if (!tipo || !categoria) {
-      toast.error('Selecione o tipo e a categoria antes de continuar');
+    const subtipo = form.getValues('subtipo');
+    const errors: Record<string, boolean> = {};
+
+    if (!tipo) errors.tipo = true;
+    if (!categoria) errors.categoria = true;
+    if (TIPOS_COM_SUBTIPO.includes(tipo) && !subtipo) errors.subtipo = true;
+
+    if (Object.keys(errors).length > 0) {
+      setStepErrors(errors);
+      const missing: string[] = [];
+      if (errors.tipo) missing.push('tipo');
+      if (errors.subtipo) missing.push('classificação');
+      if (errors.categoria) missing.push('categoria');
+      toast.error(`Preencha: ${missing.join(', ')}`);
       return;
     }
+
+    setStepErrors({});
     setStep(2);
   };
 
@@ -272,12 +288,17 @@ export function AtividadeForm(props: AtividadeFormProps) {
                         <button
                           key={tipo}
                           type="button"
-                          onClick={() => field.onChange(tipo)}
+                          onClick={() => {
+                            field.onChange(tipo);
+                            setStepErrors(prev => ({ ...prev, tipo: false }));
+                          }}
                           className={cn(
                             'flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors',
                             field.value === tipo
                               ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-input hover:bg-accent'
+                              : stepErrors.tipo
+                                ? 'border-destructive hover:bg-accent'
+                                : 'border-input hover:bg-accent'
                           )}
                         >
                           <Icon className="h-5 w-5" />
@@ -304,12 +325,17 @@ export function AtividadeForm(props: AtividadeFormProps) {
                         <button
                           key={key}
                           type="button"
-                          onClick={() => field.onChange(field.value === key ? undefined : key)}
+                          onClick={() => {
+                            field.onChange(field.value === key ? undefined : key);
+                            setStepErrors(prev => ({ ...prev, subtipo: false }));
+                          }}
                           className={cn(
                             'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
                             field.value === key
                               ? 'border-primary bg-primary/10 text-primary font-medium'
-                              : 'border-input hover:bg-accent'
+                              : stepErrors.subtipo
+                                ? 'border-destructive hover:bg-accent'
+                                : 'border-input hover:bg-accent'
                           )}
                         >
                           {label}
@@ -334,12 +360,17 @@ export function AtividadeForm(props: AtividadeFormProps) {
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => field.onChange(cat)}
+                        onClick={() => {
+                          field.onChange(cat);
+                          setStepErrors(prev => ({ ...prev, categoria: false }));
+                        }}
                         className={cn(
                           'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
                           field.value === cat
                             ? 'border-primary bg-primary/10 text-primary font-medium'
-                            : 'border-input hover:bg-accent'
+                            : stepErrors.categoria
+                              ? 'border-destructive hover:bg-accent'
+                              : 'border-input hover:bg-accent'
                         )}
                       >
                         {ATIVIDADE_CATEGORIA_LABELS[cat]}
