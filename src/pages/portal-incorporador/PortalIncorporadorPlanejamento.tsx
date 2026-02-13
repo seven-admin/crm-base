@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarDays, BarChart3 } from 'lucide-react';
+import { CalendarDays, BarChart3, Calendar } from 'lucide-react';
 import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
 import { PlanejamentoDashboard } from '@/components/planejamento/PlanejamentoDashboard';
 import { PlanejamentoTimeline } from '@/components/planejamento/PlanejamentoTimeline';
+import { PlanejamentoCalendarioEmpreendimento } from '@/components/planejamento/PlanejamentoCalendarioEmpreendimento';
 
 export default function PortalIncorporadorPlanejamento() {
   const [empreendimentoId, setEmpreendimentoId] = useState<string>('');
@@ -47,6 +48,10 @@ export default function PortalIncorporadorPlanejamento() {
               <CalendarDays className="h-4 w-4" />
               Timeline
             </TabsTrigger>
+            <TabsTrigger value="calendario" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendário
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Dashboard
@@ -55,6 +60,10 @@ export default function PortalIncorporadorPlanejamento() {
 
           <TabsContent value="timeline" className="mt-4">
             <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly />
+          </TabsContent>
+
+          <TabsContent value="calendario" className="mt-4">
+            <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly />
           </TabsContent>
 
           <TabsContent value="dashboard" className="mt-4">
