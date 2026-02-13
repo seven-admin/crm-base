@@ -10,12 +10,15 @@ import { Imobiliaria, ImobiliariaFormData } from '@/types/mercado.types';
 import { useCepLookup } from '@/hooks/useCepLookup';
 import { Building2, MapPin, UserCog, Phone, ChevronLeft, ChevronRight, Check, Loader2, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatarCNPJ, formatarTelefone } from '@/lib/documentUtils';
+import { formatarCNPJ, formatarCPF, formatarTelefone, validarCPF, validarCNPJ } from '@/lib/documentUtils';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const formSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
+  tipo_pessoa: z.enum(['fisica', 'juridica']).default('juridica'),
   cnpj: z.string().optional(),
+  cpf: z.string().optional(),
   site: z.string().optional(),
   endereco_logradouro: z.string().optional(),
   endereco_numero: z.string().optional(),
@@ -32,7 +35,18 @@ const formSchema = z.object({
   whatsapp: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   is_active: z.boolean().default(true)
-});
+}).refine((data) => {
+  if (data.tipo_pessoa === 'juridica' && data.cnpj && data.cnpj.replace(/\D/g, '').length > 0) {
+    return validarCNPJ(data.cnpj);
+  }
+  return true;
+}, { message: 'CNPJ inválido', path: ['cnpj'] })
+.refine((data) => {
+  if (data.tipo_pessoa === 'fisica' && data.cpf && data.cpf.replace(/\D/g, '').length > 0) {
+    return validarCPF(data.cpf);
+  }
+  return true;
+}, { message: 'CPF inválido', path: ['cpf'] });
 
 interface ImobiliariaFormProps {
   initialData?: Imobiliaria;
@@ -56,7 +70,9 @@ export function ImobiliariaForm({ initialData, onSubmit, isLoading, hideAdminFie
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: '',
+      tipo_pessoa: 'juridica',
       cnpj: '',
+      cpf: '',
       site: '',
       endereco_logradouro: '',
       endereco_numero: '',
@@ -80,7 +96,9 @@ export function ImobiliariaForm({ initialData, onSubmit, isLoading, hideAdminFie
     if (initialData) {
       reset({
         nome: initialData.nome || '',
+        tipo_pessoa: (initialData.tipo_pessoa as 'fisica' | 'juridica') || 'juridica',
         cnpj: initialData.cnpj || '',
+        cpf: (initialData as any).cpf || '',
         site: initialData.site || '',
         endereco_logradouro: initialData.endereco_logradouro || '',
         endereco_numero: initialData.endereco_numero || '',
@@ -101,7 +119,9 @@ export function ImobiliariaForm({ initialData, onSubmit, isLoading, hideAdminFie
     } else {
       reset({
         nome: '',
+        tipo_pessoa: 'juridica',
         cnpj: '',
+        cpf: '',
         site: '',
         endereco_logradouro: '',
         endereco_numero: '',
@@ -127,6 +147,7 @@ export function ImobiliariaForm({ initialData, onSubmit, isLoading, hideAdminFie
   const gestorEmail = watch('gestor_email');
   const gestorCriarAcesso = watch('gestor_criar_acesso');
   const hasGestorLinked = !!initialData?.user_id;
+  const tipoPessoa = watch('tipo_pessoa');
 
   const nextStep = () => {
     if (currentStep < STEPS.length) {
@@ -196,23 +217,67 @@ export function ImobiliariaForm({ initialData, onSubmit, isLoading, hideAdminFie
         {/* Step 1: Empresa */}
         {currentStep === 1 && (
           <div className="space-y-4">
+            {/* Tipo de Pessoa */}
+            <div className="space-y-2">
+              <Label>Tipo de Pessoa</Label>
+              <RadioGroup
+                value={tipoPessoa}
+                onValueChange={(value: 'fisica' | 'juridica') => {
+                  setValue('tipo_pessoa', value);
+                  if (value === 'fisica') {
+                    setValue('cnpj', '');
+                  } else {
+                    setValue('cpf', '');
+                  }
+                }}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="juridica" id="tipo_juridica" />
+                  <Label htmlFor="tipo_juridica" className="cursor-pointer font-normal">Pessoa Jurídica</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fisica" id="tipo_fisica" />
+                  <Label htmlFor="tipo_fisica" className="cursor-pointer font-normal">Pessoa Física</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input id="nome" {...register('nome')} placeholder="Nome da imobiliária" />
+                <Label htmlFor="nome">
+                  Nome * {tipoPessoa === 'fisica' && <span className="text-muted-foreground font-normal">(Nome completo)</span>}
+                </Label>
+                <Input id="nome" {...register('nome')} placeholder={tipoPessoa === 'fisica' ? 'Nome completo' : 'Nome da imobiliária'} />
                 {errors.nome && <p className="text-sm text-destructive">{errors.nome.message}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cnpj">CNPJ</Label>
-                <Input 
-                  id="cnpj" 
-                  value={watch('cnpj') || ''}
-                  onChange={(e) => setValue('cnpj', formatarCNPJ(e.target.value))}
-                  placeholder="00.000.000/0000-00" 
-                  maxLength={18}
-                />
-                {errors.cnpj && <p className="text-sm text-destructive">{errors.cnpj.message}</p>}
-              </div>
+
+              {tipoPessoa === 'juridica' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Input 
+                    id="cnpj" 
+                    value={watch('cnpj') || ''}
+                    onChange={(e) => setValue('cnpj', formatarCNPJ(e.target.value))}
+                    placeholder="00.000.000/0000-00" 
+                    maxLength={18}
+                  />
+                  {errors.cnpj && <p className="text-sm text-destructive">{errors.cnpj.message}</p>}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF</Label>
+                  <Input 
+                    id="cpf" 
+                    value={watch('cpf') || ''}
+                    onChange={(e) => setValue('cpf', formatarCPF(e.target.value))}
+                    placeholder="000.000.000-00" 
+                    maxLength={14}
+                  />
+                  {errors.cpf && <p className="text-sm text-destructive">{errors.cpf.message}</p>}
+                </div>
+              )}
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="site">Site</Label>
                 <Input id="site" {...register('site')} placeholder="https://..." />
