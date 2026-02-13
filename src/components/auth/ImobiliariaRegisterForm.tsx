@@ -231,14 +231,12 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="nome_imobiliaria">
-                {formData.tipo_pessoa === 'juridica' ? 'Nome da Imobiliária' : 'Nome Fantasia'} *
-              </Label>
+              <Label htmlFor="nome_imobiliaria">Nome *</Label>
               <Input
                 id="nome_imobiliaria"
                 value={formData.nome_imobiliaria}
                 onChange={(e) => handleChange('nome_imobiliaria', e.target.value)}
-                placeholder={formData.tipo_pessoa === 'juridica' ? 'Nome da imobiliária' : 'Nome fantasia'}
+                placeholder="Nome"
                 className={errors.nome_imobiliaria ? 'border-destructive' : ''}
               />
               {errors.nome_imobiliaria && <p className="text-xs text-destructive">{errors.nome_imobiliaria}</p>}
