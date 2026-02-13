@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -77,7 +77,6 @@ const formSchema = z
     deadline_date: z.date().optional(),
   })
   .superRefine((values, ctx) => {
-    // Validar que data_fim >= data_inicio
     if (values.data_inicio && values.data_fim && values.data_fim < values.data_inicio) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -91,7 +90,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export interface AtividadeFormSubmitData {
   formData: AtividadeFormData;
-  gestorIds?: string[]; // Se presente, criar para múltiplos gestores
+  gestorIds?: string[];
 }
 
 export interface AtividadeFormProps {
@@ -113,17 +112,16 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const { data: gestorData } = useGestorEmpreendimentos();
   const { data: gestores = [] } = useGestoresProduto();
 
+  const [step, setStep] = useState<1 | 2>(1);
   const [atribuirParaGestores, setAtribuirParaGestores] = useState(false);
   const [todosGestores, setTodosGestores] = useState(false);
   const [gestoresSelecionados, setGestoresSelecionados] = useState<string[]>([]);
 
-  // Determinar lista de empreendimentos a exibir
   const hasGestorEmpreendimentos = gestorData?.empreendimentos && gestorData.empreendimentos.length > 0;
   const empreendimentos = hasGestorEmpreendimentos 
     ? gestorData.empreendimentos 
     : todosEmpreendimentos;
 
-  // Filtrar apenas clientes em fase de prospecção/qualificação
   const clientesProspecto = clientes?.filter(c => 
     c.fase === 'prospecto' || c.fase === 'qualificado' || c.fase === 'negociando'
   ) || [];
@@ -151,8 +149,6 @@ export function AtividadeForm(props: AtividadeFormProps) {
     },
   });
 
-  // Se abriu o formulário já vinculado a um cliente (ex.: histórico do cliente),
-  // garantir que o valor fique fixo mesmo se o form re-renderizar.
   useEffect(() => {
     if (!initialData && defaultClienteId) {
       form.setValue('cliente_id', defaultClienteId);
@@ -161,30 +157,35 @@ export function AtividadeForm(props: AtividadeFormProps) {
 
   const requerFollowup = form.watch('requer_followup');
   const clienteId = form.watch('cliente_id');
-
   const tipoAtual = form.watch('tipo');
 
-  // Se remover o cliente, limpa temperatura; se tipo mudar para um sem subtipo, limpa subtipo
   useEffect(() => {
     if (!clienteId) {
       form.setValue('temperatura_cliente', undefined);
     }
   }, [clienteId, form]);
 
-  // Limpar subtipo quando tipo muda para um que não aceita
   useEffect(() => {
     if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
       form.setValue('subtipo', undefined);
     }
   }, [tipoAtual, form]);
 
-
-  // Auto-selecionar empreendimento quando gestor tem apenas 1 vinculado
   useEffect(() => {
     if (!initialData && gestorData?.autoSelectedId) {
       form.setValue('empreendimento_id', gestorData.autoSelectedId);
     }
   }, [gestorData?.autoSelectedId, form, initialData]);
+
+  const handleNextStep = () => {
+    const tipo = form.getValues('tipo');
+    const categoria = form.getValues('categoria');
+    if (!tipo || !categoria) {
+      toast.error('Selecione o tipo e a categoria antes de continuar');
+      return;
+    }
+    setStep(2);
+  };
 
   const handleFormSubmit = (values: FormValues) => {
     const formData: AtividadeFormData = {
@@ -196,7 +197,6 @@ export function AtividadeForm(props: AtividadeFormProps) {
       corretor_id: values.corretor_id || undefined,
       imobiliaria_id: values.imobiliaria_id || undefined,
       empreendimento_id: values.empreendimento_id || undefined,
-      // gestor_id só é definido na CRIAÇÃO - nunca no update (imutável)
       ...(initialData ? {} : { gestor_id: user?.id }),
       data_inicio: format(values.data_inicio, 'yyyy-MM-dd'),
       data_fim: format(values.data_fim, 'yyyy-MM-dd'),
@@ -209,13 +209,11 @@ export function AtividadeForm(props: AtividadeFormProps) {
       deadline_date: values.deadline_date ? format(values.deadline_date, 'yyyy-MM-dd') : undefined,
     };
 
-    // Se super-admin ativou atribuição para gestores
     if (isSuperAdmin() && atribuirParaGestores && !initialData) {
       const gestorIds = todosGestores 
         ? gestores.map(g => g.id) 
         : gestoresSelecionados;
       
-      // Validar que pelo menos um gestor foi selecionado
       if (gestorIds.length === 0) {
         toast.error('Selecione pelo menos um gestor para atribuir a atividade');
         return;
@@ -230,544 +228,359 @@ export function AtividadeForm(props: AtividadeFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        {/* Tipo de Atividade */}
-        <FormField
-          control={form.control}
-          name="tipo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Atividade</FormLabel>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => {
-                  const Icon = TIPO_ICONS[tipo];
-                  return (
-                    <button
-                      key={tipo}
-                      type="button"
-                      onClick={() => field.onChange(tipo)}
-                      className={cn(
-                        'flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors',
-                        field.value === tipo
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-input hover:bg-accent'
-                      )}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="text-xs">{ATIVIDADE_TIPO_LABELS[tipo]}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Step indicator */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2 flex-1">
+            <div className={cn(
+              'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
+              step === 1 ? 'bg-primary text-primary-foreground' : 'bg-primary/20 text-primary'
+            )}>
+              1
+            </div>
+            <span className={cn('text-sm', step === 1 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+              Configuração
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-border" />
+          <div className="flex items-center gap-2 flex-1">
+            <div className={cn(
+              'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
+              step === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            )}>
+              2
+            </div>
+            <span className={cn('text-sm', step === 2 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+              Detalhes
+            </span>
+          </div>
+        </div>
 
-        {/* Subtipo (apenas para ligacao, visita, atendimento) */}
-        {TIPOS_COM_SUBTIPO.includes(tipoAtual) && (
-          <FormField
-            control={form.control}
-            name="subtipo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Classificação</FormLabel>
-                <Select value={field.value || ''} onValueChange={(v) => field.onChange(v || undefined)}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {Object.entries(ATIVIDADE_SUBTIPO_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+        {/* ========== STEP 1 - Configuração ========== */}
+        {step === 1 && (
+          <div className="space-y-4">
+            {/* Tipo de Atividade */}
+            <FormField
+              control={form.control}
+              name="tipo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Atividade</FormLabel>
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => {
+                      const Icon = TIPO_ICONS[tipo];
+                      return (
+                        <button
+                          key={tipo}
+                          type="button"
+                          onClick={() => field.onChange(tipo)}
+                          className={cn(
+                            'flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors',
+                            field.value === tipo
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-input hover:bg-accent'
+                          )}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="text-xs">{ATIVIDADE_TIPO_LABELS[tipo]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Subtipo / Classificação - botões inline */}
+            {TIPOS_COM_SUBTIPO.includes(tipoAtual) && (
+              <FormField
+                control={form.control}
+                name="subtipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Classificação</FormLabel>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(Object.entries(ATIVIDADE_SUBTIPO_LABELS) as [AtividadeSubtipo, string][]).map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => field.onChange(field.value === key ? undefined : key)}
+                          className={cn(
+                            'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
+                            field.value === key
+                              ? 'border-primary bg-primary/10 text-primary font-medium'
+                              : 'border-input hover:bg-accent'
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
-        )}
 
-        {/* Categoria */}
-        <FormField
-          control={form.control}
-          name="categoria"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Categoria</FormLabel>
-              <div className="grid grid-cols-4 gap-2">
-                {(Object.keys(ATIVIDADE_CATEGORIA_LABELS) as AtividadeCategoria[]).map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => field.onChange(cat)}
-                    className={cn(
-                      'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
-                      field.value === cat
-                        ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-input hover:bg-accent'
-                    )}
-                  >
-                    {ATIVIDADE_CATEGORIA_LABELS[cat]}
-                  </button>
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Categoria */}
+            <FormField
+              control={form.control}
+              name="categoria"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(Object.keys(ATIVIDADE_CATEGORIA_LABELS) as AtividadeCategoria[]).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => field.onChange(cat)}
+                        className={cn(
+                          'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors text-sm',
+                          field.value === cat
+                            ? 'border-primary bg-primary/10 text-primary font-medium'
+                            : 'border-input hover:bg-accent'
+                        )}
+                      >
+                        {ATIVIDADE_CATEGORIA_LABELS[cat]}
+                      </button>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Título */}
-        <FormField
-          control={form.control}
-          name="titulo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Título</FormLabel>
-              <FormControl>
-                <Input placeholder="Descreva a atividade..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Seção Atribuir para Gestores - Apenas Super Admin em modo criação */}
-        {isSuperAdmin() && !initialData && gestores.length > 0 && (
-          <Card className="p-4 bg-muted/30 border-primary/20">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-semibold">Atribuir para Gestores de Produto</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Criar esta atividade para um ou mais gestores
-                  </p>
-                </div>
-                <Switch
-                  checked={atribuirParaGestores}
-                  onCheckedChange={setAtribuirParaGestores}
-                />
-              </div>
-
-              {atribuirParaGestores && (
-                <div className="space-y-3 pt-2 border-t">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="todos-gestores"
-                      checked={todosGestores}
-                      onCheckedChange={(checked) => {
-                        setTodosGestores(checked === true);
-                        if (checked) {
-                          setGestoresSelecionados([]);
-                        }
-                      }}
+            {/* Atribuir para Gestores - Apenas Super Admin em modo criação */}
+            {isSuperAdmin() && !initialData && gestores.length > 0 && (
+              <Card className="p-4 bg-muted/30 border-primary/20">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-semibold">Atribuir para Gestores de Produto</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Criar esta atividade para um ou mais gestores
+                      </p>
+                    </div>
+                    <Switch
+                      checked={atribuirParaGestores}
+                      onCheckedChange={setAtribuirParaGestores}
                     />
-                    <Label htmlFor="todos-gestores" className="cursor-pointer font-medium">
-                      Todos os Gestores ({gestores.length})
-                    </Label>
                   </div>
 
-                  {!todosGestores && (
-                    <div className="space-y-2">
-                      <Label className="text-sm text-muted-foreground">
-                        Selecione os gestores individualmente:
-                      </Label>
-                      <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border rounded-md bg-background">
-                        {gestores.map((gestor) => (
-                          <div key={gestor.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`gestor-${gestor.id}`}
-                              checked={gestoresSelecionados.includes(gestor.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setGestoresSelecionados([...gestoresSelecionados, gestor.id]);
-                                } else {
-                                  setGestoresSelecionados(
-                                    gestoresSelecionados.filter((id) => id !== gestor.id)
-                                  );
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={`gestor-${gestor.id}`}
-                              className="cursor-pointer text-sm flex-1"
-                            >
-                              {gestor.full_name}
-                              <span className="text-xs text-muted-foreground ml-2">
-                                ({gestor.email})
-                              </span>
-                            </Label>
-                          </div>
-                        ))}
+                  {atribuirParaGestores && (
+                    <div className="space-y-3 pt-2 border-t">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="todos-gestores"
+                          checked={todosGestores}
+                          onCheckedChange={(checked) => {
+                            setTodosGestores(checked === true);
+                            if (checked) {
+                              setGestoresSelecionados([]);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="todos-gestores" className="cursor-pointer font-medium">
+                          Todos os Gestores ({gestores.length})
+                        </Label>
                       </div>
-                      {!todosGestores && gestoresSelecionados.length === 0 && (
-                        <p className="text-xs text-destructive">
-                          Selecione pelo menos um gestor
-                        </p>
+
+                      {!todosGestores && (
+                        <div className="space-y-2">
+                          <Label className="text-sm text-muted-foreground">
+                            Selecione os gestores individualmente:
+                          </Label>
+                          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border rounded-md bg-background">
+                            {gestores.map((gestor) => (
+                              <div key={gestor.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`gestor-${gestor.id}`}
+                                  checked={gestoresSelecionados.includes(gestor.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setGestoresSelecionados([...gestoresSelecionados, gestor.id]);
+                                    } else {
+                                      setGestoresSelecionados(
+                                        gestoresSelecionados.filter((id) => id !== gestor.id)
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label
+                                  htmlFor={`gestor-${gestor.id}`}
+                                  className="cursor-pointer text-sm flex-1"
+                                >
+                                  {gestor.full_name}
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    ({gestor.email})
+                                  </span>
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          {!todosGestores && gestoresSelecionados.length === 0 && (
+                            <p className="text-xs text-destructive">
+                              Selecione pelo menos um gestor
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {/* Datas e Horários: Início e Fim */}
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="data_inicio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Início</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                        field.onChange(date);
-                        // Se data_fim é anterior, ajusta para mesma data
-                        const dataFim = form.getValues('data_fim');
-                        if (date && dataFim && date > dataFim) {
-                          form.setValue('data_fim', date);
-                        }
-                      }}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
+              </Card>
             )}
-          />
 
-          <FormField
-            control={form.control}
-            name="data_fim"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Fim</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => {
-                        const dataInicio = form.getValues('data_inicio');
-                        return dataInicio ? date < dataInicio : false;
-                      }}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Horários (opcionais) */}
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="hora_inicio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Hora de Início (opcional)</FormLabel>
-                <FormControl>
-                  <Input type="time" placeholder="--:--" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="hora_fim"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Hora de Fim (opcional)</FormLabel>
-                <FormControl>
-                  <Input type="time" placeholder="--:--" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Prazo (deadline) */}
-        <FormField
-          control={form.control}
-          name="deadline_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prazo (opcional)</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? format(field.value, 'dd/MM/yyyy') : 'Definir prazo'}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Cliente */}
-        <FormField
-          control={form.control}
-          name="cliente_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cliente (opcional)</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={!!lockCliente}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um cliente" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {clientesProspecto.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Empreendimento */}
-        <FormField
-          control={form.control}
-          name="empreendimento_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Empreendimento
-                {hasGestorEmpreendimentos && empreendimentos.length === 1 && (
-                  <span className="ml-2 text-xs text-muted-foreground">(auto-selecionado)</span>
-                )}
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um empreendimento" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {empreendimentos.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Temperatura do Cliente - Só mostrar quando cliente selecionado */}
-        {clienteId && (
-          <FormField
-            control={form.control}
-            name="temperatura_cliente"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Temperatura do Cliente</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a temperatura" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
-                      <SelectItem key={temp} value={temp}>
-                        {CLIENTE_TEMPERATURA_LABELS[temp]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        {/* Seção Colapsável - Mais opções */}
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button type="button" variant="ghost" className="w-full justify-between text-muted-foreground">
-              <span>Mais opções</span>
-              <ChevronDown className="h-4 w-4" />
+            {/* Botão Próximo */}
+            <Button type="button" className="w-full" onClick={handleNextStep}>
+              Próximo
+              <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-4 pt-2">
-            {/* Corretor e Imobiliária */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="corretor_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Corretor</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {corretores.map((corretor) => (
-                          <SelectItem key={corretor.id} value={corretor.id}>
-                            {corretor.nome_completo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          </div>
+        )}
 
-              <FormField
-                control={form.control}
-                name="imobiliaria_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Imobiliária</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {imobiliarias.map((imob) => (
-                          <SelectItem key={imob.id} value={imob.id}>
-                            {imob.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Observações */}
+        {/* ========== STEP 2 - Detalhes ========== */}
+        {step === 2 && (
+          <div className="space-y-4">
+            {/* Título */}
             <FormField
               control={form.control}
-              name="observacoes"
+              name="titulo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações</FormLabel>
+                  <FormLabel>Título</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Adicione observações sobre a atividade..."
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
+                    <Input placeholder="Descreva a atividade..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CollapsibleContent>
-        </Collapsible>
 
-        {/* Follow-up */}
-        <div className="space-y-3">
-          <FormField
-            control={form.control}
-            name="requer_followup"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                <div>
-                  <FormLabel className="text-base">Requer Follow-up</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Agendar lembrete para acompanhamento
-                  </p>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+            {/* Datas e Horários */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="data_inicio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Início</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full justify-start text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            const dataFim = form.getValues('data_fim');
+                            if (date && dataFim && date > dataFim) {
+                              form.setValue('data_fim', date);
+                            }
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {requerFollowup && (
+              <FormField
+                control={form.control}
+                name="data_fim"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Fim</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full justify-start text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => {
+                            const dataInicio = form.getValues('data_inicio');
+                            return dataInicio ? date < dataInicio : false;
+                          }}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Horários */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="hora_inicio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Início (opcional)</FormLabel>
+                    <FormControl>
+                      <Input type="time" placeholder="--:--" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hora_fim"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Fim (opcional)</FormLabel>
+                    <FormControl>
+                      <Input type="time" placeholder="--:--" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Prazo */}
             <FormField
               control={form.control}
-              name="data_followup"
+              name="deadline_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data do Follow-up</FormLabel>
+                  <FormLabel>Prazo (opcional)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -779,7 +592,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
+                          {field.value ? format(field.value, 'dd/MM/yyyy') : 'Definir prazo'}
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -797,12 +610,249 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 </FormItem>
               )}
             />
-          )}
-        </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : initialData ? 'Atualizar Atividade' : 'Criar Atividade'}
-        </Button>
+            {/* Cliente */}
+            <FormField
+              control={form.control}
+              name="cliente_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cliente (opcional)</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!!lockCliente}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cliente" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {clientesProspecto.map((cliente) => (
+                        <SelectItem key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Empreendimento */}
+            <FormField
+              control={form.control}
+              name="empreendimento_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Empreendimento
+                    {hasGestorEmpreendimentos && empreendimentos.length === 1 && (
+                      <span className="ml-2 text-xs text-muted-foreground">(auto-selecionado)</span>
+                    )}
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um empreendimento" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {empreendimentos.map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Temperatura do Cliente */}
+            {clienteId && (
+              <FormField
+                control={form.control}
+                name="temperatura_cliente"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Temperatura do Cliente</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a temperatura" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
+                          <SelectItem key={temp} value={temp}>
+                            {CLIENTE_TEMPERATURA_LABELS[temp]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Mais opções */}
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="ghost" className="w-full justify-between text-muted-foreground">
+                  <span>Mais opções</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="corretor_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Corretor</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {corretores.map((corretor) => (
+                              <SelectItem key={corretor.id} value={corretor.id}>
+                                {corretor.nome_completo}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="imobiliaria_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Imobiliária</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {imobiliarias.map((imob) => (
+                              <SelectItem key={imob.id} value={imob.id}>
+                                {imob.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="observacoes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Adicione observações sobre a atividade..."
+                          className="resize-none"
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Follow-up */}
+            <div className="space-y-3">
+              <FormField
+                control={form.control}
+                name="requer_followup"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <FormLabel className="text-base">Requer Follow-up</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Agendar lembrete para acompanhamento
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {requerFollowup && (
+                <FormField
+                  control={form.control}
+                  name="data_followup"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Follow-up</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? format(field.value, 'dd/MM/yyyy') : 'Selecione'}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            {/* Botões Voltar + Submit */}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Voltar
+              </Button>
+              <Button type="submit" className="flex-1" disabled={isLoading}>
+                {isLoading ? 'Salvando...' : initialData ? 'Atualizar Atividade' : 'Criar Atividade'}
+              </Button>
+            </div>
+          </div>
+        )}
       </form>
     </Form>
   );
