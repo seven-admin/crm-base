@@ -19,7 +19,9 @@ export const UFS_BRASIL = [
 export interface Imobiliaria {
   id: string;
   nome: string;
+  tipo_pessoa?: string | null;
   cnpj?: string | null;
+  cpf?: string | null;
   site?: string | null;
   endereco_logradouro?: string | null;
   endereco_numero?: string | null;
@@ -80,7 +82,9 @@ export interface Incorporadora {
 
 export interface ImobiliariaFormData {
   nome: string;
+  tipo_pessoa?: 'fisica' | 'juridica';
   cnpj?: string;
+  cpf?: string;
   site?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;

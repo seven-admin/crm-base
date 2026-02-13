@@ -2810,6 +2810,7 @@ export type Database = {
       imobiliarias: {
         Row: {
           cnpj: string | null
+          cpf: string | null
           created_at: string
           email: string | null
           endereco_bairro: string | null
@@ -2827,12 +2828,14 @@ export type Database = {
           nome: string
           site: string | null
           telefone: string | null
+          tipo_pessoa: string
           updated_at: string
           user_id: string | null
           whatsapp: string | null
         }
         Insert: {
           cnpj?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           endereco_bairro?: string | null
@@ -2850,12 +2853,14 @@ export type Database = {
           nome: string
           site?: string | null
           telefone?: string | null
+          tipo_pessoa?: string
           updated_at?: string
           user_id?: string | null
           whatsapp?: string | null
         }
         Update: {
           cnpj?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           endereco_bairro?: string | null
@@ -2873,6 +2878,7 @@ export type Database = {
           nome?: string
           site?: string | null
           telefone?: string | null
+          tipo_pessoa?: string
           updated_at?: string
           user_id?: string | null
           whatsapp?: string | null
