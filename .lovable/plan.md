@@ -1,53 +1,36 @@
 
-# Converter formulario de Atividade em etapas + botoes para Classificacao
 
-## Resumo
+# Tres alteracoes pontuais
 
-Substituir o SelectBox de "Classificacao" (subtipo) por dois botoes inline ("Primeiro Atendimento" / "Retorno"), seguindo o mesmo padrao visual ja usado em Tipo e Categoria. Alem disso, dividir o formulario em 2 etapas (steps) para reduzir o tamanho do modal.
+## 1. Formulario de cadastro publico de imobiliaria (ImobiliariaRegisterForm) - suporte a CPF
 
-## Estrutura das etapas
+O formulario de auto-cadastro (`src/components/auth/ImobiliariaRegisterForm.tsx`) nao foi atualizado para suportar pessoa fisica/CPF -- apenas o form interno (`ImobiliariaForm.tsx`) recebeu essa mudanca.
 
-### Etapa 1 - Configuracao
-- Tipo de Atividade (grid de botoes com icones - ja existe)
-- Classificacao / Subtipo (dois botoes inline - substituir o Select atual)
-- Categoria (grid de botoes - ja existe)
-- Atribuicao para Gestores (card com switch - apenas super_admin, apenas criacao)
+### Alteracoes em `src/components/auth/ImobiliariaRegisterForm.tsx`:
+- Adicionar estado `tipo_pessoa` (`'fisica' | 'juridica'`, default `'juridica'`).
+- Adicionar campo `cpf` ao estado do form e ao schema zod, com validacao condicional (usar `validarCPFLocal` similar ao `validarCNPJLocal` ja existente no arquivo, ou importar de `documentUtils`).
+- Renderizar um RadioGroup/botoes antes do campo de documento para alternar entre PJ e PF.
+- Quando PJ: mostrar campo CNPJ (como hoje). Quando PF: mostrar campo CPF com mascara e validacao.
+- Enviar `tipo_pessoa` e `cpf` no body da chamada `register-imobiliaria`.
+- Atualizar a edge function `register-imobiliaria` para aceitar e persistir `tipo_pessoa` e `cpf`.
 
-### Etapa 2 - Detalhes
-- Titulo
-- Datas (inicio, fim) e horarios
-- Prazo (deadline)
-- Cliente
-- Empreendimento
-- Temperatura do cliente (condicional)
-- Secao "Mais opcoes" (corretor, imobiliaria, observacoes)
-- Follow-up (switch + data)
-- Botao de submit
+### Alteracao na edge function `supabase/functions/register-imobiliaria/index.ts`:
+- Aceitar os campos `tipo_pessoa` e `cpf` no body.
+- Incluir esses campos no INSERT da tabela `imobiliarias`.
 
-## Alteracoes tecnicas
+---
 
-### Arquivo: `src/components/atividades/AtividadeForm.tsx`
+## 2. Pagina Index - trocar logo
 
-1. **Adicionar estado `step`** (`useState<1 | 2>(1)`) para controlar a etapa atual.
+### Alteracao em `src/pages/Index.tsx`:
+- Substituir `import logoIcon from '@/assets/logo-icon.png'` por `import logo from '@/assets/logo-full.png'` (mesma logo usada no Sidebar).
+- Atualizar o `<img>` para usar `logo` em vez de `logoIcon`.
 
-2. **Substituir o Select de subtipo** (linhas 267-290) por botoes inline:
-```text
-<div className="grid grid-cols-2 gap-2">
-  <button "Primeiro Atendimento" />
-  <button "Retorno" />
-</div>
-```
-Mesmo estilo dos botoes de Categoria (border, bg-primary/10 quando selecionado).
+---
 
-3. **Etapa 1**: Renderizar Tipo + Classificacao (condicional) + Categoria + Atribuicao Gestores. Mostrar botao "Proximo" que valida tipo/categoria antes de avancar.
+## 3. Validacao na etapa 1 do formulario de atividade
 
-4. **Etapa 2**: Renderizar todos os campos restantes (titulo, datas, cliente, empreendimento, etc.) + botao "Voltar" e botao "Criar/Atualizar".
+### Alteracao em `src/components/atividades/AtividadeForm.tsx`:
+- Na funcao `handleNextStep` (linha 180), alem de verificar `tipo` e `categoria`, tambem verificar se o `subtipo` foi preenchido quando o tipo exige (`TIPOS_COM_SUBTIPO`).
+- Adicionar feedback visual: destacar campos obrigatorios nao preenchidos com borda vermelha ou mensagem.
 
-5. **Indicador de etapa**: Adicionar um indicador simples no topo (ex: "Etapa 1 de 2" / "Etapa 2 de 2" com dots ou barra de progresso).
-
-6. **Ao editar** (`initialData` presente): comecar direto na etapa 1 normalmente, permitindo navegar entre etapas.
-
-## Observacoes
-- O formulario continuara dentro do mesmo `<Form>` do react-hook-form, apenas controlando visibilidade das secoes com CSS/condicional.
-- Nenhuma alteracao de banco de dados necessaria.
-- Nenhum outro arquivo precisa ser alterado.
