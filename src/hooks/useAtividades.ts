@@ -342,6 +342,27 @@ export function useConcluirAtividadesEmLote() {
   });
 }
 
+export function useReabrirAtividadesEmLote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from('atividades')
+        .update({ status: 'pendente', resultado: null, motivo_cancelamento: null })
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['atividades'] });
+      queryClient.invalidateQueries({ queryKey: ['agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['atividades-vencidas'] });
+      invalidateDashboards(queryClient);
+      toast.success(`${ids.length} atividade(s) reaberta(s)!`);
+    },
+    onError: () => toast.error('Erro ao reabrir atividades em lote'),
+  });
+}
+
 export function useCancelarAtividade() {
   const queryClient = useQueryClient();
   return useMutation({
