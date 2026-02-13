@@ -9,6 +9,7 @@ export interface MetaComercial {
   periodicidade: string;
   empreendimento_id: string | null;
   corretor_id: string | null;
+  gestor_id: string | null;
   meta_valor: number;
   meta_unidades: number;
   meta_visitas: number;
@@ -257,6 +258,7 @@ export function useCreateMeta() {
       periodicidade?: string;
       empreendimento_id?: string | null;
       corretor_id?: string | null;
+      gestor_id?: string | null;
       meta_valor: number;
       meta_unidades: number;
       meta_visitas?: number;
@@ -271,6 +273,7 @@ export function useCreateMeta() {
           periodicidade: data.periodicidade || 'mensal',
           empreendimento_id: data.empreendimento_id || null,
           corretor_id: data.corretor_id || null,
+          gestor_id: data.gestor_id || null,
           meta_valor: data.meta_valor,
           meta_unidades: data.meta_unidades,
           meta_visitas: data.meta_visitas || 0,
@@ -278,7 +281,7 @@ export function useCreateMeta() {
           meta_treinamentos: data.meta_treinamentos || 0,
           meta_propostas: data.meta_propostas || 0,
         }, {
-          onConflict: 'competencia,empreendimento_id,corretor_id,periodicidade',
+          onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per',
         })
         .select()
         .single();
@@ -304,6 +307,10 @@ export function useCreateMeta() {
       queryClient.invalidateQueries({ queryKey: ['metas-comerciais'] });
       queryClient.invalidateQueries({ queryKey: ['historico-metas'] });
       queryClient.invalidateQueries({ queryKey: ['todas-metas'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
+      queryClient.invalidateQueries({ queryKey: ['forecast-fechamento'] });
+      queryClient.invalidateQueries({ queryKey: ['ranking-corretores-mes'] });
+      queryClient.invalidateQueries({ queryKey: ['metas-vs-realizado-empreendimento'] });
     },
   });
 }
@@ -336,6 +343,10 @@ export interface MetaComercialComEmpreendimento extends MetaComercial {
     id: string;
     nome: string;
   } | null;
+  gestor?: {
+    id: string;
+    full_name: string;
+  } | null;
 }
 
 export function useTodasMetas(anoFiltro?: number) {
@@ -346,7 +357,8 @@ export function useTodasMetas(anoFiltro?: number) {
         .from('metas_comerciais' as any)
         .select(`
           *,
-          empreendimento:empreendimentos(id, nome)
+          empreendimento:empreendimentos(id, nome),
+          gestor:profiles!metas_comerciais_gestor_id_fkey(id, full_name)
         `)
         .order('competencia', { ascending: false });
       
@@ -480,7 +492,7 @@ export function useCopiarMetas() {
             meta_treinamentos: meta.meta_treinamentos || 0,
             meta_propostas: meta.meta_propostas || 0,
           }, {
-            onConflict: 'competencia,empreendimento_id,corretor_id,periodicidade',
+            onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per',
           });
         
         if (error) throw error;

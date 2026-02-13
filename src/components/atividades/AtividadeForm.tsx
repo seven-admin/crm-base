@@ -720,20 +720,27 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Temperatura do Cliente</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a temperatura" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
-                          <SelectItem key={temp} value={temp}>
-                            {CLIENTE_TEMPERATURA_LABELS[temp]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { value: 'frio' as const, label: 'Frio', colors: 'border-blue-400 bg-blue-50 text-blue-700' },
+                        { value: 'morno' as const, label: 'Morno', colors: 'border-orange-400 bg-orange-50 text-orange-700' },
+                        { value: 'quente' as const, label: 'Quente', colors: 'border-red-400 bg-red-50 text-red-700' },
+                      ]).map((temp) => (
+                        <button
+                          key={temp.value}
+                          type="button"
+                          onClick={() => field.onChange(field.value === temp.value ? undefined : temp.value)}
+                          className={cn(
+                            'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors text-sm font-medium',
+                            field.value === temp.value
+                              ? temp.colors
+                              : 'border-input hover:bg-accent'
+                          )}
+                        >
+                          {temp.label}
+                        </button>
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

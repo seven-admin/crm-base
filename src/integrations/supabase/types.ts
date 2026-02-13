@@ -3159,6 +3159,7 @@ export type Database = {
           corretor_id: string | null
           created_at: string
           empreendimento_id: string | null
+          gestor_id: string | null
           id: string
           meta_atendimentos: number
           meta_propostas: number
@@ -3174,6 +3175,7 @@ export type Database = {
           corretor_id?: string | null
           created_at?: string
           empreendimento_id?: string | null
+          gestor_id?: string | null
           id?: string
           meta_atendimentos?: number
           meta_propostas?: number
@@ -3189,6 +3191,7 @@ export type Database = {
           corretor_id?: string | null
           created_at?: string
           empreendimento_id?: string | null
+          gestor_id?: string | null
           id?: string
           meta_atendimentos?: number
           meta_propostas?: number
@@ -3212,6 +3215,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metas_comerciais_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
