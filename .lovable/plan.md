@@ -1,36 +1,36 @@
 
 
-# Webhook de Atividade: Disparar na Criacao e na Alteracao
+# Webhook de Alteracao de Atividade nao Dispara
 
-## Situacao Atual
+## Diagnostico
 
-O webhook `atividade_criada_por_superadmin` so e disparado em dois locais:
-- `useCreateAtividade` (linha 209) - criacao individual
-- `useCreateAtividadesParaGestores` (linha 260) - criacao em lote
+O codigo de disparo esta correto no `useUpdateAtividade`. O problema e que na tabela `webhooks` so existe um registro para o evento `atividade_criada_por_superadmin`, mas **nenhum** para `atividade_alterada_por_superadmin`.
 
-O hook `useUpdateAtividade` (linha 283-300) **nao dispara nenhum webhook**. Isso significa que quando um super admin edita uma atividade existente, nenhuma notificacao e enviada via webhook.
+O `webhook-dispatcher` faz match exato pelo nome do evento -- se nao ha webhook cadastrado para `atividade_alterada_por_superadmin`, ele simplesmente retorna "nenhum webhook configurado" e nao dispara nada.
 
-## Alteracao
+## Opcoes
 
-**Arquivo: `src/hooks/useAtividades.ts`**
+Existem duas formas de resolver:
 
-Adicionar disparo de webhook no `useUpdateAtividade` (mutationFn, apos o update bem-sucedido):
+**Opcao A (Recomendada)** - Usar o mesmo evento `atividade_criada_por_superadmin` tanto para criacao quanto alteracao, adicionando um campo `acao` no payload (`"criada"` ou `"alterada"`). Assim o webhook ja cadastrado passa a receber ambos os disparos sem nenhuma configuracao adicional.
 
-1. Verificar se o usuario logado e super_admin
-2. Se sim, buscar dados complementares (perfil do criador, gestor atribuido, empreendimento)
-3. Disparar webhook com evento `atividade_alterada_por_superadmin` (evento distinto para que o n8n possa diferenciar criacao de alteracao)
-4. O payload seguira o mesmo formato do webhook de criacao, incluindo: titulo, criado_por, gestores, data_inicio, data_fim, tipo, empreendimento
+**Opcao B** - Manter eventos separados. Nesse caso, basta o usuario cadastrar um novo webhook em Configuracoes com o evento `atividade_alterada_por_superadmin` apontando para a mesma URL do n8n. Nenhuma alteracao de codigo seria necessaria.
 
-Tambem adicionar o disparo no `useAlterarStatusAtividade` (linha 576-633), que e usado quando o super admin altera o status de uma atividade. Neste caso o evento sera o mesmo `atividade_alterada_por_superadmin` e incluira o campo adicional `status_anterior` e `status_novo`.
+## Plano (Opcao A)
 
-### Resumo dos disparos apos a alteracao
+### Arquivo: `src/hooks/useAtividades.ts`
 
-| Hook | Evento webhook |
-|------|---------------|
-| `useCreateAtividade` | `atividade_criada_por_superadmin` (ja existe) |
-| `useCreateAtividadesParaGestores` | `atividade_criada_por_superadmin` (ja existe) |
-| `useUpdateAtividade` | `atividade_alterada_por_superadmin` (novo) |
-| `useAlterarStatusAtividade` | `atividade_alterada_por_superadmin` (novo) |
+1. No `useUpdateAtividade` (linha 306): trocar o evento de `atividade_alterada_por_superadmin` para `atividade_criada_por_superadmin` e adicionar o campo `acao: 'alterada'` ao payload.
 
-Nenhuma alteracao de banco de dados ou edge function necessaria - o `webhook-dispatcher` ja aceita qualquer nome de evento e faz o match com os webhooks cadastrados na tabela `webhooks`.
+2. No `useAlterarStatusAtividade`: mesma mudanca -- usar `atividade_criada_por_superadmin` com `acao: 'status_alterado'`.
+
+3. Nos hooks de criacao (`useCreateAtividade` e `useCreateAtividadesParaGestores`): adicionar `acao: 'criada'` ao payload para que o n8n consiga diferenciar.
+
+### Arquivo: `src/hooks/useWebhooks.ts`
+
+Remover o evento `atividade_alterada_por_superadmin` da lista `WEBHOOK_EVENTS`, ja que nao sera mais necessario como evento separado.
+
+### Resultado
+
+Todos os disparos (criacao, edicao, mudanca de status) usarao o mesmo evento `atividade_criada_por_superadmin` que ja esta cadastrado e ativo com a URL do n8n. O campo `acao` no payload permite ao n8n diferenciar o tipo de operacao.
 
