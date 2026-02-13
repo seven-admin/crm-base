@@ -287,6 +287,37 @@ export function useUpdateAtividade() {
       const payload = normalizeAtividadeForSave(data);
       const { data: result, error } = await supabase.from('atividades').update(payload).eq('id', id).select().single();
       if (error) throw error;
+
+      // Webhook: atividade alterada por super_admin
+      try {
+        const usuario = await getUsuarioLogado();
+        if (usuario && await isSuperAdmin(usuario.id)) {
+          const gestorId = (result as any).gestor_id;
+          const empreendimentoId = (result as any).empreendimento_id;
+
+          const { data: gestorProfile } = gestorId
+            ? await supabase.from('profiles').select('full_name, phone').eq('id', gestorId).maybeSingle()
+            : { data: null };
+
+          const { data: empreendimento } = empreendimentoId
+            ? await supabase.from('empreendimentos').select('nome').eq('id', empreendimentoId).maybeSingle()
+            : { data: null };
+
+          dispararWebhook('atividade_alterada_por_superadmin', {
+            atividade_id: id,
+            titulo: (result as any).titulo,
+            criado_por: { id: usuario.id, nome: usuario.nome, telefone: usuario.telefone },
+            gestores: gestorProfile ? [{ id: gestorId, nome: gestorProfile.full_name || 'Gestor', telefone: gestorProfile.phone || null }] : [],
+            data_inicio: (result as any).data_inicio,
+            data_fim: (result as any).data_fim,
+            tipo: (result as any).tipo,
+            empreendimento: empreendimento?.nome || null,
+          });
+        }
+      } catch (e) {
+        console.warn('[webhook] Erro ao disparar webhook de alteração:', e);
+      }
+
       return result;
     },
     onSuccess: () => {
@@ -601,7 +632,7 @@ export function useAlterarStatusAtividade() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, phone')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -619,6 +650,44 @@ export function useAlterarStatusAtividade() {
         });
 
       if (comentarioError) throw comentarioError;
+
+      // Webhook: atividade alterada por super_admin (mudança de status)
+      try {
+        if (await isSuperAdmin(user.id)) {
+          const { data: atividade } = await supabase
+            .from('atividades')
+            .select('titulo, gestor_id, empreendimento_id, data_inicio, data_fim, tipo')
+            .eq('id', id)
+            .maybeSingle();
+
+          const gestorId = (atividade as any)?.gestor_id;
+          const empreendimentoId = (atividade as any)?.empreendimento_id;
+
+          const { data: gestorProfile } = gestorId
+            ? await supabase.from('profiles').select('full_name, phone').eq('id', gestorId).maybeSingle()
+            : { data: null };
+
+          const { data: empreendimento } = empreendimentoId
+            ? await supabase.from('empreendimentos').select('nome').eq('id', empreendimentoId).maybeSingle()
+            : { data: null };
+
+          dispararWebhook('atividade_alterada_por_superadmin', {
+            atividade_id: id,
+            titulo: (atividade as any)?.titulo,
+            criado_por: { id: user.id, nome: nomeUsuario, telefone: profile?.phone || null },
+            gestores: gestorProfile ? [{ id: gestorId, nome: gestorProfile.full_name || 'Gestor', telefone: gestorProfile.phone || null }] : [],
+            data_inicio: (atividade as any)?.data_inicio,
+            data_fim: (atividade as any)?.data_fim,
+            tipo: (atividade as any)?.tipo,
+            empreendimento: empreendimento?.nome || null,
+            status_anterior: statusAtual,
+            status_novo: novoStatus,
+            justificativa,
+          });
+        }
+      } catch (e) {
+        console.warn('[webhook] Erro ao disparar webhook de alteração de status:', e);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atividades'] });
