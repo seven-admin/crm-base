@@ -22,7 +22,6 @@ export interface WebhookFormData {
 }
 
 export const WEBHOOK_EVENTS = [
-  { value: 'atividade_alterada_por_superadmin', label: 'Atividade Alterada por Super Admin' },
   { value: 'atividade_comentada', label: 'Atividade Comentada (Marketing / Forecast)' },
   { value: 'atividade_criada_por_superadmin', label: 'Atividade Criada por Super Admin' },
   { value: 'ticket_aguardando_analise', label: 'Atividade de Produção - Aguardando Análise' },

@@ -207,6 +207,7 @@ export function useCreateAtividade() {
               : { data: null };
 
             dispararWebhook('atividade_criada_por_superadmin', {
+              acao: 'criada',
               titulo: data.titulo,
               criado_por: { id: currentUser.user.id, nome: profile?.full_name || 'Super Admin', telefone: profile?.phone || null },
               gestores: [{ id: data.gestor_id, nome: gestorProfile?.full_name || 'Gestor', telefone: gestorProfile?.phone || null }],
@@ -258,6 +259,7 @@ export function useCreateAtividadesParaGestores() {
           : { data: null };
 
         dispararWebhook('atividade_criada_por_superadmin', {
+          acao: 'criada',
           titulo: formData.titulo,
           criado_por: { id: usuario.id, nome: usuario.nome, telefone: usuario.telefone },
           gestores: (gestoresProfiles || []).map(g => ({ id: g.id, nome: g.full_name || 'Gestor', telefone: g.phone || null })),
@@ -303,7 +305,8 @@ export function useUpdateAtividade() {
             ? await supabase.from('empreendimentos').select('nome').eq('id', empreendimentoId).maybeSingle()
             : { data: null };
 
-          dispararWebhook('atividade_alterada_por_superadmin', {
+          dispararWebhook('atividade_criada_por_superadmin', {
+            acao: 'alterada',
             atividade_id: id,
             titulo: (result as any).titulo,
             criado_por: { id: usuario.id, nome: usuario.nome, telefone: usuario.telefone },
@@ -671,7 +674,8 @@ export function useAlterarStatusAtividade() {
             ? await supabase.from('empreendimentos').select('nome').eq('id', empreendimentoId).maybeSingle()
             : { data: null };
 
-          dispararWebhook('atividade_alterada_por_superadmin', {
+          dispararWebhook('atividade_criada_por_superadmin', {
+            acao: 'status_alterado',
             atividade_id: id,
             titulo: (atividade as any)?.titulo,
             criado_por: { id: user.id, nome: nomeUsuario, telefone: profile?.phone || null },
