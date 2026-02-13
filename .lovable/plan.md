@@ -1,52 +1,85 @@
 
-# Padronizar layout de todas as tabelas do sistema
+# Plano: Contadores Financeiros, Unidades por Andar e Otimizacao de Boxes
 
-## Problema
-As tabelas de listagem usam layouts inconsistentes: algumas usam `Card` com `CardHeader`, outras usam `div` com borda, outras nao tem container nenhum. O usuario quer um padrao unico.
+---
 
-## Padrao escolhido
-O padrao mais limpo e mais usado no sistema e:
-- **Toolbar** (busca, filtros, botoes) fora do container da tabela, diretamente no fluxo da pagina
-- **Tabela** envolvida por `<div className="rounded-lg border">`
-- **Paginacao** abaixo da tabela, fora do container
-- Contagem de registros como texto `text-sm text-muted-foreground` acima da tabela
+## 1. Corrigir contadores financeiros do Forecast
 
-Esse e o padrao ja usado em: Corretores, ClientesTable, NegociacoesTable, Eventos.
+### Diagnostico
+Os KPIs financeiros buscam dados de 3 tabelas:
+- **comissoes**: 0 registros no banco. O hook busca `valor_venda` e `valor_comissao` dessa tabela, mas ela esta vazia.
+- **negociacoes**: 0 registros no banco.
+- **propostas**: 4 registros, todos com status "convertida" (nenhuma "aceita").
 
-## Arquivos a alterar
+Porem existem **448 unidades vendidas** com valor total de ~R$ 151 milhoes. Essas vendas foram registradas via "Venda Historica" (alteracao de status da unidade), sem criar registros em comissoes/negociacoes.
 
-### 1. `src/pages/Imobiliarias.tsx`
-- Remover `<Card>`, `<CardHeader>`, `<CardContent>` ao redor da tabela
-- Mover a barra de busca + badge de contagem para fora, no mesmo nivel da toolbar de botoes (mesma linha ou abaixo)
-- Envolver a `<Table>` em `<div className="rounded-lg border">`
-- Manter `PaginationControls` fora do container
+### Correcao
+O hook `useForecastFinanceiro.ts` precisa ser atualizado para buscar valor de vendas a partir das **unidades vendidas** (tabela `unidades` com `status = 'vendida'`), alem de manter a busca de comissoes. Tambem deve incluir propostas "convertidas" (nao apenas "aceitas").
 
-### 2. `src/pages/Incorporadoras.tsx`
-- Mesma alteracao que Imobiliarias: remover Card wrapper, toolbar fora, tabela em `<div className="rounded-lg border">`
+**Alteracoes em `src/hooks/useForecastFinanceiro.ts`**:
+- Adicionar query para somar `valor` de unidades com `status = 'vendida'`
+- Usar o maior valor entre vendas via comissoes e vendas via unidades vendidas (para nao duplicar)
+- Alterar filtro de propostas: incluir status `aceita` E `convertida`
+- Remover filtro de data das vendas por unidades (vendas historicas nao tem data de venda registrada separadamente)
 
-### 3. `src/pages/Usuarios.tsx` (linhas ~656-658)
-- Adicionar `rounded-lg border` ao `<div>` que envolve a tabela desktop
+---
 
-### 4. `src/pages/Atividades.tsx` (linhas ~625-626)
-- Substituir `<Card className="hidden md:block"><CardContent className="p-0">` por `<div className="hidden md:block rounded-lg border">`
+## 2. Unidades agrupadas por andar para predios/edificios
 
-### 5. `src/pages/Bonificacoes.tsx` (linhas ~270-271)
-- Substituir `<Card className="hidden md:block"><CardContent className="p-0">` por `<div className="hidden md:block rounded-lg border">`
+Atualmente, a `UnidadesTab` agrupa unidades por bloco/quadra. Para empreendimentos do tipo `predio` ou `comercial`, a exibicao deve agrupar por **andar** dentro de cada bloco.
 
-### 6. `src/pages/Propostas.tsx` (linhas ~307-308)
-- Substituir `<Card><CardContent className="pt-6">` por `<div className="rounded-lg border">`
+### Alteracoes em `src/components/empreendimentos/UnidadesTab.tsx`:
 
-### 7. `src/pages/Auditoria.tsx` (linhas ~311-320)
-- Remover `<Card><CardHeader><CardContent>` wrapper. Mover titulo/contagem para fora. Tabela em `<div className="rounded-lg border">`
+No trecho que renderiza os cards de unidades (linhas 422-481), adicionar logica condicional:
+- Se o tipo do empreendimento e `predio` ou `comercial`:
+  - Dentro de cada bloco, sub-agrupar as unidades por `andar`
+  - Exibir cabecalho "Andar X" antes de cada grupo
+  - Ordenar andares numericamente (1, 2, 3...)
+  - Dentro de cada andar, ordenar por numero da unidade
+- Se o tipo e `loteamento` ou `condominio`: manter o layout atual (sem agrupamento por andar)
 
-### 8. `src/pages/portal/PortalCorretoresGestao.tsx` (linhas ~126-127)
-- Substituir `<Card><CardContent className="p-0">` por `<div className="rounded-lg border">`
+Layout visual para predios:
+```text
+Torre A
+  Andar 1
+    [101] [102] [103] [104]
+  Andar 2
+    [201] [202] [203] [204]
+  ...
+```
 
-## Resultado
-Todas as tabelas de listagem terao o mesmo padrao visual:
-- Toolbar com busca/filtros/botoes no topo
-- Contagem de registros como texto simples
-- Tabela em container `rounded-lg border`
-- Paginacao abaixo
+---
 
-Nenhuma alteracao de logica ou banco de dados - apenas reorganizacao de containers HTML/CSS.
+## 3. Otimizar criacao e vinculacao de boxes
+
+### 3a. Vinculacao em lote de boxes a unidades
+
+Atualmente, vincular um box a uma unidade e feito um a um (clicando no icone de link de cada box). Para otimizar:
+
+**Alteracoes em `src/components/empreendimentos/BoxesTab.tsx`**:
+- Adicionar modo de selecao "vincular" (alem do existente "excluir")
+- Botao "Vincular em Lote" na toolbar
+- Ao ativar, usuario seleciona multiplos boxes disponiveis via checkbox
+- Ao confirmar, abre dialog para selecionar a unidade destino
+- Todos os boxes selecionados sao vinculados a mesma unidade em uma unica operacao
+
+**Alteracoes em `src/hooks/useBoxes.ts`**:
+- Criar hook `useVincularBoxesBatch` que faz update em lote (usando `.in('id', ids)`) para vincular multiplos boxes a uma unidade de uma vez
+
+### 3b. Melhorias na UI de vinculacao
+
+- No dialog de vinculacao, mostrar a unidade com mais contexto (bloco + numero + tipologia)
+- Adicionar opcao de "Desvincular em Lote" quando boxes vinculados estao selecionados
+
+---
+
+## Resumo dos arquivos afetados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/hooks/useForecastFinanceiro.ts` | Buscar vendas via unidades vendidas + propostas convertidas |
+| `src/components/empreendimentos/UnidadesTab.tsx` | Agrupar por andar para predios/edificios |
+| `src/components/empreendimentos/BoxesTab.tsx` | Modo de vinculacao em lote + desvincular em lote |
+| `src/hooks/useBoxes.ts` | Novo hook `useVincularBoxesBatch` |
+
+Nenhuma alteracao de banco de dados necessaria - todos os campos ja existem.
