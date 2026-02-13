@@ -22,28 +22,27 @@ export interface WebhookFormData {
 }
 
 export const WEBHOOK_EVENTS = [
+  { value: 'atividade_alterada_por_superadmin', label: 'Atividade Alterada por Super Admin' },
+  { value: 'atividade_comentada', label: 'Atividade Comentada (Marketing / Forecast)' },
+  { value: 'atividade_criada_por_superadmin', label: 'Atividade Criada por Super Admin' },
+  { value: 'ticket_aguardando_analise', label: 'Atividade de Produção - Aguardando Análise' },
+  { value: 'ticket_ajuste', label: 'Atividade de Produção - Ajuste' },
+  { value: 'ticket_aprovacao_cliente', label: 'Atividade de Produção - Aprovação Cliente' },
+  { value: 'ticket_concluido', label: 'Atividade de Produção - Concluído' },
+  { value: 'ticket_em_producao', label: 'Atividade de Produção - Em Produção' },
+  { value: 'ticket_revisao', label: 'Atividade de Produção - Revisão' },
+  { value: 'assinatura_enviada', label: 'Assinatura Enviada (Webhook n8n)' },
+  { value: 'briefing_triado', label: 'Briefing Triado' },
+  { value: 'contrato_assinado', label: 'Contrato Assinado' },
+  { value: 'contrato_gerado', label: 'Contrato Gerado' },
+  { value: 'corretor_aprovado', label: 'Corretor Aprovado (Ativação)' },
+  { value: 'imobiliaria_cadastrada', label: 'Imobiliária Cadastrada' },
+  { value: 'lead_convertido', label: 'Lead Convertido' },
+  { value: 'meta_comercial_criada', label: 'Meta Comercial Criada' },
   { value: 'negociacao_criada', label: 'Negociação Criada' },
   { value: 'negociacao_fechada', label: 'Negociação Fechada (Sucesso)' },
   { value: 'negociacao_perdida', label: 'Negociação Perdida' },
-  { value: 'contrato_gerado', label: 'Contrato Gerado' },
-  { value: 'contrato_assinado', label: 'Contrato Assinado' },
-  { value: 'assinatura_enviada', label: 'Assinatura Enviada (Webhook n8n)' },
   { value: 'reserva_criada', label: 'Reserva Criada' },
-  { value: 'lead_convertido', label: 'Lead Convertido' },
-  { value: 'briefing_triado', label: 'Briefing Triado' },
-  // Novos eventos
-  { value: 'atividade_criada_por_superadmin', label: 'Atividade Criada por Super Admin' },
-  { value: 'meta_comercial_criada', label: 'Meta Comercial Criada' },
-  { value: 'atividade_comentada', label: 'Atividade Comentada (Marketing / Forecast)' },
-  // Atividades de Produção - status changes
-  { value: 'ticket_aguardando_analise', label: 'Atividade de Produção - Aguardando Análise' },
-  { value: 'ticket_em_producao', label: 'Atividade de Produção - Em Produção' },
-  { value: 'ticket_revisao', label: 'Atividade de Produção - Revisão' },
-  { value: 'ticket_aprovacao_cliente', label: 'Atividade de Produção - Aprovação Cliente' },
-  { value: 'ticket_ajuste', label: 'Atividade de Produção - Ajuste' },
-  { value: 'ticket_concluido', label: 'Atividade de Produção - Concluído' },
-  { value: 'corretor_aprovado', label: 'Corretor Aprovado (Ativação)' },
-  { value: 'imobiliaria_cadastrada', label: 'Imobiliária Cadastrada' },
 ];
 
 export function useWebhooks() {
