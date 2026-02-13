@@ -1,22 +1,23 @@
 
-# Remover vendas historicas dos contadores do Forecast
+# Cadastro Individual de Box
 
-## Alteracao
+## O que muda
 
-Arquivo: `src/hooks/useForecastFinanceiro.ts`
+Adicionar um botao "Novo Box" ao lado do botao "Criar em Lote" na toolbar do `BoxesTab`, que abre um formulario simples para cadastrar um unico box.
 
-O hook atualmente busca vendas de duas fontes:
-1. Tabela `comissoes` (vendas registradas no sistema)
-2. Tabela `unidades` com `status = 'vendida'` (inclui vendas historicas)
+## Detalhes
 
-E usa `Math.max` entre os dois valores.
+### Novo componente: `src/components/empreendimentos/BoxForm.tsx`
+- Formulario com campos: Numero, Bloco (opcional), Tipo de vaga, Coberto (switch), Valor (opcional), Observacoes (opcional)
+- Usa o hook `useCreateBox` que ja existe em `useBoxes.ts`
+- Layout similar ao `BoxBulkForm` para manter consistencia visual
+- Sem campos de quantidade/prefixo/numero_inicial (sao exclusivos do lote)
 
-A alteracao e simples: remover a query de unidades vendidas (linhas 60-65), remover do `Promise.all`, e usar apenas o valor de vendas via comissoes (`valorVendasComissoes`) diretamente como `valorVendas`.
+### Alteracao: `src/components/empreendimentos/BoxesTab.tsx`
+- Adicionar estado `formIndividualOpen` para controlar o dialog
+- Adicionar botao "Novo Box" (com icone `Plus`) ao lado dos botoes existentes na toolbar (antes do "Criar em Lote")
+- Adicionar um `Dialog` para o formulario individual, similar ao dialog de criacao em lote ja existente
 
-### O que muda
-- Remove a query `unidadesVendidasQuery` (busca na tabela `unidades`)
-- Remove o calculo `valorVendasUnidades` e o `Math.max`
-- `valorVendas` passa a ser apenas a soma de `valor_venda` da tabela `comissoes`
-- Os demais contadores (comissoes por gestor, negociacoes, propostas) permanecem iguais
-
-Isso garante que apenas vendas efetivamente registradas pelo fluxo do sistema (com comissao gerada) aparecam nos KPIs financeiros.
+### Nenhuma alteracao de banco ou hooks
+- O hook `useCreateBox` ja existe e aceita `BoxFormData`
+- O tipo `BoxFormData` ja tem todos os campos necessarios (numero, tipo, coberto, bloco_id, valor, observacoes)
