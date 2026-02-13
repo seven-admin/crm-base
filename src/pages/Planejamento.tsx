@@ -4,12 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ClipboardList, CalendarDays, BarChart3, Download, Upload, Globe } from 'lucide-react';
+import { ClipboardList, CalendarDays, BarChart3, Download, Upload, Globe, Calendar } from 'lucide-react';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PlanejamentoPlanilha } from '@/components/planejamento/PlanejamentoPlanilha';
 import { PlanejamentoDashboard } from '@/components/planejamento/PlanejamentoDashboard';
 import { PlanejamentoTimeline } from '@/components/planejamento/PlanejamentoTimeline';
+import { PlanejamentoCalendarioEmpreendimento } from '@/components/planejamento/PlanejamentoCalendarioEmpreendimento';
 import { PlanejamentoGlobal } from '@/components/planejamento/PlanejamentoGlobal';
 import { ImportarPlanejamentoDialog } from '@/components/planejamento/ImportarPlanejamentoDialog';
 
@@ -111,6 +112,10 @@ export default function Planejamento() {
                     <CalendarDays className="h-4 w-4" />
                     Timeline
                   </TabsTrigger>
+                  <TabsTrigger value="calendario" className="gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Calendário
+                  </TabsTrigger>
                   <TabsTrigger value="dashboard" className="gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Dashboard
@@ -123,6 +128,10 @@ export default function Planejamento() {
 
                 <TabsContent value="timeline" className="mt-4">
                   <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly={!canEdit} />
+                </TabsContent>
+
+                <TabsContent value="calendario" className="mt-4">
+                  <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly={!canEdit} />
                 </TabsContent>
 
                 <TabsContent value="dashboard" className="mt-4">
