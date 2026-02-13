@@ -423,58 +423,91 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               <div className="space-y-6">
                 {sortedBlocoEntries.map(([blocoId, blocoUnidades]) => {
                   const bloco = blocos?.find(b => b.id === blocoId);
+                  const isPredioOuComercial = empreendimento?.tipo === 'predio' || empreendimento?.tipo === 'comercial';
+
+                  // Sub-agrupar por andar para prédios/comerciais
+                  const renderUnidadeButton = (unidade: Unidade) => {
+                    const isSelected = selectedUnidadeIds.has(unidade.id);
+                    const isDisponivel = unidade.status === 'disponivel';
+                    const label = buildUnitLabel(unidade, labelFormato);
+                    
+                    return (
+                      <button
+                        key={unidade.id}
+                        onClick={() => {
+                          if (selectionMode) {
+                            handleToggleSelection(unidade.id, unidade.status);
+                          } else {
+                            handleEditUnidade(unidade);
+                          }
+                        }}
+                        className={cn(
+                          'relative group h-10 min-w-[3.5rem] px-1.5 rounded flex items-center justify-center text-xs font-medium text-white transition-all truncate',
+                          UNIDADE_STATUS_COLORS[unidade.status],
+                          selectionMode === 'venda' && isDisponivel && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
+                          selectionMode === 'venda' && !isDisponivel && 'opacity-50 cursor-not-allowed',
+                          selectionMode === 'delete' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-destructive',
+                          selectionMode === 'status' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
+                          isSelected && selectionMode === 'venda' && 'ring-2 ring-primary ring-offset-2',
+                          isSelected && selectionMode === 'delete' && 'ring-2 ring-destructive ring-offset-2',
+                          isSelected && selectionMode === 'status' && 'ring-2 ring-primary ring-offset-2',
+                          !selectionMode && 'cursor-pointer hover:opacity-80'
+                        )}
+                        title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}`}
+                        disabled={selectionMode === 'venda' && !isDisponivel}
+                      >
+                        {label}
+                        {selectionMode && isSelected && (
+                          <div className={cn(
+                            "absolute -top-1 -right-1 rounded-full p-0.5",
+                            selectionMode === 'delete' ? 'bg-destructive' : 'bg-primary'
+                          )}>
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                        {!selectionMode && (
+                          <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 opacity-0 group-hover:opacity-100" />
+                        )}
+                      </button>
+                    );
+                  };
+
                   return (
                     <div key={blocoId}>
                       <h4 className="font-medium mb-3">
                         {bloco?.nome || `Sem ${agrupamentoLabel}`}
                       </h4>
-                      <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-18 gap-2">
-                        {blocoUnidades?.map((unidade) => {
-                          const isSelected = selectedUnidadeIds.has(unidade.id);
-                          const isDisponivel = unidade.status === 'disponivel';
-                          const label = buildUnitLabel(unidade, labelFormato);
+                      {isPredioOuComercial ? (
+                        // Agrupar por andar para prédios/comerciais
+                        (() => {
+                          const andares = new Map<number, Unidade[]>();
+                          blocoUnidades?.forEach(u => {
+                            const andar = u.andar ?? 0;
+                            if (!andares.has(andar)) andares.set(andar, []);
+                            andares.get(andar)!.push(u);
+                          });
+                          const sortedAndares = Array.from(andares.entries()).sort((a, b) => a[0] - b[0]);
                           
                           return (
-                            <button
-                              key={unidade.id}
-                              onClick={() => {
-                                if (selectionMode) {
-                                  handleToggleSelection(unidade.id, unidade.status);
-                                } else {
-                                  handleEditUnidade(unidade);
-                                }
-                              }}
-                              className={cn(
-                                'relative group h-10 min-w-[3.5rem] px-1.5 rounded flex items-center justify-center text-xs font-medium text-white transition-all truncate',
-                                UNIDADE_STATUS_COLORS[unidade.status],
-                                selectionMode === 'venda' && isDisponivel && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
-                                selectionMode === 'venda' && !isDisponivel && 'opacity-50 cursor-not-allowed',
-                                selectionMode === 'delete' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-destructive',
-                                selectionMode === 'status' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
-                                isSelected && selectionMode === 'venda' && 'ring-2 ring-primary ring-offset-2',
-                                isSelected && selectionMode === 'delete' && 'ring-2 ring-destructive ring-offset-2',
-                                isSelected && selectionMode === 'status' && 'ring-2 ring-primary ring-offset-2',
-                                !selectionMode && 'cursor-pointer hover:opacity-80'
-                              )}
-                              title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}`}
-                              disabled={selectionMode === 'venda' && !isDisponivel}
-                            >
-                              {label}
-                              {selectionMode && isSelected && (
-                                <div className={cn(
-                                  "absolute -top-1 -right-1 rounded-full p-0.5",
-                                  selectionMode === 'delete' ? 'bg-destructive' : 'bg-primary'
-                                )}>
-                                  <Check className="h-3 w-3 text-primary-foreground" />
+                            <div className="space-y-4 ml-4">
+                              {sortedAndares.map(([andar, units]) => (
+                                <div key={andar}>
+                                  <h5 className="text-sm font-medium text-muted-foreground mb-2">
+                                    Andar {andar || 'Térreo'}
+                                  </h5>
+                                  <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-18 gap-2">
+                                    {units.map(renderUnidadeButton)}
+                                  </div>
                                 </div>
-                              )}
-                              {!selectionMode && (
-                                <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 opacity-0 group-hover:opacity-100" />
-                              )}
-                            </button>
+                              ))}
+                            </div>
                           );
-                        })}
-                      </div>
+                        })()
+                      ) : (
+                        <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-18 gap-2">
+                          {blocoUnidades?.map(renderUnidadeButton)}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

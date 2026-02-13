@@ -218,3 +218,41 @@ export function useDeleteBoxesBatch() {
     },
   });
 }
+
+// Vincular boxes em lote a uma unidade
+export function useVincularBoxesBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      unidadeId,
+      empreendimentoId,
+      status = 'reservado',
+    }: {
+      ids: string[];
+      unidadeId: string | null;
+      empreendimentoId: string;
+      status?: 'disponivel' | 'reservado' | 'vendido';
+    }) => {
+      const { error } = await supabase
+        .from('boxes')
+        .update({
+          unidade_id: unidadeId,
+          status: unidadeId ? status : 'disponivel',
+        })
+        .in('id', ids);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { empreendimentoId, ids, unidadeId }) => {
+      queryClient.invalidateQueries({ queryKey: ['boxes', empreendimentoId] });
+      const action = unidadeId ? 'vinculado(s)' : 'desvinculado(s)';
+      toast.success(`${ids.length} box(es) ${action} com sucesso!`);
+    },
+    onError: (error) => {
+      console.error('Erro ao vincular boxes:', error);
+      toast.error('Erro ao vincular boxes');
+    },
+  });
+}
