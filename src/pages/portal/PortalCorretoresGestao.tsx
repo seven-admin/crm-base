@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGestorCorretores, CorretorGestao } from '@/hooks/useGestorCorretores';
-import { Card, CardContent } from '@/components/ui/card';
+// Card import removed - using standard table layout
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -123,8 +123,7 @@ export default function PortalCorretoresGestao() {
         />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -172,8 +171,7 @@ export default function PortalCorretoresGestao() {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

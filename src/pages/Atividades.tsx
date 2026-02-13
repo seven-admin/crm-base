@@ -622,8 +622,7 @@ export default function Atividades() {
             </div>
 
             {/* Lista - Desktop Table View */}
-            <Card className="hidden md:block">
-              <CardContent className="p-0">
+            <div className="hidden md:block rounded-lg border">
                 {isLoading ? (
                   <div className="p-6 space-y-4">
                     {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
@@ -821,8 +820,7 @@ export default function Atividades() {
                     </TableBody>
                   </Table>
                 )}
-              </CardContent>
-            </Card>
+            </div>
 
             {/* Paginação (lista) */}
             {!isLoading && atividades.length > 0 && (

@@ -267,8 +267,7 @@ export default function Bonificacoes() {
         </div>
 
         {/* Desktop Table View */}
-        <Card className="hidden md:block">
-          <CardContent className="p-0">
+        <div className="hidden md:block rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -377,8 +376,7 @@ export default function Bonificacoes() {
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Modal de nova bonificação */}

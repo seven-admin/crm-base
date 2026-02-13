@@ -304,8 +304,7 @@ export default function Propostas() {
       </Card>
 
       {/* Tabela */}
-      <Card>
-        <CardContent className="pt-6">
+      <div>
           {isLoading || permissionsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : paginatedPropostas.length === 0 ? (
@@ -318,6 +317,7 @@ export default function Propostas() {
             </div>
           ) : (
             <>
+              <div className="rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -429,6 +429,7 @@ export default function Propostas() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {totalPages > 1 && (
                 <div className="mt-4">
@@ -441,8 +442,7 @@ export default function Propostas() {
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Form Dialog - Criar nova proposta */}
       <PropostaForm
