@@ -40,6 +40,7 @@ import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch, use
 import { useBlocos } from '@/hooks/useBlocos';
 import { useUnidades } from '@/hooks/useUnidades';
 import { BoxBulkForm } from './BoxBulkForm';
+import { BoxForm } from './BoxForm';
 import { BOX_STATUS_LABELS, BOX_TIPO_LABELS, BoxStatus } from '@/types/empreendimentos.types';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +58,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
   const [blocoFilter, setBlocoFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
+  const [formIndividualOpen, setFormIndividualOpen] = useState(false);
   const [vincularOpen, setVincularOpen] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
   const [selectedUnidadeId, setSelectedUnidadeId] = useState<string>('');
@@ -326,6 +328,10 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
                 <Trash2 className="h-4 w-4 mr-2" />
                 Excluir em Lote
               </Button>
+              <Button variant="outline" onClick={() => setFormIndividualOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Box
+              </Button>
               <Button onClick={() => setFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar em Lote
@@ -507,6 +513,19 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
           </Table>
         </div>
       </CardContent>
+
+      {/* Dialog Novo Box Individual */}
+      <Dialog open={formIndividualOpen} onOpenChange={setFormIndividualOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Novo Box</DialogTitle>
+          </DialogHeader>
+          <BoxForm
+            empreendimentoId={empreendimentoId}
+            onSuccess={() => setFormIndividualOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog Criar em Lote */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
