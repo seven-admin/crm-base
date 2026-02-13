@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useClientesPaginated, useDeleteCliente, useCreateCliente, useUpdateCliente, useClienteStats, useQualificarCliente, useMarcarPerdido, useReativarCliente, useCliente, useUpdateClientesEmLote } from '@/hooks/useClientes';
 import { useGestoresProduto } from '@/hooks/useGestores';
-import { Cliente, ClienteFormData, ClienteFase, CLIENTE_FASE_LABELS, CLIENTE_FASE_COLORS, CLIENTE_TEMPERATURA_LABELS, CLIENTE_TEMPERATURA_COLORS, ClienteTemperatura } from '@/types/clientes.types';
+import { Cliente, ClienteFormData, ClienteFase, ClienteTemperatura } from '@/types/clientes.types';
 import { perf } from '@/lib/perf';
 import {
   AlertDialog,
@@ -89,6 +89,10 @@ const Clientes = () => {
   const reativarMutation = useReativarCliente();
   const updateEmLoteMutation = useUpdateClientesEmLote();
   const isMobile = useIsMobile();
+
+  const handleUpdateTemperatura = useCallback((id: string, temperatura: ClienteTemperatura | null) => {
+    updateMutation.mutate({ id, data: { temperatura: temperatura ?? undefined } });
+  }, [updateMutation]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -244,6 +248,7 @@ const Clientes = () => {
             setPerdidoDialogOpen(true);
           }}
           onReativar={(id) => reativarMutation.mutate(id)}
+          onUpdateTemperatura={handleUpdateTemperatura}
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
         />
@@ -265,6 +270,7 @@ const Clientes = () => {
             setPerdidoDialogOpen(true);
           }}
           onReativar={(id) => reativarMutation.mutate(id)}
+          onUpdateTemperatura={handleUpdateTemperatura}
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
