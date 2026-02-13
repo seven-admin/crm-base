@@ -1,44 +1,53 @@
 
-# Adicionar CPF ao cadastro de Imobiliaria (Pessoa Fisica ou Juridica)
+# Converter formulario de Atividade em etapas + botoes para Classificacao
 
 ## Resumo
 
-Permitir que uma imobiliaria seja cadastrada tanto como pessoa juridica (CNPJ) quanto como pessoa fisica (CPF), com um seletor de tipo de pessoa e validacao adequada para cada documento.
+Substituir o SelectBox de "Classificacao" (subtipo) por dois botoes inline ("Primeiro Atendimento" / "Retorno"), seguindo o mesmo padrao visual ja usado em Tipo e Categoria. Alem disso, dividir o formulario em 2 etapas (steps) para reduzir o tamanho do modal.
 
-## Alteracoes no banco de dados
+## Estrutura das etapas
 
-**Migration SQL** - Adicionar coluna `cpf` e `tipo_pessoa` na tabela `imobiliarias`:
+### Etapa 1 - Configuracao
+- Tipo de Atividade (grid de botoes com icones - ja existe)
+- Classificacao / Subtipo (dois botoes inline - substituir o Select atual)
+- Categoria (grid de botoes - ja existe)
+- Atribuicao para Gestores (card com switch - apenas super_admin, apenas criacao)
 
+### Etapa 2 - Detalhes
+- Titulo
+- Datas (inicio, fim) e horarios
+- Prazo (deadline)
+- Cliente
+- Empreendimento
+- Temperatura do cliente (condicional)
+- Secao "Mais opcoes" (corretor, imobiliaria, observacoes)
+- Follow-up (switch + data)
+- Botao de submit
+
+## Alteracoes tecnicas
+
+### Arquivo: `src/components/atividades/AtividadeForm.tsx`
+
+1. **Adicionar estado `step`** (`useState<1 | 2>(1)`) para controlar a etapa atual.
+
+2. **Substituir o Select de subtipo** (linhas 267-290) por botoes inline:
 ```text
-ALTER TABLE imobiliarias ADD COLUMN tipo_pessoa text NOT NULL DEFAULT 'juridica';
-ALTER TABLE imobiliarias ADD COLUMN cpf text;
+<div className="grid grid-cols-2 gap-2">
+  <button "Primeiro Atendimento" />
+  <button "Retorno" />
+</div>
 ```
+Mesmo estilo dos botoes de Categoria (border, bg-primary/10 quando selecionado).
 
-A coluna `tipo_pessoa` aceita valores `'fisica'` ou `'juridica'` (default `'juridica'` para manter compatibilidade com dados existentes).
+3. **Etapa 1**: Renderizar Tipo + Classificacao (condicional) + Categoria + Atribuicao Gestores. Mostrar botao "Proximo" que valida tipo/categoria antes de avancar.
 
-## Alteracoes no frontend
+4. **Etapa 2**: Renderizar todos os campos restantes (titulo, datas, cliente, empreendimento, etc.) + botao "Voltar" e botao "Criar/Atualizar".
 
-### 1. `src/types/mercado.types.ts`
-- Adicionar `tipo_pessoa?: 'fisica' | 'juridica'` e `cpf?: string` nas interfaces `Imobiliaria` e `ImobiliariaFormData`.
+5. **Indicador de etapa**: Adicionar um indicador simples no topo (ex: "Etapa 1 de 2" / "Etapa 2 de 2" com dots ou barra de progresso).
 
-### 2. `src/components/mercado/ImobiliariaForm.tsx`
-- Adicionar campo `tipo_pessoa` ao schema zod (default `'juridica'`).
-- Adicionar campo `cpf` ao schema com validacao condicional.
-- No Step 1 (Empresa), adicionar um `RadioGroup` com opcoes "Pessoa Juridica" e "Pessoa Fisica" antes dos campos de documento.
-- Quando `tipo_pessoa === 'juridica'`: exibir campo CNPJ (como hoje), ocultar CPF.
-- Quando `tipo_pessoa === 'fisica'`: exibir campo CPF com mascara (`formatarCPF`) e validacao (`validarCPF`), ocultar CNPJ.
-- Atualizar `useEffect` do `reset` para carregar `tipo_pessoa` e `cpf` do `initialData`.
+6. **Ao editar** (`initialData` presente): comecar direto na etapa 1 normalmente, permitindo navegar entre etapas.
 
-### 3. `src/hooks/useImobiliarias.ts`
-- Garantir que o campo `cpf` e `tipo_pessoa` sejam enviados no insert/update (verificar se o hook ja envia todos os campos dinamicamente).
-
-### 4. Validacao
-- Usar `validarCPF` de `src/lib/documentUtils.ts` (ja existe no projeto) para validar CPF no submit quando tipo_pessoa for `'fisica'`.
-- Usar `validarCNPJ` de `src/lib/documentUtils.ts` (ja existe) para validar CNPJ quando tipo_pessoa for `'juridica'`.
-- A validacao sera feita via `refine` no schema zod.
-
-## Detalhes da UX
-
-- O seletor de tipo de pessoa sera um `RadioGroup` horizontal com duas opcoes: "Pessoa Juridica" e "Pessoa Fisica".
-- Ao trocar o tipo, o campo de documento anterior sera limpo automaticamente.
-- Labels dinamicos: quando PF, o label "Nome" pode ter hint "(Nome completo)" para orientar.
+## Observacoes
+- O formulario continuara dentro do mesmo `<Form>` do react-hook-form, apenas controlando visibilidade das secoes com CSS/condicional.
+- Nenhuma alteracao de banco de dados necessaria.
+- Nenhum outro arquivo precisa ser alterado.
