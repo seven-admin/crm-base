@@ -36,7 +36,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X } from 'lucide-react';
-import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch } from '@/hooks/useBoxes';
+import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch, useVincularBoxesBatch } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useUnidades } from '@/hooks/useUnidades';
 import { BoxBulkForm } from './BoxBulkForm';
@@ -62,8 +62,12 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
   const [selectedUnidadeId, setSelectedUnidadeId] = useState<string>('');
   
   // Estado para seleção em lote
-  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectionMode, setSelectionMode] = useState<'excluir' | 'vincular' | false>(false);
   const [selectedBoxIds, setSelectedBoxIds] = useState<Set<string>>(new Set());
+  
+  // Dialog vincular em lote
+  const [vincularLoteOpen, setVincularLoteOpen] = useState(false);
+  const [vincularLoteUnidadeId, setVincularLoteUnidadeId] = useState<string>('');
 
   const { data: boxes = [], isLoading } = useBoxes(empreendimentoId, {
     blocoId: blocoFilter !== 'all' ? blocoFilter : undefined,
@@ -74,10 +78,16 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
   const deleteBox = useDeleteBox();
   const deleteBoxesBatch = useDeleteBoxesBatch();
   const vincularBox = useVincularBoxUnidade();
+  const vincularBoxesBatch = useVincularBoxesBatch();
 
   const unidadesDisponiveis = unidades.filter(
     u => u.status === 'disponivel' || u.status === 'reservada' || u.status === 'negociacao'
   );
+
+  // Verificar se seleção tem boxes vinculados ou não
+  const selectedBoxes = boxes.filter(b => selectedBoxIds.has(b.id));
+  const temVinculados = selectedBoxes.some(b => b.unidade_id);
+  const temNaoVinculados = selectedBoxes.some(b => !b.unidade_id);
 
   const handleToggleBox = (boxId: string) => {
     setSelectedBoxIds(prev => {
@@ -144,6 +154,39 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
     }
   };
 
+  const handleVincularEmLote = () => {
+    if (vincularLoteUnidadeId && selectedBoxIds.size > 0) {
+      vincularBoxesBatch.mutate(
+        {
+          ids: Array.from(selectedBoxIds),
+          unidadeId: vincularLoteUnidadeId,
+          empreendimentoId,
+        },
+        {
+          onSuccess: () => {
+            setVincularLoteOpen(false);
+            setVincularLoteUnidadeId('');
+            handleExitSelectionMode();
+          },
+        }
+      );
+    }
+  };
+
+  const handleDesvincularEmLote = () => {
+    const idsVinculados = selectedBoxes.filter(b => b.unidade_id).map(b => b.id);
+    if (idsVinculados.length > 0) {
+      vincularBoxesBatch.mutate(
+        {
+          ids: idsVinculados,
+          unidadeId: null,
+          empreendimentoId,
+        },
+        { onSuccess: handleExitSelectionMode }
+      );
+    }
+  };
+
   const formatCurrency = (value: number | null) => {
     if (!value) return '-';
     return new Intl.NumberFormat('pt-BR', {
@@ -181,7 +224,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
             Gerencie as vagas de estacionamento do empreendimento
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {selectionMode ? (
             <>
               <span className="text-sm text-muted-foreground">
@@ -193,41 +236,93 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
               <Button variant="outline" size="sm" onClick={handleDeselectAll}>
                 Limpar
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={selectedBoxIds.size === 0 || deleteBoxesBatch.isPending}
-                  >
-                    {deleteBoxesBatch.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir ({selectedBoxIds.size})
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar exclusão em lote</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja excluir {selectedBoxIds.size} box(es)?
-                      Esta ação não pode ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteSelected}>
-                      Excluir
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {selectionMode === 'excluir' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={selectedBoxIds.size === 0 || deleteBoxesBatch.isPending}
+                    >
+                      {deleteBoxesBatch.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir ({selectedBoxIds.size})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar exclusão em lote</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir {selectedBoxIds.size} box(es)?
+                        Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteSelected}>
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {selectionMode === 'vincular' && (
+                <>
+                  {temNaoVinculados && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setVincularLoteUnidadeId('');
+                        setVincularLoteOpen(true);
+                      }}
+                      disabled={selectedBoxIds.size === 0}
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Vincular ({selectedBoxes.filter(b => !b.unidade_id).length})
+                    </Button>
+                  )}
+                  {temVinculados && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={vincularBoxesBatch.isPending}
+                        >
+                          {vincularBoxesBatch.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          <Link2Off className="h-4 w-4 mr-2" />
+                          Desvincular ({selectedBoxes.filter(b => b.unidade_id).length})
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Desvincular em lote</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Deseja desvincular {selectedBoxes.filter(b => b.unidade_id).length} box(es) de suas unidades?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDesvincularEmLote}>
+                            Desvincular
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </>
+              )}
               <Button variant="ghost" size="sm" onClick={handleExitSelectionMode}>
                 <X className="h-4 w-4" />
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={() => setSelectionMode(true)}>
+              <Button variant="outline" size="sm" onClick={() => setSelectionMode('vincular')}>
+                <Link2 className="h-4 w-4 mr-2" />
+                Vincular em Lote
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setSelectionMode('excluir')}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Excluir em Lote
               </Button>
@@ -259,6 +354,12 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
             <p className="text-xs text-blue-600">Vendidos</p>
           </div>
         </div>
+
+        {selectionMode === 'vincular' && (
+          <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+            Selecione os boxes que deseja <strong>vincular a uma unidade</strong> ou <strong>desvincular</strong>.
+          </div>
+        )}
 
         {/* Filtros */}
         <div className="flex items-center gap-4">
@@ -310,7 +411,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
             <TableBody>
               {boxes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={selectionMode ? 9 : 9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     Nenhum box cadastrado. Clique em "Criar em Lote" para adicionar.
                   </TableCell>
                 </TableRow>
@@ -344,7 +445,9 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
                     </TableCell>
                     <TableCell>
                       {box.unidade?.numero ? (
-                        <Badge variant="secondary">Unidade {box.unidade.numero}</Badge>
+                        <Badge variant="secondary">
+                          {box.bloco?.nome ? `${box.bloco.nome} - ` : ''}Un {box.unidade.numero}
+                        </Badge>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
@@ -418,7 +521,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Vincular Unidade */}
+      {/* Dialog Vincular Unidade (individual) */}
       <Dialog open={vincularOpen} onOpenChange={setVincularOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -432,7 +535,8 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
               <SelectContent>
                 {unidadesDisponiveis.map((unidade) => (
                   <SelectItem key={unidade.id} value={unidade.id}>
-                    {unidade.numero} - {unidade.bloco?.nome || 'Sem bloco'}
+                    {unidade.bloco?.nome ? `${unidade.bloco.nome} - ` : ''}Un {unidade.numero}
+                    {unidade.tipologia?.nome ? ` (${unidade.tipologia.nome})` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -447,6 +551,45 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
               >
                 {vincularBox.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Vincular
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Vincular em Lote */}
+      <Dialog open={vincularLoteOpen} onOpenChange={setVincularLoteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vincular {selectedBoxes.filter(b => !b.unidade_id).length} Box(es) a uma Unidade</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Selecione a unidade para vincular os boxes selecionados.
+            </p>
+            <Select value={vincularLoteUnidadeId} onValueChange={setVincularLoteUnidadeId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma unidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {unidadesDisponiveis.map((unidade) => (
+                  <SelectItem key={unidade.id} value={unidade.id}>
+                    {unidade.bloco?.nome ? `${unidade.bloco.nome} - ` : ''}Un {unidade.numero}
+                    {unidade.tipologia?.nome ? ` (${unidade.tipologia.nome})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setVincularLoteOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleVincularEmLote}
+                disabled={!vincularLoteUnidadeId || vincularBoxesBatch.isPending}
+              >
+                {vincularBoxesBatch.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Vincular em Lote
               </Button>
             </div>
           </div>

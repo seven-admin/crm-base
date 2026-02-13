@@ -49,26 +49,41 @@ export function useForecastFinanceiro(
         negQuery = negQuery.eq('gestor_id', gestorId);
       }
 
-      // 3. Propostas aceitas no período
+      // 3. Propostas aceitas ou convertidas no período
       let propQuery = supabase
         .from('propostas')
-        .select('valor_proposta')
-        .eq('status', 'aceita')
+        .select('valor_proposta, status')
+        .in('status', ['aceita', 'convertida'])
         .gte('created_at', `${inicioStr}T00:00:00`)
         .lte('created_at', `${fimStr}T23:59:59`);
 
-      const [comissoesRes, negRes, propRes] = await Promise.all([
+      // 4. Unidades vendidas (vendas históricas - sem filtro de data)
+      const unidadesVendidasQuery = supabase
+        .from('unidades')
+        .select('valor')
+        .eq('status', 'vendida')
+        .eq('is_active', true);
+
+      const [comissoesRes, negRes, propRes, unidadesRes] = await Promise.all([
         comissoesQuery,
         negQuery,
         propQuery,
+        unidadesVendidasQuery,
       ]);
 
       if (comissoesRes.error) throw comissoesRes.error;
       if (negRes.error) throw negRes.error;
       if (propRes.error) throw propRes.error;
+      if (unidadesRes.error) throw unidadesRes.error;
 
-      // Calcular valor total de vendas
-      const valorVendas = (comissoesRes.data || []).reduce((sum, c: any) => sum + (c.valor_venda || 0), 0);
+      // Calcular valor total de vendas via comissões
+      const valorVendasComissoes = (comissoesRes.data || []).reduce((sum, c: any) => sum + (c.valor_venda || 0), 0);
+
+      // Calcular valor total de vendas via unidades vendidas
+      const valorVendasUnidades = (unidadesRes.data || []).reduce((sum, u: any) => sum + (u.valor || 0), 0);
+
+      // Usar o maior valor para evitar duplicação
+      const valorVendas = Math.max(valorVendasComissoes, valorVendasUnidades);
 
       // Agrupar comissões por gestor
       const gestorMap = new Map<string, { gestor_id: string; gestor_nome: string; valor: number }>();
@@ -93,7 +108,7 @@ export function useForecastFinanceiro(
       // Valor de negociações em andamento
       const valorNegociacoes = (negRes.data || []).reduce((sum, n: any) => sum + (n.valor_proposta || 0), 0);
 
-      // Valor de propostas aceitas
+      // Valor de propostas aceitas/convertidas
       const valorPropostasAceitas = (propRes.data || []).reduce((sum, p: any) => sum + (p.valor_proposta || 0), 0);
 
       return {
