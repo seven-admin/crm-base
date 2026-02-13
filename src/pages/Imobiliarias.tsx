@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+// Card import removed - using standard table layout
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -239,122 +239,117 @@ export default function Imobiliarias() {
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome, CNPJ ou cidade..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Badge variant="secondary">
-                {total} imobiliária{total !== 1 ? 's' : ''}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-            ) : imobiliarias.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhuma imobiliária encontrada
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Imobiliária</TableHead>
-                        <TableHead>Contato</TableHead>
-                        <TableHead>Cidade</TableHead>
-                        <TableHead>Corretores</TableHead>
-                        <TableHead>Status</TableHead>
-                        {canDelete && <TableHead className="w-[60px]"></TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {imobiliarias.map((imob) => (
-                        <TableRow 
-                          key={imob.id}
-                          className={canEdit ? "cursor-pointer hover:bg-muted/50" : ""}
-                          onClick={() => canEdit && handleEdit(imob)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Building className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium">{imob.nome}</p>
-                                {imob.cnpj && (
-                                  <p className="text-sm text-muted-foreground">{imob.cnpj}</p>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              {imob.telefone && (
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Phone className="h-3 w-3" />
-                                  {imob.telefone}
-                                </div>
-                              )}
-                              {imob.email && (
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Mail className="h-3 w-3" />
-                                  {imob.email}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {imob.endereco_cidade && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 text-muted-foreground" />
-                                {imob.endereco_cidade}/{imob.endereco_uf}
-                              </div>
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, CNPJ ou cidade..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {total} imobiliária{total !== 1 ? 's' : ''}
+          </p>
+        </div>
+
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+        ) : imobiliarias.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nenhuma imobiliária encontrada
+          </div>
+        ) : (
+          <>
+            <div className="rounded-lg border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Imobiliária</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead>Cidade</TableHead>
+                    <TableHead>Corretores</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canDelete && <TableHead className="w-[60px]"></TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {imobiliarias.map((imob) => (
+                    <TableRow 
+                      key={imob.id}
+                      className={canEdit ? "cursor-pointer hover:bg-muted/50" : ""}
+                      onClick={() => canEdit && handleEdit(imob)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Building className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{imob.nome}</p>
+                            {imob.cnpj && (
+                              <p className="text-sm text-muted-foreground">{imob.cnpj}</p>
                             )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <span>{imob.corretores_count || 0}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {imob.telefone && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone className="h-3 w-3" />
+                              {imob.telefone}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={imob.is_active ? 'default' : 'secondary'}>
-                              {imob.is_active ? 'Ativo' : 'Inativo'}
-                            </Badge>
-                          </TableCell>
-                          {canDelete && (
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </TableCell>
                           )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                
-                <PaginationControls
-                  page={page}
-                  totalPages={totalPages}
-                  totalItems={total}
-                  onPageChange={setPage}
-                />
-              </>
-            )}
-          </CardContent>
-        </Card>
+                          {imob.email && (
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Mail className="h-3 w-3" />
+                              {imob.email}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {imob.endereco_cidade && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            {imob.endereco_cidade}/{imob.endereco_uf}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>{imob.corretores_count || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={imob.is_active ? 'default' : 'secondary'}>
+                          {imob.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      {canDelete && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <PaginationControls
+              page={page}
+              totalPages={totalPages}
+              totalItems={total}
+              onPageChange={setPage}
+            />
+          </>
+        )}
 
         {canDelete && (
           <AlertDialog

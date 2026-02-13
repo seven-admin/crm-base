@@ -654,7 +654,7 @@ export default function Usuarios() {
                 </div>
 
                 {/* Desktop Table View */}
-                <div className="hidden md:block">
+                <div className="hidden md:block rounded-lg border">
                   <Table>
                     <TableHeader>
                       <TableRow>

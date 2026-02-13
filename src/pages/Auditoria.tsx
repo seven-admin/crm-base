@@ -308,20 +308,15 @@ export default function Auditoria() {
       </Card>
 
       {/* Lista de Logs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Logs de Auditoria</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              {logsData?.total || 0} registros
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <p className="text-sm text-muted-foreground">
+        {logsData?.total || 0} registros
+      </p>
+      <div>
           {isLoading ? (
             <Skeleton className="h-80 w-full" />
           ) : (
             <>
+              <div className="rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -399,10 +394,10 @@ export default function Auditoria() {
                   </div>
                 </div>
               )}
+              </div>
             </>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Modal de Detalhes */}
       <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
