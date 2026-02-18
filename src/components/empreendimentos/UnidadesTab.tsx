@@ -254,7 +254,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         margin: 15,
         filename: `Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 680, windowWidth: 680 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 660, windowWidth: 660 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       }).from(container).save();
