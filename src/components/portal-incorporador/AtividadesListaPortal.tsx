@@ -17,7 +17,7 @@ import {
   type AtividadeSubtipo,
   type AtividadeFilters 
 } from '@/types/atividades.types';
-import { format, isBefore, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, isBefore, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Phone, 
@@ -66,6 +66,7 @@ export function AtividadesListaPortal({ empreendimentoIds, dataSelecionada, onLi
   // Buscar atividade selecionada para o dialog
   const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
 
+
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
@@ -76,8 +77,8 @@ export function AtividadesListaPortal({ empreendimentoIds, dataSelecionada, onLi
     ...(tipoFiltro !== 'todos' && { tipo: tipoFiltro }),
     ...(statusFiltro !== 'todos' && { status: statusFiltro }),
     ...(dataSelecionada && {
-      data_inicio: startOfDay(dataSelecionada).toISOString(),
-      data_fim: endOfDay(dataSelecionada).toISOString(),
+      data_inicio: format(dataSelecionada, 'yyyy-MM-dd'),
+      data_fim: format(dataSelecionada, 'yyyy-MM-dd'),
     }),
   };
 

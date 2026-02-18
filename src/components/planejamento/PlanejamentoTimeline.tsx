@@ -301,56 +301,57 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
 
       {/* Timeline */}
       <Card className="overflow-hidden">
-        <div className="relative flex">
-          {/* Coluna fixa de fases/itens */}
-          <div className="min-w-[200px] w-fit max-w-[350px] flex-shrink-0 border-r bg-card z-10">
-            {/* Header */}
-            <div 
-              className="border-b bg-muted/50 flex items-center px-3 font-medium text-sm"
-              style={{ height: HEADER_HEIGHT }}
-            >
-              Tarefas
-            </div>
-            
-            {/* Fases e itens */}
-            {fases?.map(fase => {
-              const faseItens = itensByFase.get(fase.id);
-              if (!faseItens || faseItens.length === 0) return null;
-
-              return (
-                <div key={fase.id}>
-                  {/* Fase */}
-                  <div 
-                    className="border-b bg-muted/30 flex items-center gap-2 px-3 font-medium text-sm"
-                    style={{ height: FASE_ROW_HEIGHT }}
-                  >
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: fase.cor }} />
-                    <span className="truncate">{fase.nome}</span>
-                  </div>
-
-                  {/* Itens */}
-                  {faseItens.map(item => (
-                    <div 
-                      key={item.id}
-                      className="border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer"
-                      style={{ height: ROW_HEIGHT }}
-                      title={item.item}
-                      onClick={() => handleItemClick(item)}
-                    >
-                      <span className="truncate">{item.item}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Área scrollável */}
-          <ScrollArea className="flex-1" ref={scrollRef}>
-            <div style={{ width: totalWidth }}>
-              {/* Header de datas */}
+        {/* Container com scroll vertical + horizontal integrados */}
+        <div className="overflow-auto max-h-[600px]" ref={scrollRef}>
+          <div className="flex" style={{ minWidth: `${200 + totalWidth}px` }}>
+            {/* Coluna fixa de fases/itens - sticky left */}
+            <div className="min-w-[200px] w-[200px] flex-shrink-0 border-r bg-card sticky left-0 z-20">
+              {/* Header */}
               <div 
-                className="flex border-b bg-muted/50 sticky top-0"
+                className="border-b bg-muted/50 flex items-center px-3 font-medium text-sm sticky top-0 z-30"
+                style={{ height: HEADER_HEIGHT }}
+              >
+                Tarefas
+              </div>
+              
+              {/* Fases e itens */}
+              {fases?.map(fase => {
+                const faseItens = itensByFase.get(fase.id);
+                if (!faseItens || faseItens.length === 0) return null;
+
+                return (
+                  <div key={fase.id}>
+                    {/* Fase */}
+                    <div 
+                      className="border-b bg-muted/30 flex items-center gap-2 px-3 font-medium text-sm"
+                      style={{ height: FASE_ROW_HEIGHT }}
+                    >
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: fase.cor }} />
+                      <span className="truncate">{fase.nome}</span>
+                    </div>
+
+                    {/* Itens */}
+                    {faseItens.map(item => (
+                      <div 
+                        key={item.id}
+                        className="border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer"
+                        style={{ height: ROW_HEIGHT }}
+                        title={item.item}
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <span className="truncate">{item.item}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Área de datas (sem scroll próprio - usa o container pai) */}
+            <div style={{ width: totalWidth, flexShrink: 0 }}>
+              {/* Header de datas - sticky top */}
+              <div 
+                className="flex border-b bg-muted/50 sticky top-0 z-10"
                 style={{ height: HEADER_HEIGHT }}
               >
                 {columns.map((col, idx) => (
@@ -468,8 +469,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                 );
               })}
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          </div>
         </div>
       </Card>
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   PieChart,
   Pie,
@@ -18,10 +20,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   Calendar,
+  List,
 } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CORES_ARRAY, TOOLTIP_STYLE } from '@/lib/chartColors';
+
 
 const CATEGORIA_LABELS: Record<string, string> = {
   'render_3d': 'Render 3D',
@@ -51,7 +55,18 @@ interface TicketResumo {
   dias_restantes?: number;
 }
 
+const STATUS_TICKET_LABELS: Record<string, { label: string; cls: string }> = {
+  em_producao: { label: 'Em Produção', cls: 'bg-blue-100 text-blue-800' },
+  aguardando_aprovacao: { label: 'Aguard. Aprovação', cls: 'bg-yellow-100 text-yellow-800' },
+  aprovado: { label: 'Aprovado', cls: 'bg-green-100 text-green-800' },
+  revisao: { label: 'Revisão', cls: 'bg-orange-100 text-orange-800' },
+  concluido: { label: 'Concluído', cls: 'bg-muted text-muted-foreground' },
+  arquivado: { label: 'Arquivado', cls: 'bg-muted text-muted-foreground' },
+};
+
 export default function PortalIncorporadorMarketing() {
+  const [statusFiltro, setStatusFiltro] = useState<string>('todos');
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
   
   // Query customizada para incorporadores
@@ -174,6 +189,8 @@ export default function PortalIncorporadorMarketing() {
         proximasEntregas,
         porEtapa,
         porCategoria,
+        allTickets: allTickets.filter(t => !['concluido', 'arquivado'].includes(t.status) && !(t.ticket_etapa_id && etapasFinaisIds.has(t.ticket_etapa_id))),
+        etapas: etapas || [],
       };
     },
     enabled: empreendimentoIds.length > 0,
@@ -410,6 +427,89 @@ export default function PortalIncorporadorMarketing() {
                 ))}
               </div>
             )}
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Lista completa de tickets */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <List className="h-4 w-4 text-primary" />
+              Todos os Tickets Ativos
+              <Badge variant="secondary">{data.allTickets.length}</Badge>
+            </CardTitle>
+            <div className="flex gap-2 flex-wrap">
+              <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  {Object.entries(STATUS_TICKET_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas as cat.</SelectItem>
+                  {Object.entries(CATEGORIA_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[360px]">
+            {(() => {
+              const filtered = data.allTickets.filter(t => {
+                if (statusFiltro !== 'todos' && t.status !== statusFiltro) return false;
+                if (categoriaFiltro !== 'todos' && t.categoria !== categoriaFiltro) return false;
+                return true;
+              });
+              if (filtered.length === 0) return (
+                <p className="text-center text-muted-foreground py-8 text-sm">Nenhum ticket encontrado</p>
+              );
+              const hoje = format(new Date(), 'yyyy-MM-dd');
+              return (
+                <div className="space-y-2 pr-3">
+                  {filtered.map(ticket => {
+                    const atrasado = ticket.data_previsao && ticket.data_previsao < hoje;
+                    const statusCfg = STATUS_TICKET_LABELS[ticket.status] || { label: ticket.status, cls: 'bg-muted text-muted-foreground' };
+                    return (
+                      <div key={ticket.id} className={`flex items-center justify-between p-3 border rounded-lg transition-colors hover:bg-muted/50 ${atrasado ? 'border-destructive/40' : ''}`}>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className="text-xs text-muted-foreground font-mono shrink-0">{ticket.codigo}</span>
+                          <div className="min-w-0">
+                            <p className="text-sm truncate">{ticket.titulo}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-muted-foreground">{CATEGORIA_LABELS[ticket.categoria] || ticket.categoria}</span>
+                              {ticket.data_previsao && (
+                                <span className={`text-xs flex items-center gap-1 ${atrasado ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                  <Calendar className="h-3 w-3" />
+                                  {format(parseISO(ticket.data_previsao), 'dd/MM', { locale: ptBR })}
+                                  {atrasado && ` (${differenceInDays(new Date(), parseISO(ticket.data_previsao))}d atraso)`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={`text-xs ml-2 flex-shrink-0 ${statusCfg.cls}`}>
+                          {statusCfg.label}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </ScrollArea>
         </CardContent>
       </Card>
