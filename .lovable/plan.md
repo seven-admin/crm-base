@@ -1,14 +1,11 @@
 
-## Mudança
+## Problema
 
-Remover o `Badge` com a contagem numérica do canto superior direito da célula do dia no calendário (`PlanejamentoCalendario.tsx`), já que o texto `+N mais` no rodapé da célula já informa essa contagem de forma contextual.
+O arquivo editado anteriormente foi `PlanejamentoCalendario.tsx` (visão global), mas o usuário está na tela de **Calendário por Empreendimento**, cujo componente é `PlanejamentoCalendarioEmpreendimento.tsx`.
 
-### Arquivo modificado
-
-- **`src/components/planejamento/PlanejamentoCalendario.tsx`** — remover as linhas 235–239:
+Neste arquivo, nas linhas 170–174, existe o mesmo `Badge` numérico no canto superior direito de cada célula do dia:
 
 ```tsx
-// REMOVER:
 {hasItems && (
   <Badge variant="secondary" className="text-xs h-5 px-1.5">
     {dayItems.length}
@@ -16,4 +13,12 @@ Remover o `Badge` com a contagem numérica do canto superior direito da célula 
 )}
 ```
 
-Após a remoção, o cabeçalho da célula terá apenas o número do dia, sem nenhum número adicional que cause confusão.
+## Solução
+
+Remover o bloco acima (linhas 170–174) do arquivo `src/components/planejamento/PlanejamentoCalendarioEmpreendimento.tsx`.
+
+Após a remoção, cada célula do dia exibirá apenas o número do dia no canto superior esquerdo. A contagem de tarefas continuará sendo informada pelo texto `+N mais` já existente na base da célula.
+
+### Arquivo modificado
+
+- `src/components/planejamento/PlanejamentoCalendarioEmpreendimento.tsx` — remover linhas 170–174 (o bloco `{hasItems && <Badge>...</Badge>}`)
