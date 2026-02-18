@@ -1,24 +1,32 @@
 
-## Correção da margem direita — 1 linha
+## Redução do espaçamento das linhas — problema de padding excessivo
 
 ### Diagnóstico
 
-A página A4 tem 210mm de largura. Com `margin: 15` (15mm de cada lado), a área útil é 180mm.
+O `padding: 6px 6px` nas células `<td>` e `<th>` está correto para alinhamento visual, mas **6px em cima + 6px em baixo = 12px de espaçamento vertical** por linha — isso dobra a altura das linhas sem necessidade.
 
-Convertendo 180mm para pixels a 96dpi: 180 × 96 / 25.4 ≈ **680px**.
+Para uma tabela compacta, o padding vertical deve ser `2px`, não `6px`. O padding horizontal (`6px`) pode ficar igual para manter o espaçamento lateral.
 
-O problema: o `width: 680` e `windowWidth: 680` estão exatamente no limite. Com `scale: 2`, o html2canvas renderiza em 1360px e o html2pdf comprime isso para caber em 180mm. Qualquer pixel extra de padding interno ou borda causa o estouro visível na margem direita.
+### Mudanças exatas
 
-### Solução
+**Linha 196 — `tdBase`**: trocar `padding: 6px 6px` por `padding: 2px 6px`
 
-Reduzir `width` e `windowWidth` de `680` para `660`. Isso cria uma folga de ~10px de cada lado, garantindo que o conteúdo caiba sem corte.
-
-**Linha 257** — mudar `width: 680, windowWidth: 680` para `width: 660, windowWidth: 660`:
-```typescript
-html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 660, windowWidth: 660 },
+```
+const tdBase = "padding: 2px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap;";
 ```
 
-### Arquivo modificado
-- `src/components/empreendimentos/UnidadesTab.tsx` — apenas linha 257
+**Linhas 225–230 — `<th>`**: trocar `padding: 6px 6px` por `padding: 2px 6px` em todos os cabeçalhos
 
-Apenas 2 valores numéricos alterados. Nada mais.
+```html
+<th style="padding: 2px 6px; border-bottom: 2px solid #333; ...">
+```
+
+### Por que isso resolve
+
+- `padding: 2px 6px` = 2px topo, 2px base, 6px esquerda, 6px direita
+- O espaçamento simétrico (2px/2px) ainda centraliza o texto verticalmente
+- A altura da linha cai de ~24px para ~16px — cabe muito mais linhas por página
+- Nenhuma mudança estrutural, apenas 2 valores de padding
+
+### Arquivo modificado
+- `src/components/empreendimentos/UnidadesTab.tsx` — linhas 196, 225, 226, 227, 228, 229, 230
