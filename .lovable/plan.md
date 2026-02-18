@@ -1,99 +1,120 @@
 
-## Reestruturação Correta das 3 Abas do Forecast do Incorporador
+# Plano: 4 Melhorias no Planejamento e Forecast do Incorporador
 
-### Mapeamento final das abas
+## Parte 1 — Planejamento (Portal do Incorporador)
 
-**DASHBOARD** — Negócios e atendimentos  
-- Card "Previsões e Negócios": KPIs (Total, Pendentes, Aprovadas, Rejeitadas) + lista de negociações com scroll  
-- Card "Lista de Atendimentos": lista paginada de atividades tipo `atendimento`  
+### 1.1 Dashboard como primeira aba
 
-**ATIVIDADES** — Análise operacional (sem calendário/lista de detalhes)  
-- 4 cards de categoria (Seven, Incorporadora, Imobiliária, Cliente)  
-- Lista de Atendimentos logo abaixo dos 4 cards (conforme solicitado)  
-- Funil de Temperatura + Visitas por Empreendimento (grid 2 colunas)  
-- Atividades por Tipo Semanal + Próximas Atividades (grid 2 colunas)  
-- Resumo de Atendimentos e Retornos (`AtendimentosResumo`)  
+**Arquivo**: `src/pages/portal-incorporador/PortalIncorporadorPlanejamento.tsx`
 
-**CALENDÁRIO** — Detalhamento dia a dia  
-- `CalendarioCompacto` na esquerda com seleção de data  
-- `AtividadesListaPortal` na direita mostrando atividades do dia clicado  
-- Layout em grid (1/3 calendário + 2/3 lista), igual ao layout que estava na aba Atividades antes  
+Trocar a ordem das abas e o `defaultValue`:
+- Antes: `activeTab = 'timeline'`, ordem Timeline → Calendário → Dashboard
+- Depois: `activeTab = 'dashboard'`, ordem **Dashboard → Timeline → Calendário**
+
+### 1.2 Colapso de fases na Timeline
+
+**Arquivo**: `src/components/planejamento/PlanejamentoTimeline.tsx`
+
+Adicionar estado `collapsedFases: Set<string>` para controlar fases colapsadas.
+
+- Adicionar um botão de toggle (chevron ▶/▼) ao lado do nome de cada fase
+- Quando colapsada, a fase exibe apenas a linha do cabeçalho (sem as linhas dos itens)
+- Adicionar botão global "Colapsar Tudo / Expandir Tudo" nos controles superiores
+- A lógica de colapso se aplica tanto à coluna de nomes (esquerda) quanto à área de barras (direita), mantendo o sincronismo
+
+```tsx
+const [collapsedFases, setCollapsedFases] = useState<Set<string>>(new Set());
+
+const toggleFase = (faseId: string) => {
+  setCollapsedFases(prev => {
+    const next = new Set(prev);
+    if (next.has(faseId)) next.delete(faseId);
+    else next.add(faseId);
+    return next;
+  });
+};
+
+const collapseAll = () => {
+  const allFaseIds = fases?.filter(f => itensByFase.has(f.id)).map(f => f.id) || [];
+  setCollapsedFases(new Set(allFaseIds));
+};
+
+const expandAll = () => setCollapsedFases(new Set());
+```
+
+No header dos controles, adicionar botões:
+```tsx
+<Button variant="outline" size="sm" onClick={collapseAll}>Colapsar Tudo</Button>
+<Button variant="outline" size="sm" onClick={expandAll}>Expandir Tudo</Button>
+```
+
+### 1.3 Melhor uso de tela em tela grande
+
+**Arquivo**: `src/components/planejamento/PlanejamentoTimeline.tsx`
+
+- Aumentar o `max-h-[600px]` para `max-h-[calc(100vh-280px)]` para que em telas grandes a timeline ocupe mais espaço vertical
+- Aumentar a coluna de tarefas de `200px` para `240px` para comportar nomes mais longos sem truncar tanto
+
+**Arquivo**: `src/components/planejamento/PlanejamentoDashboard.tsx`
+
+Verificar se o dashboard usa bem o espaço horizontal em telas largas — se necessário, ajustar o grid de "Próximos 7 dias" para ocupar colunas side-by-side (`grid-cols-2` com proporções `2fr 1fr`).
 
 ---
 
-### Bug: ProximasAtividades → navega para `/atividades` (rota errada para o incorporador)
+## Parte 2 — Forecast do Incorporador (Dashboard)
 
-**Problema:** O `onClick` em `ProximasAtividades.tsx` chama `navigate('/atividades')`, que é a rota interna do sistema — o incorporador não tem acesso e é redirecionado para o início do portal.
+### 2.1 Remover "Lista de Atendimentos" do Dashboard
 
-**Correção:** O componente `ProximasAtividades` precisa de uma prop opcional `onAtividadeClick?: (atividadeId: string) => void`. Quando essa prop é fornecida, usa ela em vez de `navigate`. No `PortalIncorporadorForecast`, ao clicar em uma atividade próxima, navegar para a aba **Calendário** com a data da atividade selecionada (ou abrir o detalhe inline).
+**Arquivo**: `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`
 
-A solução mais limpa é passar `onAtividadeClick` que seta a `dataSelecionada` para a data daquela atividade e muda para a aba **Calendário** onde o `AtividadesListaPortal` mostrará as atividades do dia.
+Remover o Card "Lista de Atendimentos" (linhas ~247–289) da aba `dashboard`.
 
----
+### 2.2 Adicionar gráficos de negociações no lugar
 
-### Arquivos a modificar
+No mesmo arquivo, dentro da aba `dashboard`, após os KPIs de negociações, adicionar dois gráficos usando Recharts (já instalado):
 
-**1. `src/components/forecast/ProximasAtividades.tsx`**
+**Gráfico 1 — Donut/Pizza: Distribuição de Status**
+- Mostra proporção visual de Pendentes / Aprovadas / Rejeitadas
+- Componente `PieChart` do Recharts com `Cell` coloridas (amarelo, verde, vermelho)
 
-Adicionar prop `onAtividadeClick?: (atividadeId: string, dataAtividade: string) => void`:
+**Gráfico 2 — Barras: Negociações por Empreendimento**
+- Agrupa as negociações por `empreendimento.nome` e mostra contagem
+- Componente `BarChart` do Recharts, orientação horizontal para acomodar nomes longos
+
+Ambos os gráficos são construídos a partir dos dados já carregados pelo `useNegociacoesIncorporador`, sem necessidade de nova query.
 
 ```tsx
-interface ProximasAtividadesProps {
-  gestorId?: string;
-  empreendimentoIds?: string[];
-  onAtividadeClick?: (atividadeId: string, dataAtividade: string) => void;
-}
+// Dados para gráficos (derivados do array 'negociacoes')
+const pieData = [
+  { name: 'Pendentes', value: negKPIs.pendentes, color: '#f59e0b' },
+  { name: 'Aprovadas', value: negKPIs.aprovadas, color: '#22c55e' },
+  { name: 'Rejeitadas', value: negKPIs.rejeitadas, color: '#ef4444' },
+].filter(d => d.value > 0);
+
+const barData = negociacoes?.reduce((acc, neg) => {
+  const nome = neg.empreendimento?.nome || 'Sem empreendimento';
+  const existing = acc.find(a => a.nome === nome);
+  if (existing) existing.total++;
+  else acc.push({ nome, total: 1 });
+  return acc;
+}, [] as { nome: string; total: number }[]) || [];
 ```
 
-No `onClick` de cada atividade, verificar se `onAtividadeClick` existe:
-```tsx
-onClick={() => {
-  if (onAtividadeClick) {
-    onAtividadeClick(atividade.id, atividade.data_inicio);
-  } else {
-    navigate('/atividades');
-  }
-}}
+Layout dentro do card "Previsões e Negócios":
 ```
-
-**2. `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`**
-
-Reestruturar completamente o conteúdo das 3 abas:
-
-```
-DASHBOARD:
-  └─ Card "Previsões e Negócios"
-       ├─ KPIs (4 boxes: Total, Pendentes, Aprovadas, Rejeitadas)
-       └─ ScrollArea com lista de negociações
-  └─ Card "Lista de Atendimentos"
-       └─ ScrollArea com lista de atividades tipo=atendimento
-
-ATIVIDADES:
-  └─ Grid 4 cols: CategoriaCard × 4 (Seven, Incorporadora, Imobiliária, Cliente)
-  └─ Card "Lista de Atendimentos" (logo abaixo dos 4 cards)
-  └─ Grid 2 cols: FunilTemperatura | VisitasPorEmpreendimento
-  └─ Grid 2 cols: AtividadesPorTipo | ProximasAtividades (com onAtividadeClick)
-  └─ AtendimentosResumo (largura total)
-
-CALENDÁRIO:
-  └─ Grid 3 cols:
-       ├─ col-1: CalendarioCompacto (com onDayClick → setDataSelecionada)
-       └─ col-2: AtividadesListaPortal (com dataSelecionada)
-```
-
-Adicionar handler para o clique nas Próximas Atividades:
-```tsx
-function handleProximaAtividadeClick(atividadeId: string, dataAtividade: string) {
-  setDataSelecionada(parseISO(dataAtividade));
-  setTab('calendario');
-}
+[KPIs 4 boxes]
+[Gráfico Donut — col-span-1] | [Gráfico Barras — col-span-2]
+[ScrollArea com lista de negociações]
 ```
 
 ---
 
-### Resumo das mudanças
+## Arquivos a modificar
 
-| Arquivo | O que muda |
+| Arquivo | Mudanças |
 |---|---|
-| `ProximasAtividades.tsx` | Adicionar prop `onAtividadeClick` opcional, corrigir navigate para portal |
-| `PortalIncorporadorForecast.tsx` | Redistribuir componentes nas 3 abas conforme especificação acima |
+| `src/pages/portal-incorporador/PortalIncorporadorPlanejamento.tsx` | Reordenar abas, defaultValue = 'dashboard' |
+| `src/components/planejamento/PlanejamentoTimeline.tsx` | Estado de colapso de fases, botões global, max-h maior, coluna 240px |
+| `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx` | Remover card Atendimentos do dashboard, adicionar gráficos Recharts |
+
+Nenhum arquivo novo necessário — apenas modificações nos 3 arquivos acima.
