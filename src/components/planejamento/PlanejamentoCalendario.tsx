@@ -223,7 +223,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                       isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
                     )}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <span
                         className={cn(
                           'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
