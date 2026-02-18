@@ -17,6 +17,8 @@ import { CalendarioCompacto } from '@/components/forecast/CalendarioCompacto';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { AtividadesListaPortal } from '@/components/portal-incorporador/AtividadesListaPortal';
 import { useResumoAtividades } from '@/hooks/useForecast';
+import { useAtividade } from '@/hooks/useAtividades';
+import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
 import { format, parseISO } from 'date-fns';
@@ -98,6 +100,7 @@ const ATIVIDADE_STATUS_BADGE: Record<string, 'default' | 'secondary' | 'outline'
 export default function PortalIncorporadorForecast() {
   const [tab, setTab] = useState<'dashboard' | 'atividades' | 'calendario'>('dashboard');
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
+  const [detalheAtividadeId, setDetalheAtividadeId] = useState<string | null>(null);
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
 
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
@@ -106,6 +109,7 @@ export default function PortalIncorporadorForecast() {
   );
   const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds);
   const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds);
+  const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
 
   const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
     seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
@@ -369,7 +373,11 @@ export default function PortalIncorporadorForecast() {
                 <ScrollArea className="h-[280px]">
                   <div className="space-y-2 pr-3">
                     {atendimentos.map((at: any) => (
-                      <div key={at.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div
+                        key={at.id}
+                        onClick={() => setDetalheAtividadeId(at.id)}
+                        className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{at.titulo}</p>
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
@@ -428,6 +436,13 @@ export default function PortalIncorporadorForecast() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AtividadeDetalheDialog
+        atividade={atividadeSelecionada || null}
+        loading={loadingDetalhe}
+        open={!!detalheAtividadeId}
+        onOpenChange={(open) => !open && setDetalheAtividadeId(null)}
+      />
     </div>
   );
 }
