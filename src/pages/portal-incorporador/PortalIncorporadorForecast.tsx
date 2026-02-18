@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { FunilTemperatura } from '@/components/forecast/FunilTemperatura';
 import { VisitasPorEmpreendimento } from '@/components/forecast/VisitasPorEmpreendimento';
 import { AtividadesPorTipo } from '@/components/forecast/AtividadesPorTipo';
@@ -82,16 +83,16 @@ function useAtendimentosLista(empreendimentoIds: string[]) {
   });
 }
 
-const STATUS_APROVACAO_LABELS: Record<string, { label: string; badgeClass: string }> = {
-  pendente: { label: 'Pendente', badgeClass: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  aprovada: { label: 'Aprovada', badgeClass: 'bg-green-100 text-green-800 border-green-200' },
-  rejeitada: { label: 'Rejeitada', badgeClass: 'bg-red-100 text-red-800 border-red-200' },
+const STATUS_APROVACAO_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  pendente: { label: 'Pendente', variant: 'outline' },
+  aprovada: { label: 'Aprovada', variant: 'secondary' },
+  rejeitada: { label: 'Rejeitada', variant: 'destructive' },
 };
 
-const ATIVIDADE_STATUS_BADGE: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  concluida: 'bg-green-100 text-green-800 border-green-200',
-  cancelada: 'bg-muted text-muted-foreground',
+const ATIVIDADE_STATUS_BADGE: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  pendente: 'outline',
+  concluida: 'secondary',
+  cancelada: 'secondary',
 };
 
 export default function PortalIncorporadorForecast() {
@@ -171,7 +172,7 @@ export default function PortalIncorporadorForecast() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── DASHBOARD: Negociações + Lista de Atendimentos ── */}
+        {/* ── DASHBOARD: Negociações + Gráficos ── */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">
 
           {/* Card Previsões e Negócios */}
@@ -182,19 +183,19 @@ export default function PortalIncorporadorForecast() {
                 Previsões e Negócios
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               {/* KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <p className="text-2xl font-bold">{negKPIs.total}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Total</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50 border border-yellow-200 text-center">
-                  <p className="text-2xl font-bold text-yellow-700">{negKPIs.pendentes}</p>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border text-center">
+                  <p className="text-2xl font-bold text-foreground">{negKPIs.pendentes}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Pendentes</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50 border border-green-200 text-center">
-                  <p className="text-2xl font-bold text-green-700">{negKPIs.aprovadas}</p>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border text-center">
+                  <p className="text-2xl font-bold text-chart-2">{negKPIs.aprovadas}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Aprovadas</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50 border border-destructive/30 text-center">
@@ -202,6 +203,84 @@ export default function PortalIncorporadorForecast() {
                   <p className="text-xs text-muted-foreground mt-0.5">Rejeitadas</p>
                 </div>
               </div>
+
+              {/* Gráficos */}
+              {loadingNeg ? (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Skeleton className="h-[200px]" />
+                  <Skeleton className="h-[200px] lg:col-span-2" />
+                </div>
+              ) : negociacoes && negociacoes.length > 0 ? (() => {
+                const pieData = [
+                  { name: 'Pendentes', value: negKPIs.pendentes, color: 'hsl(var(--chart-5))' },
+                  { name: 'Aprovadas', value: negKPIs.aprovadas, color: 'hsl(var(--chart-2))' },
+                  { name: 'Rejeitadas', value: negKPIs.rejeitadas, color: 'hsl(var(--destructive))' },
+                ].filter(d => d.value > 0);
+
+                const barData = (negociacoes as any[]).reduce((acc: { nome: string; total: number }[], neg: any) => {
+                  const nome = neg.empreendimento?.nome || 'Sem empreendimento';
+                  const existing = acc.find(a => a.nome === nome);
+                  if (existing) existing.total++;
+                  else acc.push({ nome, total: 1 });
+                  return acc;
+                }, []).sort((a: { nome: string; total: number }, b: { nome: string; total: number }) => b.total - a.total);
+
+                return (
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {/* Donut — distribuição de status */}
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2 text-center">Distribuição por Status</p>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={45}
+                            outerRadius={70}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip
+                            formatter={(value: number, name: string) => [value, name]}
+                          />
+                          <Legend
+                            iconSize={8}
+                            formatter={(value) => <span className="text-xs">{value}</span>}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Barras — negociações por empreendimento */}
+                    <div className="lg:col-span-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 text-center">Negociações por Empreendimento</p>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                          <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                          <YAxis
+                            type="category"
+                            dataKey="nome"
+                            tick={{ fontSize: 10 }}
+                            width={120}
+                            tickFormatter={(v: string) => v.length > 16 ? v.slice(0, 15) + '…' : v}
+                          />
+                          <RechartsTooltip formatter={(v: number) => [v, 'Negociações']} />
+                          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  Nenhum dado de negociação disponível para gráficos
+                </p>
+              )}
 
               {/* Lista de negociações */}
               {loadingNeg ? (
@@ -213,9 +292,9 @@ export default function PortalIncorporadorForecast() {
                   Nenhuma negociação encontrada
                 </p>
               ) : (
-                <ScrollArea className="h-[380px]">
+                <ScrollArea className="h-[320px]">
                   <div className="space-y-2 pr-3">
-                    {negociacoes.map((neg: any) => {
+                    {(negociacoes as any[]).map((neg: any) => {
                       const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
                       return (
                         <div key={neg.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -232,7 +311,7 @@ export default function PortalIncorporadorForecast() {
                               <span>📅 {format(parseISO(neg.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
                             </div>
                           </div>
-                          <Badge variant="outline" className={`text-xs ml-2 flex-shrink-0 ${statusCfg.badgeClass}`}>
+                          <Badge variant={statusCfg.variant} className="text-xs ml-2 flex-shrink-0">
                             {statusCfg.label}
                           </Badge>
                         </div>
@@ -243,54 +322,11 @@ export default function PortalIncorporadorForecast() {
               )}
             </CardContent>
           </Card>
-
-          {/* Card Lista de Atendimentos */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Headphones className="h-4 w-4 text-primary" />
-                  Lista de Atendimentos
-                </CardTitle>
-                <Badge variant="secondary">{atendimentos?.length || 0}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loadingAtend ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
-                </div>
-              ) : !atendimentos?.length ? (
-                <p className="text-center text-muted-foreground py-6 text-sm">
-                  Nenhum atendimento encontrado
-                </p>
-              ) : (
-                <ScrollArea className="h-[280px]">
-                  <div className="space-y-2 pr-3">
-                    {atendimentos.map((at: any) => (
-                      <div key={at.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{at.titulo}</p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
-                            {at.cliente && <span>👤 {at.cliente.nome}</span>}
-                            {at.empreendimento && <span>🏢 {at.empreendimento.nome}</span>}
-                            <span>📅 {format(parseISO(at.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
-                          </div>
-                        </div>
-                        <Badge className={`text-xs ml-2 flex-shrink-0 ${ATIVIDADE_STATUS_BADGE[at.status] || ''}`}>
-                          {at.status === 'pendente' ? 'Pendente' : at.status === 'concluida' ? 'Concluída' : at.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* ── ATIVIDADES: Cards categoria + Atendimentos + Análises ── */}
         <TabsContent value="atividades" className="space-y-6 mt-6">
+
 
           {/* 4 Cards de Categoria */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -342,7 +378,7 @@ export default function PortalIncorporadorForecast() {
                             <span>📅 {format(parseISO(at.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
                           </div>
                         </div>
-                        <Badge className={`text-xs ml-2 flex-shrink-0 ${ATIVIDADE_STATUS_BADGE[at.status] || ''}`}>
+                        <Badge variant={ATIVIDADE_STATUS_BADGE[at.status] || 'outline'} className="text-xs ml-2 flex-shrink-0">
                           {at.status === 'pendente' ? 'Pendente' : at.status === 'concluida' ? 'Concluída' : at.status}
                         </Badge>
                       </div>

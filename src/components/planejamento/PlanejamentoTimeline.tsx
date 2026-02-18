@@ -2,9 +2,8 @@ import { useMemo, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, differenceInDays, isWithinInterval, isBefore, isAfter, addDays, startOfWeek, endOfWeek, eachWeekOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -31,6 +30,7 @@ const DAY_INITIALS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const ROW_HEIGHT = 36;
 const HEADER_HEIGHT = 60;
 const FASE_ROW_HEIGHT = 32;
+const LEFT_COL_WIDTH = 240;
 
 export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Props) {
   const { itens, isLoading } = usePlanejamentoItens({ empreendimento_id: empreendimentoId });
@@ -41,6 +41,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedItem, setSelectedItem] = useState<PlanejamentoItemWithRelations | null>(null);
   const [detalheOpen, setDetalheOpen] = useState(false);
+  const [collapsedFases, setCollapsedFases] = useState<Set<string>>(new Set());
 
   const handleItemClick = (item: PlanejamentoItemWithRelations) => {
     setSelectedItem(item);
@@ -76,7 +77,6 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
       }
     });
 
-    // Adicionar buffer
     return {
       start: startOfMonth(subMonths(minDate, 1)),
       end: endOfMonth(addMonths(maxDate, 1))
@@ -143,6 +143,23 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
     });
     return grouped;
   }, [itens, fases]);
+
+  // Colapsar / expandir tudo
+  const toggleFase = (faseId: string) => {
+    setCollapsedFases(prev => {
+      const next = new Set(prev);
+      if (next.has(faseId)) next.delete(faseId);
+      else next.add(faseId);
+      return next;
+    });
+  };
+
+  const collapseAll = () => {
+    const allFaseIds = fases?.filter(f => itensByFase.has(f.id)).map(f => f.id) || [];
+    setCollapsedFases(new Set(allFaseIds));
+  };
+
+  const expandAll = () => setCollapsedFases(new Set());
 
   // Calcular posição de um item na timeline
   const getItemPosition = (item: PlanejamentoItemWithRelations) => {
@@ -221,7 +238,6 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
 
   const handleToday = () => {
     setCurrentDate(new Date());
-    // Scroll to today
     if (scrollRef.current) {
       const todayIdx = columns.findIndex(c => c.isToday);
       if (todayIdx > -1) {
@@ -248,18 +264,10 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
   const cellWidth = CELL_WIDTHS[zoom];
   const totalWidth = columns.length * cellWidth;
 
-  // Calcular altura total
-  let totalRows = 0;
-  fases?.forEach(fase => {
-    if (itensByFase.has(fase.id)) {
-      totalRows += 1 + (itensByFase.get(fase.id)?.length || 0);
-    }
-  });
-
   return (
     <div className="space-y-4">
       {/* Controles */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={handlePrev}>
             <ChevronLeft className="h-4 w-4" />
@@ -276,7 +284,16 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Zoom:</span>
+          {/* Botões de colapso */}
+          <Button variant="outline" size="sm" onClick={collapseAll} className="text-xs">
+            Colapsar Tudo
+          </Button>
+          <Button variant="outline" size="sm" onClick={expandAll} className="text-xs">
+            Expandir Tudo
+          </Button>
+
+          {/* Zoom */}
+          <span className="text-xs text-muted-foreground ml-2">Zoom:</span>
           <Button 
             variant="outline" 
             size="icon" 
@@ -301,11 +318,13 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
 
       {/* Timeline */}
       <Card className="overflow-hidden">
-        {/* Container com scroll vertical + horizontal integrados */}
-        <div className="overflow-auto max-h-[600px]" ref={scrollRef}>
-          <div className="flex" style={{ minWidth: `${200 + totalWidth}px` }}>
+        <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 280px)' }} ref={scrollRef}>
+          <div className="flex" style={{ minWidth: `${LEFT_COL_WIDTH + totalWidth}px` }}>
             {/* Coluna fixa de fases/itens - sticky left */}
-            <div className="min-w-[200px] w-[200px] flex-shrink-0 border-r bg-card sticky left-0 z-20">
+            <div
+              className="flex-shrink-0 border-r bg-card sticky left-0 z-20"
+              style={{ width: LEFT_COL_WIDTH, minWidth: LEFT_COL_WIDTH }}
+            >
               {/* Header */}
               <div 
                 className="border-b bg-muted/50 flex items-center px-3 font-medium text-sm sticky top-0 z-30"
@@ -318,20 +337,31 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
               {fases?.map(fase => {
                 const faseItens = itensByFase.get(fase.id);
                 if (!faseItens || faseItens.length === 0) return null;
+                const isCollapsed = collapsedFases.has(fase.id);
 
                 return (
                   <div key={fase.id}>
-                    {/* Fase */}
+                    {/* Fase com botão de colapso */}
                     <div 
-                      className="border-b bg-muted/30 flex items-center gap-2 px-3 font-medium text-sm"
+                      className="border-b bg-muted/30 flex items-center gap-1 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50 transition-colors"
                       style={{ height: FASE_ROW_HEIGHT }}
+                      onClick={() => toggleFase(fase.id)}
                     >
+                      <button className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+                        {isCollapsed
+                          ? <ChevronRightIcon className="h-3.5 w-3.5" />
+                          : <ChevronDown className="h-3.5 w-3.5" />
+                        }
+                      </button>
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: fase.cor }} />
                       <span className="truncate">{fase.nome}</span>
+                      <span className="ml-auto text-xs text-muted-foreground font-normal flex-shrink-0">
+                        {faseItens.length}
+                      </span>
                     </div>
 
-                    {/* Itens */}
-                    {faseItens.map(item => (
+                    {/* Itens — ocultos quando colapsado */}
+                    {!isCollapsed && faseItens.map(item => (
                       <div 
                         key={item.id}
                         className="border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer"
@@ -347,7 +377,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
               })}
             </div>
 
-            {/* Área de datas (sem scroll próprio - usa o container pai) */}
+            {/* Área de datas */}
             <div style={{ width: totalWidth, flexShrink: 0 }}>
               {/* Header de datas - sticky top */}
               <div 
@@ -374,13 +404,15 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
               {fases?.map(fase => {
                 const faseItens = itensByFase.get(fase.id);
                 if (!faseItens || faseItens.length === 0) return null;
+                const isCollapsed = collapsedFases.has(fase.id);
 
                 return (
                   <div key={fase.id}>
                     {/* Linha da fase */}
                     <div 
-                      className="flex border-b bg-muted/30"
+                      className="flex border-b bg-muted/30 cursor-pointer"
                       style={{ height: FASE_ROW_HEIGHT }}
+                      onClick={() => toggleFase(fase.id)}
                     >
                       {columns.map((col, idx) => (
                         <div
@@ -395,8 +427,8 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                       ))}
                     </div>
 
-                    {/* Linhas dos itens */}
-                    {faseItens.map(item => {
+                    {/* Linhas dos itens — ocultas quando colapsado */}
+                    {!isCollapsed && faseItens.map(item => {
                       const pos = getItemPosition(item);
 
                       return (
