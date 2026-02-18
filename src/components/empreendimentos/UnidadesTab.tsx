@@ -173,7 +173,16 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return;
     }
 
-    const ordenadas = ordenarUnidadesPorBlocoENumero(disponiveis);
+    // Ordenação: Bloco/Quadra → Andar → Número
+    const ordenadas = [...disponiveis].sort((a, b) => {
+      const blocoA = a.bloco?.nome || '';
+      const blocoB = b.bloco?.nome || '';
+      const blocoCompare = blocoA.localeCompare(blocoB, 'pt-BR', { numeric: true });
+      if (blocoCompare !== 0) return blocoCompare;
+      const andarCompare = (a.andar ?? 0) - (b.andar ?? 0);
+      if (andarCompare !== 0) return andarCompare;
+      return a.numero.localeCompare(b.numero, 'pt-BR', { numeric: true });
+    });
 
     const blocoLabel = isLoteamento ? 'Quadra' : 'Bloco';
     const unidLabel = isLoteamento ? 'Lote' : 'Número';
@@ -188,17 +197,17 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const linhasHtml = ordenadas.map((u, i) => `
       <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
-        <td style="${tdBase}">${u.bloco?.nome || 'Sem ' + blocoLabel}</td>
         <td style="${tdBase} text-align: center;">${u.numero}</td>
+        <td style="${tdBase}">${u.bloco?.nome || '-'}</td>
         <td style="${tdBase} text-align: center;">${u.andar != null ? u.andar + 'º' : '-'}</td>
         <td style="${tdBase}">${u.tipologia?.nome || '-'}</td>
-        <td style="${tdBase} text-align: center;">${u.area_privativa ?? '-'}</td>
+        <td style="${tdBase} text-align: center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
         <td style="${tdBase} text-align: right;">${formatarMoeda(u.valor)}</td>
       </tr>
     `).join('');
 
     const htmlContent = `
-      <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333;">
+      <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ccc;">
           <div>
             <div style="font-size: 12pt; font-weight: bold; line-height: 1.3;">CRM 360 – Seven Group 360</div>
@@ -213,8 +222,8 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
           <thead>
             <tr style="background: #e5e5e5;">
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">${blocoLabel}</th>
               <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">${unidLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">${blocoLabel}</th>
               <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Andar</th>
               <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">Tipologia</th>
               <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Área (m²)</th>
