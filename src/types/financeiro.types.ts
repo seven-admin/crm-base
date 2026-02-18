@@ -134,9 +134,10 @@ export interface Bonificacao {
 }
 
 // Frequência de recorrência
-export type RecorrenciaFrequencia = 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual';
+export type RecorrenciaFrequencia = 'semanal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual';
 
 export const RECORRENCIA_LABELS: Record<RecorrenciaFrequencia, string> = {
+  semanal: 'Semanal',
   mensal: 'Mensal',
   bimestral: 'Bimestral',
   trimestral: 'Trimestral',
@@ -144,7 +145,7 @@ export const RECORRENCIA_LABELS: Record<RecorrenciaFrequencia, string> = {
   anual: 'Anual',
 };
 
-export const RECORRENCIA_MESES: Record<RecorrenciaFrequencia, number> = {
+export const RECORRENCIA_MESES: Record<Exclude<RecorrenciaFrequencia, 'semanal'>, number> = {
   mensal: 1,
   bimestral: 2,
   trimestral: 3,
