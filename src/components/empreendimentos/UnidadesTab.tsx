@@ -195,16 +195,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const tdBase = "padding: 2px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1; vertical-align: top;";
 
-    const linhasHtml = ordenadas.map((u, i) => `
-      <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
-        <td style="${tdBase} text-align: center;">${u.numero}</td>
-        <td style="${tdBase}">${u.bloco?.nome || '-'}</td>
-        <td style="${tdBase} text-align: center;">${u.andar != null ? u.andar + 'º' : '-'}</td>
-        <td style="${tdBase}">${u.tipologia?.nome || '-'}</td>
-        <td style="${tdBase} text-align: center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
-        <td style="${tdBase} text-align: right;">${formatarMoeda(u.valor)}</td>
-      </tr>
-    `).join('');
+    const linhasHtml = ordenadas.map((u) => `<tr style="background:#ffffff;"><td style="${tdBase}text-align:center;">${u.numero}</td><td style="${tdBase}">${u.bloco?.nome || '-'}</td><td style="${tdBase}text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td><td style="${tdBase}">${u.tipologia?.nome || '-'}</td><td style="${tdBase}text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td><td style="${tdBase}text-align:right;">${formatarMoeda(u.valor)}</td></tr>`).join('');
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
@@ -230,9 +221,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               <th style="padding: 2px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 8pt; line-height: 1; vertical-align: top;">Valor (R$)</th>
             </tr>
           </thead>
-          <tbody>
-            ${linhasHtml}
-          </tbody>
+          <tbody>${linhasHtml}</tbody>
         </table>
         <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
           Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
