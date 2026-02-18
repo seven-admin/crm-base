@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { usePlanejamentoGlobal, type PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
 import { usePlanejamentoFases } from '@/hooks/usePlanejamentoFases';
+import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 
@@ -52,6 +53,7 @@ interface ColumnInfo {
 export function PlanejamentoGlobalTimeline({ filters, onFiltersChange }: Props) {
   const { itens, isLoading } = usePlanejamentoGlobal(filters);
   const { fases } = usePlanejamentoFases();
+  const { data: empreendimentos } = useEmpreendimentosSelect();
   
   const [zoom, setZoom] = useState<ZoomLevel>('semana');
   const [collapsedEmpreendimentos, setCollapsedEmpreendimentos] = useState<Set<string>>(new Set());
@@ -383,9 +385,27 @@ export function PlanejamentoGlobalTimeline({ filters, onFiltersChange }: Props) 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base">Timeline Global de Projetos</CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select
+              value={filters.empreendimento_id || 'all'}
+              onValueChange={(v) =>
+                onFiltersChange({ ...filters, empreendimento_id: v === 'all' ? undefined : v })
+              }
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Todos os empreendimentos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os empreendimentos</SelectItem>
+                {empreendimentos?.map((emp) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
               size="sm"

@@ -17,8 +17,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { usePlanejamentoGlobal, type PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
+import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 
@@ -51,6 +53,7 @@ function hexToRgba(hex: string, alpha: number): string {
 
 export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const { itens, isLoading } = usePlanejamentoGlobal(filters);
+  const { data: empreendimentos } = useEmpreendimentosSelect();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -144,11 +147,29 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
       <div className="lg:col-span-2">
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-lg font-semibold capitalize">
                 {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
               </CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select
+                  value={filters.empreendimento_id || 'all'}
+                  onValueChange={(v) =>
+                    onFiltersChange({ ...filters, empreendimento_id: v === 'all' ? undefined : v })
+                  }
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Todos os empreendimentos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os empreendimentos</SelectItem>
+                    {empreendimentos?.map((emp) => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {emp.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="sm" onClick={handleToday}>
                   Hoje
                 </Button>
