@@ -193,9 +193,9 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    const tdBase = "padding: 2px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1; vertical-align: top;";
+    const tdBase = "padding: 4px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1; vertical-align: top;";
 
-    const linhasHtml = ordenadas.map((u) => `<tr style="background:#ffffff;"><td style="${tdBase}text-align:center;">${u.numero}</td><td style="${tdBase}">${u.bloco?.nome || '-'}</td><td style="${tdBase}text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td><td style="${tdBase}">${u.tipologia?.nome || '-'}</td><td style="${tdBase}text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td><td style="${tdBase}text-align:right;">${formatarMoeda(u.valor)}</td></tr>`).join('');
+    const linhasHtml = ordenadas.map((u) => `<tr style="background:#ffffff; border-bottom: 1px solid #ddd;"><td style="${tdBase} text-align:center;">${u.numero}</td><td style="${tdBase}">${u.bloco?.nome || '-'}</td><td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td><td style="${tdBase}">${u.tipologia?.nome || '-'}</td><td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td><td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td></tr>`).join('');
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
@@ -210,7 +210,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
             <div style="font-size: 8pt; color: #777;">Gerado em ${dataGeracao}</div>
           </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border-top: 1px solid #ddd;">
           <thead>
             <tr style="background: #e5e5e5;">
               <th style="padding: 2px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1; vertical-align: top;">${unidLabel}</th>
