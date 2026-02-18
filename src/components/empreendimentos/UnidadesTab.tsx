@@ -193,7 +193,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    const tdBase = "padding: 6px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap;";
+    const tdBase = "padding: 6px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap;";
 
     const linhasHtml = ordenadas.map((u, i) => `
       <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
@@ -219,15 +219,15 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
             <div style="font-size: 8pt; color: #777;">Gerado em ${dataGeracao}</div>
           </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
           <thead>
             <tr style="background: #e5e5e5;">
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt;">${unidLabel}</th>
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">${blocoLabel}</th>
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt;">Andar</th>
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">Tipologia</th>
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt;">Área (m²)</th>
-              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt;">Valor (R$)</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 8pt;">${unidLabel}</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 8pt;">${blocoLabel}</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 8pt;">Andar</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 8pt;">Tipologia</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 8pt;">Área (m²)</th>
+              <th style="padding: 6px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 8pt;">Valor (R$)</th>
             </tr>
           </thead>
           <tbody>
@@ -251,7 +251,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     try {
       await (html2pdf() as any).set({
-        margin: [10, 10, 10, 10],
+        margin: 15,
         filename: `Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 680, windowWidth: 680 },
