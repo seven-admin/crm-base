@@ -19,6 +19,7 @@ export interface PlanejamentoGlobalFilters {
   responsavel_id?: string;
   fase_id?: string;
   status_id?: string;
+  empreendimento_id?: string;
 }
 
 export interface EmpreendimentoProgresso {
@@ -80,6 +81,10 @@ export function usePlanejamentoGlobal(filters?: PlanejamentoGlobalFilters, limit
 
       if (filters?.responsavel_id) {
         query = query.eq('responsavel_tecnico_id', filters.responsavel_id);
+      }
+
+      if (filters?.empreendimento_id) {
+        query = query.eq('empreendimento_id', filters.empreendimento_id);
       }
 
       // Filtros de data
