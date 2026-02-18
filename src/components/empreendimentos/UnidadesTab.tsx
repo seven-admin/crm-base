@@ -177,34 +177,31 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const blocoLabel = isLoteamento ? 'Quadra' : 'Bloco';
     const unidLabel = isLoteamento ? 'Lote' : 'Número';
-    const dataGeracao = format(new Date(), 'dd/MM/yyyy');
+    const dataGeracao = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
 
     const formatarMoeda = (valor: number | null | undefined) => {
       if (valor == null) return '-';
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
+    const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap;";
+
     const linhasHtml = ordenadas.map((u, i) => `
-      <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9f9f9'};">
-        <td style="padding: 6px 8px; border: 1px solid #ddd;">${u.bloco?.nome || 'Sem ' + blocoLabel}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd;">${u.numero}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd;">${u.tipologia?.nome || '-'}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd; text-align: center;">${u.area_privativa ?? '-'}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd; text-align: right;">${formatarMoeda(u.valor)}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd;">${u.posicao || '-'}</td>
-        <td style="padding: 6px 8px; border: 1px solid #ddd;">${u.observacoes || '-'}</td>
+      <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
+        <td style="${tdBase}">${u.bloco?.nome || 'Sem ' + blocoLabel}</td>
+        <td style="${tdBase}">${u.numero}</td>
+        <td style="${tdBase}">${u.tipologia?.nome || '-'}</td>
+        <td style="${tdBase} text-align: center;">${u.area_privativa ?? '-'}</td>
+        <td style="${tdBase} text-align: right;">${formatarMoeda(u.valor)}</td>
       </tr>
     `).join('');
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ccc;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="${logoImg}" alt="Logo" style="height: 32px;" />
-            <div>
-              <div style="font-size: 12pt; font-weight: bold; line-height: 1.2;">CRM 360 – Seven Group 360</div>
-              <div style="font-size: 8pt; color: #777;">Plataforma de Gestão Integrada</div>
-            </div>
+          <div>
+            <div style="font-size: 12pt; font-weight: bold; line-height: 1.3;">CRM 360 – Seven Group 360</div>
+            <div style="font-size: 8pt; color: #777;">Plataforma de Gestão Integrada</div>
           </div>
           <div style="text-align: right;">
             <div style="font-size: 12pt; font-weight: bold;">Unidades Disponíveis</div>
@@ -215,20 +212,18 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
           <thead>
             <tr style="background: #e5e5e5;">
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; font-weight: bold;">${blocoLabel}</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; font-weight: bold;">${unidLabel}</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Tipologia</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">Área (m²)</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">Valor (R$)</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Posição</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left; font-weight: bold;">Observações</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">${blocoLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">${unidLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">Tipologia</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt;">Área (m²)</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt;">Valor (R$)</th>
             </tr>
           </thead>
           <tbody>
             ${linhasHtml}
           </tbody>
         </table>
-        <p style="margin: 16px 0 0; font-size: 9pt; color: #555; text-align: right;">
+        <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
           Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
         </p>
       </div>
