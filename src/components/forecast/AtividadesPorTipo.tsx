@@ -37,7 +37,7 @@ export function AtividadesPorTipo({ gestorId, dataInicio, dataFim, empreendiment
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Atividades por Tipo
+            Atividades por Tipo Semanal
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -61,7 +61,7 @@ export function AtividadesPorTipo({ gestorId, dataInicio, dataFim, empreendiment
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-base">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Atividades por Tipo
+            Atividades por Tipo Semanal
           </span>
           <span className="text-sm font-normal text-muted-foreground">
             Total: {total}
