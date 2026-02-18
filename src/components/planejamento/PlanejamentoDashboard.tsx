@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, Clock, CheckCircle2, AlertTriangle, UserX, Calendar } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
 import { usePlanejamentoFases } from '@/hooks/usePlanejamentoFases';
 import { usePlanejamentoStatus } from '@/hooks/usePlanejamentoStatus';
@@ -148,34 +148,6 @@ export function PlanejamentoDashboard({ empreendimentoId }: Props) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Alertas */}
-      {(metrics.semResponsavel > 0 || metrics.semData > 0) && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {metrics.semResponsavel > 0 && (
-            <Card className="border-amber-500/50 bg-amber-500/5">
-              <CardContent className="py-4 flex items-center gap-3">
-                <UserX className="h-5 w-5 text-amber-600" />
-                <div>
-                  <p className="font-medium text-sm">{metrics.semResponsavel} tarefa(s) sem responsável</p>
-                  <p className="text-xs text-muted-foreground">Atribua um responsável técnico</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          {metrics.semData > 0 && (
-            <Card className="border-amber-500/50 bg-amber-500/5">
-              <CardContent className="py-4 flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-amber-600" />
-                <div>
-                  <p className="font-medium text-sm">{metrics.semData} tarefa(s) sem data</p>
-                  <p className="text-xs text-muted-foreground">Defina datas de início e fim</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Progresso por fase */}
