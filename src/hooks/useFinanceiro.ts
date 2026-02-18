@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { addMonths, endOfYear, format } from 'date-fns';
+import { addMonths, addWeeks, endOfYear, format } from 'date-fns';
 import type { 
   LancamentoFinanceiro, 
   LancamentoFormData, 
@@ -153,13 +153,20 @@ function generateRecurringDates(
   const start = new Date(startDate);
   const currentYear = start.getFullYear();
   const endYear = endOfYear(new Date(currentYear, 11, 31)); // Dezembro do ano corrente
-  const intervalMonths = RECORRENCIA_MESES[frequencia];
 
   let currentDate = start;
-  
-  while (currentDate <= endYear) {
-    dates.push(format(currentDate, 'yyyy-MM-dd'));
-    currentDate = addMonths(currentDate, intervalMonths);
+
+  if (frequencia === 'semanal') {
+    while (currentDate <= endYear) {
+      dates.push(format(currentDate, 'yyyy-MM-dd'));
+      currentDate = addWeeks(currentDate, 1);
+    }
+  } else {
+    const intervalMonths = RECORRENCIA_MESES[frequencia];
+    while (currentDate <= endYear) {
+      dates.push(format(currentDate, 'yyyy-MM-dd'));
+      currentDate = addMonths(currentDate, intervalMonths);
+    }
   }
 
   return dates;
