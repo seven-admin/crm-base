@@ -410,51 +410,6 @@ export default function PortalIncorporadorMarketing() {
         </Card>
       </div>
 
-      {/* Próximas Entregas - Largura total */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Próximas Entregas (7 dias)</CardTitle>
-          <Badge variant="secondary">{data.proximasEntregas.length}</Badge>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[280px]">
-            {data.proximasEntregas.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhuma entrega prevista
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {data.proximasEntregas.map((ticket) => (
-                  <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <span className="text-xs text-muted-foreground font-mono shrink-0">{ticket.codigo}</span>
-                      <span className="text-sm truncate">{ticket.titulo}</span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Badge variant="outline" className="text-xs">
-                        {CATEGORIA_LABELS[ticket.categoria] || ticket.categoria}
-                      </Badge>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground w-16 justify-end">
-                        <Calendar className="h-3 w-3" />
-                        {ticket.data_previsao && format(parseISO(ticket.data_previsao), 'dd/MM', { locale: ptBR })}
-                      </div>
-                      {ticket.dias_restantes !== undefined && (
-                        <Badge 
-                          variant={ticket.dias_restantes <= 1 ? 'destructive' : 'secondary'} 
-                          className="text-xs w-12 justify-center"
-                        >
-                          {ticket.dias_restantes === 0 ? 'Hoje' : `${ticket.dias_restantes}d`}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
       {/* Lista completa de tickets */}
       <Card>
         <CardHeader className="pb-3">
@@ -538,6 +493,51 @@ export default function PortalIncorporadorMarketing() {
                 </div>
               );
             })()}
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Próximas Entregas - Largura total */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Próximas Entregas (7 dias)</CardTitle>
+          <Badge variant="secondary">{data.proximasEntregas.length}</Badge>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[280px]">
+            {data.proximasEntregas.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma entrega prevista
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {data.proximasEntregas.map((ticket) => (
+                  <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <span className="text-xs text-muted-foreground font-mono shrink-0">{ticket.codigo}</span>
+                      <span className="text-sm truncate">{ticket.titulo}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Badge variant="outline" className="text-xs">
+                        {CATEGORIA_LABELS[ticket.categoria] || ticket.categoria}
+                      </Badge>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground w-16 justify-end">
+                        <Calendar className="h-3 w-3" />
+                        {ticket.data_previsao && format(parseISO(ticket.data_previsao), 'dd/MM', { locale: ptBR })}
+                      </div>
+                      {ticket.dias_restantes !== undefined && (
+                        <Badge 
+                          variant={ticket.dias_restantes <= 1 ? 'destructive' : 'secondary'} 
+                          className="text-xs w-12 justify-center"
+                        >
+                          {ticket.dias_restantes === 0 ? 'Hoje' : `${ticket.dias_restantes}d`}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
