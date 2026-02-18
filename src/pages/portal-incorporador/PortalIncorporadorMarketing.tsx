@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import {
   PieChart,
   Pie,
@@ -67,7 +69,29 @@ const STATUS_TICKET_LABELS: Record<string, { label: string; cls: string }> = {
 export default function PortalIncorporadorMarketing() {
   const [statusFiltro, setStatusFiltro] = useState<string>('todos');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
+  const [detalheTicketId, setDetalheTicketId] = useState<string | null>(null);
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+
+  // Query para detalhe do ticket selecionado
+  const { data: ticketDetalhe, isLoading: loadingDetalhe } = useQuery({
+    queryKey: ['ticket-portal-detalhe', detalheTicketId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projetos_marketing')
+        .select(`
+          *,
+          cliente:cliente_id(id, full_name, email),
+          supervisor:supervisor_id(id, full_name),
+          empreendimento:empreendimento_id(id, nome),
+          briefing:briefing_id(id, codigo, cliente, tema, objetivo, formato_peca, composicao, head_titulo, sub_complemento, mensagem_chave, tom_comunicacao, estilo_visual, diretrizes_visuais, referencia, importante, observacoes, status)
+        `)
+        .eq('id', detalheTicketId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!detalheTicketId,
+  });
   
   // Query customizada para incorporadores
   const { data, isLoading: loadingDash } = useQuery({
@@ -189,7 +213,7 @@ export default function PortalIncorporadorMarketing() {
         proximasEntregas,
         porEtapa,
         porCategoria,
-        allTickets: allTickets.filter(t => !['concluido', 'arquivado'].includes(t.status) && !(t.ticket_etapa_id && etapasFinaisIds.has(t.ticket_etapa_id))),
+        allTickets: allTickets.filter(t => t.status !== 'arquivado'),
         etapas: etapas || [],
       };
     },
@@ -484,7 +508,11 @@ export default function PortalIncorporadorMarketing() {
                     const atrasado = ticket.data_previsao && ticket.data_previsao < hoje;
                     const statusCfg = STATUS_TICKET_LABELS[ticket.status] || { label: ticket.status, cls: 'bg-muted text-muted-foreground' };
                     return (
-                      <div key={ticket.id} className={`flex items-center justify-between p-3 border rounded-lg transition-colors hover:bg-muted/50 ${atrasado ? 'border-destructive/40' : ''}`}>
+                      <div
+                        key={ticket.id}
+                        onClick={() => setDetalheTicketId(ticket.id)}
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors hover:bg-muted/50 cursor-pointer ${atrasado ? 'border-destructive/40' : ''}`}
+                      >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <span className="text-xs text-muted-foreground font-mono shrink-0">{ticket.codigo}</span>
                           <div className="min-w-0">
@@ -513,6 +541,141 @@ export default function PortalIncorporadorMarketing() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Modal de detalhe do ticket */}
+      <Dialog open={!!detalheTicketId} onOpenChange={(open) => !open && setDetalheTicketId(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-start gap-2 flex-wrap">
+              {ticketDetalhe && (
+                <span className="font-mono text-sm text-muted-foreground shrink-0">{(ticketDetalhe as any).codigo}</span>
+              )}
+              <span className="flex-1">{(ticketDetalhe as any)?.titulo}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingDetalhe ? (
+            <div className="space-y-3 py-4">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : ticketDetalhe ? (
+            <div className="space-y-4 py-2">
+              {/* Badges de status, categoria e prioridade */}
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const t = ticketDetalhe as any;
+                  const statusCfg = STATUS_TICKET_LABELS[t.status] || { label: t.status, cls: 'bg-muted text-muted-foreground' };
+                  return (
+                    <>
+                      <Badge variant="outline" className={`text-xs ${statusCfg.cls}`}>{statusCfg.label}</Badge>
+                      <Badge variant="outline" className="text-xs">{CATEGORIA_LABELS[t.categoria] || t.categoria}</Badge>
+                      {t.prioridade && (
+                        <Badge variant="outline" className="text-xs capitalize">{t.prioridade}</Badge>
+                      )}
+                      {t.is_interno && (
+                        <Badge variant="secondary" className="text-xs">Interno</Badge>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Empreendimento e datas */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {(ticketDetalhe as any).empreendimento && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Empreendimento</p>
+                    <p className="font-medium">{(ticketDetalhe as any).empreendimento.nome}</p>
+                  </div>
+                )}
+                {(ticketDetalhe as any).supervisor && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Supervisor</p>
+                    <p className="font-medium">{(ticketDetalhe as any).supervisor.full_name}</p>
+                  </div>
+                )}
+                {(ticketDetalhe as any).data_previsao && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Previsão de Entrega</p>
+                    <p className="font-medium">
+                      {format(parseISO((ticketDetalhe as any).data_previsao), "dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                )}
+                {(ticketDetalhe as any).data_entrega && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Data de Entrega</p>
+                    <p className="font-medium">
+                      {format(parseISO((ticketDetalhe as any).data_entrega), "dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Descrição */}
+              {(ticketDetalhe as any).descricao && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Descrição</p>
+                    <p className="text-sm whitespace-pre-wrap">{(ticketDetalhe as any).descricao}</p>
+                  </div>
+                </>
+              )}
+
+              {/* Briefing vinculado */}
+              {(ticketDetalhe as any).briefing && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Briefing vinculado</p>
+                    {(() => {
+                      const b = (ticketDetalhe as any).briefing;
+                      const campos = [
+                        { label: 'Tema', value: b.tema },
+                        { label: 'Objetivo', value: b.objetivo },
+                        { label: 'Formato da Peça', value: b.formato_peca },
+                        { label: 'Composição', value: b.composicao },
+                        { label: 'Head / Título', value: b.head_titulo },
+                        { label: 'Mensagem-Chave', value: b.mensagem_chave },
+                        { label: 'Tom de Comunicação', value: b.tom_comunicacao },
+                        { label: 'Estilo Visual', value: b.estilo_visual },
+                        { label: 'Diretrizes Visuais', value: b.diretrizes_visuais },
+                        { label: 'Referência', value: b.referencia },
+                        { label: 'Importante', value: b.importante },
+                        { label: 'Observações', value: b.observacoes },
+                      ].filter(c => c.value);
+                      return (
+                        <div className="grid grid-cols-1 gap-2">
+                          {campos.map(c => (
+                            <div key={c.label} className="text-sm">
+                              <span className="text-xs text-muted-foreground">{c.label}: </span>
+                              <span>{c.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </>
+              )}
+
+              {/* Texto do briefing inline */}
+              {(ticketDetalhe as any).briefing_texto && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Briefing</p>
+                    <p className="text-sm whitespace-pre-wrap">{(ticketDetalhe as any).briefing_texto}</p>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
