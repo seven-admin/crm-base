@@ -52,7 +52,11 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
-  const { itens, isLoading } = usePlanejamentoGlobal(filters);
+  const [localEmpreendimentoId, setLocalEmpreendimentoId] = useState<string | undefined>(undefined);
+
+  // empreendimento_id é controlado localmente — não interfere nas outras abas
+  const localFilters = { ...filters, empreendimento_id: localEmpreendimentoId };
+  const { itens, isLoading } = usePlanejamentoGlobal(localFilters);
   const { data: empreendimentos } = useEmpreendimentosSelect();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -153,10 +157,8 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               </CardTitle>
               <div className="flex items-center gap-2 flex-wrap">
                 <Select
-                  value={filters.empreendimento_id || 'all'}
-                  onValueChange={(v) =>
-                    onFiltersChange({ ...filters, empreendimento_id: v === 'all' ? undefined : v })
-                  }
+                  value={localEmpreendimentoId || 'all'}
+                  onValueChange={(v) => setLocalEmpreendimentoId(v === 'all' ? undefined : v)}
                 >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Todos os empreendimentos" />
