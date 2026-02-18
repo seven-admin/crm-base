@@ -193,7 +193,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap; vertical-align: middle;";
+    const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap; vertical-align: middle; line-height: 20px;";
 
     const linhasHtml = ordenadas.map((u, i) => `
       <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
@@ -222,21 +222,16 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
           <thead>
             <tr style="background: #e5e5e5;">
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">${unidLabel}</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">${blocoLabel}</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Andar</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">Tipologia</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Área (m²)</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt; vertical-align: middle;">Valor (R$)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${linhasHtml}
-          </tbody>
-        </table>
-        <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">${unidLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">${blocoLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">Andar</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">Tipologia</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">Área (m²)</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt; vertical-align: middle; line-height: 24px;">Valor (R$)</th>
+...
           Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
         </p>
+        <div style="height: 20px;"></div>
       </div>
     `;
 
