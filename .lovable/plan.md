@@ -1,86 +1,43 @@
 
-## O que está errado e o que será corrigido
+## Correção definitiva — alinhamento e margem direita
 
-### Problema 1 — Tabela sem dados (crítico)
-A linha 231 do arquivo contém literalmente os caracteres `...` dentro da template string do HTML. Isso substituiu todo o trecho:
+### Diagnóstico real
+
+O `display: flex; align-items: center` dentro de `<td>` **não funciona no html2canvas**. O html2canvas não suporta flexbox dentro de células de tabela quando renderiza off-screen. Por isso o texto sempre fica colado na base, independente de quantas vezes essa abordagem seja tentada.
+
+### Solução simples (sem reinventar)
+
+Remover todos os `<div style="display:flex...">` dentro dos `<td>` e `<th>`.
+
+Usar apenas `padding-top` e `padding-bottom` iguais nas células para criar o efeito visual de centralização. Isso funciona 100% no html2canvas porque é CSS básico suportado universalmente.
+
+**`tdBase` novo:**
 ```
-            </tr>
-          </thead>
-          <tbody>
-            ${linhasHtml}
-          </tbody>
-        </table>
-        <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
+padding: 6px 6px; border-bottom: 1px solid #555; font-family: 'Courier New'...; font-size: 9pt; white-space: nowrap;
 ```
-Por isso a tabela exibe apenas o cabeçalho (thead) e nenhuma linha de dado.
 
-### Problema 2 — Alinhamento vertical na base das células
-`vertical-align: middle` em `<td>` não é respeitado pelo html2canvas quando o elemento é renderizado fora do DOM (off-screen). A única abordagem que funciona de forma confiável nesse contexto é envolver o conteúdo de cada `<td>` e `<th>` em um `<div>` com `display: flex; align-items: center;` e altura fixa.
-
-Exemplo para `<td>`:
+**Células `<td>` — conteúdo direto, sem div:**
 ```html
-<td style="padding: 0 6px; border-bottom: 1px solid #555; ...">
-  <div style="display: flex; align-items: center; height: 22px;">CONTEÚDO</div>
-</td>
+<td style="${tdBase} text-align: center;">${u.numero}</td>
+<td style="${tdBase}">${u.bloco?.nome || '-'}</td>
 ```
 
-Exemplo para `<th>`:
+**Cabeçalhos `<th>` — mesma coisa:**
 ```html
-<th style="padding: 0 6px; border-bottom: 2px solid #333; ...">
-  <div style="display: flex; align-items: center; height: 26px;">TEXTO</div>
-</th>
+<th style="padding: 6px 6px; border-bottom: 2px solid #333; ...">Número</th>
 ```
 
----
+### Margem direita fora do padrão
 
-### Mudanças no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
+Mudar `margin: 15` para `margin: [10, 10, 10, 10]` no html2pdf para reduzir a margem de 15mm para 10mm em todos os lados.
 
-**1. Remover o `line-height` do `tdBase`** — não é mais necessário pois o alinhamento será feito pelo flex interno:
-```
-const tdBase = "padding: 0 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap;";
-```
+### Resumo das mudanças em `src/components/empreendimentos/UnidadesTab.tsx`
 
-**2. Reescrever `linhasHtml`** com `<div>` flex interno em cada `<td>`:
-```html
-<tr style="background: ...">
-  <td style="${tdBase} text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; height: 22px;">${u.numero}</div>
-  </td>
-  <td style="${tdBase}">
-    <div style="display: flex; align-items: center; height: 22px;">${u.bloco?.nome || '-'}</div>
-  </td>
-  ... (mesma estrutura para Andar, Tipologia, Área, Valor)
-</tr>
-```
+1. `tdBase` (linha 196): trocar para `padding: 6px 6px;` — remove `line-height`, remove qualquer flex
+2. `linhasHtml` (linhas 199–207): remover todos os `<div style="display:flex...">` — conteúdo direto na célula
+3. `<th>` (linhas 225–230): remover os `<div style="display:flex...">` — texto direto no `<th>`, com `padding: 6px 6px;`
+4. `margin: 15` (linha 254): mudar para `margin: [10, 10, 10, 10]`
 
-**3. Reescrever todos os `<th>`** com `<div>` flex interno:
-```html
-<th style="padding: 0 6px; border-bottom: 2px solid #333; ...">
-  <div style="display: flex; align-items: center; justify-content: center; height: 26px;">Número</div>
-</th>
-```
+### Por que isso funciona
 
-**4. Reconstruir o fechamento correto da tabela** (o trecho que foi substituído por `...`):
-```html
-            </tr>
-          </thead>
-          <tbody>
-            ${linhasHtml}
-          </tbody>
-        </table>
-        <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
-          Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
-        </p>
-        <div style="height: 20px;"></div>
-```
-
----
-
-### Resultado esperado
-- Todas as linhas de dados aparecem na tabela
-- Texto de todas as células centralizado verticalmente (meio da célula)
-- Totalizador com espaçador de 20px abaixo para evitar corte na quebra de página
-- Estrutura HTML válida e completa
-
-### Arquivo modificado
-- `src/components/empreendimentos/UnidadesTab.tsx` — linhas 196–235
+html2canvas suporta `padding` em células de tabela normalmente. Um `padding: 6px` em cima e em baixo cria espaçamento simétrico que visualmente centraliza o texto — exatamente o que o html2pdf.js precisa para renderizar corretamente.
