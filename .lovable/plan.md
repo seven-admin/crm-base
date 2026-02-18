@@ -1,67 +1,36 @@
 
-# Adicionar Modal de Detalhe ao Clicar em Atendimento
+## Remover Cards de Alerta do Dashboard de Planejamento
 
-## Problema atual
+### Alteração
 
-Na aba **Atividades** do Forecast do Incorporador, o card "Lista de Atendimentos" renderiza cada atendimento como uma `div` com `hover:bg-muted/50`, mas sem nenhum `onClick` — clicar não faz nada.
+Remover o bloco condicional que exibe os dois cards de aviso em `src/components/planejamento/PlanejamentoDashboard.tsx`:
 
-## Solução
+- Card "X tarefa(s) sem responsável / Atribua um responsável técnico"
+- Card "X tarefa(s) sem data / Defina datas de início e fim"
 
-Modificar apenas `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`:
+### Localização exata
 
-### 1. Adicionar imports
-
-```ts
-import { useAtividade } from '@/hooks/useAtividades';
-import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
-```
-
-Esses dois já existem no projeto e são usados em `AtividadesListaPortal.tsx` da mesma forma.
-
-### 2. Adicionar estado para o ID da atividade selecionada
-
-```ts
-const [detalheAtividadeId, setDetalheAtividadeId] = useState<string | null>(null);
-```
-
-### 3. Buscar a atividade completa quando selecionada
-
-```ts
-const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
-```
-
-O hook `useAtividade` busca todos os campos completos da atividade (cliente, corretor, empreendimento, gestor, observações, resultado, etc.) necessários para o modal.
-
-### 4. Adicionar `cursor-pointer` e `onClick` em cada item da lista
+**Arquivo**: `src/components/planejamento/PlanejamentoDashboard.tsx` — linhas 153 a 178
 
 ```tsx
-<div
-  key={at.id}
-  onClick={() => setDetalheAtividadeId(at.id)}
-  className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
->
+{(metrics.semResponsavel > 0 || metrics.semData > 0) && (
+  <div className="grid gap-4 md:grid-cols-2">
+    {metrics.semResponsavel > 0 && (
+      <Card className="border-amber-500/50 bg-amber-500/5">
+        ...
+      </Card>
+    )}
+    {metrics.semData > 0 && (
+      <Card className="border-amber-500/50 bg-amber-500/5">
+        ...
+      </Card>
+    )}
+  </div>
+)}
 ```
 
-### 5. Renderizar o `AtividadeDetalheDialog` fora das tabs
+Todo esse bloco será removido. Os imports de `UserX` e `Calendar` que ficarem sem uso também serão removidos do topo do arquivo.
 
-```tsx
-<AtividadeDetalheDialog
-  atividade={atividadeSelecionada || null}
-  loading={loadingDetalhe}
-  open={!!detalheAtividadeId}
-  onOpenChange={(open) => !open && setDetalheAtividadeId(null)}
-/>
-```
+### Impacto
 
-## Resumo
-
-| O que muda | Detalhe |
-|---|---|
-| Arquivo modificado | `PortalIncorporadorForecast.tsx` somente |
-| Novos imports | `useAtividade` e `AtividadeDetalheDialog` |
-| Novo estado | `detalheAtividadeId: string \| null` |
-| Nova query | `useAtividade(detalheAtividadeId)` — carrega só quando necessário |
-| Cada item da lista | Recebe `cursor-pointer` + `onClick` |
-| Modal | `AtividadeDetalheDialog` renderizado ao final do componente |
-
-Nenhum arquivo novo — alteração pontual em um único arquivo.
+Apenas o `PlanejamentoDashboard.tsx` é afetado. Nenhuma outra página ou componente usa esses alertas.
