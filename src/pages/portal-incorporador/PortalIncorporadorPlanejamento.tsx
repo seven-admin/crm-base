@@ -10,7 +10,7 @@ import { PlanejamentoCalendarioEmpreendimento } from '@/components/planejamento/
 
 export default function PortalIncorporadorPlanejamento() {
   const [empreendimentoId, setEmpreendimentoId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('timeline');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { empreendimentos, isLoading } = useIncorporadorEmpreendimentos();
 
   // Auto-select first empreendimento if only one
@@ -44,6 +44,10 @@ export default function PortalIncorporadorPlanejamento() {
       {empreendimentoId ? (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
+            <TabsTrigger value="dashboard" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-2">
               <CalendarDays className="h-4 w-4" />
               Timeline
@@ -52,11 +56,11 @@ export default function PortalIncorporadorPlanejamento() {
               <Calendar className="h-4 w-4" />
               Calendário
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard" className="mt-4">
+            <PlanejamentoDashboard empreendimentoId={empreendimentoId} />
+          </TabsContent>
 
           <TabsContent value="timeline" className="mt-4">
             <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly />
@@ -64,10 +68,6 @@ export default function PortalIncorporadorPlanejamento() {
 
           <TabsContent value="calendario" className="mt-4">
             <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly />
-          </TabsContent>
-
-          <TabsContent value="dashboard" className="mt-4">
-            <PlanejamentoDashboard empreendimentoId={empreendimentoId} />
           </TabsContent>
         </Tabs>
       ) : (
