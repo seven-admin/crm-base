@@ -1,40 +1,37 @@
 
-## Correção do alinhamento vertical — causa raiz identificada
+## Correção definitiva — trocar `vertical-align: middle` por `vertical-align: top`
 
-### O que está causando o espaçamento no topo de cada linha
+### Diagnóstico real observado na imagem
 
-O `tdBase` não tem `line-height` definido. O browser usa o valor padrão de aproximadamente `1.2`, o que significa:
+A imagem mostra claramente que o texto de cada linha está **flutuando no centro vertical** da célula, com espaço vazio acima e abaixo. Isso é exatamente o comportamento do `vertical-align: middle` — ele calcula a altura total da célula e posiciona o texto no meio.
 
-- Com `font-size: 7.5pt`, o `line-height` efetivo é ~9pt
-- Isso cria ~0.75pt de espaço acima e abaixo do texto dentro de cada célula
-- Visualmente: a linha parece ter um "topo vazio" antes do conteúdo
+O problema é que `vertical-align: middle` funciona junto com a altura calculada da linha. Com `line-height: 1` e `padding: 2px`, a altura mínima da célula deveria ser pequena — mas o browser de renderização do html2canvas pode estar calculando uma altura maior para a linha (baseada no maior elemento da linha ou em valores internos), fazendo o texto flutuar visualmente no centro.
 
-O padding de `2px` em cima e embaixo está correto. O problema é que o `line-height` nativo do browser duplica o espaçamento percebido.
+### Solução correta
 
-### Solução
+Trocar `vertical-align: middle` por `vertical-align: top` em todos os `<td>` e `<th>`.
 
-Adicionar `line-height: 1; vertical-align: middle;` no `tdBase` e nos `<th>`.
+- `vertical-align: top` = o texto começa logo depois do `padding-top` de 2px
+- O resultado: texto colado ao topo, separado apenas pelos 2px de padding — sem espaço flutuante
+- O `line-height: 1` continua correto para eliminar o espaço interno da fonte
 
-- `line-height: 1` = a altura da linha é exatamente igual ao tamanho da fonte — sem espaço extra acima nem abaixo do texto
-- `vertical-align: middle` = o texto fica centralizado verticalmente dentro do `padding` de 2px
+### Mudanças exatas
 
-### Mudança exata — linha 196
+**Linha 196 — `tdBase`**: trocar `vertical-align: middle` por `vertical-align: top`
 
 Atual:
 ```
-"padding: 2px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap;"
+"padding: 2px 6px; ... line-height: 1; vertical-align: middle;"
 ```
 
 Novo:
 ```
-"padding: 2px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1; vertical-align: middle;"
+"padding: 2px 6px; ... line-height: 1; vertical-align: top;"
 ```
 
-### Mudança nos `<th>` — linhas 225 a 230
-
-Adicionar `line-height: 1; vertical-align: middle;` no style de cada `<th>`.
+**Linhas 225–230 — `<th>`**: trocar `vertical-align: middle` por `vertical-align: top` em todos os cabeçalhos
 
 ### Arquivo modificado
 - `src/components/empreendimentos/UnidadesTab.tsx` — linhas 196, 225, 226, 227, 228, 229, 230
 
-Apenas 2 propriedades CSS adicionadas. Nenhuma mudança estrutural.
+Apenas a palavra `middle` trocada por `top` em 7 lugares. Nenhuma outra mudança.
