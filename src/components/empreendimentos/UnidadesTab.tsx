@@ -198,15 +198,20 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333;">
-        <div style="text-align: center; margin-bottom: 8px;">
-          <img src="${logoImg}" alt="Logo" style="height: 50px; margin: 0 auto 8px;" />
-          <div style="font-size: 18pt; font-weight: bold; margin: 0;">CRM 360</div>
-          <div style="font-size: 14pt; margin: 2px 0;">Seven Group 360</div>
-          <div style="font-size: 10pt; color: #777;">Plataforma de Gestão Integrada</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ccc;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="${logoImg}" alt="Logo" style="height: 32px;" />
+            <div>
+              <div style="font-size: 12pt; font-weight: bold; line-height: 1.2;">CRM 360 – Seven Group 360</div>
+              <div style="font-size: 8pt; color: #777;">Plataforma de Gestão Integrada</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12pt; font-weight: bold;">Unidades Disponíveis</div>
+            <div style="font-size: 10pt; color: #555;">${empreendimento.nome}</div>
+            <div style="font-size: 8pt; color: #777;">Gerado em ${dataGeracao}</div>
+          </div>
         </div>
-        <hr style="border: none; border-top: 1px solid #ccc; margin: 0 0 20px;" />
-        <h2 style="margin: 0 0 4px; font-size: 16pt;">Unidades Disponíveis - ${empreendimento.nome}</h2>
-        <p style="margin: 0 0 16px; font-size: 9pt; color: #777;">Gerado em ${dataGeracao}</p>
         <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
           <thead>
             <tr style="background: #e5e5e5;">
