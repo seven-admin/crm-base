@@ -184,12 +184,13 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap;";
+    const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap; vertical-align: middle;";
 
     const linhasHtml = ordenadas.map((u, i) => `
       <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f5f5f5'};">
         <td style="${tdBase}">${u.bloco?.nome || 'Sem ' + blocoLabel}</td>
-        <td style="${tdBase}">${u.numero}</td>
+        <td style="${tdBase} text-align: center;">${u.numero}</td>
+        <td style="${tdBase} text-align: center;">${u.andar != null ? u.andar + 'º' : '-'}</td>
         <td style="${tdBase}">${u.tipologia?.nome || '-'}</td>
         <td style="${tdBase} text-align: center;">${u.area_privativa ?? '-'}</td>
         <td style="${tdBase} text-align: right;">${formatarMoeda(u.valor)}</td>
@@ -212,11 +213,12 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
           <thead>
             <tr style="background: #e5e5e5;">
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">${blocoLabel}</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">${unidLabel}</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt;">Tipologia</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt;">Área (m²)</th>
-              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt;">Valor (R$)</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">${blocoLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">${unidLabel}</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Andar</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: left; font-weight: bold; font-size: 9pt; vertical-align: middle;">Tipologia</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: center; font-weight: bold; font-size: 9pt; vertical-align: middle;">Área (m²)</th>
+              <th style="padding: 5px 6px; border-bottom: 2px solid #333; text-align: right; font-weight: bold; font-size: 9pt; vertical-align: middle;">Valor (R$)</th>
             </tr>
           </thead>
           <tbody>
@@ -230,7 +232,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     `;
 
     const container = document.createElement('div');
-    container.style.width = '210mm';
+    container.style.width = '680px';
     container.style.background = 'white';
     container.innerHTML = htmlContent;
 
@@ -242,7 +244,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         margin: 15,
         filename: `Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 794, windowWidth: 794 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 680, windowWidth: 680 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       }).from(container).save();
