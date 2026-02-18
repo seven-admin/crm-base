@@ -1,43 +1,37 @@
 
-## Correção definitiva — alinhamento e margem direita
+## Correções pontuais — 3 problemas, 3 mudanças de linha
 
-### Diagnóstico real
+### Problema 1 — Fonte grande demais na tabela
+A `<table>` tem `font-size: 10pt` (linha 222) que sobrescreve o `9pt` do `tdBase`. O texto da tabela fica grande. A solução é reduzir o `font-size` da `<table>` para `8pt` e o `tdBase` para `7.5pt`.
 
-O `display: flex; align-items: center` dentro de `<td>` **não funciona no html2canvas**. O html2canvas não suporta flexbox dentro de células de tabela quando renderiza off-screen. Por isso o texto sempre fica colado na base, independente de quantas vezes essa abordagem seja tentada.
+### Problema 2 — Margem errada
+A linha 254 tem `margin: [10, 10, 10, 10]`. Precisa voltar para `margin: 15` (15mm em todos os lados como era antes e como o usuário quer).
 
-### Solução simples (sem reinventar)
+### Problema 3 — Alinhamento vertical
+O `padding: 6px 6px` com conteúdo direto deve funcionar. O problema real é que a `<table>` tem `font-size: 10pt` sobrescrevendo tudo, fazendo as células terem altura automática diferente do esperado. Com `font-size: 8pt` na table e `7.5pt` nas células, o html2canvas vai renderizar corretamente com o padding simétrico.
 
-Remover todos os `<div style="display:flex...">` dentro dos `<td>` e `<th>`.
+---
 
-Usar apenas `padding-top` e `padding-bottom` iguais nas células para criar o efeito visual de centralização. Isso funciona 100% no html2canvas porque é CSS básico suportado universalmente.
+### Mudanças exatas no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
 
-**`tdBase` novo:**
+**Linha 196** — `tdBase`: reduzir fonte de `9pt` para `7.5pt`
 ```
-padding: 6px 6px; border-bottom: 1px solid #555; font-family: 'Courier New'...; font-size: 9pt; white-space: nowrap;
+font-size: 7.5pt;
 ```
 
-**Células `<td>` — conteúdo direto, sem div:**
+**Linha 222** — `<table>`: reduzir fonte de `10pt` para `8pt`
 ```html
-<td style="${tdBase} text-align: center;">${u.numero}</td>
-<td style="${tdBase}">${u.bloco?.nome || '-'}</td>
+<table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
 ```
 
-**Cabeçalhos `<th>` — mesma coisa:**
+**Linhas 225–230** — `<th>`: reduzir fonte de `9pt` para `8pt`
 ```html
-<th style="padding: 6px 6px; border-bottom: 2px solid #333; ...">Número</th>
+font-size: 8pt;
 ```
 
-### Margem direita fora do padrão
+**Linha 254** — margem: voltar de `[10, 10, 10, 10]` para `15`
+```typescript
+margin: 15,
+```
 
-Mudar `margin: 15` para `margin: [10, 10, 10, 10]` no html2pdf para reduzir a margem de 15mm para 10mm em todos os lados.
-
-### Resumo das mudanças em `src/components/empreendimentos/UnidadesTab.tsx`
-
-1. `tdBase` (linha 196): trocar para `padding: 6px 6px;` — remove `line-height`, remove qualquer flex
-2. `linhasHtml` (linhas 199–207): remover todos os `<div style="display:flex...">` — conteúdo direto na célula
-3. `<th>` (linhas 225–230): remover os `<div style="display:flex...">` — texto direto no `<th>`, com `padding: 6px 6px;`
-4. `margin: 15` (linha 254): mudar para `margin: [10, 10, 10, 10]`
-
-### Por que isso funciona
-
-html2canvas suporta `padding` em células de tabela normalmente. Um `padding: 6px` em cima e em baixo cria espaçamento simétrico que visualmente centraliza o texto — exatamente o que o html2pdf.js precisa para renderizar corretamente.
+Apenas 4 alterações de valores em linhas exatas. Sem mexer em estrutura, sem reinventar nada.
