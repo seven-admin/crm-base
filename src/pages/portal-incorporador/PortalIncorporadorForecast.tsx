@@ -31,6 +31,7 @@ import {
   UserCheck,
   Headphones,
   FileText,
+  CalendarDays,
   CheckCircle2,
   Clock,
   XCircle,
@@ -99,7 +100,7 @@ const ATIVIDADE_STATUS_BADGE: Record<string, string> = {
 };
 
 export default function PortalIncorporadorForecast() {
-  const [tab, setTab] = useState<'dashboard' | 'atividades'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'atividades' | 'calendario'>('dashboard');
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
   
@@ -130,6 +131,12 @@ export default function PortalIncorporadorForecast() {
     rejeitadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'rejeitada').length || 0,
   };
 
+  // Handler para click no calendário da aba Calendário → navega para Atividades
+  function handleCalendarioClick(date: Date) {
+    setDataSelecionada(date);
+    setTab('atividades');
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -154,26 +161,10 @@ export default function PortalIncorporadorForecast() {
     );
   }
 
-  // Verificar se há dados de atividades
-  const hasAtividadesData = (resumoAtividades?.total || 0) > 0;
-
   return (
     <div className="space-y-6">
-      {/* Alerta quando não há atividades */}
-      {!hasAtividadesData && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>Nenhuma atividade encontrada</AlertTitle>
-          <AlertDescription>
-            Não há atividades registradas para seus empreendimentos no momento. 
-            As informações de forecast serão exibidas aqui quando atividades forem agendadas, 
-            negociações forem iniciadas ou leads forem registrados.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Tabs Navigation */}
-      <Tabs value={tab} onValueChange={(v) => setTab(v as 'dashboard' | 'atividades')}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'dashboard' | 'atividades' | 'calendario')}>
         <TabsList>
           <TabsTrigger value="dashboard" className="gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -183,10 +174,104 @@ export default function PortalIncorporadorForecast() {
             <ListTodo className="h-4 w-4" />
             Atividades
           </TabsTrigger>
+          <TabsTrigger value="calendario" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Calendário
+          </TabsTrigger>
         </TabsList>
 
-        {/* Dashboard Tab */}
+        {/* ── DASHBOARD TAB: só negociações ── */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Previsões e Negócios
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* KPIs de negociações */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <p className="text-2xl font-bold">{negKPIs.total}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Total</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 border border-yellow-200 text-center">
+                  <p className="text-2xl font-bold text-yellow-700">{negKPIs.pendentes}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Pendentes</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 border border-green-200 text-center">
+                  <p className="text-2xl font-bold text-green-700">{negKPIs.aprovadas}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Aprovadas</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 border border-destructive/30 text-center">
+                  <p className="text-2xl font-bold text-destructive">{negKPIs.rejeitadas}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Rejeitadas</p>
+                </div>
+              </div>
+
+              {/* Lista de negociações */}
+              {loadingNeg ? (
+                <div className="space-y-2">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+                </div>
+              ) : !negociacoes?.length ? (
+                <p className="text-center text-muted-foreground py-6 text-sm">
+                  Nenhuma negociação encontrada
+                </p>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-2 pr-3">
+                    {negociacoes.map((neg: any) => {
+                      const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
+                      return (
+                        <div key={neg.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-muted-foreground">{neg.codigo}</span>
+                              {neg.cliente && <span className="text-sm font-medium truncate">👤 {neg.cliente.nome}</span>}
+                            </div>
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
+                              {neg.empreendimento && <span>🏢 {neg.empreendimento.nome}</span>}
+                              {neg.valor_total && (
+                                <span>💰 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(neg.valor_total)}</span>
+                              )}
+                              <span>📅 {format(parseISO(neg.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className={`text-xs ml-2 flex-shrink-0 ${statusCfg.badgeClass}`}>
+                            {statusCfg.label}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── ATIVIDADES TAB: calendário lateral + lista + todos os detalhes ── */}
+        <TabsContent value="atividades" className="space-y-6 mt-6">
+          {/* Calendário lateral + lista de atividades */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <CalendarioCompacto 
+                empreendimentoIds={empreendimentoIds} 
+                onDayClick={setDataSelecionada}
+                selectedDate={dataSelecionada}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              <AtividadesListaPortal 
+                empreendimentoIds={empreendimentoIds}
+                dataSelecionada={dataSelecionada}
+                onLimparData={() => setDataSelecionada(null)}
+              />
+            </div>
+          </div>
+
           {/* Cards por Categoria */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {(['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
@@ -210,13 +295,13 @@ export default function PortalIncorporadorForecast() {
             <VisitasPorEmpreendimento empreendimentoIds={empreendimentoIds} />
           </div>
 
-          {/* Atividades e Próximas */}
+          {/* Atividades por Tipo + Próximas */}
           <div className="grid gap-4 lg:grid-cols-2">
             <AtividadesPorTipo empreendimentoIds={empreendimentoIds} />
             <ProximasAtividades empreendimentoIds={empreendimentoIds} />
           </div>
 
-          {/* Atendimentos - ocupa largura total */}
+          {/* Resumo de Atendimentos */}
           <AtendimentosResumo empreendimentoIds={empreendimentoIds} />
 
           {/* Lista de Atendimentos */}
@@ -262,94 +347,27 @@ export default function PortalIncorporadorForecast() {
               )}
             </CardContent>
           </Card>
-
-          {/* Negociações */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                Previsões e Negócios
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* KPIs de negociações */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 rounded-lg bg-muted/50 text-center">
-                  <p className="text-2xl font-bold">{negKPIs.total}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Total</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/50 border border-yellow-200 text-center">
-                  <p className="text-2xl font-bold text-yellow-700">{negKPIs.pendentes}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Pendentes</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/50 border border-green-200 text-center">
-                  <p className="text-2xl font-bold text-green-700">{negKPIs.aprovadas}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Aprovadas</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/50 border border-destructive/30 text-center">
-                  <p className="text-2xl font-bold text-destructive">{negKPIs.rejeitadas}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Rejeitadas</p>
-                </div>
-              </div>
-
-              {/* Lista de negociações */}
-              {loadingNeg ? (
-                <div className="space-y-2">
-                  {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
-                </div>
-              ) : !negociacoes?.length ? (
-                <p className="text-center text-muted-foreground py-6 text-sm">
-                  Nenhuma negociação encontrada
-                </p>
-              ) : (
-                <ScrollArea className="h-[280px]">
-                  <div className="space-y-2 pr-3">
-                    {negociacoes.map((neg: any) => {
-                      const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
-                      return (
-                        <div key={neg.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-muted-foreground">{neg.codigo}</span>
-                              {neg.cliente && <span className="text-sm font-medium truncate">👤 {neg.cliente.nome}</span>}
-                            </div>
-                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
-                              {neg.empreendimento && <span>🏢 {neg.empreendimento.nome}</span>}
-                              {neg.valor_total && (
-                                <span>💰 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(neg.valor_total)}</span>
-                              )}
-                              <span>📅 {format(parseISO(neg.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
-                            </div>
-                          </div>
-                          <Badge variant="outline" className={`text-xs ml-2 flex-shrink-0 ${statusCfg.badgeClass}`}>
-                            {statusCfg.label}
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        {/* Atividades Tab */}
-        <TabsContent value="atividades" className="space-y-6 mt-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-1">
+        {/* ── CALENDÁRIO TAB: só o CalendarioCompacto em destaque ── */}
+        <TabsContent value="calendario" className="mt-6">
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
               <CalendarioCompacto 
                 empreendimentoIds={empreendimentoIds} 
-                onDayClick={setDataSelecionada}
+                onDayClick={handleCalendarioClick}
                 selectedDate={dataSelecionada}
               />
-            </div>
-            <div className="lg:col-span-2">
-              <AtividadesListaPortal 
-                empreendimentoIds={empreendimentoIds}
-                dataSelecionada={dataSelecionada}
-                onLimparData={() => setDataSelecionada(null)}
-              />
+              {dataSelecionada && (
+                <p className="text-center text-sm text-muted-foreground mt-3">
+                  Clique em uma data para ver as atividades na aba <strong>Atividades</strong>
+                </p>
+              )}
+              {!dataSelecionada && (
+                <p className="text-center text-sm text-muted-foreground mt-3">
+                  Selecione uma data para filtrar as atividades
+                </p>
+              )}
             </div>
           </div>
         </TabsContent>
