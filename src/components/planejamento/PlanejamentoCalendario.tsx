@@ -232,11 +232,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                       >
                         {format(day, 'd')}
                       </span>
-                      {hasItems && (
-                        <Badge variant="secondary" className="text-xs h-5 px-1.5">
-                          {dayItems.length}
-                        </Badge>
-                      )}
                     </div>
 
                     {/* Preview das tarefas */}
