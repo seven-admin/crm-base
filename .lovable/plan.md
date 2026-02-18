@@ -1,21 +1,80 @@
 
+# Redesign do PDF de Unidades Disponíveis
 
-## Abreviacao dos Dias da Semana na Timeline
+## Resumo das mudanças
 
-### Problema
-No zoom "Dia", o sublabel usa `format(date, 'EEE')` que gera abreviacoes como "seg", "ter", "qua" -- texto largo demais para as celulas de 32px, quebrando o layout.
+Todas as alterações são no arquivo `src/components/empreendimentos/UnidadesTab.tsx`, dentro da função `handleExportarDisponiveis`.
 
-### Solucao
+---
 
-**Arquivo: `src/components/planejamento/PlanejamentoTimeline.tsx`**
+## 1. Remover logo — cabeçalho só texto
 
-Substituir o `format(date, 'EEE', { locale: ptBR })` na linha 91 por um mapeamento manual de iniciais:
+Remover o `<img src="${logoImg}" ...>` do cabeçalho (linha 203). O lado esquerdo ficará apenas com:
 
 ```
-const DAY_INITIALS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+CRM 360 – Seven Group 360
+Plataforma de Gestão Integrada
 ```
 
-E usar `DAY_INITIALS[date.getDay()]` como sublabel no modo dia.
+O import do `logoImg` pode ser mantido (é usado em outros lugares do sistema).
 
-Isso garante que cada celula mostre apenas uma letra (D, S, T, Q, Q, S, S) sem quebra de texto.
+---
 
+## 2. Adicionar hora na data de geração
+
+Linha 180: mudar o `format` de `'dd/MM/yyyy'` para `'dd/MM/yyyy HH:mm:ss'`.
+
+Resultado no PDF: `Gerado em 18/02/2026 14:32:05`
+
+---
+
+## 3. Remover colunas "Posição" e "Observações"
+
+Remover da linha de `<th>` o cabeçalho de Posição e Observações (linhas 223–224).
+
+Remover do `linhasHtml` as duas `<td>` correspondentes (linhas 194–195).
+
+A tabela ficará com 5 colunas: **Bloco / Número / Tipologia / Área (m²) / Valor (R$)**
+
+---
+
+## 4. Redesign das linhas da tabela
+
+**Borda das linhas:** trocar `border: 1px solid #ddd` por `border-bottom: 1px solid #555` (apenas linha inferior, cinza escuro, sem bordas laterais) — visual mais limpo e moderno.
+
+**Espaçamento:** reduzir padding de `6px 8px` para `3px 6px` — linhas mais compactas.
+
+**Fonte do conteúdo:** aplicar `font-family: 'Courier New', Courier, monospace` nas células `<td>` — fonte monoespaçada que garante alinhamento uniforme e evita quebras inesperadas, ideal para números e códigos.
+
+O cabeçalho (`<thead>`) mantém a fonte Helvetica/Arial para diferenciação visual entre header e dados.
+
+---
+
+## 5. Corrigir o totalizador cortado
+
+Adicionar `white-space: nowrap` no `<p>` do totalizador (linha 231) para garantir que o texto "Total de unidades disponíveis: X" não quebre em duas linhas.
+
+---
+
+## Resultado visual esperado
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  CRM 360 – Seven Group 360          Unidades Disponíveis│
+│  Plataforma de Gestão Integrada     LIVTY               │
+│                                     Gerado em 18/02/2026│
+│                                             14:32:05     │
+├──────────┬────────┬──────────┬──────────┬───────────────┤
+│  Bloco   │ Número │Tipologia │ Área(m²) │    Valor(R$)  │
+├──────────┼────────┼──────────┼──────────┼───────────────┤  ← borda cinza escuro 1px
+│  Q-1     │  101   │  Casa A  │   120,00 │  R$ 450.000   │
+│  Q-1     │  102   │  Casa B  │   135,00 │  R$ 490.000   │
+└──────────┴────────┴──────────┴──────────┴───────────────┘
+                        Total de unidades disponíveis: 42
+```
+
+---
+
+## Arquivo modificado
+
+- `src/components/empreendimentos/UnidadesTab.tsx` (apenas a função `handleExportarDisponiveis`)
