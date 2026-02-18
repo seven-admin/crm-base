@@ -1,37 +1,24 @@
 
-## Correções pontuais — 3 problemas, 3 mudanças de linha
+## Correção da margem direita — 1 linha
 
-### Problema 1 — Fonte grande demais na tabela
-A `<table>` tem `font-size: 10pt` (linha 222) que sobrescreve o `9pt` do `tdBase`. O texto da tabela fica grande. A solução é reduzir o `font-size` da `<table>` para `8pt` e o `tdBase` para `7.5pt`.
+### Diagnóstico
 
-### Problema 2 — Margem errada
-A linha 254 tem `margin: [10, 10, 10, 10]`. Precisa voltar para `margin: 15` (15mm em todos os lados como era antes e como o usuário quer).
+A página A4 tem 210mm de largura. Com `margin: 15` (15mm de cada lado), a área útil é 180mm.
 
-### Problema 3 — Alinhamento vertical
-O `padding: 6px 6px` com conteúdo direto deve funcionar. O problema real é que a `<table>` tem `font-size: 10pt` sobrescrevendo tudo, fazendo as células terem altura automática diferente do esperado. Com `font-size: 8pt` na table e `7.5pt` nas células, o html2canvas vai renderizar corretamente com o padding simétrico.
+Convertendo 180mm para pixels a 96dpi: 180 × 96 / 25.4 ≈ **680px**.
 
----
+O problema: o `width: 680` e `windowWidth: 680` estão exatamente no limite. Com `scale: 2`, o html2canvas renderiza em 1360px e o html2pdf comprime isso para caber em 180mm. Qualquer pixel extra de padding interno ou borda causa o estouro visível na margem direita.
 
-### Mudanças exatas no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
+### Solução
 
-**Linha 196** — `tdBase`: reduzir fonte de `9pt` para `7.5pt`
-```
-font-size: 7.5pt;
-```
+Reduzir `width` e `windowWidth` de `680` para `660`. Isso cria uma folga de ~10px de cada lado, garantindo que o conteúdo caiba sem corte.
 
-**Linha 222** — `<table>`: reduzir fonte de `10pt` para `8pt`
-```html
-<table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
-```
-
-**Linhas 225–230** — `<th>`: reduzir fonte de `9pt` para `8pt`
-```html
-font-size: 8pt;
-```
-
-**Linha 254** — margem: voltar de `[10, 10, 10, 10]` para `15`
+**Linha 257** — mudar `width: 680, windowWidth: 680` para `width: 660, windowWidth: 660`:
 ```typescript
-margin: 15,
+html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 660, windowWidth: 660 },
 ```
 
-Apenas 4 alterações de valores em linhas exatas. Sem mexer em estrutura, sem reinventar nada.
+### Arquivo modificado
+- `src/components/empreendimentos/UnidadesTab.tsx` — apenas linha 257
+
+Apenas 2 valores numéricos alterados. Nada mais.
