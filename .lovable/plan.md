@@ -1,72 +1,81 @@
 
-## Correções no PDF — Totalizador Cortado + Coluna Andar + Alinhamento Vertical
+## Correções no PDF de Unidades Disponíveis
 
-### Problema raiz do totalizador cortado
-
-O container HTML é renderizado pelo html2canvas com `width: 794` (largura total A4 em px a 96dpi), mas o jsPDF aplica `margin: 15` (15mm de cada lado). Isso significa que apenas ~680px de largura útil existem no PDF final — mas o HTML é gerado com 794px de largura total.
-
-O resultado: o `<p style="text-align: right">` do totalizador renderiza o texto rente à borda direita dos 794px, mas o PDF corta os últimos ~114px por causa da margem direita.
-
-**Solução:** Reduzir o `width` do container para `180mm` (210mm - 2×15mm) e ajustar o `windowWidth` do html2canvas para `680` (equivalente em px), garantindo que o conteúdo renderizado caiba exatamente dentro das margens do PDF.
-
-Alternativamente — e mais simples — manter o container em 794px mas adicionar `padding-right: 15mm` no próprio `<div>` interno, compensando a margem do PDF dentro do HTML.
-
-A abordagem mais confiável é: **definir `padding: 0 15mm` no `<div>` wrapper** e setar `margin: 0` no html2pdf, deixando o HTML controlar todo o espaçamento. Mas isso muda muito a estrutura atual.
-
-**Abordagem escolhida (mínima e cirúrgica):** Mudar o `container.style.width` de `'210mm'` para `'180mm'` e o `windowWidth` do html2canvas de `794` para `680`. Isso faz o html2canvas renderizar o conteúdo na largura correta e o jsPDF consegue posicionar sem cortar.
+### O que será mudado em `src/components/empreendimentos/UnidadesTab.tsx`
 
 ---
 
-### Mudanças no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
+### 1. Reordenar colunas — Número primeiro
 
-**1. Corrigir largura do container e do html2canvas**
+O usuário quer a coluna **Número** como primeira coluna, seguida de Quadra/Bloco, Andar, Tipologia, Área e Valor.
 
-Linha 233: mudar `container.style.width` de `'210mm'` para `'680px'`
+Nova ordem:
 
-Linha 245: mudar `width: 794` para `width: 680` e `windowWidth: 794` para `windowWidth: 680`
-
-Isso garante que o conteúdo renderizado respeite a área útil após as margens de 15mm em cada lado.
-
----
-
-**2. Adicionar coluna Andar**
-
-Linha 187 — `linhasHtml`: inserir `<td>` de Andar entre Número e Tipologia:
-
-```html
-<td style="${tdBase} text-align: center;">${u.andar != null ? u.andar + 'º' : '-'}</td>
-```
-
-Linhas 215–219 — `<thead>`: inserir `<th>` de Andar entre Número e Tipologia:
-
-```html
-<th style="... text-align: center;">Andar</th>
-```
-
----
-
-**3. Corrigir alinhamento vertical das células (`vertical-align: middle`)**
-
-Linha 187 — `tdBase`: adicionar `vertical-align: middle`:
-
-```
-const tdBase = "padding: 3px 6px; border-bottom: 1px solid #555; font-family: 'Courier New', Courier, monospace; font-size: 9pt; white-space: nowrap; vertical-align: middle;";
-```
-
-Linhas 215–219 — todos os `<th>`: adicionar `vertical-align: middle` em cada um.
-
----
-
-### Resultado esperado
-
-| Bloco | Número | Andar | Tipologia | Área (m²) | Valor (R$) |
+| Número | Bloco/Quadra | Andar | Tipologia | Área (m²) | Valor (R$) |
 |---|---|---|---|---|---|
-| BLOCO A | 207 | 2º | 3 QUARTOS | 87,37 | R$ 550.000,00 |
-| BLOCO A | 210 | 2º | 3 QUARTOS | 82,04 | R$ 525.000,00 |
 
-- Texto de todas as células centralizado verticalmente
-- Totalizador completo visível sem corte
-- Coluna Andar presente entre Número e Tipologia
+Isso se aplica tanto ao `<thead>` quanto às linhas `<tr>` do `linhasHtml`.
+
+---
+
+### 2. Substituir "Sem Bloco" por traço
+
+Linha 191: mudar
+
+```
+u.bloco?.nome || 'Sem ' + blocoLabel
+```
+
+para
+
+```
+u.bloco?.nome || '-'
+```
+
+---
+
+### 3. Ordenação correta — Quadra → Andar → Número
+
+A função atual `ordenarUnidadesPorBlocoENumero` ordena por bloco e depois por número, mas não considera o andar. Para o PDF, a ordenação deve ser:
+
+1. Bloco/Quadra (natural, crescente)
+2. Andar (numérico, crescente)
+3. Número da unidade (natural, crescente)
+
+Será aplicada uma ordenação local inline antes de montar o HTML, substituindo o `ordenarUnidadesPorBlocoENumero` por um `.sort()` personalizado com três níveis.
+
+---
+
+### 4. Corrigir o totalizador cortado — causa raiz real
+
+O container está com `width: 680px` e o html2pdf usa `margin: 15` (em mm). O problema é que a margem é aplicada **após** a renderização do canvas, então o canvas é gerado com 680px mas o PDF aplica margens de 15mm (≈56.7px) em cada lado — restando ~566px visíveis de 680px de conteúdo. O conteúdo não é cortado na largura da tabela (que tem `width: 100%`), mas o `text-align: right` do totalizador posiciona o texto na borda direita dos 680px, que é exatamente onde a margem corta.
+
+**Solução definitiva:** Adicionar `padding-right: 30px` no wrapper externo do `htmlContent` e `box-sizing: border-box`, garantindo que todo conteúdo fique a pelo menos 30px da borda direita antes que o PDF aplique sua margem.
+
+```html
+<div style="font-family: ...; padding-right: 30px; box-sizing: border-box;">
+```
+
+Isso empurra o texto do totalizador 30px para dentro, evitando o corte independente de qual margem o jsPDF aplique.
+
+---
+
+### Resultado final — nova ordem de colunas
+
+```
+┌──────────┬──────────────┬───────┬──────────┬──────────┬────────────────┐
+│  Número  │ Quadra/Bloco │ Andar │Tipologia │ Área(m²) │   Valor (R$)   │
+├──────────┼──────────────┼───────┼──────────┼──────────┼────────────────┤
+│   101    │    Q-1       │  1º   │  Casa A  │  120,00  │  R$ 450.000,00 │
+│   102    │    Q-1       │   -   │  Casa B  │  135,00  │  R$ 490.000,00 │
+│   201    │    Q-2       │  2º   │  Casa C  │   98,50  │  R$ 380.000,00 │
+└──────────┴──────────────┴───────┴──────────┴──────────┴────────────────┘
+                               Total de unidades disponíveis: 42
+```
+
+- "Sem Bloco" → `-`
+- Número é sempre a primeira coluna
+- Ordenação: Bloco → Andar → Número
 
 ### Arquivo modificado
-- `src/components/empreendimentos/UnidadesTab.tsx` — linhas 187–245 (função `handleExportarDisponiveis`)
+- `src/components/empreendimentos/UnidadesTab.tsx` — linhas 176–232 (função `handleExportarDisponiveis`)
