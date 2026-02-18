@@ -5,7 +5,6 @@ import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FunilTemperatura } from '@/components/forecast/FunilTemperatura';
@@ -24,17 +23,13 @@ import { ptBR } from 'date-fns/locale';
 import {
   BarChart3,
   ListTodo,
-  Info,
+  CalendarDays,
   Briefcase,
   Building2,
   Users,
   UserCheck,
   Headphones,
   FileText,
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  XCircle,
 } from 'lucide-react';
 
 // Hook inline para negociações do incorporador
@@ -103,11 +98,8 @@ export default function PortalIncorporadorForecast() {
   const [tab, setTab] = useState<'dashboard' | 'atividades' | 'calendario'>('dashboard');
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
-  
+
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
-  const { data: resumoAtividades, isLoading: loadingResumo } = useResumoAtividades(
-    undefined, undefined, undefined, empsFilter
-  );
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
     undefined, undefined, undefined, empsFilter
   );
@@ -121,7 +113,7 @@ export default function PortalIncorporadorForecast() {
     cliente: { icon: UserCheck, iconColor: 'text-chart-4', bgColor: 'bg-chart-4/10' },
   };
 
-  const isLoading = loadingEmps || loadingResumo || loadingCategorias;
+  const isLoading = loadingEmps || loadingCategorias;
 
   // KPIs de negociações
   const negKPIs = {
@@ -131,10 +123,10 @@ export default function PortalIncorporadorForecast() {
     rejeitadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'rejeitada').length || 0,
   };
 
-  // Handler para click no calendário da aba Calendário → navega para Atividades
-  function handleCalendarioClick(date: Date) {
-    setDataSelecionada(date);
-    setTab('atividades');
+  // Ao clicar em uma atividade nas Próximas Atividades → vai para aba Calendário com data
+  function handleProximaAtividadeClick(atividadeId: string, dataAtividade: string) {
+    setDataSelecionada(parseISO(dataAtividade));
+    setTab('calendario');
   }
 
   if (isLoading) {
@@ -163,7 +155,6 @@ export default function PortalIncorporadorForecast() {
 
   return (
     <div className="space-y-6">
-      {/* Tabs Navigation */}
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'dashboard' | 'atividades' | 'calendario')}>
         <TabsList>
           <TabsTrigger value="dashboard" className="gap-2">
@@ -180,8 +171,10 @@ export default function PortalIncorporadorForecast() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── DASHBOARD TAB: só negociações ── */}
+        {/* ── DASHBOARD: Negociações + Lista de Atendimentos ── */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">
+
+          {/* Card Previsões e Negócios */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -190,7 +183,7 @@ export default function PortalIncorporadorForecast() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* KPIs de negociações */}
+              {/* KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <p className="text-2xl font-bold">{negKPIs.total}</p>
@@ -213,14 +206,14 @@ export default function PortalIncorporadorForecast() {
               {/* Lista de negociações */}
               {loadingNeg ? (
                 <div className="space-y-2">
-                  {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
                 </div>
               ) : !negociacoes?.length ? (
                 <p className="text-center text-muted-foreground py-6 text-sm">
                   Nenhuma negociação encontrada
                 </p>
               ) : (
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[380px]">
                   <div className="space-y-2 pr-3">
                     {negociacoes.map((neg: any) => {
                       const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
@@ -250,61 +243,8 @@ export default function PortalIncorporadorForecast() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* ── ATIVIDADES TAB: calendário lateral + lista + todos os detalhes ── */}
-        <TabsContent value="atividades" className="space-y-6 mt-6">
-          {/* Calendário lateral + lista de atividades */}
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-              <CalendarioCompacto 
-                empreendimentoIds={empreendimentoIds} 
-                onDayClick={setDataSelecionada}
-                selectedDate={dataSelecionada}
-              />
-            </div>
-            <div className="lg:col-span-2">
-              <AtividadesListaPortal 
-                empreendimentoIds={empreendimentoIds}
-                dataSelecionada={dataSelecionada}
-                onLimparData={() => setDataSelecionada(null)}
-              />
-            </div>
-          </div>
-
-          {/* Cards por Categoria */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {(['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
-              const cfg = CATEGORIA_CONFIG[cat];
-              return (
-                <CategoriaCard
-                  key={cat}
-                  nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
-                  icon={cfg.icon}
-                  iconColor={cfg.iconColor}
-                  bgColor={cfg.bgColor}
-                  dados={resumoCategorias?.[cat]}
-                />
-              );
-            })}
-          </div>
-
-          {/* Funil e Visitas */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <FunilTemperatura empreendimentoIds={empreendimentoIds} />
-            <VisitasPorEmpreendimento empreendimentoIds={empreendimentoIds} />
-          </div>
-
-          {/* Atividades por Tipo + Próximas */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <AtividadesPorTipo empreendimentoIds={empreendimentoIds} />
-            <ProximasAtividades empreendimentoIds={empreendimentoIds} />
-          </div>
-
-          {/* Resumo de Atendimentos */}
-          <AtendimentosResumo empreendimentoIds={empreendimentoIds} />
-
-          {/* Lista de Atendimentos */}
+          {/* Card Lista de Atendimentos */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -318,7 +258,7 @@ export default function PortalIncorporadorForecast() {
             <CardContent>
               {loadingAtend ? (
                 <div className="space-y-2">
-                  {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
                 </div>
               ) : !atendimentos?.length ? (
                 <p className="text-center text-muted-foreground py-6 text-sm">
@@ -349,25 +289,105 @@ export default function PortalIncorporadorForecast() {
           </Card>
         </TabsContent>
 
-        {/* ── CALENDÁRIO TAB: só o CalendarioCompacto em destaque ── */}
+        {/* ── ATIVIDADES: Cards categoria + Atendimentos + Análises ── */}
+        <TabsContent value="atividades" className="space-y-6 mt-6">
+
+          {/* 4 Cards de Categoria */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {(['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+              const cfg = CATEGORIA_CONFIG[cat];
+              return (
+                <CategoriaCard
+                  key={cat}
+                  nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
+                  icon={cfg.icon}
+                  iconColor={cfg.iconColor}
+                  bgColor={cfg.bgColor}
+                  dados={resumoCategorias?.[cat]}
+                />
+              );
+            })}
+          </div>
+
+          {/* Lista de Atendimentos logo abaixo dos cards */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Headphones className="h-4 w-4 text-primary" />
+                  Lista de Atendimentos
+                </CardTitle>
+                <Badge variant="secondary">{atendimentos?.length || 0}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingAtend ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+                </div>
+              ) : !atendimentos?.length ? (
+                <p className="text-center text-muted-foreground py-6 text-sm">
+                  Nenhum atendimento encontrado
+                </p>
+              ) : (
+                <ScrollArea className="h-[280px]">
+                  <div className="space-y-2 pr-3">
+                    {atendimentos.map((at: any) => (
+                      <div key={at.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{at.titulo}</p>
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
+                            {at.cliente && <span>👤 {at.cliente.nome}</span>}
+                            {at.empreendimento && <span>🏢 {at.empreendimento.nome}</span>}
+                            <span>📅 {format(parseISO(at.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                          </div>
+                        </div>
+                        <Badge className={`text-xs ml-2 flex-shrink-0 ${ATIVIDADE_STATUS_BADGE[at.status] || ''}`}>
+                          {at.status === 'pendente' ? 'Pendente' : at.status === 'concluida' ? 'Concluída' : at.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Funil de Temperatura + Visitas */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FunilTemperatura empreendimentoIds={empreendimentoIds} />
+            <VisitasPorEmpreendimento empreendimentoIds={empreendimentoIds} />
+          </div>
+
+          {/* Atividades por Tipo + Próximas Atividades */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <AtividadesPorTipo empreendimentoIds={empreendimentoIds} />
+            <ProximasAtividades
+              empreendimentoIds={empreendimentoIds}
+              onAtividadeClick={handleProximaAtividadeClick}
+            />
+          </div>
+
+          {/* Resumo de Atendimentos e Retornos */}
+          <AtendimentosResumo empreendimentoIds={empreendimentoIds} />
+        </TabsContent>
+
+        {/* ── CALENDÁRIO: Calendário + lista de atividades do dia ── */}
         <TabsContent value="calendario" className="mt-6">
-          <div className="flex justify-center">
-            <div className="w-full max-w-md">
-              <CalendarioCompacto 
-                empreendimentoIds={empreendimentoIds} 
-                onDayClick={handleCalendarioClick}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <CalendarioCompacto
+                empreendimentoIds={empreendimentoIds}
+                onDayClick={setDataSelecionada}
                 selectedDate={dataSelecionada}
               />
-              {dataSelecionada && (
-                <p className="text-center text-sm text-muted-foreground mt-3">
-                  Clique em uma data para ver as atividades na aba <strong>Atividades</strong>
-                </p>
-              )}
-              {!dataSelecionada && (
-                <p className="text-center text-sm text-muted-foreground mt-3">
-                  Selecione uma data para filtrar as atividades
-                </p>
-              )}
+            </div>
+            <div className="lg:col-span-2">
+              <AtividadesListaPortal
+                empreendimentoIds={empreendimentoIds}
+                dataSelecionada={dataSelecionada}
+                onLimparData={() => setDataSelecionada(null)}
+              />
             </div>
           </div>
         </TabsContent>

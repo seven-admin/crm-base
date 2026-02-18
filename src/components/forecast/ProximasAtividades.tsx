@@ -31,9 +31,10 @@ const formatarHora = (hora?: string | null) =>
 interface ProximasAtividadesProps {
   gestorId?: string;
   empreendimentoIds?: string[];
+  onAtividadeClick?: (atividadeId: string, dataAtividade: string) => void;
 }
 
-export function ProximasAtividades({ gestorId, empreendimentoIds }: ProximasAtividadesProps) {
+export function ProximasAtividades({ gestorId, empreendimentoIds, onAtividadeClick }: ProximasAtividadesProps) {
   const { data: atividades, isLoading } = useProximasAtividades(10, gestorId, empreendimentoIds);
   const { data: superAdminIds } = useSuperAdminIds();
   const navigate = useNavigate();
@@ -93,7 +94,13 @@ export function ProximasAtividades({ gestorId, empreendimentoIds }: ProximasAtiv
                       isToday && 'bg-primary/5 border border-primary/10',
                       isSuperAdmin && 'bg-amber-500/5 border-l-2 border-l-amber-500 ring-1 ring-amber-500/20'
                     )}
-                    onClick={() => navigate(`/atividades`)}
+                    onClick={() => {
+                      if (onAtividadeClick) {
+                        onAtividadeClick(atividade.id, atividade.data_inicio);
+                      } else {
+                        navigate('/atividades');
+                      }
+                    }}
                   >
                     <div className={cn(
                       'h-10 w-10 rounded-full flex items-center justify-center shrink-0',
