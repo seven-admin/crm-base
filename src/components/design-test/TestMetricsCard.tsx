@@ -8,7 +8,7 @@ const metrics = [
 
 export function TestMetricsCard() {
   return (
-    <div style={{ background: 'transparent', padding: 24, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'transparent', padding: 24, display: 'flex', flexDirection: 'column', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)' }}>
       <div className="flex items-center justify-between mb-5">
         <p style={{ fontSize: 15, fontWeight: 600, color: '#1E293B' }}>Visão Geral</p>
         <button className="flex items-center gap-1" style={{ fontSize: 12, color: '#64748B', background: '#F1F5F9', borderRadius: 16, padding: '5px 12px', border: 'none', cursor: 'pointer' }}>
