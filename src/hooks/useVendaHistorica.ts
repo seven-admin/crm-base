@@ -6,7 +6,8 @@ import { invalidateDashboards } from '@/lib/invalidateDashboards';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
-const CLIENTE_HISTORICO_NOME = 'Comprador Histórico (Pré-Sistema)';
+// Nome em UPPERCASE exato como o trigger uppercase_clientes() armazena no banco
+const CLIENTE_HISTORICO_NOME = 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)';
 
 export interface VendaHistoricaData {
   unidade_ids: string[];
@@ -25,24 +26,23 @@ interface VendaHistoricaResult {
 }
 
 async function getOrCreateClienteHistorico(empreendimentoId: string): Promise<string> {
-  // Buscar cliente histórico existente
+  // Buscar cliente histórico existente (ilike: case-insensitive, à prova do trigger uppercase)
   const { data: clienteExistente } = await supabase
     .from('clientes')
     .select('id')
-    .eq('nome', CLIENTE_HISTORICO_NOME)
+    .ilike('nome', CLIENTE_HISTORICO_NOME)
     .maybeSingle();
 
   if (clienteExistente) {
     return clienteExistente.id;
   }
 
-  // Criar novo cliente histórico
+  // Criar novo cliente histórico (global — sem empreendimento_id para ser reutilizável)
   const { data: novoCliente, error } = await supabase
     .from('clientes')
     .insert({
       nome: CLIENTE_HISTORICO_NOME,
       fase: 'comprador',
-      empreendimento_id: empreendimentoId,
       observacoes: 'Cliente genérico para vendas anteriores à implantação do sistema. Não representa um comprador real específico.',
     })
     .select('id')
