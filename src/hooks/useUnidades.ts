@@ -161,7 +161,7 @@ export function useDeleteUnidade() {
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
         .from('unidades')
-        .update({ is_active: false })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
@@ -335,7 +335,7 @@ export function useDeleteUnidadesBatch() {
     mutationFn: async ({ ids, empreendimentoId }: { ids: string[]; empreendimentoId: string }) => {
       const { error } = await supabase
         .from('unidades')
-        .update({ is_active: false })
+        .delete()
         .in('id', ids);
 
       if (error) throw error;
