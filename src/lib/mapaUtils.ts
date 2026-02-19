@@ -117,7 +117,7 @@ export function buildUnitLabel(
   }
   
   // Use | separator
-  return parts.join('|');
+  return parts.join(' | ');
 }
 
 /**
