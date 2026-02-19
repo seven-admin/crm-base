@@ -1,81 +1,113 @@
 
-## Problema: RLS bloqueando INSERT de clientes para gestor_produto
+# Problema: has_role() retorna false para 48 usuários
 
-### Diagnóstico
+## Diagnóstico Definitivo
 
-A usuária **Mauren** tem role `gestor_produto` e já tem empreendimentos vinculados. O erro "new row violates row-level security policy for table 'clientes'" indica que **nenhuma** das políticas INSERT está passando.
+A tabela `user_roles` evoluiu e hoje tem duas colunas:
+- `role` (enum `app_role`) — coluna antiga, **nullable**, usada pela função `has_role()`
+- `role_id` (UUID → tabela `roles`) — coluna nova, usada pelo sistema de permissões moderno
 
-Existem duas políticas INSERT na tabela `clientes`:
-
-**Política 1 — "Authenticated users can create clientes":**
+A função `has_role(_user_id, _role text)` que é usada nas políticas RLS consulta apenas a coluna `role` (enum):
 ```sql
-WITH CHECK (
-  (corretor_id IS NULL)
-  OR (corretor_id IN (SELECT c.id FROM corretores WHERE user_id = auth.uid() OR email = ...))
-  OR is_admin(auth.uid())
-  OR has_role(auth.uid(), 'gestor_produto')
+SELECT EXISTS (
+  SELECT 1 FROM public.user_roles
+  WHERE user_id = _user_id AND role::text = _role
 )
 ```
-Esta deveria passar para `gestor_produto`. ✓
 
-**Política 2 — "Gestores can insert clientes":**
+O usuário `comercial_sm_axis01` tem `role = NULL` e `role_id = <uuid do gestor_produto>`, então `has_role()` sempre retorna `false`, bloqueando o INSERT mesmo com a política nova.
+
+**48 de 59 usuários** estão nessa situação — ou seja, o problema afeta quase todos os usuários cadastrados pelo sistema moderno.
+
+## Solução
+
+### Passo 1 — Corrigir a função `has_role(uuid, text)`
+
+Atualizar a função para consultar **ambas** as colunas: a enum `role` (legada) E o `role_id` via join na tabela `roles` (moderna):
+
 ```sql
-WITH CHECK (
-  has_role(auth.uid(), 'gestor_produto') AND (gestor_id = auth.uid())
-)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role text)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles ur
+    WHERE ur.user_id = _user_id
+      AND (
+        ur.role::text = _role
+        OR EXISTS (
+          SELECT 1 FROM public.roles r
+          WHERE r.id = ur.role_id AND r.name = _role AND r.is_active = true
+        )
+      )
+  )
+$$;
 ```
-Esta só passa se `gestor_id = auth.uid()`.
 
-**Causa raiz:** O trigger `auto_set_gestor_id_clientes` — que deveria preencher `gestor_id` automaticamente — **não está registrado no banco** (a consulta de triggers retornou vazia). Isso significa que o trigger que existe como função SQL nunca foi associado a nenhuma tabela via `CREATE TRIGGER`.
+### Passo 2 — Sincronizar a coluna `role` para os 48 usuários
 
-Porém, como as políticas são PERMISSIVE, basta a Política 1 passar. O que pode estar causando falha mesmo na Política 1 é se o `ClienteForm` estiver enviando um `corretor_id` com algum valor inválido (ex: string vazia `""` ao invés de `null`).
-
-### Solução: dupla correção
-
-**1. Criar o trigger ausente no banco** — registrar o trigger `auto_set_gestor_id_clientes` na tabela `clientes` para que `gestor_id` seja preenchido automaticamente com `auth.uid()` quando o usuário é gestor_produto:
+Preencher a coluna `role` (enum) a partir do `role_id` para os usuários que têm `role = NULL`, quando o nome do role bate com valores do enum `app_role`:
 
 ```sql
-CREATE TRIGGER trg_auto_set_gestor_id_clientes
-  BEFORE INSERT ON public.clientes
+-- Quais roles do enum existem?
+-- Verificar: SELECT unnest(enum_range(NULL::app_role));
+
+UPDATE public.user_roles ur
+SET role = r.name::app_role
+FROM public.roles r
+WHERE ur.role_id = r.id
+  AND ur.role IS NULL
+  AND r.name IN (SELECT unnest(enum_range(NULL::app_role))::text);
+```
+
+Isso sincroniza os registros onde o nome do role existe no enum (ex: `admin`, `super_admin`, etc.).
+
+### Passo 3 — Criar trigger para manter sincronizado automaticamente
+
+Para que inserções futuras não voltem a ter `role = NULL`:
+
+```sql
+CREATE OR REPLACE FUNCTION public.sync_user_role_enum()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_role_name text;
+BEGIN
+  IF NEW.role IS NULL AND NEW.role_id IS NOT NULL THEN
+    SELECT name INTO v_role_name FROM public.roles WHERE id = NEW.role_id AND is_active = true;
+    BEGIN
+      NEW.role := v_role_name::app_role;
+    EXCEPTION WHEN invalid_text_representation THEN
+      -- role_name não existe no enum, mantém NULL (roles customizados como gestor_produto)
+      NULL;
+    END;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_sync_user_role_enum
+  BEFORE INSERT OR UPDATE ON public.user_roles
   FOR EACH ROW
-  EXECUTE FUNCTION public.auto_set_gestor_id_clientes();
+  EXECUTE FUNCTION public.sync_user_role_enum();
 ```
 
-**2. Adicionar uma política INSERT explícita para gestores_produto** — garantida e simples, sem depender de `gestor_id`:
+### Por que o Passo 1 é o mais importante
 
-```sql
-CREATE POLICY "Gestores produto can insert clientes"
-  ON public.clientes
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (has_role(auth.uid(), 'gestor_produto'));
-```
+Roles como `gestor_produto` **não existem no enum `app_role`** (que provavelmente contém apenas `admin`, `user`, etc.), então o UPDATE do Passo 2 não os cobre. O Passo 1 (corrigir a função) garante que qualquer role — seja do enum ou via role_id — seja reconhecido corretamente pelas políticas RLS.
 
-Isso garante que qualquer `gestor_produto` autenticado pode criar clientes, sem condições adicionais que possam falhar.
+## Impacto
 
-### Arquivos afetados
+- Resolve imediatamente o erro de RLS para `comercial_sm_axis01` e outros 47 usuários afetados
+- Não altera nenhuma política RLS existente
+- Não quebra nenhuma funcionalidade atual
+- A correção da função afeta todas as tabelas que usam `has_role()` nas suas políticas — todas se beneficiam
 
-Apenas **uma migration SQL** — sem alterações em código React.
+## Arquivos
 
-### Migration SQL completa
-
-```sql
--- 1. Criar o trigger que estava faltando (função já existe)
-CREATE TRIGGER trg_auto_set_gestor_id_clientes
-  BEFORE INSERT ON public.clientes
-  FOR EACH ROW
-  EXECUTE FUNCTION public.auto_set_gestor_id_clientes();
-
--- 2. Adicionar política INSERT direta para gestor_produto
-CREATE POLICY "Gestores produto can insert clientes direto"
-  ON public.clientes
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (public.has_role(auth.uid(), 'gestor_produto'));
-```
-
-### Impacto
-
-- Resolve o erro de RLS imediatamente para todas as usuárias com role `gestor_produto`
-- O trigger garante que o `gestor_id` seja preenchido automaticamente
-- Nenhuma alteração em código React necessária
+Apenas uma migration SQL — zero alterações em código React.
