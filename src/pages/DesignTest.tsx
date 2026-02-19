@@ -19,7 +19,7 @@ const statusBadges = [
   { label: 'Ativo', color: '#22C55E', bg: '#DCFCE7' },
   { label: 'Inativo', color: '#94A3B8', bg: '#F1F5F9' },
   { label: 'Pendente', color: '#F59E0B', bg: '#FEF3C7' },
-  { label: 'Aprovado', color: '#6d93c5', bg: '#E0EAFF' },
+  { label: 'Aprovado', color: '#f47f19', bg: '#fce0c7' },
   { label: 'Cancelado', color: '#EF4444', bg: '#FEE2E2' },
   { label: 'Em Análise', color: '#8B5CF6', bg: '#EDE9FE' },
   { label: 'Rascunho', color: '#64748B', bg: '#F1F5F9' },
@@ -28,7 +28,7 @@ const statusBadges = [
 
 export default function DesignTest() {
   return (
-    <div className="min-h-screen" style={{ background: '#e8eaec' }}>
+    <div className="min-h-screen" style={{ background: '#e1e1e1' }}>
       {/* Top Nav */}
       <nav
         className="flex items-center justify-between px-6"
@@ -37,7 +37,7 @@ export default function DesignTest() {
         <div className="flex items-center gap-2.5 shrink-0">
           <div
             className="flex items-center justify-center"
-            style={{ width: 32, height: 32, borderRadius: '50%', background: '#6d93c5' }}
+            style={{ width: 32, height: 32, borderRadius: '50%', background: '#f47f19' }}
           >
             <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>S</span>
           </div>
@@ -90,7 +90,7 @@ export default function DesignTest() {
           ))}
           <div
             className="flex items-center justify-center"
-            style={{ width: 36, height: 36, borderRadius: '50%', background: '#E0EAFF', fontSize: 13, fontWeight: 600, color: '#6d93c5', cursor: 'pointer' }}
+            style={{ width: 36, height: 36, borderRadius: '50%', background: '#fce0c7', fontSize: 13, fontWeight: 600, color: '#f47f19', cursor: 'pointer' }}
           >
             JD
           </div>
@@ -183,7 +183,7 @@ export default function DesignTest() {
               <label style={{ fontSize: 13, fontWeight: 500, color: '#475569', display: 'block', marginBottom: 8 }}>Interesse</label>
               {['Apartamento', 'Lote', 'Sala Comercial'].map(opt => (
                 <label key={opt} className="flex items-center gap-2" style={{ fontSize: 13, color: '#1E293B', marginBottom: 6, cursor: 'pointer' }}>
-                  <input type="checkbox" style={{ accentColor: '#6d93c5', width: 16, height: 16 }} /> {opt}
+                  <input type="checkbox" style={{ accentColor: '#f47f19', width: 16, height: 16 }} /> {opt}
                 </label>
               ))}
             </div>
@@ -191,7 +191,7 @@ export default function DesignTest() {
               <label style={{ fontSize: 13, fontWeight: 500, color: '#475569', display: 'block', marginBottom: 8 }}>Temperatura</label>
               {['Quente', 'Morno', 'Frio'].map(opt => (
                 <label key={opt} className="flex items-center gap-2" style={{ fontSize: 13, color: '#1E293B', marginBottom: 6, cursor: 'pointer' }}>
-                  <input type="radio" name="temp" style={{ accentColor: '#6d93c5', width: 16, height: 16 }} /> {opt}
+                  <input type="radio" name="temp" style={{ accentColor: '#f47f19', width: 16, height: 16 }} /> {opt}
                 </label>
               ))}
             </div>
@@ -199,13 +199,13 @@ export default function DesignTest() {
 
           {/* Buttons */}
           <div className="flex items-center gap-3" style={{ marginTop: 20 }}>
-            <button style={{ background: '#6d93c5', color: '#fff', borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+            <button style={{ background: '#f47f19', color: '#fff', borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
               Salvar Cliente
             </button>
             <button style={{ background: '#F1F5F9', color: '#475569', borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
               Cancelar
             </button>
-            <button style={{ background: 'transparent', color: '#6d93c5', borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 500, border: '1px solid #6d93c5', cursor: 'pointer' }}>
+            <button style={{ background: 'transparent', color: '#f47f19', borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 500, border: '1px solid #f47f19', cursor: 'pointer' }}>
               Rascunho
             </button>
           </div>

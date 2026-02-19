@@ -27,8 +27,8 @@ export function TestHeroCard() {
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: '#E0EAFF' }}>
-            <BarChart3 size={20} style={{ color: '#6d93c5' }} />
+          <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: '#fce0c7' }}>
+            <BarChart3 size={20} style={{ color: '#f47f19' }} />
           </div>
           <h1 style={{ fontSize: 48, fontWeight: 700, color: '#1E293B', lineHeight: 1.1 }}>
             Painel Executivo
@@ -60,8 +60,8 @@ export function TestHeroCard() {
                   </div>
                 )}
                 <div className="relative flex flex-col items-center" style={{ height: `${h}%`, width: '100%' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: isMax ? '#6d93c5' : '#94A3B8', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)', zIndex: 1, flexShrink: 0 }} />
-                  <div style={{ flex: 1, width: 2, background: isMax ? 'linear-gradient(to bottom, #6d93c5, rgba(109,147,197,0.1))' : 'linear-gradient(to bottom, #CBD5E1, rgba(203,213,225,0.1))', borderRadius: 1 }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: isMax ? '#f47f19' : '#94A3B8', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)', zIndex: 1, flexShrink: 0 }} />
+                  <div style={{ flex: 1, width: 2, background: isMax ? 'linear-gradient(to bottom, #f47f19, rgba(244,127,25,0.1))' : 'linear-gradient(to bottom, #CBD5E1, rgba(203,213,225,0.1))', borderRadius: 1 }} />
                 </div>
                 <span style={{ fontSize: 11, color: '#94A3B8', marginTop: 6 }}>{d.day}</span>
               </div>

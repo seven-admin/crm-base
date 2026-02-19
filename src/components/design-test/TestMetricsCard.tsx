@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 
 const metrics = [
-  { label: 'VGV Total', value: 'R$ 48.2M', bars: [40, 65, 50, 80, 55, 70, 45, 90, 60, 75], color: '#6d93c5' },
+  { label: 'VGV Total', value: 'R$ 48.2M', bars: [40, 65, 50, 80, 55, 70, 45, 90, 60, 75], color: '#f47f19' },
   { label: 'Unidades Vendidas', value: '142', bars: [55, 35, 70, 60, 45, 80, 50, 65, 75, 40], color: '#22C55E' },
   { label: 'Clientes Ativos', value: '1.847', bars: [70, 50, 60, 85, 40, 75, 55, 65, 45, 80], color: '#F59E0B' },
 ];

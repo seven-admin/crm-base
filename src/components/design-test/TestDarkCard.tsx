@@ -4,7 +4,7 @@ export function TestDarkCard() {
   return (
     <div
       style={{
-        background: '#d0d6dd',
+        background: '#f8f8f8',
         borderRadius: 20,
         boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
         padding: 24,

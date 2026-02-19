@@ -1,7 +1,7 @@
 import { MoreHorizontal } from 'lucide-react';
 
 const team = [
-  { initials: 'RS', name: 'Rafael Santos', role: 'Corretor Pleno', status: 'Disponível', statusColor: '#22C55E', bg: '#E0EAFF', color: '#6d93c5' },
+  { initials: 'RS', name: 'Rafael Santos', role: 'Corretor Pleno', status: 'Disponível', statusColor: '#22C55E', bg: '#fce0c7', color: '#f47f19' },
   { initials: 'CM', name: 'Carla Mendes', role: 'Gerente Comercial', status: 'Ausente', statusColor: '#F59E0B', bg: '#FEF3C7', color: '#F59E0B' },
 ];
 
@@ -10,7 +10,7 @@ export function TestTeamCard() {
     <div style={{ background: 'transparent', padding: 24, display: 'flex', flexDirection: 'column', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)' }}>
       <div className="flex items-center justify-between mb-5">
         <p style={{ fontSize: 15, fontWeight: 600, color: '#1E293B' }}>Corretores</p>
-        <button style={{ fontSize: 13, color: '#6d93c5', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Ver todos</button>
+        <button style={{ fontSize: 13, color: '#f47f19', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Ver todos</button>
       </div>
       <div className="flex flex-col flex-1 justify-center">
         {team.map((m, i) => (
