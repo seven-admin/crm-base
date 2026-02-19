@@ -1,113 +1,123 @@
 
-# Problema: has_role() retorna false para 48 usuários
+# Correção do Bug: COMPRADOR HISTÓRICO (PRÉ-SISTEMA) duplicado
 
-## Diagnóstico Definitivo
+## Causa Raiz
 
-A tabela `user_roles` evoluiu e hoje tem duas colunas:
-- `role` (enum `app_role`) — coluna antiga, **nullable**, usada pela função `has_role()`
-- `role_id` (UUID → tabela `roles`) — coluna nova, usada pelo sistema de permissões moderno
+Dois problemas simultâneos causam a duplicação:
 
-A função `has_role(_user_id, _role text)` que é usada nas políticas RLS consulta apenas a coluna `role` (enum):
-```sql
-SELECT EXISTS (
-  SELECT 1 FROM public.user_roles
-  WHERE user_id = _user_id AND role::text = _role
-)
+**Problema 1 — Constante com case errado no frontend (`useVendaHistorica.ts`)**
+
+```ts
+// ATUAL (errado): texto misto
+const CLIENTE_HISTORICO_NOME = 'Comprador Histórico (Pré-Sistema)';
+
+// A busca compara exatamente com esse texto:
+.eq('nome', CLIENTE_HISTORICO_NOME) // → não encontra no banco
+
+// No banco, o trigger uppercase_clientes() converte para:
+// 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)'
+// Logo, .eq() nunca encontra → cria um novo registro a cada venda histórica
 ```
 
-O usuário `comercial_sm_axis01` tem `role = NULL` e `role_id = <uuid do gestor_produto>`, então `has_role()` sempre retorna `false`, bloqueando o INSERT mesmo com a política nova.
+**Problema 2 — Filtro de exclusão incorreto no `useClientesSelect.ts`**
 
-**48 de 59 usuários** estão nessa situação — ou seja, o problema afeta quase todos os usuários cadastrados pelo sistema moderno.
+```ts
+// ATUAL (errado): sem acentos
+.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
+// O nome real no banco é: 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)'
+// Como não bate exatamente, o cliente vaza para as listas de seleção
+```
+
+## Situação dos Registros Duplicados no Banco
+
+```text
+Empreendimento JD. IGUATEMI (5b01d2c4):
+  ├── ID: 37e1... (criado 05/02 11:52) → 0 negociações, 1 contrato  ← MANTER
+  └── ID: bf70... (criado 05/02 11:54) → 0 negociações, 1 contrato  ← CONSOLIDAR e APAGAR
+
+Empreendimento BELVEDERE (42157c74):
+  ├── ID: 1108... (criado 05/02 13:15) → 0 negociações, 1 contrato  ← MANTER
+  └── ID: 336b... (criado 05/02 21:30) → 0 negociações, 1 contrato  ← CONSOLIDAR e APAGAR
+
+Empreendimento 156f9324:
+  └── ID: 6447... (criado 09/02 19:48) → 0 negociações, 1 contrato  ← OK
+```
 
 ## Solução
 
-### Passo 1 — Corrigir a função `has_role(uuid, text)`
+### Parte 1 — Limpeza do banco (SQL Migration)
 
-Atualizar a função para consultar **ambas** as colunas: a enum `role` (legada) E o `role_id` via join na tabela `roles` (moderna):
-
-```sql
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role text)
-RETURNS boolean
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = _user_id
-      AND (
-        ur.role::text = _role
-        OR EXISTS (
-          SELECT 1 FROM public.roles r
-          WHERE r.id = ur.role_id AND r.name = _role AND r.is_active = true
-        )
-      )
-  )
-$$;
-```
-
-### Passo 2 — Sincronizar a coluna `role` para os 48 usuários
-
-Preencher a coluna `role` (enum) a partir do `role_id` para os usuários que têm `role = NULL`, quando o nome do role bate com valores do enum `app_role`:
+Consolidar os registros duplicados reassociando os contratos para o mais antigo e depois deletando os duplicados:
 
 ```sql
--- Quais roles do enum existem?
--- Verificar: SELECT unnest(enum_range(NULL::app_role));
+-- JD. IGUATEMI: reassociar contrato do duplicado para o mais antigo, depois deletar
+UPDATE public.contratos
+SET cliente_id = '37e13872-519b-4dce-b00a-7c375b573bde'
+WHERE cliente_id = 'bf704830-1aa0-4025-9cf6-0c6edd62039f';
 
-UPDATE public.user_roles ur
-SET role = r.name::app_role
-FROM public.roles r
-WHERE ur.role_id = r.id
-  AND ur.role IS NULL
-  AND r.name IN (SELECT unnest(enum_range(NULL::app_role))::text);
+DELETE FROM public.clientes 
+WHERE id = 'bf704830-1aa0-4025-9cf6-0c6edd62039f';
+
+-- BELVEDERE: mesma coisa
+UPDATE public.contratos
+SET cliente_id = '1108a037-7aaa-4860-8ccb-740c757a5426'
+WHERE cliente_id = '336b2481-bfe3-4aea-8530-d8fe7cd0c146';
+
+DELETE FROM public.clientes 
+WHERE id = '336b2481-bfe3-4aea-8530-d8fe7cd0c146';
 ```
 
-Isso sincroniza os registros onde o nome do role existe no enum (ex: `admin`, `super_admin`, etc.).
-
-### Passo 3 — Criar trigger para manter sincronizado automaticamente
-
-Para que inserções futuras não voltem a ter `role = NULL`:
+Além disso, remover o campo `empreendimento_id` do cliente histórico — ele é genérico e não deve ficar vinculado a um empreendimento específico, o que garante que um único registro por nome sirva para todos:
 
 ```sql
-CREATE OR REPLACE FUNCTION public.sync_user_role_enum()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_role_name text;
-BEGIN
-  IF NEW.role IS NULL AND NEW.role_id IS NOT NULL THEN
-    SELECT name INTO v_role_name FROM public.roles WHERE id = NEW.role_id AND is_active = true;
-    BEGIN
-      NEW.role := v_role_name::app_role;
-    EXCEPTION WHEN invalid_text_representation THEN
-      -- role_name não existe no enum, mantém NULL (roles customizados como gestor_produto)
-      NULL;
-    END;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_sync_user_role_enum
-  BEFORE INSERT OR UPDATE ON public.user_roles
-  FOR EACH ROW
-  EXECUTE FUNCTION public.sync_user_role_enum();
+UPDATE public.clientes
+SET empreendimento_id = NULL
+WHERE nome = 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)';
 ```
 
-### Por que o Passo 1 é o mais importante
+### Parte 2 — Correção do frontend (`useVendaHistorica.ts`)
 
-Roles como `gestor_produto` **não existem no enum `app_role`** (que provavelmente contém apenas `admin`, `user`, etc.), então o UPDATE do Passo 2 não os cobre. O Passo 1 (corrigir a função) garante que qualquer role — seja do enum ou via role_id — seja reconhecido corretamente pelas políticas RLS.
+Alterar a constante para o texto em UPPERCASE exato como o banco armazena, e usar `ilike` para a busca (à prova de futuras variações):
+
+```ts
+// Antes:
+const CLIENTE_HISTORICO_NOME = 'Comprador Histórico (Pré-Sistema)';
+.eq('nome', CLIENTE_HISTORICO_NOME)
+
+// Depois:
+const CLIENTE_HISTORICO_NOME = 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)';
+// Busca com ilike para ser case-insensitive
+.ilike('nome', CLIENTE_HISTORICO_NOME)
+```
+
+Também remover o `empreendimento_id` do INSERT do cliente histórico, já que ele deve ser um registro global reutilizável:
+
+```ts
+// Remover empreendimento_id: empreendimentoId do insert
+```
+
+### Parte 3 — Correção do filtro de exclusão (`useClientesSelect.ts`)
+
+Corrigir o texto do filtro para incluir os acentos corretos:
+
+```ts
+// Antes (sem acentos — não filtra):
+.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
+
+// Depois (com acentos corretos):
+.ilike('nome', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')
+// Como ilike não funciona com neq, usar filter:
+.not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')
+```
+
+## Arquivos Alterados
+
+- `supabase/migrations/...` — Consolida os 2 duplicados e limpa `empreendimento_id`
+- `src/hooks/useVendaHistorica.ts` — Corrige a constante de nome e a busca
+- `src/hooks/useClientesSelect.ts` — Corrige o filtro de exclusão com acentos
 
 ## Impacto
 
-- Resolve imediatamente o erro de RLS para `comercial_sm_axis01` e outros 47 usuários afetados
-- Não altera nenhuma política RLS existente
-- Não quebra nenhuma funcionalidade atual
-- A correção da função afeta todas as tabelas que usam `has_role()` nas suas políticas — todas se beneficiam
-
-## Arquivos
-
-Apenas uma migration SQL — zero alterações em código React.
+- Elimina a criação de novos duplicados a partir de agora
+- Consolida os 2 registros duplicados existentes sem perda de dados (contratos são reassociados)
+- O cliente histórico passa a ser verdadeiramente global (sem `empreendimento_id`), permitindo reutilização correta
