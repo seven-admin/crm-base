@@ -1,114 +1,119 @@
-import {
-  DollarSign, TrendingUp, Users, Building2,
-  ShoppingCart, BarChart3, Target, Percent,
-  AlertTriangle, Clock, CheckCircle2,
-} from 'lucide-react';
-import { TestKPICard } from '@/components/design-test/TestKPICard';
-import { TestTrendChart } from '@/components/design-test/TestTrendChart';
-import { TestDonutChart } from '@/components/design-test/TestDonutChart';
-import { TestFunnelMini } from '@/components/design-test/TestFunnelMini';
+import { Search, Bell, MessageSquare, Settings } from 'lucide-react';
+import { TestHeroCard } from '@/components/design-test/TestHeroCard';
+import { TestProjectList } from '@/components/design-test/TestProjectList';
+import { TestTeamCard } from '@/components/design-test/TestTeamCard';
+import { TestDarkCard } from '@/components/design-test/TestDarkCard';
+import { TestMetricsCard } from '@/components/design-test/TestMetricsCard';
 
-// Mock data
-const kpis = [
-  { title: 'VGV Total', value: 'R$ 48,2M', variation: 12.5, icon: DollarSign, iconBg: '#FDE8D0', iconColor: '#F4A261', subtitle: '142 unidades' },
-  { title: 'Vendas do Mês', value: '23', variation: 8.3, icon: ShoppingCart, iconBg: '#D4EDDA', iconColor: '#81C784', subtitle: 'R$ 7,8M' },
-  { title: 'Taxa de Conversão', value: '18,4%', variation: -2.1, icon: Target, iconBg: '#D6EAF8', iconColor: '#7EC8E3', subtitle: '84 leads ativos' },
-  { title: 'Ticket Médio', value: 'R$ 339K', variation: 5.7, icon: BarChart3, iconBg: '#E8DAEF', iconColor: '#B39DDB', subtitle: 'por unidade' },
-  { title: 'Comissões Pendentes', value: 'R$ 1,2M', variation: -4.2, icon: Percent, iconBg: '#FCE4EC', iconColor: '#E8A0BF', subtitle: '18 registros' },
-  { title: 'Clientes Ativos', value: '347', variation: 15.8, icon: Users, iconBg: '#D4EDDA', iconColor: '#81C784', subtitle: '+12 esta semana' },
-  { title: 'Empreendimentos', value: '8', variation: 0, icon: Building2, iconBg: '#D6EAF8', iconColor: '#64B5F6', subtitle: '5 em vendas' },
-  { title: 'Forecast Mês', value: 'R$ 12,5M', variation: 22.1, icon: TrendingUp, iconBg: '#FFF9C4', iconColor: '#FFD54F', subtitle: '68% da meta' },
-];
-
-const trendData = [
-  { name: 'Set', value: 3200, prev: 2800 },
-  { name: 'Out', value: 4100, prev: 3100 },
-  { name: 'Nov', value: 3800, prev: 3500 },
-  { name: 'Dez', value: 5200, prev: 4000 },
-  { name: 'Jan', value: 4800, prev: 4200 },
-  { name: 'Fev', value: 6100, prev: 4500 },
-];
-
-const donutData = [
-  { name: 'Fechadas', value: 42, color: '#81C784' },
-  { name: 'Em negociação', value: 28, color: '#7EC8E3' },
-  { name: 'Propostas', value: 18, color: '#FFD54F' },
-  { name: 'Perdidas', value: 12, color: '#E8A0BF' },
-];
-
-const funnelSteps = [
-  { label: 'Leads', value: 340, color: '#64B5F6' },
-  { label: 'Qualificados', value: 185, color: '#7EC8E3' },
-  { label: 'Visitas', value: 98, color: '#B39DDB' },
-  { label: 'Propostas', value: 52, color: '#FFD54F' },
-  { label: 'Fechamento', value: 23, color: '#81C784' },
-];
-
-const alerts = [
-  { icon: AlertTriangle, text: '5 propostas vencem em 48h', color: '#F4A261', bg: '#FDE8D0' },
-  { icon: Clock, text: '12 follow-ups atrasados', color: '#E8A0BF', bg: '#FCE4EC' },
-  { icon: CheckCircle2, text: 'Meta mensal 68% atingida', color: '#81C784', bg: '#D4EDDA' },
-];
+const navLinks = ['Dashboard', 'Projects', 'Inbox', 'Schedule', 'Reports'];
+const activeLink = 'Dashboard';
 
 export default function DesignTest() {
   return (
-    <div className="min-h-screen p-6 lg:p-8" style={{ background: '#F5F6FA' }}>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: '#1E293B' }}>
-          Dashboard Executivo
-        </h1>
-        <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>
-          Visão geral do desempenho comercial — Fevereiro 2026
-        </p>
-      </div>
-
-      {/* KPIs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        {kpis.map((kpi, i) => (
-          <TestKPICard key={i} {...kpi} />
-        ))}
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-        <div className="lg:col-span-2">
-          <TestTrendChart title="Vendas — Últimos 6 meses" data={trendData} color="#7EC8E3" />
+    <div className="min-h-screen" style={{ background: '#F5F6FA' }}>
+      {/* Top Nav */}
+      <nav
+        className="flex items-center justify-between px-6"
+        style={{ height: 64, background: '#FFFFFF', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div
+            className="flex items-center justify-center"
+            style={{ width: 32, height: 32, borderRadius: '50%', background: '#6366F1' }}
+          >
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>S</span>
+          </div>
+          <span style={{ fontWeight: 700, fontSize: 16, color: '#1E293B' }}>Starter</span>
         </div>
-        <TestDonutChart title="Status das Negociações" data={donutData} />
-      </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <TestFunnelMini title="Funil de Vendas" steps={funnelSteps} />
+        {/* Center links */}
+        <div className="flex items-center gap-8">
+          {navLinks.map(link => (
+            <button
+              key={link}
+              style={{
+                fontSize: 14,
+                fontWeight: link === activeLink ? 600 : 400,
+                color: link === activeLink ? '#1E293B' : '#94A3B8',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                paddingBottom: 4,
+                borderBottom: link === activeLink ? '2px solid #6366F1' : '2px solid transparent',
+              }}
+            >
+              {link}
+            </button>
+          ))}
+        </div>
 
-        {/* Alerts Card */}
-        <div
-          style={{
-            background: '#FFFFFF',
-            border: 'none',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-            borderRadius: 16,
-            padding: 24,
-          }}
-        >
-          <p className="text-sm font-semibold mb-5" style={{ color: '#1E293B' }}>
-            Alertas & Pendências
-          </p>
-          <div className="flex flex-col gap-4">
-            {alerts.map((alert, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center shrink-0"
-                  style={{ width: 36, height: 36, borderRadius: '50%', background: alert.bg }}
-                >
-                  <alert.icon size={16} style={{ color: alert.color }} />
-                </div>
-                <span className="text-sm" style={{ color: '#475569' }}>
-                  {alert.text}
-                </span>
-              </div>
-            ))}
+        {/* Right side */}
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="relative">
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+            <input
+              placeholder="Search..."
+              style={{
+                width: 260,
+                height: 36,
+                borderRadius: 10,
+                border: '1px solid #F1F5F9',
+                background: '#F8FAFC',
+                paddingLeft: 36,
+                paddingRight: 12,
+                fontSize: 13,
+                color: '#1E293B',
+                outline: 'none',
+              }}
+            />
+          </div>
+          {[Bell, MessageSquare, Settings].map((Icon, i) => (
+            <button
+              key={i}
+              className="flex items-center justify-center"
+              style={{ width: 36, height: 36, borderRadius: 10, background: '#F8FAFC', border: '1px solid #F1F5F9', cursor: 'pointer' }}
+            >
+              <Icon size={16} style={{ color: '#64748B' }} />
+            </button>
+          ))}
+          <div
+            className="flex items-center justify-center"
+            style={{ width: 36, height: 36, borderRadius: '50%', background: '#EEF2FF', fontSize: 13, fontWeight: 600, color: '#6366F1', cursor: 'pointer' }}
+          >
+            JD
+          </div>
+        </div>
+      </nav>
+
+      {/* Body */}
+      <div className="flex gap-4 p-4" style={{ height: 'calc(100vh - 64px)' }}>
+        {/* Left column 62% */}
+        <div className="flex flex-col gap-4" style={{ width: '62%' }}>
+          {/* Hero — 58% */}
+          <div style={{ flex: '0 0 58%', minHeight: 0 }}>
+            <TestHeroCard />
+          </div>
+          {/* Bottom row — 42% */}
+          <div className="flex gap-4" style={{ flex: '0 0 calc(42% - 16px)', minHeight: 0 }}>
+            <div style={{ width: '50%' }}>
+              <TestTeamCard />
+            </div>
+            <div style={{ width: '50%' }}>
+              <TestDarkCard />
+            </div>
+          </div>
+        </div>
+
+        {/* Right column 38% */}
+        <div className="flex flex-col gap-4" style={{ width: '38%' }}>
+          {/* Project list — 58% */}
+          <div style={{ flex: '0 0 58%', minHeight: 0 }}>
+            <TestProjectList />
+          </div>
+          {/* Metrics — 42% */}
+          <div style={{ flex: '0 0 calc(42% - 16px)', minHeight: 0 }}>
+            <TestMetricsCard />
           </div>
         </div>
       </div>
