@@ -43,14 +43,10 @@ export function TestProjectList() {
   return (
     <div
       style={{
-        background: '#FFFFFF',
-        borderRadius: 20,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+        background: 'transparent',
         padding: 24,
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden',
       }}
     >
       <div className="flex items-center justify-between mb-4">
