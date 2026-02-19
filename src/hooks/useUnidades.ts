@@ -327,6 +327,37 @@ export function useUpdateUnidadesStatusBatch() {
   });
 }
 
+// Alterar tipologia em lote
+export function useUpdateUnidadesTipologiaBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, empreendimentoId, tipologiaId, areaPrivativa }: { ids: string[]; empreendimentoId: string; tipologiaId: string; areaPrivativa?: number }) => {
+      const updateData: Record<string, string | number> = { tipologia_id: tipologiaId };
+      if (areaPrivativa !== undefined) {
+        updateData.area_privativa = areaPrivativa;
+      }
+
+      const { error } = await supabase
+        .from('unidades')
+        .update(updateData)
+        .in('id', ids);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { empreendimentoId, ids }) => {
+      queryClient.invalidateQueries({ queryKey: ['unidades', empreendimentoId] });
+      queryClient.invalidateQueries({ queryKey: ['empreendimento', empreendimentoId] });
+      queryClient.invalidateQueries({ queryKey: ['empreendimentos'] });
+      toast.success(`Tipologia de ${ids.length} unidade(s) atualizada com sucesso!`);
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar tipologia:', error);
+      toast.error('Erro ao atualizar tipologia das unidades');
+    },
+  });
+}
+
 // Excluir unidades em lote
 export function useDeleteUnidadesBatch() {
   const queryClient = useQueryClient();

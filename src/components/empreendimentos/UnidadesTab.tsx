@@ -29,6 +29,7 @@ import { BlocoForm } from './BlocoForm';
 import { ImportarUnidadesDialog } from './ImportarUnidadesDialog';
 import { VendaHistoricaDialog } from './VendaHistoricaDialog';
 import { AlterarStatusLoteDialog } from './AlterarStatusLoteDialog';
+import { AlterarTipologiaLoteDialog } from './AlterarTipologiaLoteDialog';
 import { cn } from '@/lib/utils';
 import { buildUnitLabel, type LabelFormatElement } from '@/lib/mapaUtils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
@@ -50,10 +51,11 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [vendaHistoricaOpen, setVendaHistoricaOpen] = useState(false);
   const [statusLoteOpen, setStatusLoteOpen] = useState(false);
+  const [tipologiaLoteOpen, setTipologiaLoteOpen] = useState(false);
   const [selectedUnidade, setSelectedUnidade] = useState<Unidade | null>(null);
   
   // Estado para seleção de unidades
-  const [selectionMode, setSelectionMode] = useState<'venda' | 'delete' | 'status' | false>(false);
+  const [selectionMode, setSelectionMode] = useState<'venda' | 'delete' | 'status' | 'tipologia' | false>(false);
   const [selectedUnidadeIds, setSelectedUnidadeIds] = useState<Set<string>>(new Set());
 
   const tiposComMapa = ['loteamento', 'condominio'];
@@ -323,6 +325,16 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     Alterar Status ({selectedUnidadeIds.size})
                   </Button>
                 )}
+                {selectionMode === 'tipologia' && (
+                  <Button
+                    size="sm"
+                    onClick={() => setTipologiaLoteOpen(true)}
+                    disabled={selectedUnidadeIds.size === 0}
+                  >
+                    <Layers className="h-4 w-4 mr-2" />
+                    Alterar Tipologia ({selectedUnidadeIds.size})
+                  </Button>
+                )}
                 {selectionMode === 'delete' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -373,6 +385,10 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                   <FileText className="h-4 w-4 mr-2" />
                   Exportar Disponíveis (PDF)
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectionMode('tipologia')}>
+                  <Layers className="h-4 w-4 mr-2" />
+                  Alterar Tipologia
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => setSelectionMode('status')}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Alterar Status
@@ -412,6 +428,8 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               ? <>Clique nas unidades <strong>disponíveis</strong> (verde) para selecioná-las para registro de venda histórica.</>
               : selectionMode === 'status'
               ? <>Clique nas unidades cujo <strong>status</strong> deseja alterar.</>
+              : selectionMode === 'tipologia'
+              ? <>Clique nas unidades cuja <strong>tipologia</strong> deseja alterar.</>
               : <>Clique nas unidades que deseja <strong>excluir</strong>. Esta ação é permanente.</>
             }
           </div>
@@ -461,9 +479,11 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                           selectionMode === 'venda' && !isDisponivel && 'opacity-50 cursor-not-allowed',
                           selectionMode === 'delete' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-destructive',
                           selectionMode === 'status' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
+                          selectionMode === 'tipologia' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
                           isSelected && selectionMode === 'venda' && 'ring-2 ring-primary ring-offset-2',
                           isSelected && selectionMode === 'delete' && 'ring-2 ring-destructive ring-offset-2',
                           isSelected && selectionMode === 'status' && 'ring-2 ring-primary ring-offset-2',
+                          isSelected && selectionMode === 'tipologia' && 'ring-2 ring-primary ring-offset-2',
                           !selectionMode && 'cursor-pointer hover:opacity-80'
                         )}
                         title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}`}
@@ -568,6 +588,14 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <AlterarStatusLoteDialog
           open={statusLoteOpen}
           onOpenChange={setStatusLoteOpen}
+          empreendimentoId={empreendimentoId}
+          selectedCount={selectedUnidadeIds.size}
+          selectedIds={Array.from(selectedUnidadeIds)}
+          onSuccess={handleExitSelectionMode}
+        />
+        <AlterarTipologiaLoteDialog
+          open={tipologiaLoteOpen}
+          onOpenChange={setTipologiaLoteOpen}
           empreendimentoId={empreendimentoId}
           selectedCount={selectedUnidadeIds.size}
           selectedIds={Array.from(selectedUnidadeIds)}
