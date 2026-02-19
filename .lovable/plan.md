@@ -1,23 +1,38 @@
 
 
-# Ajustes: Numero reduzido e sombra leve nos cards
+# 3 Variantes de Card: Branco, Transparente e Cinza (#d0d6dd)
 
-## 1. Reduzir numero em destaque no HeroCard
+## Objetivo
 
-O valor "R$ 2.847.500" atualmente usa `fontSize: 72`. Reduzir 25% para `fontSize: 54`.
+Mostrar 3 estilos de card na pagina, para comparacao visual:
 
-**Arquivo**: `src/components/design-test/TestHeroCard.tsx` (linha 74)
+1. **Branco** -- fundo `#FFFFFF` com sombra leve (ja e o estilo do HeroCard e da tabela)
+2. **Sem fundo** -- `background: 'transparent'` com sombra leve (ja e o estilo atual do TeamCard e ProjectList)
+3. **Cinza (#d0d6dd)** -- substituir o card escuro "Novo Empreendimento" (atualmente `#1E293B`) por fundo `#d0d6dd`
 
-## 2. Adicionar sombra leve nos cards secundarios
+## Mudanca
 
-Os cards transparentes (ProjectList, TeamCard, MetricsCard) atualmente nao possuem sombra. Adicionar uma sombra suave para dar leve profundidade, mantendo o fundo transparente.
+Apenas o `TestDarkCard.tsx` precisa ser alterado:
 
-Sombra: `boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)'`
+- `background: '#1E293B'` vira `background: '#d0d6dd'`
+- Cor do titulo: `#FFFFFF` vira `#1E293B` (texto escuro sobre fundo claro)
+- Cor do subtexto: `#94A3B8` vira `#475569` (melhor contraste)
+- Botao: `background: '#F8FAFC'` pode permanecer branco, ou virar `#FFFFFF` para maior destaque
 
-**Arquivos afetados**:
-- `src/components/design-test/TestProjectList.tsx` -- adicionar boxShadow e borderRadius ao container
-- `src/components/design-test/TestTeamCard.tsx` -- adicionar boxShadow e borderRadius ao container
-- `src/components/design-test/TestMetricsCard.tsx` -- adicionar boxShadow e borderRadius ao container
+Os demais cards ja representam as outras 2 variantes (branco e transparente), entao nao precisam de alteracao.
 
-Os cards que ja possuem sombra (HeroCard, TableCard, DarkCard, Labels, Form) permanecem inalterados.
+## Arquivo afetado
+
+| Arquivo | Mudanca |
+|---|---|
+| `src/components/design-test/TestDarkCard.tsx` | Trocar fundo de `#1E293B` para `#d0d6dd`, ajustar cores de texto para escuro |
+
+## Detalhe tecnico
+
+```
+background: '#d0d6dd'        (era #1E293B)
+titulo color: '#1E293B'      (era #FFFFFF)
+subtexto color: '#475569'    (era #94A3B8)
+botao: background '#FFFFFF'  (manter claro)
+```
 
