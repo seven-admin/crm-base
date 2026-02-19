@@ -1,33 +1,27 @@
 
-# Identificador Visual de Tipologia nos Cards
-
-## Objetivo
-Adicionar um indicador colorido em cada card de unidade para identificar visualmente unidades com a mesma tipologia. Cada tipologia recebe uma cor unica automaticamente.
-
-## Como vai funcionar
-- Uma pequena bolinha colorida aparece no canto inferior esquerdo de cada card
-- Tipologias diferentes recebem cores diferentes de uma paleta predefinida
-- Cards sem tipologia nao exibem a bolinha
-- A legenda das tipologias e exibida abaixo da legenda de status existente
+# Trocar indicador de tipologia: de bolinha para linha separadora
 
 ## Alteracao no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
 
-### 1. Paleta de cores para tipologias
-Criar uma paleta fixa de cores (8-10 cores distintas) que sera atribuida automaticamente a cada tipologia do empreendimento com base no indice:
+### O que muda
+Substituir o circulo colorido no canto inferior esquerdo por uma linha horizontal de 2px com a cor da tipologia, posicionada entre o titulo (label da unidade) e a descricao (nome da tipologia e area).
 
+### Detalhes
+
+**Remover** (linha 553-555): o `div` absoluto com a bolinha (`w-2.5 h-2.5 rounded-full`).
+
+**Adicionar** entre o `<span>` do label (linha 535) e o `<span>` da tipologia (linha 537): uma `<div>` com `h-[2px] w-full rounded-full mt-1` usando a cor da tipologia do mapa. So exibir quando a unidade tiver `tipologia_id`.
+
+O card ficara assim visualmente:
+
+```text
+  101
+ ━━━━━━  (linha colorida 2px)
+ 2Q Suite
+  65m²
 ```
-const TIPOLOGIA_COLORS = [
-  'bg-indigo-400', 'bg-pink-400', 'bg-teal-400',
-  'bg-orange-400', 'bg-cyan-400', 'bg-rose-400',
-  'bg-lime-400', 'bg-violet-400', 'bg-amber-400', 'bg-sky-400'
-];
-```
 
-### 2. Mapa tipologia -> cor
-Construir um Map que associa cada `tipologia_id` a uma cor da paleta, baseado na lista de tipologias ja carregada pelo componente.
+### Legenda
+A legenda de tipologias ja existente continua usando as bolinhas coloridas -- nao sera alterada, pois funciona bem como legenda.
 
-### 3. Bolinha no card
-Dentro do `renderUnidadeButton`, adicionar uma bolinha (`w-2.5 h-2.5 rounded-full`) no canto inferior esquerdo do card, com a cor correspondente a tipologia da unidade.
-
-### 4. Legenda de tipologias
-Adicionar uma segunda linha de legenda (abaixo da legenda de status) mostrando cada tipologia com sua bolinha colorida e o nome, para que o usuario saiba o que cada cor representa.
+Arquivo alterado: `src/components/empreendimentos/UnidadesTab.tsx`
