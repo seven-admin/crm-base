@@ -22,13 +22,13 @@ export function TestTableCard() {
         <thead>
           <tr>
             {['Cliente', 'Empreendimento', 'Status', 'Valor', 'Data'].map(h => (
-              <th key={h} style={{ fontSize: 11, fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #F1F5F9' }}>{h}</th>
+              <th key={h} style={{ fontSize: 11, fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #bebfc0' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {transactions.map((t, i) => (
-            <tr key={i} style={{ borderBottom: i < transactions.length - 1 ? '1px solid #F1F5F9' : undefined }}>
+            <tr key={i} style={{ borderBottom: i < transactions.length - 1 ? '1px solid #bebfc0' : undefined }}>
               <td style={{ padding: '12px', fontSize: 14, fontWeight: 500, color: '#1E293B' }}>{t.cliente}</td>
               <td style={{ padding: '12px', fontSize: 13, color: '#64748B' }}>{t.empreendimento}</td>
               <td style={{ padding: '12px' }}>
