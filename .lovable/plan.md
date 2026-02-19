@@ -1,44 +1,39 @@
 
 
-# Alterar Tipologia em Lote
+# Melhorar Cards de Unidades na Lista
 
-## Resumo
-Adicionar a funcionalidade de alterar a tipologia de multiplas unidades de uma vez, seguindo o mesmo padrao ja existente para "Alterar Status em Lote".
+## Alteracoes no arquivo `src/components/empreendimentos/UnidadesTab.tsx`
 
-## Alteracoes
+### 1. Legendas com espacamento
+Na secao de legendas (linha 444), aumentar o gap entre os itens de `gap-4` para `gap-6` para melhor respiro visual.
 
-### 1. Novo hook: `useUpdateUnidadesTipologiaBatch` (em `src/hooks/useUnidades.ts`)
-- Criar uma mutation que faz `supabase.from('unidades').update({ tipologia_id }).in('id', ids)`
-- Tambem atualiza `area_privativa` automaticamente com base na tipologia selecionada (se a tipologia tiver area definida)
-- Invalida as queries de unidades apos sucesso
+### 2. Cards mais completos com tipologia
+Na funcao `renderUnidadeButton` (linha 460-506), transformar o botao simples em um card mais informativo:
+- Aumentar o tamanho do card (de `h-10 min-w-[3.5rem]` para algo como `h-auto min-w-[5rem] p-2`)
+- Exibir o numero/label principal em tamanho normal
+- Adicionar uma linha pequena abaixo com o nome da tipologia (ex: "2Q Suite") em texto menor (`text-[10px]`)
+- Mostrar area privativa se disponivel (ex: "65m2")
 
-### 2. Novo componente: `AlterarTipologiaLoteDialog` (em `src/components/empreendimentos/AlterarTipologiaLoteDialog.tsx`)
-- Dialog com select de tipologias do empreendimento (usando `useTipologias`)
-- Checkbox opcional "Atualizar area privativa" para aplicar a area da tipologia nas unidades
-- Preview mostrando quantas unidades serao alteradas
-- Mesmo layout do `AlterarStatusLoteDialog` existente
+### 3. Cor do texto escura
+- Trocar `text-white` por `text-gray-800` ou `text-slate-800`
+- Ajustar as cores de fundo dos status (`UNIDADE_STATUS_COLORS`) usadas nos cards para tons mais claros/pasteis, ja que o texto sera escuro. Isso sera feito localmente no componente, sem alterar o type global (que e usado em outros lugares como o mapa)
+- Usar variantes como `bg-emerald-100`, `bg-yellow-100`, `bg-blue-100`, `bg-purple-100`, `bg-red-100`, `bg-gray-200` para os cards na grid
 
-### 3. Integrar no `UnidadesTab.tsx`
-- Adicionar novo modo de selecao `'tipologia'` ao tipo `selectionMode`
-- Adicionar botao "Alterar Tipologia" na barra de acoes (ao lado de "Alterar Status")
-- Quando em modo tipologia, exibir botao de confirmacao que abre o dialog
-- Renderizar o novo `AlterarTipologiaLoteDialog`
+### 4. Ajustar grid
+- Reduzir colunas do grid para acomodar cards maiores (ex: `grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10`)
 
 ## Detalhes tecnicos
 
-### Hook (useUnidades.ts)
-```typescript
-export function useUpdateUnidadesTipologiaBatch() {
-  // mutationFn recebe { ids, empreendimentoId, tipologia_id, area_privativa? }
-  // Faz update de tipologia_id e opcionalmente area_privativa
-}
+O `renderUnidadeButton` passara de um botao simples com apenas o label para algo como:
+
+```
+[  101  ]
+[ 2Q Suite ]
+[  65m2  ]
 ```
 
-### Fluxo do usuario
-1. Clica em "Alterar Tipologia" na barra de acoes
-2. Entra em modo de selecao (seleciona unidades clicando nelas)
-3. Clica em "Alterar Tipologia (N)" para abrir o dialog
-4. Seleciona a tipologia desejada no select
-5. Opcionalmente marca "Atualizar area privativa"
-6. Confirma a alteracao
+Com fundo pastel e texto escuro, mantendo o indicador de status via cor de fundo.
+
+Arquivos alterados:
+- `src/components/empreendimentos/UnidadesTab.tsx` (unico arquivo)
 
