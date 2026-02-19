@@ -52,7 +52,7 @@ export function TestProjectList() {
       <div className="flex flex-col flex-1 overflow-auto" style={{ gap: 0 }}>
         {projects.map((p, i) => (
           <div key={i}>
-            {i > 0 && <div style={{ height: 1, background: '#F1F5F9' }} />}
+            {i > 0 && <div style={{ height: 1, background: '#bebfc0' }} />}
             <div className="flex items-start gap-3 py-4" style={{ cursor: 'pointer' }}>
               <div className="flex items-center justify-center shrink-0" style={{ width: 48, height: 48, borderRadius: 14, background: p.iconBg }}>
                 <div style={{ width: 20, height: 20, borderRadius: 6, background: p.iconColor, opacity: 0.7 }} />

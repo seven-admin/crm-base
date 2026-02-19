@@ -15,7 +15,7 @@ export function TestTeamCard() {
       <div className="flex flex-col flex-1 justify-center">
         {team.map((m, i) => (
           <div key={i}>
-            {i > 0 && <div style={{ height: 1, background: '#F1F5F9', margin: '12px 0' }} />}
+            {i > 0 && <div style={{ height: 1, background: '#bebfc0', margin: '12px 0' }} />}
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center shrink-0" style={{ width: 40, height: 40, borderRadius: '50%', background: m.bg, fontSize: 13, fontWeight: 600, color: m.color }}>{m.initials}</div>
               <div className="flex-1 min-w-0">

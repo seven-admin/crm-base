@@ -17,7 +17,7 @@ export function TestMetricsCard() {
       </div>
       <div className="flex flex-1" style={{ gap: 0 }}>
         {metrics.map((m, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center justify-between" style={{ borderRight: i < metrics.length - 1 ? '1px solid #F1F5F9' : undefined, padding: '0 16px' }}>
+          <div key={i} className="flex-1 flex flex-col items-center justify-between" style={{ borderRight: i < metrics.length - 1 ? '1px solid #bebfc0' : undefined, padding: '0 16px' }}>
             <span style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>{m.label}</span>
             <p style={{ fontSize: 28, fontWeight: 700, color: '#1E293B', margin: '8px 0' }}>{m.value}</p>
             <div className="flex items-end gap-1" style={{ height: 48, width: '100%', justifyContent: 'center' }}>
