@@ -1,4 +1,5 @@
 import { Search, Bell, MessageSquare, Settings } from 'lucide-react';
+import logo from '@/assets/logo-full.png';
 import { TestHeroCard } from '@/components/design-test/TestHeroCard';
 import { TestProjectList } from '@/components/design-test/TestProjectList';
 import { TestTeamCard } from '@/components/design-test/TestTeamCard';
@@ -34,14 +35,8 @@ export default function DesignTest() {
         className="flex items-center justify-between px-6"
         style={{ height: 64, background: '#FFFFFF', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
       >
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div
-            className="flex items-center justify-center"
-            style={{ width: 32, height: 32, borderRadius: '50%', background: '#f47f19' }}
-          >
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>S</span>
-          </div>
-          <span style={{ fontWeight: 700, fontSize: 16, color: '#1E293B' }}>Starter</span>
+        <div className="shrink-0">
+          <img src={logo} alt="SevenGroup" style={{ height: 28, filter: 'brightness(0)' }} />
         </div>
 
         <div className="flex items-center gap-8">
