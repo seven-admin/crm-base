@@ -1,123 +1,113 @@
 
-# Correção do Bug: COMPRADOR HISTÓRICO (PRÉ-SISTEMA) duplicado
+# Pagina de Teste - Redesign Visual (Estilo Referencia)
 
-## Causa Raiz
+## Objetivo
 
-Dois problemas simultâneos causam a duplicação:
+Criar uma pagina isolada `/design-test` que replica o Dashboard Executivo com o novo estilo visual da imagem de referencia. Isso permite ajustar cores, sombras, tipografia e espacamento **sem afetar nenhuma outra pagina do sistema**. Quando o resultado estiver aprovado, aplicamos as mudancas globalmente.
 
-**Problema 1 — Constante com case errado no frontend (`useVendaHistorica.ts`)**
+## Abordagem
 
-```ts
-// ATUAL (errado): texto misto
-const CLIENTE_HISTORICO_NOME = 'Comprador Histórico (Pré-Sistema)';
+A pagina de teste tera seus proprios componentes e estilos **inline/isolados**, sem modificar `index.css`, `card.tsx` ou `chartColors.ts`. Assim o sistema atual continua intacto enquanto iteramos no novo visual.
 
-// A busca compara exatamente com esse texto:
-.eq('nome', CLIENTE_HISTORICO_NOME) // → não encontra no banco
+## Arquivos a Criar
 
-// No banco, o trigger uppercase_clientes() converte para:
-// 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)'
-// Logo, .eq() nunca encontra → cria um novo registro a cada venda histórica
-```
+### 1. `src/pages/DesignTest.tsx`
+Pagina principal com o layout completo do dashboard no novo estilo:
+- Fundo cinza frio (`#F5F6FA`) aplicado via `style` inline
+- KPIs com tipografia grande (3xl bold), icones em circulos pasteis coloridos
+- Graficos com cores dessaturadas e sem grid lines
+- Cards brancos sem borda, apenas com `box-shadow` suave
+- Espacamento generoso (`gap-6`)
 
-**Problema 2 — Filtro de exclusão incorreto no `useClientesSelect.ts`**
+### 2. `src/components/design-test/TestKPICard.tsx`
+Card de KPI no novo estilo visual:
+- Valor em `text-3xl font-bold`
+- Icone dentro de circulo pastel (48x48, `rounded-full`)
+- Cada KPI com cor propria (peach, verde-agua, lavanda, azul claro)
+- Badge pill para variacao (verde positivo / vermelho negativo)
+- Sombra suave (`shadow-sm`) sem borda
+- Border-radius 16px
 
-```ts
-// ATUAL (errado): sem acentos
-.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
-// O nome real no banco é: 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)'
-// Como não bate exatamente, o cliente vaza para as listas de seleção
-```
+### 3. `src/components/design-test/TestTrendChart.tsx`
+Grafico de tendencia no novo estilo:
+- Sem `CartesianGrid` (fundo limpo)
+- Area chart com gradiente suave (opacidade 0.08)
+- Linha fina com cor pastel
+- Eixos discretos (cor `#CBD5E1`, sem `axisLine`)
+- Card sem borda, com sombra
 
-## Situação dos Registros Duplicados no Banco
+### 4. `src/components/design-test/TestDonutChart.tsx`
+Donut chart no novo estilo:
+- Paleta pastel
+- Legenda vertical ao lado do grafico (layout horizontal flex)
+- Valor total centralizado dentro do donut
+- Card sem borda
+
+### 5. `src/components/design-test/TestFunnelMini.tsx`
+Funil minimalista:
+- Barras com cores pastel
+- Border-radius maior nas barras (rounded-full)
+- Mais espacamento vertical
+
+### 6. Rota no `App.tsx`
+Adicionar rota publica `/design-test` (sem ProtectedRoute, para facil acesso durante desenvolvimento).
+
+## Nova Paleta Pastel (isolada nos componentes de teste)
 
 ```text
-Empreendimento JD. IGUATEMI (5b01d2c4):
-  ├── ID: 37e1... (criado 05/02 11:52) → 0 negociações, 1 contrato  ← MANTER
-  └── ID: bf70... (criado 05/02 11:54) → 0 negociações, 1 contrato  ← CONSOLIDAR e APAGAR
-
-Empreendimento BELVEDERE (42157c74):
-  ├── ID: 1108... (criado 05/02 13:15) → 0 negociações, 1 contrato  ← MANTER
-  └── ID: 336b... (criado 05/02 21:30) → 0 negociações, 1 contrato  ← CONSOLIDAR e APAGAR
-
-Empreendimento 156f9324:
-  └── ID: 6447... (criado 09/02 19:48) → 0 negociações, 1 contrato  ← OK
+Cor           Hex        Uso
+Peach         #F4A261    KPI financeiro, serie principal
+Rosa pastel   #E8A0BF    Marketing, serie secundaria
+Azul claro    #7EC8E3    Conversao, forecast
+Verde agua    #81C784    Vendas, sucesso
+Lavanda       #B39DDB    Comissoes, CRM
+Amarelo suave #FFD54F    Alertas, warnings
+Azul pastel   #64B5F6    Info, neutro
+Cinza suave   #B0BEC5    Backgrounds, inativos
 ```
 
-## Solução
+## Estilos dos Cards de Teste
 
-### Parte 1 — Limpeza do banco (SQL Migration)
-
-Consolidar os registros duplicados reassociando os contratos para o mais antigo e depois deletando os duplicados:
-
-```sql
--- JD. IGUATEMI: reassociar contrato do duplicado para o mais antigo, depois deletar
-UPDATE public.contratos
-SET cliente_id = '37e13872-519b-4dce-b00a-7c375b573bde'
-WHERE cliente_id = 'bf704830-1aa0-4025-9cf6-0c6edd62039f';
-
-DELETE FROM public.clientes 
-WHERE id = 'bf704830-1aa0-4025-9cf6-0c6edd62039f';
-
--- BELVEDERE: mesma coisa
-UPDATE public.contratos
-SET cliente_id = '1108a037-7aaa-4860-8ccb-740c757a5426'
-WHERE cliente_id = '336b2481-bfe3-4aea-8530-d8fe7cd0c146';
-
-DELETE FROM public.clientes 
-WHERE id = '336b2481-bfe3-4aea-8530-d8fe7cd0c146';
+```text
+Propriedade        Valor
+Background         #FFFFFF
+Border             nenhuma
+Box-shadow         0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)
+Border-radius      16px (1rem)
+Padding            24px
 ```
 
-Além disso, remover o campo `empreendimento_id` do cliente histórico — ele é genérico e não deve ficar vinculado a um empreendimento específico, o que garante que um único registro por nome sirva para todos:
+## Estilos do Fundo
 
-```sql
-UPDATE public.clientes
-SET empreendimento_id = NULL
-WHERE nome = 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)';
+```text
+Propriedade        Valor
+Background page    #F5F6FA (cinza frio neutro)
 ```
 
-### Parte 2 — Correção do frontend (`useVendaHistorica.ts`)
+## Dados Mock
 
-Alterar a constante para o texto em UPPERCASE exato como o banco armazena, e usar `ilike` para a busca (à prova de futuras variações):
+A pagina usara dados mock estaticos para nao depender de autenticacao ou banco de dados, permitindo visualizacao imediata:
+- 8 KPIs com valores ficticios
+- Grafico de tendencia com 6 meses de dados
+- Donut com 4 fatias
+- Funil com 5 etapas
+- Lista de alertas com 3 itens
 
-```ts
-// Antes:
-const CLIENTE_HISTORICO_NOME = 'Comprador Histórico (Pré-Sistema)';
-.eq('nome', CLIENTE_HISTORICO_NOME)
+## Resultado Esperado
 
-// Depois:
-const CLIENTE_HISTORICO_NOME = 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)';
-// Busca com ilike para ser case-insensitive
-.ilike('nome', CLIENTE_HISTORICO_NOME)
-```
+Uma pagina acessivel em `/design-test` que mostra exatamente como o dashboard ficara com o novo estilo da referencia. A partir dela, podemos:
+1. Ajustar cores, sombras e espacamentos iterativamente
+2. Quando aprovado, aplicar as mudancas em `index.css`, `card.tsx`, `chartColors.ts` e nos componentes reais
 
-Também remover o `empreendimento_id` do INSERT do cliente histórico, já que ele deve ser um registro global reutilizável:
+## Secao Tecnica
 
-```ts
-// Remover empreendimento_id: empreendimentoId do insert
-```
+| Arquivo | Operacao |
+|---|---|
+| `src/pages/DesignTest.tsx` | Criar |
+| `src/components/design-test/TestKPICard.tsx` | Criar |
+| `src/components/design-test/TestTrendChart.tsx` | Criar |
+| `src/components/design-test/TestDonutChart.tsx` | Criar |
+| `src/components/design-test/TestFunnelMini.tsx` | Criar |
+| `src/App.tsx` | Adicionar rota `/design-test` |
 
-### Parte 3 — Correção do filtro de exclusão (`useClientesSelect.ts`)
-
-Corrigir o texto do filtro para incluir os acentos corretos:
-
-```ts
-// Antes (sem acentos — não filtra):
-.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
-
-// Depois (com acentos corretos):
-.ilike('nome', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')
-// Como ilike não funciona com neq, usar filter:
-.not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')
-```
-
-## Arquivos Alterados
-
-- `supabase/migrations/...` — Consolida os 2 duplicados e limpa `empreendimento_id`
-- `src/hooks/useVendaHistorica.ts` — Corrige a constante de nome e a busca
-- `src/hooks/useClientesSelect.ts` — Corrige o filtro de exclusão com acentos
-
-## Impacto
-
-- Elimina a criação de novos duplicados a partir de agora
-- Consolida os 2 registros duplicados existentes sem perda de dados (contratos são reassociados)
-- O cliente histórico passa a ser verdadeiramente global (sem `empreendimento_id`), permitindo reutilização correta
+Nenhum arquivo existente sera modificado alem do `App.tsx` (apenas 1 linha de rota adicionada). Todo o resto do sistema permanece inalterado.
