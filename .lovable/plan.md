@@ -1,36 +1,23 @@
 
 
-# Alterar cor das linhas separadoras para #bebfc0
+# Ajustes: Numero reduzido e sombra leve nos cards
 
-## Mudanca
+## 1. Reduzir numero em destaque no HeroCard
 
-Substituir a cor `#F1F5F9` usada em **linhas divisorias e borders de separacao** por `#bebfc0` nos componentes da pagina `/design-test`. Somente as linhas que servem como separadores visuais serao alteradas -- backgrounds de botoes, tags e badges permanecem inalterados.
+O valor "R$ 2.847.500" atualmente usa `fontSize: 72`. Reduzir 25% para `fontSize: 54`.
 
-## Arquivos e linhas afetadas
+**Arquivo**: `src/components/design-test/TestHeroCard.tsx` (linha 74)
 
-### `src/components/design-test/TestTeamCard.tsx`
-- Divisoria entre membros da equipe (`background: '#F1F5F9'` na div separadora)
+## 2. Adicionar sombra leve nos cards secundarios
 
-### `src/components/design-test/TestProjectList.tsx`
-- Divisoria entre itens da lista de projetos (`background: '#F1F5F9'` na div separadora)
+Os cards transparentes (ProjectList, TeamCard, MetricsCard) atualmente nao possuem sombra. Adicionar uma sombra suave para dar leve profundidade, mantendo o fundo transparente.
 
-### `src/components/design-test/TestTableCard.tsx`
-- `borderBottom` do header da tabela
-- `borderBottom` entre linhas da tabela
+Sombra: `boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)'`
 
-### `src/components/design-test/TestMetricsCard.tsx`
-- `borderRight` entre as 3 colunas de metricas
+**Arquivos afetados**:
+- `src/components/design-test/TestProjectList.tsx` -- adicionar boxShadow e borderRadius ao container
+- `src/components/design-test/TestTeamCard.tsx` -- adicionar boxShadow e borderRadius ao container
+- `src/components/design-test/TestMetricsCard.tsx` -- adicionar boxShadow e borderRadius ao container
 
-### `src/pages/DesignTest.tsx`
-- Borders dos inputs do formulario (`border: '1px solid #E2E8F0'` -- estes usam `#E2E8F0`, nao `#F1F5F9`, portanto nao serao alterados)
-- Borders dos icones do nav e input de busca (estes sao borders de elementos UI, nao separadores -- permanecem como estao)
-
-## Resumo tecnico
-
-Trocar `#F1F5F9` por `#bebfc0` somente nas propriedades que funcionam como divisorias visuais:
-- `background: '#F1F5F9'` em divs de height 1px (separadores)
-- `borderBottom: '1px solid #F1F5F9'` em linhas de tabela
-- `borderRight: '1px solid #F1F5F9'` entre colunas de metricas
-
-Nao alterar usos de `#F1F5F9` em backgrounds de botoes, tags, pills ou badges.
+Os cards que ja possuem sombra (HeroCard, TableCard, DarkCard, Labels, Form) permanecem inalterados.
 
