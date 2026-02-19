@@ -30,7 +30,7 @@ export function TestHeroCard() {
           <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: '#fce0c7' }}>
             <BarChart3 size={20} style={{ color: '#f47f19' }} />
           </div>
-          <h1 style={{ fontSize: 48, fontWeight: 700, color: '#1E293B', lineHeight: 1.1 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1E293B', lineHeight: 1.1 }}>
             Painel Executivo
           </h1>
         </div>
@@ -71,7 +71,7 @@ export function TestHeroCard() {
       </div>
 
       <div className="mt-auto pt-4">
-        <p style={{ fontSize: 54, fontWeight: 700, color: '#1E293B', lineHeight: 1 }}>
+        <p style={{ fontSize: 40, fontWeight: 700, color: '#1E293B', lineHeight: 1 }}>
           R$ 2.847.500
         </p>
         <p style={{ fontSize: 14, color: '#94A3B8', marginTop: 8, lineHeight: 1.5 }}>
