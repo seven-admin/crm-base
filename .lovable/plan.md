@@ -1,54 +1,44 @@
 
 
-# Corrigir erro de unidades duplicadas apos exclusao em lote
+# Alterar Tipologia em Lote
 
-## Problema
+## Resumo
+Adicionar a funcionalidade de alterar a tipologia de multiplas unidades de uma vez, seguindo o mesmo padrao ja existente para "Alterar Status em Lote".
 
-A exclusao de unidades em lote faz **soft delete** (marca `is_active = false`), mas a tabela `unidades` tem uma **unique constraint** no banco de dados:
+## Alteracoes
 
-```
-unidades_empreendimento_id_bloco_id_numero_key (empreendimento_id, bloco_id, numero)
-```
+### 1. Novo hook: `useUpdateUnidadesTipologiaBatch` (em `src/hooks/useUnidades.ts`)
+- Criar uma mutation que faz `supabase.from('unidades').update({ tipologia_id }).in('id', ids)`
+- Tambem atualiza `area_privativa` automaticamente com base na tipologia selecionada (se a tipologia tiver area definida)
+- Invalida as queries de unidades apos sucesso
 
-Isso impede criar novas unidades com o mesmo numero e bloco, mesmo que as anteriores estejam marcadas como inativas.
+### 2. Novo componente: `AlterarTipologiaLoteDialog` (em `src/components/empreendimentos/AlterarTipologiaLoteDialog.tsx`)
+- Dialog com select de tipologias do empreendimento (usando `useTipologias`)
+- Checkbox opcional "Atualizar area privativa" para aplicar a area da tipologia nas unidades
+- Preview mostrando quantas unidades serao alteradas
+- Mesmo layout do `AlterarStatusLoteDialog` existente
 
-## Solucao
-
-Duas abordagens possiveis (recomendo a opcao 1):
-
-### Opcao 1 - Alterar a exclusao em lote para **hard delete** (DELETE real)
-
-**Arquivo**: `src/hooks/useUnidades.ts` - funcao `useDeleteUnidadesBatch`
-
-- Trocar o `.update({ is_active: false })` por `.delete()` para que os registros sejam realmente removidos do banco
-- Isso libera os numeros para reutilizacao imediata
-
-### Opcao 2 - Alterar a unique constraint no banco para considerar apenas registros ativos
-
-- Remover a constraint atual e criar um **partial unique index** que considera apenas unidades com `is_active = true`
-- Isso permite manter o soft delete e ainda reutilizar numeros
-
-## Plano de implementacao (Opcao 1 recomendada)
-
-1. **Corrigir dados atuais**: Executar uma migracao SQL para deletar permanentemente as unidades inativas do empreendimento AXIS (e opcionalmente todas as inativas do sistema)
-
-2. **Alterar o hook `useDeleteUnidadesBatch`**: Trocar soft delete por hard delete para evitar o problema no futuro
-
-3. **Revisar tambem `useDeleteUnidade`** (exclusao individual): Garantir consistencia, trocando tambem para hard delete
+### 3. Integrar no `UnidadesTab.tsx`
+- Adicionar novo modo de selecao `'tipologia'` ao tipo `selectionMode`
+- Adicionar botao "Alterar Tipologia" na barra de acoes (ao lado de "Alterar Status")
+- Quando em modo tipologia, exibir botao de confirmacao que abre o dialog
+- Renderizar o novo `AlterarTipologiaLoteDialog`
 
 ## Detalhes tecnicos
 
-### Migracao SQL
-```sql
-DELETE FROM unidades 
-WHERE empreendimento_id = '176bc0f0-09b5-4d24-a785-7ea23d7d19cf' 
-  AND is_active = false;
+### Hook (useUnidades.ts)
+```typescript
+export function useUpdateUnidadesTipologiaBatch() {
+  // mutationFn recebe { ids, empreendimentoId, tipologia_id, area_privativa? }
+  // Faz update de tipologia_id e opcionalmente area_privativa
+}
 ```
 
-### Alteracao no hook
-No arquivo `src/hooks/useUnidades.ts`, na funcao `useDeleteUnidadesBatch`, trocar:
-- De: `supabase.from('unidades').update({ is_active: false }).in('id', ids)`
-- Para: `supabase.from('unidades').delete().in('id', ids)`
-
-Mesma alteracao na funcao `useDeleteUnidade` (exclusao individual).
+### Fluxo do usuario
+1. Clica em "Alterar Tipologia" na barra de acoes
+2. Entra em modo de selecao (seleciona unidades clicando nelas)
+3. Clica em "Alterar Tipologia (N)" para abrir o dialog
+4. Seleciona a tipologia desejada no select
+5. Opcionalmente marca "Atualizar area privativa"
+6. Confirma a alteracao
 
