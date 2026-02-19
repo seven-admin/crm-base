@@ -19,7 +19,7 @@ export function useClientesSelect(excludeId?: string, enabled: boolean = true) {
         .from('clientes')
         .select('id, nome, cpf')
         .eq('is_active', true)
-        .neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')
+        .not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')
         .order('nome', { ascending: true });
       
       if (error) throw error;
