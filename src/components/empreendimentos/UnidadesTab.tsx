@@ -21,6 +21,7 @@ import {
 import { useUnidades, useDeleteUnidadesBatch } from '@/hooks/useUnidades';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useEmpreendimento } from '@/hooks/useEmpreendimentos';
+import { useTipologias } from '@/hooks/useTipologias';
 import { UNIDADE_STATUS_LABELS, UNIDADE_STATUS_COLORS, type Unidade } from '@/types/empreendimentos.types';
 import { MapaInterativo } from '@/components/mapa/MapaInterativo';
 import { UnidadeForm } from './UnidadeForm';
@@ -35,6 +36,12 @@ import { buildUnitLabel, type LabelFormatElement } from '@/lib/mapaUtils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
 import { toast } from 'sonner';
 
+const TIPOLOGIA_COLORS = [
+  'bg-indigo-400', 'bg-pink-400', 'bg-teal-400',
+  'bg-orange-400', 'bg-cyan-400', 'bg-rose-400',
+  'bg-lime-400', 'bg-violet-400', 'bg-amber-400', 'bg-sky-400'
+];
+
 interface UnidadesTabProps {
   empreendimentoId: string;
 }
@@ -43,6 +50,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const { data: empreendimento } = useEmpreendimento(empreendimentoId);
   const { data: unidades, isLoading } = useUnidades(empreendimentoId);
   const { data: blocos } = useBlocos(empreendimentoId);
+  const { data: tipologias } = useTipologias(empreendimentoId);
   const deleteUnidadesBatch = useDeleteUnidadesBatch();
 
   const [unidadeFormOpen, setUnidadeFormOpen] = useState(false);
@@ -104,6 +112,17 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   // Formato do label para as unidades (mesmo do mapa)
   const labelFormato = (empreendimento?.mapa_label_formato as LabelFormatElement[] | undefined) 
     || ['bloco', 'tipologia', 'numero'];
+
+  // Mapa tipologia_id -> cor
+  const tipologiaColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (tipologias) {
+      tipologias.forEach((tip, index) => {
+        map.set(tip.id, TIPOLOGIA_COLORS[index % TIPOLOGIA_COLORS.length]);
+      });
+    }
+    return map;
+  }, [tipologias]);
 
   // Unidades selecionadas (apenas disponíveis)
   const unidadesSelecionadas = useMemo(() => {
@@ -450,6 +469,18 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               ))}
             </div>
 
+            {tipologias && tipologias.length > 0 && (
+              <div className="flex flex-wrap gap-4 mb-6">
+                <span className="text-sm font-medium text-muted-foreground">Tipologias:</span>
+                {tipologias.map((tip) => (
+                  <div key={tip.id} className="flex items-center gap-1.5">
+                    <div className={cn('w-2.5 h-2.5 rounded-full', tipologiaColorMap.get(tip.id))} />
+                    <span className="text-sm">{tip.nome}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {unidades && unidades.length > 0 ? (
               <div className="space-y-6">
                 {sortedBlocoEntries.map(([blocoId, blocoUnidades]) => {
@@ -518,6 +549,9 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                         )}
                         {!selectionMode && (
                           <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100" />
+                        )}
+                        {unidade.tipologia_id && tipologiaColorMap.has(unidade.tipologia_id) && (
+                          <div className={cn('absolute bottom-0.5 left-0.5 w-2.5 h-2.5 rounded-full', tipologiaColorMap.get(unidade.tipologia_id))} />
                         )}
                       </button>
                     );
