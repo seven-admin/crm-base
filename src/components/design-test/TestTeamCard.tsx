@@ -7,7 +7,7 @@ const team = [
 
 export function TestTeamCard() {
   return (
-    <div style={{ background: 'transparent', padding: 24, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'transparent', padding: 24, display: 'flex', flexDirection: 'column', borderRadius: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)' }}>
       <div className="flex items-center justify-between mb-5">
         <p style={{ fontSize: 15, fontWeight: 600, color: '#1E293B' }}>Corretores</p>
         <button style={{ fontSize: 13, color: '#6d93c5', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Ver todos</button>

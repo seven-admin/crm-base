@@ -71,7 +71,7 @@ export function TestHeroCard() {
       </div>
 
       <div className="mt-auto pt-4">
-        <p style={{ fontSize: 72, fontWeight: 700, color: '#1E293B', lineHeight: 1 }}>
+        <p style={{ fontSize: 54, fontWeight: 700, color: '#1E293B', lineHeight: 1 }}>
           R$ 2.847.500
         </p>
         <p style={{ fontSize: 14, color: '#94A3B8', marginTop: 8, lineHeight: 1.5 }}>
