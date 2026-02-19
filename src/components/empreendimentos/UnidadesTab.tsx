@@ -441,7 +441,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex flex-wrap gap-6 mb-6">
               {Object.entries(UNIDADE_STATUS_LABELS).map(([status, label]) => (
                 <div key={status} className="flex items-center gap-2">
                   <div className={cn('w-4 h-4 rounded', UNIDADE_STATUS_COLORS[status as keyof typeof UNIDADE_STATUS_COLORS])} />
@@ -457,10 +457,22 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                   const isPredioOuComercial = empreendimento?.tipo === 'predio' || empreendimento?.tipo === 'comercial';
 
                   // Sub-agrupar por andar para prédios/comerciais
+                  // Cores pastel para cards (local, sem alterar o type global)
+                  const CARD_STATUS_COLORS: Record<string, string> = {
+                    disponivel: 'bg-emerald-100',
+                    reservada: 'bg-yellow-100',
+                    negociacao: 'bg-blue-100',
+                    contrato: 'bg-purple-100',
+                    vendida: 'bg-red-100',
+                    bloqueada: 'bg-gray-200',
+                  };
+
                   const renderUnidadeButton = (unidade: Unidade) => {
                     const isSelected = selectedUnidadeIds.has(unidade.id);
                     const isDisponivel = unidade.status === 'disponivel';
                     const label = buildUnitLabel(unidade, labelFormato);
+                    const tipologiaNome = unidade.tipologia?.nome;
+                    const areaPrivativa = unidade.area_privativa ?? unidade.tipologia?.area_privativa;
                     
                     return (
                       <button
@@ -473,8 +485,8 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                           }
                         }}
                         className={cn(
-                          'relative group h-10 min-w-[3.5rem] px-1.5 rounded flex items-center justify-center text-xs font-medium text-white transition-all truncate',
-                          UNIDADE_STATUS_COLORS[unidade.status],
+                          'relative group h-auto min-w-[5rem] p-2 rounded-lg flex flex-col items-center justify-center text-slate-800 transition-all',
+                          CARD_STATUS_COLORS[unidade.status] || 'bg-gray-200',
                           selectionMode === 'venda' && isDisponivel && 'cursor-pointer ring-offset-2 hover:ring-2 ring-primary',
                           selectionMode === 'venda' && !isDisponivel && 'opacity-50 cursor-not-allowed',
                           selectionMode === 'delete' && 'cursor-pointer ring-offset-2 hover:ring-2 ring-destructive',
@@ -486,10 +498,16 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                           isSelected && selectionMode === 'tipologia' && 'ring-2 ring-primary ring-offset-2',
                           !selectionMode && 'cursor-pointer hover:opacity-80'
                         )}
-                        title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}`}
+                        title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}${tipologiaNome ? ` | ${tipologiaNome}` : ''}${areaPrivativa ? ` | ${areaPrivativa}m²` : ''}`}
                         disabled={selectionMode === 'venda' && !isDisponivel}
                       >
-                        {label}
+                        <span className="text-xs font-semibold leading-tight">{label}</span>
+                        {tipologiaNome && (
+                          <span className="text-[10px] leading-tight text-slate-600 mt-0.5 truncate max-w-full">{tipologiaNome}</span>
+                        )}
+                        {areaPrivativa && (
+                          <span className="text-[10px] leading-tight text-slate-500 mt-0.5">{areaPrivativa}m²</span>
+                        )}
                         {selectionMode && isSelected && (
                           <div className={cn(
                             "absolute -top-1 -right-1 rounded-full p-0.5",
@@ -499,7 +517,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                           </div>
                         )}
                         {!selectionMode && (
-                          <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100" />
                         )}
                       </button>
                     );
@@ -528,7 +546,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                                   <h5 className="text-sm font-medium text-muted-foreground mb-2">
                                     Andar {andar || 'Térreo'}
                                   </h5>
-                                  <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-18 gap-2">
+                                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
                                     {units.map(renderUnidadeButton)}
                                   </div>
                                 </div>
@@ -537,7 +555,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                           );
                         })()
                       ) : (
-                        <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-18 gap-2">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
                           {blocoUnidades?.map(renderUnidadeButton)}
                         </div>
                       )}
