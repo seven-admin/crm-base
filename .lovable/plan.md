@@ -1,113 +1,146 @@
 
-# Pagina de Teste - Redesign Visual (Estilo Referencia)
 
-## Objetivo
+# Redesign da Pagina /design-test - Layout Duas Colunas com Top Nav
 
-Criar uma pagina isolada `/design-test` que replica o Dashboard Executivo com o novo estilo visual da imagem de referencia. Isso permite ajustar cores, sombras, tipografia e espacamento **sem afetar nenhuma outra pagina do sistema**. Quando o resultado estiver aprovado, aplicamos as mudancas globalmente.
+## Visao Geral
 
-## Abordagem
+Reescrever completamente a pagina `/design-test` para seguir o layout descrito: duas colunas (62/38), top nav horizontal, card hero grande com grafico de colunas, lista de projetos expandivel, card de metricas com mini bar charts, e card escuro. A pagina atual (grid de KPIs + charts) sera substituida inteiramente.
 
-A pagina de teste tera seus proprios componentes e estilos **inline/isolados**, sem modificar `index.css`, `card.tsx` ou `chartColors.ts`. Assim o sistema atual continua intacto enquanto iteramos no novo visual.
-
-## Arquivos a Criar
-
-### 1. `src/pages/DesignTest.tsx`
-Pagina principal com o layout completo do dashboard no novo estilo:
-- Fundo cinza frio (`#F5F6FA`) aplicado via `style` inline
-- KPIs com tipografia grande (3xl bold), icones em circulos pasteis coloridos
-- Graficos com cores dessaturadas e sem grid lines
-- Cards brancos sem borda, apenas com `box-shadow` suave
-- Espacamento generoso (`gap-6`)
-
-### 2. `src/components/design-test/TestKPICard.tsx`
-Card de KPI no novo estilo visual:
-- Valor em `text-3xl font-bold`
-- Icone dentro de circulo pastel (48x48, `rounded-full`)
-- Cada KPI com cor propria (peach, verde-agua, lavanda, azul claro)
-- Badge pill para variacao (verde positivo / vermelho negativo)
-- Sombra suave (`shadow-sm`) sem borda
-- Border-radius 16px
-
-### 3. `src/components/design-test/TestTrendChart.tsx`
-Grafico de tendencia no novo estilo:
-- Sem `CartesianGrid` (fundo limpo)
-- Area chart com gradiente suave (opacidade 0.08)
-- Linha fina com cor pastel
-- Eixos discretos (cor `#CBD5E1`, sem `axisLine`)
-- Card sem borda, com sombra
-
-### 4. `src/components/design-test/TestDonutChart.tsx`
-Donut chart no novo estilo:
-- Paleta pastel
-- Legenda vertical ao lado do grafico (layout horizontal flex)
-- Valor total centralizado dentro do donut
-- Card sem borda
-
-### 5. `src/components/design-test/TestFunnelMini.tsx`
-Funil minimalista:
-- Barras com cores pastel
-- Border-radius maior nas barras (rounded-full)
-- Mais espacamento vertical
-
-### 6. Rota no `App.tsx`
-Adicionar rota publica `/design-test` (sem ProtectedRoute, para facil acesso durante desenvolvimento).
-
-## Nova Paleta Pastel (isolada nos componentes de teste)
+## Estrutura do Layout
 
 ```text
-Cor           Hex        Uso
-Peach         #F4A261    KPI financeiro, serie principal
-Rosa pastel   #E8A0BF    Marketing, serie secundaria
-Azul claro    #7EC8E3    Conversao, forecast
-Verde agua    #81C784    Vendas, sucesso
-Lavanda       #B39DDB    Comissoes, CRM
-Amarelo suave #FFD54F    Alertas, warnings
-Azul pastel   #64B5F6    Info, neutro
-Cinza suave   #B0BEC5    Backgrounds, inativos
++------------------------------------------------------------------+
+|  [Logo]    Nav1  Nav2  Nav3  Nav4  Nav5    [Search] [Icons] [Av]  |  64px
++------------------------------------------------------------------+
+|                                                                    |
+|  +---------------------------+  +--------------------+             |
+|  |  CARD HERO (~58vh)        |  |  LISTA PROJETOS    |             |
+|  |  H1 48px + dropdown pill  |  |  (~58vh)           |             |
+|  |  Texto suporte 2 linhas   |  |  3 itens com       |             |
+|  |  Grafico 7 colunas        |  |  expansao, badges, |             |
+|  |  Metrica XL 72px          |  |  chevrons          |             |
+|  +---------------------------+  +--------------------+             |
+|                                                                    |
+|  +-------------+  +-----------+  +--------------------+            |
+|  | CARD LISTA  |  | CARD DARK |  |  CARD METRICAS     |            |
+|  | (~42vh)     |  | (~42vh)   |  |  (~42vh)           |            |
+|  | Avatar+badge|  | Texto     |  |  3 colunas com     |            |
+|  | + botao     |  | branco    |  |  mini bar charts   |            |
+|  +-------------+  +-----------+  +--------------------+            |
+|                                                                    |
++------------------------------------------------------------------+
 ```
 
-## Estilos dos Cards de Teste
+Coluna esquerda: ~62% | Coluna direita: ~38%
+Gap entre cards: 16px | Border-radius: 20px | Padding: 24-32px
 
-```text
-Propriedade        Valor
-Background         #FFFFFF
-Border             nenhuma
-Box-shadow         0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)
-Border-radius      16px (1rem)
-Padding            24px
-```
+## Arquivos a Modificar/Criar
 
-## Estilos do Fundo
+### 1. `src/pages/DesignTest.tsx` - Reescrita completa
 
-```text
-Propriedade        Valor
-Background page    #F5F6FA (cinza frio neutro)
-```
+Layout principal com:
+- **Top Nav** (64px): logo circular + texto, 5 links centralizados (item ativo com underline azul), input de busca (~300px), 3 icones (sino, mensagem, config), avatar circular
+- **Corpo**: flex row com coluna esquerda (62%) e coluna direita (38%), gap 16px
+- **Altura do conteudo**: calc(100vh - 64px - padding)
+
+### 2. `src/components/design-test/TestHeroCard.tsx` - NOVO
+
+Card grande (58% da altura):
+- Canto superior: icone pequeno + titulo H1 em 48px bold + dropdown pill a direita ("This week" com chevron)
+- 2 linhas de texto descritivo abaixo do titulo
+- Area central/direita: grafico com 7 colunas (Seg-Dom), cada com ponto flutuante + linha vertical, tooltip pill sobre o ponto mais alto
+- Canto inferior esquerdo: numero gigante em ~72px bold + 2 linhas de texto descritivo
+- Background branco, border-radius 20px, shadow suave
+
+### 3. `src/components/design-test/TestProjectList.tsx` - NOVO
+
+Card de lista de projetos (58% da altura, coluna direita):
+- Header: titulo "Projects" + link "See all" a direita
+- 3 itens separados por divisorias finas
+- Cada item: icone quadrado arredondado (48px) a esquerda, titulo + subtitulo, badge de status (pill colorido), chevron a direita
+- Primeiro item expandido: mostra tags pill + paragrafo descritivo + metadados (icone + texto) em linha
+- Scroll interno se necessario
+
+### 4. `src/components/design-test/TestTeamCard.tsx` - NOVO
+
+Card de lista de equipe (42% da altura, metade esquerda do bloco inferior):
+- Header: titulo + link "see all"
+- 2 itens com avatar circular (40px), nome + cargo, badge de status, botao circular (icone)
+- Separados por divisoria
+
+### 5. `src/components/design-test/TestDarkCard.tsx` - NOVO
+
+Card escuro (42% da altura, metade direita do bloco inferior esquerdo):
+- Background escuro (~#1E293B ou similar)
+- Texto em branco (titulo + descricao)
+- Botao pill claro na base, largura quase total
+- Border-radius 20px
+
+### 6. `src/components/design-test/TestMetricsCard.tsx` - NOVO
+
+Card de metricas (42% da altura, coluna direita):
+- Header: titulo + seletor de data (dropdown ou pill)
+- Corpo dividido em 3 colunas iguais separadas por linhas verticais
+- Cada coluna: label pequeno no topo, numero grande bold no centro, mini bar chart na base (8-10 barras verticais finas com alturas variadas, cores pasteis)
+- Mini bar charts feitos com divs estilizadas (nao Recharts, para simplicidade)
+
+### 7. Componentes antigos - REMOVER imports
+
+Os componentes `TestKPICard`, `TestTrendChart`, `TestDonutChart`, `TestFunnelMini` nao serao mais importados na pagina (os arquivos podem permanecer para referencia futura, apenas removemos o uso).
 
 ## Dados Mock
 
-A pagina usara dados mock estaticos para nao depender de autenticacao ou banco de dados, permitindo visualizacao imediata:
-- 8 KPIs com valores ficticios
-- Grafico de tendencia com 6 meses de dados
-- Donut com 4 fatias
-- Funil com 5 etapas
-- Lista de alertas com 3 itens
+```text
+Top Nav:
+- Links: Dashboard, Projects, Inbox, Schedule, Reports
+- Ativo: Dashboard
 
-## Resultado Esperado
+Hero Card:
+- Titulo: "Statistics"
+- Metrica: "$21,897" ou similar
+- Grafico: 7 pontos (Mon-Sun) com valores variados
 
-Uma pagina acessivel em `/design-test` que mostra exatamente como o dashboard ficara com o novo estilo da referencia. A partir dela, podemos:
-1. Ajustar cores, sombras e espacamentos iterativamente
-2. Quando aprovado, aplicar as mudancas em `index.css`, `card.tsx`, `chartColors.ts` e nos componentes reais
+Projetos:
+- 3 projetos com nomes, status badges (Active/Review/Draft), icones coloridos
+- Primeiro expandido com tags e descricao
+
+Equipe:
+- 2 membros com avatar fallback (iniciais), nome, cargo, badge
+
+Metricas:
+- 3 colunas: Revenue ($12.4K), Orders (284), Visitors (14.2K)
+- Mini bars com 8-10 valores aleatorios cada
+```
+
+## Especificacoes de Estilo
+
+```text
+Propriedade              Valor
+Background pagina        #F5F6FA
+Card background          #FFFFFF
+Card dark background     #1E293B
+Border-radius            20px
+Box-shadow               0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)
+Gap entre cards          16px
+Padding cards            24-32px
+Top nav height           64px
+H1 hero                  48px, font-weight 700, color #1E293B
+Metrica XL               72px, font-weight 700
+Labels                   12px, uppercase, tracking-wider, color #94A3B8
+Badge pill               px-3 py-1, rounded-full, font-size 12px
+Divisorias               1px solid #F1F5F9
+```
 
 ## Secao Tecnica
 
 | Arquivo | Operacao |
 |---|---|
-| `src/pages/DesignTest.tsx` | Criar |
-| `src/components/design-test/TestKPICard.tsx` | Criar |
-| `src/components/design-test/TestTrendChart.tsx` | Criar |
-| `src/components/design-test/TestDonutChart.tsx` | Criar |
-| `src/components/design-test/TestFunnelMini.tsx` | Criar |
-| `src/App.tsx` | Adicionar rota `/design-test` |
+| `src/pages/DesignTest.tsx` | Reescrever completamente |
+| `src/components/design-test/TestHeroCard.tsx` | Criar |
+| `src/components/design-test/TestProjectList.tsx` | Criar |
+| `src/components/design-test/TestTeamCard.tsx` | Criar |
+| `src/components/design-test/TestDarkCard.tsx` | Criar |
+| `src/components/design-test/TestMetricsCard.tsx` | Criar |
 
-Nenhum arquivo existente sera modificado alem do `App.tsx` (apenas 1 linha de rota adicionada). Todo o resto do sistema permanece inalterado.
+Os componentes antigos (`TestKPICard.tsx`, `TestTrendChart.tsx`, `TestDonutChart.tsx`, `TestFunnelMini.tsx`) permanecem no repositorio mas nao serao mais usados pela pagina. Nenhum outro arquivo do sistema sera alterado.
+
