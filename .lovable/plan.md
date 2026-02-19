@@ -1,18 +1,18 @@
 
 
-# Substituir logo "S" pela logo real do sistema
+# Atualizar logo e reduzir tamanhos de texto no card principal
 
-## O que muda
+## Mudancas
 
-Na barra de navegacao da pagina `/design-test`, o circulo laranja com a letra "S" e o texto "Starter" serao substituidos pela logo oficial do sistema (`logo-full.png`).
+### 1. Nova logomarca
+- Copiar o arquivo enviado (`user-uploads://Ativo_5@4x-2.png`) para `src/assets/logo-sevengroup.png`
+- Em `src/pages/DesignTest.tsx`, alterar o import da logo para usar o novo arquivo
+- Remover o filtro `brightness(0)` pois a logo ja tem as cores corretas (preto + laranja)
 
-## Alteracao
+### 2. Reducao de texto no TestHeroCard
 
-**Arquivo**: `src/pages/DesignTest.tsx`
+**Arquivo**: `src/components/design-test/TestHeroCard.tsx`
 
-- Importar a logo: `import logo from '@/assets/logo-full.png'`
-- Remover o circulo laranja com "S" e o texto "Starter"
-- Substituir por uma tag `<img>` usando a logo-full, com altura de aproximadamente 28px, filtro `brightness-0` para exibir em preto (consistente com o portal do incorporador que usa fundo claro)
-
-O restante da barra de navegacao (links, busca, icones, avatar) permanece inalterado.
+- Titulo "Painel Executivo": `fontSize: 48` para `fontSize: 24` (reducao de 50%)
+- Valor "R$ 2.847.500": `fontSize: 54` para `fontSize: 40` (reducao de ~25%)
 
