@@ -4,13 +4,14 @@ import { TestProjectList } from '@/components/design-test/TestProjectList';
 import { TestTeamCard } from '@/components/design-test/TestTeamCard';
 import { TestDarkCard } from '@/components/design-test/TestDarkCard';
 import { TestMetricsCard } from '@/components/design-test/TestMetricsCard';
+import { TestTableCard } from '@/components/design-test/TestTableCard';
 
 const navLinks = ['Dashboard', 'Projects', 'Inbox', 'Schedule', 'Reports'];
 const activeLink = 'Dashboard';
 
 export default function DesignTest() {
   return (
-    <div className="min-h-screen" style={{ background: '#F5F6FA' }}>
+    <div className="min-h-screen" style={{ background: '#e8eaec' }}>
       {/* Top Nav */}
       <nav
         className="flex items-center justify-between px-6"
@@ -87,15 +88,11 @@ export default function DesignTest() {
       </nav>
 
       {/* Body */}
-      <div className="flex gap-4 p-4" style={{ height: 'calc(100vh - 64px)' }}>
+      <div className="flex gap-4 p-4">
         {/* Left column 62% */}
         <div className="flex flex-col gap-4" style={{ width: '62%' }}>
-          {/* Hero — 58% */}
-          <div style={{ flex: '0 0 58%', minHeight: 0 }}>
-            <TestHeroCard />
-          </div>
-          {/* Bottom row — 42% */}
-          <div className="flex gap-4" style={{ flex: '0 0 calc(42% - 16px)', minHeight: 0 }}>
+          <TestHeroCard />
+          <div className="flex gap-4">
             <div style={{ width: '50%' }}>
               <TestTeamCard />
             </div>
@@ -107,15 +104,14 @@ export default function DesignTest() {
 
         {/* Right column 38% */}
         <div className="flex flex-col gap-4" style={{ width: '38%' }}>
-          {/* Project list — 58% */}
-          <div style={{ flex: '0 0 58%', minHeight: 0 }}>
-            <TestProjectList />
-          </div>
-          {/* Metrics — 42% */}
-          <div style={{ flex: '0 0 calc(42% - 16px)', minHeight: 0 }}>
-            <TestMetricsCard />
-          </div>
+          <TestProjectList />
+          <TestMetricsCard />
         </div>
+      </div>
+
+      {/* Full-width table */}
+      <div className="px-4 pb-4">
+        <TestTableCard />
       </div>
     </div>
   );
