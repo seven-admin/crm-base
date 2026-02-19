@@ -533,25 +533,11 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                         disabled={selectionMode === 'venda' && !isDisponivel}
                       >
                         <span className="text-xs font-semibold leading-tight">{label}</span>
+                        {unidade.tipologia_id && tipologiaColorMap.has(unidade.tipologia_id) && (
+                          <div className={cn('h-[2px] w-full rounded-full mt-1', tipologiaColorMap.get(unidade.tipologia_id))} />
+                        )}
                         {tipologiaNome && (
                           <span className="text-[10px] leading-tight text-slate-600 mt-0.5 truncate max-w-full">{tipologiaNome}</span>
-                        )}
-                        {areaPrivativa && (
-                          <span className="text-[10px] leading-tight text-slate-500 mt-0.5">{areaPrivativa}m²</span>
-                        )}
-                        {selectionMode && isSelected && (
-                          <div className={cn(
-                            "absolute -top-1 -right-1 rounded-full p-0.5",
-                            selectionMode === 'delete' ? 'bg-destructive' : 'bg-primary'
-                          )}>
-                            <Check className="h-3 w-3 text-primary-foreground" />
-                          </div>
-                        )}
-                        {!selectionMode && (
-                          <Pencil className="absolute top-0.5 right-0.5 h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100" />
-                        )}
-                        {unidade.tipologia_id && tipologiaColorMap.has(unidade.tipologia_id) && (
-                          <div className={cn('absolute bottom-0.5 left-0.5 w-2.5 h-2.5 rounded-full', tipologiaColorMap.get(unidade.tipologia_id))} />
                         )}
                       </button>
                     );
