@@ -1,5 +1,5 @@
 import { Search, Bell, MessageSquare, Settings } from 'lucide-react';
-import logo from '@/assets/logo-full.png';
+import logo from '@/assets/logo-sevengroup.png';
 import { TestHeroCard } from '@/components/design-test/TestHeroCard';
 import { TestProjectList } from '@/components/design-test/TestProjectList';
 import { TestTeamCard } from '@/components/design-test/TestTeamCard';
@@ -36,7 +36,7 @@ export default function DesignTest() {
         style={{ height: 64, background: '#FFFFFF', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
       >
         <div className="shrink-0">
-          <img src={logo} alt="SevenGroup" style={{ height: 28, filter: 'brightness(0)' }} />
+          <img src={logo} alt="SevenGroup" style={{ height: 28 }} />
         </div>
 
         <div className="flex items-center gap-8">
