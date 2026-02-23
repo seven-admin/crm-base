@@ -376,6 +376,28 @@ export function useConcluirAtividadesEmLote() {
   });
 }
 
+export function useAlterarStatusEmLote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
+      const { error } = await supabase
+        .from('atividades')
+        .update({ status })
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, { ids }) => {
+      queryClient.invalidateQueries({ queryKey: ['atividades'] });
+      queryClient.invalidateQueries({ queryKey: ['forecast'] });
+      queryClient.invalidateQueries({ queryKey: ['agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['atividades-vencidas'] });
+      invalidateDashboards(queryClient);
+      toast.success(`${ids.length} atividade(s) atualizada(s)!`);
+    },
+    onError: () => toast.error('Erro ao alterar status em lote'),
+  });
+}
+
 export function useReabrirAtividadesEmLote() {
   const queryClient = useQueryClient();
   return useMutation({
