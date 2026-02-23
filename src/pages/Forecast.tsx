@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ClipboardList, Monitor, X, Settings, ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck } from 'lucide-react';
+import { Plus, ClipboardList, Monitor, X, Settings, ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ListChecks } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
+import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
 import { VisitasPorEmpreendimento } from '@/components/forecast/VisitasPorEmpreendimento';
 import { AtividadeForm } from '@/components/atividades/AtividadeForm';
 import { useTVLayoutConfig } from '@/hooks/useTVLayoutConfig';
@@ -16,6 +17,7 @@ import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorC
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
 import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCreateAtividade, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import {
@@ -32,6 +34,8 @@ import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeF
 import { formatarMoeda } from '@/lib/formatters';
 
 export default function Forecast() {
+  const { role } = useAuth();
+  const isSuperAdmin = role === 'super_admin';
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
   const { data: gestores } = useGestoresProduto();
@@ -51,6 +55,8 @@ export default function Forecast() {
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [modoLote, setModoLote] = useState(false);
+  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
   const [modoTV, setModoTV] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState(new Date());
@@ -113,6 +119,7 @@ export default function Forecast() {
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
               dados={resumoCategorias?.[cat]}
+              onBadgeClick={modoLote ? (statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup }) : undefined}
             />
           );
         })
@@ -301,6 +308,15 @@ export default function Forecast() {
                 Ver Atividades
               </Link>
             </Button>
+            {isSuperAdmin && (
+              <Button
+                variant={modoLote ? 'default' : 'outline'}
+                onClick={() => setModoLote(!modoLote)}
+              >
+                <ListChecks className="h-4 w-4 mr-2" />
+                {modoLote ? 'Sair do Lote' : 'Ações em Lote'}
+              </Button>
+            )}
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Atividade
@@ -332,6 +348,17 @@ export default function Forecast() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Batch Status */}
+      <ForecastBatchStatusDialog
+        open={batchDialog.open}
+        onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
+        categoria={batchDialog.categoria}
+        statusGroup={batchDialog.statusGroup}
+        gestorId={gestorId}
+        dataInicio={dataInicio}
+        dataFim={dataFim}
+      />
     </MainLayout>
   );
 }

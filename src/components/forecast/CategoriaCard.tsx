@@ -11,9 +11,10 @@ interface CategoriaCardProps {
   dados?: CategoriaResumo;
   iconColor?: string;
   bgColor?: string;
+  onBadgeClick?: (statusGroup: string) => void;
 }
 
-export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-primary', bgColor = 'bg-primary/10' }: CategoriaCardProps) {
+export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-primary', bgColor = 'bg-primary/10', onBadgeClick }: CategoriaCardProps) {
   const total = dados?.total || 0;
 
   const tipos = dados
@@ -52,19 +53,35 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
         {/* Status badges */}
         {total > 0 && (
           <div className="grid grid-cols-2 gap-1.5 pt-1">
-            <Badge variant="info" className="justify-between text-xs px-2 py-0.5">
+            <Badge
+              variant="info"
+              className={cn('justify-between text-xs px-2 py-0.5', onBadgeClick && 'cursor-pointer hover:opacity-80')}
+              onClick={onBadgeClick ? () => onBadgeClick('abertas') : undefined}
+            >
               <span>Abertas</span>
               <span className="font-bold ml-1">{dados?.abertas || 0}</span>
             </Badge>
-            <Badge variant="success" className="justify-between text-xs px-2 py-0.5">
+            <Badge
+              variant="success"
+              className={cn('justify-between text-xs px-2 py-0.5', onBadgeClick && 'cursor-pointer hover:opacity-80')}
+              onClick={onBadgeClick ? () => onBadgeClick('fechadas') : undefined}
+            >
               <span>Fechadas</span>
               <span className="font-bold ml-1">{dados?.fechadas || 0}</span>
             </Badge>
-            <Badge variant="secondary" className="justify-between text-xs px-2 py-0.5">
+            <Badge
+              variant="secondary"
+              className={cn('justify-between text-xs px-2 py-0.5', onBadgeClick && 'cursor-pointer hover:opacity-80')}
+              onClick={onBadgeClick ? () => onBadgeClick('futuras') : undefined}
+            >
               <span>Futuras</span>
               <span className="font-bold ml-1">{dados?.futuras || 0}</span>
             </Badge>
-            <Badge variant="destructive" className="justify-between text-xs px-2 py-0.5">
+            <Badge
+              variant="destructive"
+              className={cn('justify-between text-xs px-2 py-0.5', onBadgeClick && 'cursor-pointer hover:opacity-80')}
+              onClick={onBadgeClick ? () => onBadgeClick('atrasadas') : undefined}
+            >
               <span>Atrasadas</span>
               <span className="font-bold ml-1">{dados?.atrasadas || 0}</span>
             </Badge>
