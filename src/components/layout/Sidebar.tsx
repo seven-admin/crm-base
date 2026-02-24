@@ -78,7 +78,7 @@ const menuGroups: MenuGroup[] = [
     color: '#10B981',
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
-      { icon: Map, label: 'Mapa de Unidades', path: '/mapa-unidades', moduleName: 'unidades' },
+      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
     ],
   },
   {
