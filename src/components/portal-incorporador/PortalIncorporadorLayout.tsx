@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, LogOut, BarChart3, TrendingUp, Palette, ArrowRight, ClipboardList } from 'lucide-react';
+import { ArrowLeft, LogOut, BarChart3, TrendingUp, Palette, ArrowRight, ClipboardList, Map } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import logo from '@/assets/logo-full.png';
 
@@ -24,6 +24,10 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
   '/portal-incorporador/planejamento': { 
     title: 'Planejamento', 
     subtitle: 'Cronograma de tarefas dos empreendimentos' 
+  },
+  '/portal-incorporador/disponibilidade': { 
+    title: 'Disponibilidade', 
+    subtitle: 'Visualize a disponibilidade de unidades por empreendimento' 
   },
 };
 
@@ -144,6 +148,21 @@ export function PortalIncorporadorLayout() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">Planejamento</h3>
                   <p className="text-sm text-muted-foreground line-clamp-1">Cronograma de tarefas</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/portal-incorporador/disponibilidade" className="h-full">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="p-6 flex items-center gap-4 h-full">
+                <div className="p-3 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex-shrink-0">
+                  <Map className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate">Disponibilidade</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-1">Mapa de unidades</p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               </CardContent>
