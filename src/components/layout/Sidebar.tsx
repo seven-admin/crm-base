@@ -90,23 +90,23 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Forecast',
-    icon: TrendingUp,
-    color: '#06B6D4',
-    items: [
-      { icon: BarChart2, label: 'Dashboard', path: '/forecast', moduleName: 'forecast' },
-      { icon: BookOpen, label: 'Diário de Bordo', path: '/diario-bordo', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
-      { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
-    ],
-  },
-  {
     label: 'Comercial',
     icon: Target,
     color: '#F5941E',
     items: [
       { icon: Kanban, label: 'Fichas de Proposta', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitações', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
+      { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
+      { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
+    ],
+  },
+  {
+    label: 'Diário de Bordo',
+    icon: BookOpen,
+    color: '#06B6D4',
+    items: [
+      { icon: BarChart2, label: 'Dashboard', path: '/diario-bordo', moduleName: 'forecast' },
+      { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
     ],
   },
   {

@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
-import { VisitasPorEmpreendimento } from '@/components/forecast/VisitasPorEmpreendimento';
+
 import { AtividadeForm } from '@/components/atividades/AtividadeForm';
 import { useTVLayoutConfig } from '@/hooks/useTVLayoutConfig';
 import { TVLayoutConfigDialog } from '@/components/tv-layout';
@@ -330,8 +330,6 @@ export default function Forecast() {
         {/* Cards por Categoria */}
         {renderKPIs()}
 
-        {/* Visitas por Empreendimento */}
-        <VisitasPorEmpreendimento gestorId={gestorId} dataInicio={dataInicio} dataFim={dataFim} />
       </div>
 
       {/* Dialog Nova Atividade */}
@@ -344,6 +342,7 @@ export default function Forecast() {
             <AtividadeForm 
               onSubmit={handleSubmit}
               isLoading={createAtividade.isPending}
+              tiposPermitidos={TIPOS_FORECAST}
             />
           </div>
         </DialogContent>

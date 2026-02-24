@@ -99,10 +99,12 @@ export interface AtividadeFormProps {
   isLoading?: boolean;
   defaultClienteId?: string;
   lockCliente?: boolean;
+  tiposPermitidos?: AtividadeTipo[];
 }
 
 export function AtividadeForm(props: AtividadeFormProps) {
-  const { initialData, onSubmit, isLoading, defaultClienteId, lockCliente } = props;
+  const { initialData, onSubmit, isLoading, defaultClienteId, lockCliente, tiposPermitidos } = props;
+  const tiposVisiveis = tiposPermitidos || (Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]);
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
   const { data: clientes = [] } = useClientes();
@@ -130,7 +132,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      tipo: initialData?.tipo || 'ligacao',
+      tipo: initialData?.tipo || (tiposPermitidos ? tiposPermitidos[0] : 'ligacao'),
       subtipo: (initialData?.subtipo as AtividadeSubtipo) || undefined,
       categoria: (initialData?.categoria as AtividadeCategoria) || 'seven',
       titulo: initialData?.titulo || '',
@@ -291,7 +293,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 <FormItem>
                   <FormLabel>Tipo de Atividade</FormLabel>
                   <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                    {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => {
+                    {tiposVisiveis.map((tipo) => {
                       const Icon = TIPO_ICONS[tipo];
                       return (
                         <button

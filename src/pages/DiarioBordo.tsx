@@ -175,6 +175,7 @@ export default function DiarioBordo() {
             <AtividadeForm 
               onSubmit={handleSubmit}
               isLoading={createAtividade.isPending}
+              tiposPermitidos={TIPOS_DIARIO}
             />
           </div>
         </DialogContent>
