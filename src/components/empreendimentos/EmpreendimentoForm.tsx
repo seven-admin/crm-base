@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -142,7 +143,24 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
     }
   }, [empreendimento?.id, form, open]);
 
+  const onError = (errors: Record<string, any>) => {
+    const step1Fields = ['nome', 'tipo', 'status', 'incorporadora_id', 'responsavel_comercial_id', 'descricao_curta', 'descricao_completa', 'legenda_status_visiveis', 'mapa_label_formato'];
+    const step2Fields = ['endereco_logradouro', 'endereco_numero', 'endereco_complemento', 'endereco_bairro', 'endereco_cidade', 'endereco_uf', 'endereco_cep'];
+    
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.some(k => step1Fields.includes(k))) {
+      setCurrentStep(1);
+    } else if (errorKeys.some(k => step2Fields.includes(k))) {
+      setCurrentStep(2);
+    } else {
+      setCurrentStep(3);
+    }
+    
+    toast({ variant: 'destructive', title: 'Verifique os campos obrigatórios', description: 'Há campos inválidos no formulário.' });
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log('Form submitted with values:', values);
     const data: EmpreendimentoFormData = {
       nome: values.nome,
       tipo: values.tipo as EmpreendimentoTipo,
@@ -204,7 +222,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+        <form onSubmit={form.handleSubmit(onSubmit, onError)} className="flex flex-col flex-1 overflow-hidden">
           {/* Step Indicator */}
           <div className="flex items-center justify-between mb-6 px-2">
             {STEPS.map((step, index) => {
