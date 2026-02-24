@@ -3,6 +3,12 @@
 import type { ClienteTemperatura } from './clientes.types';
 
 export type AtividadeTipo = 'ligacao' | 'meeting' | 'reuniao' | 'visita' | 'atendimento' | 'fechamento' | 'assinatura' | 'acompanhamento' | 'treinamento' | 'administrativa';
+
+// Tipos que aparecem no Forecast (pipeline comercial)
+export const TIPOS_FORECAST: AtividadeTipo[] = ['atendimento', 'fechamento', 'assinatura'];
+
+// Tipos que aparecem no Diário de Bordo (rotina operacional)
+export const TIPOS_DIARIO: AtividadeTipo[] = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa'];
 export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
 export type AtividadeCategoria = 'seven' | 'incorporadora' | 'imobiliaria' | 'cliente';
 export type AtividadeSubtipo = 'primeiro_atendimento' | 'retorno';

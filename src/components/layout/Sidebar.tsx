@@ -25,6 +25,7 @@ import {
   Shield,
   Palette,
   CalendarDays,
+  BookOpen,
   Gift,
   Wallet,
   User,
@@ -94,6 +95,7 @@ const menuGroups: MenuGroup[] = [
     color: '#06B6D4',
     items: [
       { icon: BarChart2, label: 'Dashboard', path: '/forecast', moduleName: 'forecast' },
+      { icon: BookOpen, label: 'Diário de Bordo', path: '/diario-bordo', moduleName: 'forecast' },
       { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
       { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
     ],

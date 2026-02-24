@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import type { ClienteTemperatura } from '@/types/clientes.types';
+import type { AtividadeTipo } from '@/types/atividades.types';
 
 const FORECAST_STALE = 5 * 60 * 1000; // 5 min
 const FORECAST_REFETCH = 5 * 60 * 1000; // 5 min
@@ -147,10 +148,11 @@ export function useResumoAtividades(
   gestorId?: string, 
   dataInicio?: Date, 
   dataFim?: Date,
-  empreendimentoIds?: string[]
+  empreendimentoIds?: string[],
+  tiposFilter?: AtividadeTipo[]
 ) {
   return useQuery({
-    queryKey: ['forecast', 'resumo-atividades', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all'],
+    queryKey: ['forecast', 'resumo-atividades', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all', tiposFilter?.join(',') || 'all'],
     staleTime: FORECAST_STALE,
     refetchInterval: FORECAST_REFETCH,
     queryFn: async () => {
@@ -175,6 +177,10 @@ export function useResumoAtividades(
       
       if (empreendimentoIds?.length) {
         query = query.in('empreendimento_id', empreendimentoIds);
+      }
+
+      if (tiposFilter?.length) {
+        query = query.in('tipo', tiposFilter);
       }
 
       const { data, error } = await query;
@@ -245,10 +251,11 @@ export function useAtividadesPorTipoPorSemana(
   gestorId?: string, 
   dataInicio?: Date, 
   dataFim?: Date,
-  empreendimentoIds?: string[]
+  empreendimentoIds?: string[],
+  tiposFilter?: AtividadeTipo[]
 ) {
   return useQuery({
-    queryKey: ['forecast', 'atividades-por-tipo-semana', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all'],
+    queryKey: ['forecast', 'atividades-por-tipo-semana', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all', tiposFilter?.join(',') || 'all'],
     staleTime: FORECAST_STALE,
     refetchInterval: FORECAST_REFETCH,
     queryFn: async (): Promise<AtividadeSemanaItem[]> => {
@@ -274,6 +281,10 @@ export function useAtividadesPorTipoPorSemana(
       
       if (empreendimentoIds?.length) {
         query = query.in('empreendimento_id', empreendimentoIds);
+      }
+
+      if (tiposFilter?.length) {
+        query = query.in('tipo', tiposFilter);
       }
 
       const { data, error } = await query;

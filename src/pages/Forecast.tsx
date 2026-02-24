@@ -15,7 +15,7 @@ import { TVLayoutConfigDialog } from '@/components/tv-layout';
 import { useResumoAtividades } from '@/hooks/useForecast';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
-import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateAtividade, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
@@ -43,8 +43,8 @@ export default function Forecast() {
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
   const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);
   
-  const { data: resumo, isLoading, refetch } = useResumoAtividades(gestorId, dataInicio, dataFim);
-  const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim);
+  const { data: resumo, isLoading, refetch } = useResumoAtividades(gestorId, dataInicio, dataFim, undefined, TIPOS_FORECAST);
+  const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_FORECAST);
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
 
   const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {

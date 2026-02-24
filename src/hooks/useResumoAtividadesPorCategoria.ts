@@ -19,10 +19,11 @@ export function useResumoAtividadesPorCategoria(
   gestorId?: string,
   dataInicio?: Date,
   dataFim?: Date,
-  empreendimentoIds?: string[]
+  empreendimentoIds?: string[],
+  tiposFilter?: AtividadeTipo[]
 ) {
   return useQuery({
-    queryKey: ['forecast', 'resumo-por-categoria', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all'],
+    queryKey: ['forecast', 'resumo-por-categoria', gestorId || 'all', dataInicio?.toISOString(), dataFim?.toISOString(), empreendimentoIds?.join(',') || 'all', tiposFilter?.join(',') || 'all'],
     staleTime: FORECAST_STALE,
     refetchInterval: FORECAST_REFETCH,
     queryFn: async (): Promise<ResumoCategoriasData> => {
@@ -42,6 +43,7 @@ export function useResumoAtividadesPorCategoria(
 
       if (gestorId) query = query.eq('gestor_id', gestorId);
       if (empreendimentoIds?.length) query = query.in('empreendimento_id', empreendimentoIds);
+      if (tiposFilter?.length) query = query.in('tipo', tiposFilter);
 
       const { data, error } = await query;
       if (error) throw error;
