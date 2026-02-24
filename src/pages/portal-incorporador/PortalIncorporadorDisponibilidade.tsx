@@ -16,9 +16,7 @@ const PortalIncorporadorDisponibilidade = () => {
   const [selectedEmpId, setSelectedEmpId] = useState<string>('');
 
   // Filtrar apenas loteamento e condomínio
-  const empreendimentosComMapa = empreendimentos.filter(
-    (emp) => emp.status === 'ativo'
-  );
+  const empreendimentosComMapa = empreendimentos;
 
   const empId = selectedEmpId || empreendimentosComMapa[0]?.id || '';
 
