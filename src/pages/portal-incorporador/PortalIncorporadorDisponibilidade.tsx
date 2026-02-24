@@ -56,7 +56,7 @@ const PortalIncorporadorDisponibilidade = () => {
           </CardContent>
         </Card>
       ) : empId ? (
-        <MapaInterativo empreendimentoId={empId} />
+        <MapaInterativo empreendimentoId={empId} readonly />
       ) : (
         <Card>
           <CardContent className="flex items-center justify-center py-16">
