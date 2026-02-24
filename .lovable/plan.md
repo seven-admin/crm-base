@@ -1,58 +1,32 @@
 
-# Disponibilidade no Portal do Incorporador + Renomear "Mapa de Unidades"
+# Corrigir filtro de Disponibilidade no Portal do Incorporador
 
-## Resumo
+## Problema
 
-Duas alteracoes:
-1. Renomear "Mapa de Unidades" para "Disponibilidade" em toda a aplicacao
-2. Adicionar a pagina de Disponibilidade ao Portal do Incorporador
+A pagina de Disponibilidade filtra empreendimentos apenas com status `"ativo"`, mas os empreendimentos vinculados ao usuario possuem status `"obra"`. Resultado: nenhum empreendimento aparece.
 
-## Alteracoes detalhadas
+## Solucao
 
-### 1. Renomear "Mapa de Unidades" para "Disponibilidade"
+Remover o filtro de status na pagina `PortalIncorporadorDisponibilidade.tsx`. Todos os empreendimentos vinculados ao incorporador devem aparecer, independente do status (ativo, obra, lancamento, etc.). A vinculacao via `user_empreendimentos` ja garante que o incorporador so veja os seus.
 
-**Arquivo: `src/components/layout/Sidebar.tsx`**
-- Alterar o label de `'Mapa de Unidades'` para `'Disponibilidade'` no item do menu
+## Alteracao
 
-**Arquivo: `src/pages/MapaUnidadesPage.tsx`**
-- Alterar o titulo de "Mapa de Unidades" para "Disponibilidade"
-- Alterar o subtitle para algo como "Visualize a disponibilidade de unidades por empreendimento"
-
-### 2. Criar pagina de Disponibilidade para o Portal do Incorporador
-
-**Novo arquivo: `src/pages/portal-incorporador/PortalIncorporadorDisponibilidade.tsx`**
-- Pagina similar a `MapaUnidadesPage`, mas usando `useIncorporadorEmpreendimentos` para filtrar apenas os empreendimentos vinculados ao incorporador
-- Reutiliza o componente `MapaInterativo` existente
-- Inclui seletor de empreendimento (filtrado) e o mapa
-
-### 3. Registrar a rota no App.tsx
-
-**Arquivo: `src/App.tsx`**
-- Adicionar lazy import para `PortalIncorporadorDisponibilidade`
-- Adicionar `<Route path="disponibilidade" element={...} />` dentro do bloco de rotas do portal-incorporador
-
-### 4. Adicionar card de navegacao e titulo no layout
-
-**Arquivo: `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`**
-- Adicionar entrada em `routeTitles` para `/portal-incorporador/disponibilidade`
-- Adicionar card de navegacao "Disponibilidade" na pagina principal do portal (com icone Map e cor adequada)
-
-### 5. Atualizar index de exports
-
-**Arquivo: `src/pages/portal-incorporador/index.ts`**
-- Adicionar export para `PortalIncorporadorDisponibilidade`
-
-## Arquivos afetados
-
-| Arquivo | Alteracao |
+| Arquivo | O que muda |
 |---|---|
-| `src/components/layout/Sidebar.tsx` | Renomear label para "Disponibilidade" |
-| `src/pages/MapaUnidadesPage.tsx` | Renomear titulo para "Disponibilidade" |
-| `src/pages/portal-incorporador/PortalIncorporadorDisponibilidade.tsx` | **Novo** - Pagina de disponibilidade usando empreendimentos do incorporador |
-| `src/App.tsx` | Adicionar rota `/portal-incorporador/disponibilidade` |
-| `src/components/portal-incorporador/PortalIncorporadorLayout.tsx` | Adicionar titulo e card de navegacao |
-| `src/pages/portal-incorporador/index.ts` | Adicionar export |
+| `src/pages/portal-incorporador/PortalIncorporadorDisponibilidade.tsx` | Remover o `.filter((emp) => emp.status === 'ativo')` e usar todos os empreendimentos retornados pelo hook |
 
-## Sem alteracoes no banco
+## Detalhe tecnico
 
-Tudo frontend. O componente `MapaInterativo` ja recebe `empreendimentoId` como prop, entao basta reutiliza-lo.
+Linha 20-23 atual:
+```typescript
+const empreendimentosComMapa = empreendimentos.filter(
+  (emp) => emp.status === 'ativo'
+);
+```
+
+Sera substituido por:
+```typescript
+const empreendimentosComMapa = empreendimentos;
+```
+
+Alteracao de uma unica linha, sem impacto em outros componentes.
