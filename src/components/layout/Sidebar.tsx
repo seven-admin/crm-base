@@ -94,11 +94,11 @@ const menuGroups: MenuGroup[] = [
     icon: Target,
     color: '#F5941E',
     items: [
+      { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
+      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
       { icon: Kanban, label: 'Fichas de Proposta', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitações', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
-      { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
       { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
     ],
   },
   {
