@@ -26,6 +26,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Atividades = lazy(() => import("./pages/Atividades"));
 const Forecast = lazy(() => import("./pages/Forecast"));
+const DiarioBordo = lazy(() => import("./pages/DiarioBordo"));
 const Negociacoes = lazy(() => import("./pages/Negociacoes"));
 const Propostas = lazy(() => import("./pages/Propostas"));
 const Contratos = lazy(() => import("./pages/Contratos"));
@@ -179,6 +180,11 @@ const App = () => (
             <Route path="/forecast" element={
               <ProtectedRoute moduleName="forecast">
                 <Forecast />
+              </ProtectedRoute>
+            } />
+            <Route path="/diario-bordo" element={
+              <ProtectedRoute moduleName="forecast">
+                <DiarioBordo />
               </ProtectedRoute>
             } />
             <Route path="/metas-comerciais" element={
