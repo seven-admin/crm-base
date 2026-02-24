@@ -1,92 +1,67 @@
 
-# Dividir Forecast em Forecast + Diario de Bordo
+# Separacao Completa: Formulario Filtrado + Forecast na aba Comercial
 
-## Divisao dos tipos de atividade
+## Resumo
 
-**Forecast** (pipeline comercial):
-- Atendimento
-- Fechamento
-- Assinatura
-- KPIs financeiros (Vendas, Comissoes, Negociacoes, Propostas)
+Tres alteracoes principais:
 
-**Diario de Bordo** (rotina operacional):
-- Ligacao/WhatsApp
-- Meeting
-- Reuniao
-- Acompanhamento
-- Treinamento
-- Visita
-- Staff Seven (administrativa)
+1. **Filtrar tipos no formulario** -- cada tela so mostra os tipos que lhe pertencem
+2. **Mover Forecast para dentro do grupo Comercial** no menu lateral
+3. **Diario de Bordo fica como grupo proprio** no menu lateral
 
-## O que sera feito
+## Alteracoes detalhadas
 
-### 1. Criar constantes de agrupamento
+### 1. Filtrar tipos no AtividadeForm
 
-No arquivo `src/types/atividades.types.ts`, adicionar duas constantes que definem quais tipos pertencem a cada tela:
+**Arquivo:** `src/components/atividades/AtividadeForm.tsx`
 
-```text
-TIPOS_FORECAST = ['atendimento', 'fechamento', 'assinatura']
-TIPOS_DIARIO   = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa']
-```
+- Adicionar prop `tiposPermitidos?: AtividadeTipo[]` na interface `AtividadeFormProps`
+- No grid de tipos (linha ~294), em vez de iterar `Object.keys(ATIVIDADE_TIPO_LABELS)`, iterar apenas os tipos permitidos (quando informados)
+- Ajustar `defaultValues.tipo` para usar o primeiro tipo da lista filtrada
 
-### 2. Criar hooks filtrados
+### 2. Passar filtro nas paginas
 
-Criar `src/hooks/useDiarioBordo.ts` com hooks similares aos do Forecast (resumo por categoria, resumo geral), mas filtrando apenas os tipos do Diario de Bordo.
+**Arquivo:** `src/pages/Forecast.tsx`
+- Passar `tiposPermitidos={TIPOS_FORECAST}` ao `AtividadeForm` no dialog de nova atividade
+- Remover `VisitasPorEmpreendimento` (visita e tipo do Diario)
 
-Adaptar os hooks existentes do Forecast (`useResumoAtividadesPorCategoria`, `useResumoAtividades`, `useAtividadesPorTipoPorSemana`) para aceitar um parametro `tiposFilter` opcional, ou criar versoes separadas que filtram por `.in('tipo', TIPOS_FORECAST)` e `.in('tipo', TIPOS_DIARIO)`.
+**Arquivo:** `src/pages/DiarioBordo.tsx`
+- Passar `tiposPermitidos={TIPOS_DIARIO}` ao `AtividadeForm` no dialog de nova atividade
 
-### 3. Criar a pagina Diario de Bordo
+**Arquivo da pagina /atividades** -- continua sem filtro, mostrando todos os tipos
 
-Criar `src/pages/DiarioBordo.tsx` como uma pagina independente com a mesma estrutura visual do Forecast atual:
-- Header com seletor de competencia e filtro de gestor
-- Cards por categoria (Seven, Incorporadora, Imobiliaria, Cliente) -- mostrando apenas atividades dos tipos do Diario
-- Grafico "Atividades por Tipo Semanal" -- mostrando apenas os tipos do Diario
-- Visitas por Empreendimento (permanece no Diario pois "visita" e tipo do Diario)
-- Sem KPIs financeiros (esses ficam apenas no Forecast)
-- Botao de nova atividade e acoes em lote (super admin)
+### 3. Reorganizar menu lateral (Sidebar)
 
-### 4. Filtrar o Forecast existente
+**Arquivo:** `src/components/layout/Sidebar.tsx`
 
-Alterar `src/pages/Forecast.tsx` para que os cards de categoria e o resumo considerem apenas os tipos do Forecast (`atendimento`, `fechamento`, `assinatura`). Os KPIs financeiros permanecem inalterados.
-
-### 5. Adicionar rota e menu
-
-**`src/App.tsx`**: Adicionar rota `/diario-bordo` apontando para a nova pagina, protegida pelo modulo `forecast`.
-
-**`src/components/layout/Sidebar.tsx`**: No grupo "Forecast", adicionar item "Diario de Bordo" com icone `BookOpen`, path `/diario-bordo`.
-
-O menu ficara:
+O grupo "Forecast" atual sera desmembrado. A nova estrutura:
 
 ```text
-Forecast
-  |-- Dashboard (Forecast)    /forecast
-  |-- Diario de Bordo         /diario-bordo
-  |-- Atividades              /atividades
-  |-- Metas Comerciais        /metas-comerciais
+Comercial (cor laranja, icone Target)
+  |-- Fichas de Proposta     /negociacoes
+  |-- Solicitacoes           /solicitacoes  (adminOnly)
+  |-- Forecast               /forecast
+  |-- Metas Comerciais       /metas-comerciais
+
+Diario de Bordo (grupo proprio, cor cyan, icone BookOpen)
+  |-- Dashboard              /diario-bordo
+  |-- Atividades             /atividades
 ```
+
+Ou seja:
+- O grupo "Forecast" deixa de existir como grupo separado
+- "Forecast" e "Metas Comerciais" sao movidos para dentro do grupo "Comercial"
+- "Diario de Bordo" vira um grupo proprio com o item de Atividades
 
 ## Arquivos afetados
 
-| Arquivo | Acao |
+| Arquivo | Alteracao |
 |---|---|
-| `src/types/atividades.types.ts` | Adicionar constantes TIPOS_FORECAST e TIPOS_DIARIO |
-| `src/hooks/useResumoAtividadesPorCategoria.ts` | Adicionar parametro `tiposFilter` para filtrar por tipo |
-| `src/hooks/useForecast.ts` | Adicionar parametro `tiposFilter` nos hooks de resumo e grafico semanal |
-| `src/pages/Forecast.tsx` | Passar filtro de tipos do Forecast nos hooks |
-| `src/pages/DiarioBordo.tsx` | **Novo** -- pagina do Diario de Bordo |
-| `src/App.tsx` | Adicionar rota `/diario-bordo` |
-| `src/components/layout/Sidebar.tsx` | Adicionar item no menu |
+| `src/components/atividades/AtividadeForm.tsx` | Nova prop `tiposPermitidos`, filtra grid de tipos |
+| `src/pages/Forecast.tsx` | Passa `TIPOS_FORECAST`, remove VisitasPorEmpreendimento |
+| `src/pages/DiarioBordo.tsx` | Passa `TIPOS_DIARIO` |
+| `src/components/layout/Sidebar.tsx` | Reorganiza menu: Forecast vai para Comercial, Diario de Bordo vira grupo proprio |
 
-## Detalhes tecnicos
+## Nenhuma alteracao no banco
 
-### Filtro nos hooks
-
-Os hooks `useResumoAtividadesPorCategoria` e `useResumoAtividades` receberao um parametro opcional `tiposFilter?: AtividadeTipo[]`. Quando informado, a query adicionara `.in('tipo', tiposFilter)`. A query key incluira os tipos para cache correto.
-
-### Pagina DiarioBordo
-
-Sera uma copia simplificada do Forecast, sem os KPIs financeiros. Reutilizara os mesmos componentes (`CategoriaCard`, `AtividadesPorTipo`, `VisitasPorEmpreendimento`, `ForecastBatchStatusDialog`). O grafico semanal mostrara todos os 7 tipos do Diario.
-
-### Nenhuma alteracao no banco
-
-Nao ha necessidade de migrations ou alteracoes no banco de dados. A divisao e puramente visual/frontend, filtrando os mesmos dados da tabela `atividades` por tipo.
+Tudo e frontend. Sem migrations.
