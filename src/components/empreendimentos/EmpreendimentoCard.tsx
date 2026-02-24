@@ -36,9 +36,7 @@ export function EmpreendimentoCard({ empreendimento }: EmpreendimentoCardProps) 
     ? (empreendimento.unidades_vendidas / totalUnidades) * 100
     : 0;
 
-  const valorMedio = totalUnidades > 0 
-    ? empreendimento.valor_total / totalUnidades 
-    : 0;
+  const vgvANegociar = empreendimento.valor_total - empreendimento.valor_vendido;
 
   return (
     <div className="card-elevated overflow-hidden hover:shadow-elevated transition-shadow duration-300 animate-fade-in">
@@ -186,9 +184,9 @@ export function EmpreendimentoCard({ empreendimento }: EmpreendimentoCardProps) 
 
         <div className="flex items-center justify-between pt-3 border-t border-border">
           <div>
-            <p className="text-xs text-muted-foreground">Valor médio</p>
+            <p className="text-xs text-muted-foreground">VGV a Negociar</p>
             <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(valorMedio)}
+              {formatCurrency(vgvANegociar)}
             </p>
           </div>
           <Button size="sm" onClick={() => navigate(`/empreendimentos/${empreendimento.id}`)}>
