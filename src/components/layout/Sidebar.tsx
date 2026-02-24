@@ -98,6 +98,7 @@ const menuGroups: MenuGroup[] = [
       { icon: ClipboardCheck, label: 'Solicitações', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
       { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
       { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
+      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
     ],
   },
   {
@@ -106,7 +107,7 @@ const menuGroups: MenuGroup[] = [
     color: '#06B6D4',
     items: [
       { icon: BarChart2, label: 'Dashboard', path: '/diario-bordo', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
+      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=diario', moduleName: 'atividades' },
     ],
   },
   {

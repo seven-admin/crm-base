@@ -165,6 +165,7 @@ export interface AtividadeFilters {
   cliente_id?: string;
   data_inicio?: string;
   data_fim?: string;
+  tipos?: AtividadeTipo[];
 }
 
 export interface ConfiguracoesAtividades {

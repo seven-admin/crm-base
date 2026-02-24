@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Plus, Phone, Users, MapPin, Headphones, CheckCircle, XCircle, Trash2, Edit, List, Calendar, AlertCircle, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
@@ -29,7 +30,7 @@ import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { useClientes } from '@/hooks/useClientes';
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { Shield } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -67,6 +68,18 @@ const TIPO_COLORS: Record<AtividadeTipo, string> = {
 };
 
 export default function Atividades() {
+  const [searchParams] = useSearchParams();
+  const contexto = searchParams.get('contexto') as 'forecast' | 'diario' | null;
+  
+  const tiposPermitidos = useMemo(() => {
+    if (contexto === 'forecast') return TIPOS_FORECAST;
+    if (contexto === 'diario') return TIPOS_DIARIO;
+    return undefined;
+  }, [contexto]);
+
+  const pageTitle = contexto === 'forecast' ? 'Atividades Comerciais' : contexto === 'diario' ? 'Diário de Bordo - Atividades' : 'Atividades';
+  const pageSubtitle = contexto === 'forecast' ? 'Atendimentos, fechamentos e assinaturas' : contexto === 'diario' ? 'Ligações, reuniões, visitas e acompanhamentos' : 'Gerencie as atividades comerciais';
+
   const [view, setView] = useState<'lista' | 'calendario' | 'pendencias'>('lista');
   const [filters, setFilters] = useState<AtividadeFilters>({});
   const [page, setPage] = useState(1);
@@ -86,15 +99,21 @@ export default function Atividades() {
   const ano = currentDate.getFullYear();
   const mes = currentDate.getMonth() + 1;
 
-  const { data: atividadesData, isLoading } = useAtividades({ filters, page, pageSize });
+  // Merge contexto-based tipos into filters
+  const effectiveFilters = useMemo(() => {
+    if (!tiposPermitidos) return filters;
+    return { ...filters, tipos: tiposPermitidos };
+  }, [filters, tiposPermitidos]);
+
+  const { data: atividadesData, isLoading } = useAtividades({ filters: effectiveFilters, page, pageSize });
   const atividades = atividadesData?.items || [];
   const totalPages = atividadesData?.totalPages || 1;
   const totalItems = atividadesData?.count || 0;
 
-  const { data: resumoStatus } = useAtividadesStatusResumo({ filters });
-  const { data: atividadesMes, isLoading: isLoadingMes } = useAgendaMensal(ano, mes, undefined, filters);
+  const { data: resumoStatus } = useAtividadesStatusResumo({ filters: effectiveFilters });
+  const { data: atividadesMes, isLoading: isLoadingMes } = useAgendaMensal(ano, mes, undefined, effectiveFilters);
   const { data: atividadesDia } = useAgendaDia(selectedDate);
-  const { data: atividadesHoje } = useAtividadesHoje(filters);
+  const { data: atividadesHoje } = useAtividadesHoje(effectiveFilters);
   const { data: atividadesVencidas, isLoading: isLoadingVencidas } = useAtividadesVencidas();
   const { data: gestores } = useGestoresProduto();
   const { data: empreendimentos } = useEmpreendimentos();
@@ -263,7 +282,7 @@ export default function Atividades() {
   };
 
   return (
-    <MainLayout title="Atividades" subtitle="Gerencie as atividades comerciais">
+    <MainLayout title={pageTitle} subtitle={pageSubtitle}>
       <div className="space-y-6">
         {/* Header com toggle de visualização */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -378,8 +397,8 @@ export default function Atividades() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      {Object.entries(ATIVIDADE_TIPO_LABELS).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      {(tiposPermitidos || Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => (
+                        <SelectItem key={tipo} value={tipo}>{ATIVIDADE_TIPO_LABELS[tipo]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -927,6 +946,7 @@ export default function Atividades() {
               initialData={editingAtividade || undefined} 
               onSubmit={handleAtividadeSubmit}
               isLoading={createAtividade.isPending || updateAtividade.isPending}
+              tiposPermitidos={tiposPermitidos}
             />
           </div>
         </DialogContent>
