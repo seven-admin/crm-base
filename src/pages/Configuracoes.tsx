@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfiguracoesSistema, useUpdateConfiguracoes } from '@/hooks/useConfiguracoesSistema';
+import { useSidebarColors, DEFAULT_SIDEBAR_COLORS, LABEL_TO_CHAVE } from '@/hooks/useSidebarColors';
 import { useWebhooks, useCreateWebhook, useUpdateWebhook, useDeleteWebhook, useTestarWebhook, WEBHOOK_EVENTS, type Webhook as WebhookType } from '@/hooks/useWebhooks';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RolesManager } from '@/components/configuracoes/RolesManager';
+import { SidebarColorsConfig } from '@/components/configuracoes/SidebarColorsConfig';
 import { WebhookLogsSection } from '@/components/configuracoes/WebhookLogsSection';
 import { TermosEditor } from '@/components/configuracoes/TermosEditor';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +61,8 @@ type WebhookFormData = z.infer<typeof webhookFormSchema>;
 const Configuracoes = () => {
   const { data: configs, isLoading } = useConfiguracoesSistema();
   const updateConfigs = useUpdateConfiguracoes();
+  const { colors: sidebarColors } = useSidebarColors();
+  const [localSidebarColors, setLocalSidebarColors] = useState<Record<string, string>>({});
   const { data: webhooks, isLoading: webhooksLoading } = useWebhooks();
   const createWebhook = useCreateWebhook();
   const updateWebhook = useUpdateWebhook();
@@ -103,8 +107,20 @@ const Configuracoes = () => {
     }
   }, [configs]);
 
+  useEffect(() => {
+    setLocalSidebarColors(sidebarColors);
+  }, [sidebarColors]);
+
+  const handleSidebarColorChange = (label: string, color: string) => {
+    setLocalSidebarColors(prev => ({ ...prev, [label]: color }));
+  };
+
   const handleSavePersonalizacao = async () => {
     try {
+      const sidebarColorConfigs = Object.entries(localSidebarColors)
+        .filter(([label]) => LABEL_TO_CHAVE[label])
+        .map(([label, valor]) => ({ chave: LABEL_TO_CHAVE[label], valor }));
+
       await updateConfigs.mutateAsync([
         { chave: 'login_feature_1', valor: feature1 },
         { chave: 'login_feature_2', valor: feature2 },
@@ -112,6 +128,7 @@ const Configuracoes = () => {
         { chave: 'copyright_texto', valor: copyright },
         { chave: 'login_subtitulo', valor: loginSubtitulo },
         { chave: 'login_descricao', valor: loginDescricao },
+        ...sidebarColorConfigs,
       ]);
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
@@ -470,6 +487,11 @@ const Configuracoes = () => {
                     />
                   </div>
                 </div>
+
+                <SidebarColorsConfig
+                  colors={localSidebarColors}
+                  onChange={handleSidebarColorChange}
+                />
 
                 <Button 
                   onClick={handleSavePersonalizacao}
