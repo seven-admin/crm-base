@@ -191,11 +191,11 @@ export default function Forecast() {
         {/* Tabs: Negociações / Atividades */}
         <Tabs defaultValue="negociacoes">
           <TabsList>
-            <TabsTrigger value="negociacoes" className="gap-2">
+          <TabsTrigger value="negociacoes" className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
               <Handshake className="h-4 w-4" />
               Negociações
             </TabsTrigger>
-            <TabsTrigger value="atividades" className="gap-2">
+            <TabsTrigger value="atividades" className="gap-2 data-[state=active]:text-[#06B6D4] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#06B6D4]">
               <ClipboardList className="h-4 w-4" />
               Atividades
             </TabsTrigger>
