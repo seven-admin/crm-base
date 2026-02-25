@@ -18,6 +18,10 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { AtividadeComentarios } from './AtividadeComentarios';
 import { AlterarStatusAtividadeDialog } from './AlterarStatusAtividadeDialog';
+import { TemperaturaSelector } from './TemperaturaSelector';
+import { useUpdateAtividade } from '@/hooks/useAtividades';
+import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
+import type { ClienteTemperatura } from '@/types/clientes.types';
 
 interface AtividadeDetalheDialogProps {
   atividade: Atividade | null;
@@ -67,11 +71,19 @@ const TEMPERATURA_LABELS: Record<string, { label: string; color: string; emoji: 
 export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpenChange }: AtividadeDetalheDialogProps) {
   const { role } = useAuth();
   const [alterarStatusOpen, setAlterarStatusOpen] = useState(false);
+  const updateAtividade = useUpdateAtividade();
+  const { data: historico = [] } = useAtividadeHistorico(atividade?.id ?? null);
   
   const TipoIcon = atividade ? TIPO_ICONS[atividade.tipo] : Phone;
   const temperatura = atividade?.temperatura_cliente 
     ? TEMPERATURA_LABELS[atividade.temperatura_cliente] 
     : null;
+
+  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+    if (atividade) {
+      updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
+    }
+  };
 
   const isAtrasada = (() => {
     if (!atividade) return false;
@@ -267,15 +279,16 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
             )}
 
             {/* Temperatura do Cliente */}
-            {temperatura && (
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <ThermometerSun className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Temperatura:</span>
-                <Badge variant="outline" className={cn('border', temperatura.color)}>
-                  {temperatura.emoji} {temperatura.label}
-                </Badge>
               </div>
-            )}
+              <TemperaturaSelector
+                value={atividade.temperatura_cliente}
+                onValueChange={handleTemperaturaChange}
+              />
+            </div>
 
             {/* Follow-up */}
             {atividade.requer_followup && atividade.data_followup && (
@@ -293,6 +306,36 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
             {/* Seção de Interações/Comentários */}
             <Separator />
             <AtividadeComentarios atividadeId={atividade.id} />
+
+            {/* Histórico de Alterações */}
+            {historico.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Histórico</h4>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {historico.map((item) => (
+                      <div key={item.id} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <span className="shrink-0 text-[10px] mt-0.5">
+                          {format(new Date(item.created_at), 'dd/MM HH:mm', { locale: ptBR })}
+                        </span>
+                        <span className="flex-1">
+                          <span className="font-medium text-foreground">{item.user?.full_name || 'Sistema'}</span>
+                          {' — '}
+                          {item.tipo_evento === 'criacao' && 'Criou a atividade'}
+                          {item.tipo_evento === 'concluida' && 'Concluiu a atividade'}
+                          {item.tipo_evento === 'cancelada' && 'Cancelou a atividade'}
+                          {item.tipo_evento === 'reaberta' && 'Reabriu a atividade'}
+                          {item.tipo_evento === 'temperatura_alterada' && `Temperatura: ${item.valor_anterior || '—'} → ${item.valor_novo}`}
+                          {item.tipo_evento === 'status_alterado' && `Status: ${item.valor_anterior} → ${item.valor_novo}`}
+                          {item.tipo_evento === 'edicao' && `Editou ${item.campo_alterado}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Ações de Super Admin */}
             {canAlterStatus && (

@@ -16,13 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { TemperaturaSelector } from './TemperaturaSelector';
 import {
   Form,
   FormControl,
@@ -33,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { useConcluirAtividade } from '@/hooks/useAtividades';
 import type { Atividade, ConcluirAtividadeData } from '@/types/atividades.types';
-import { CLIENTE_TEMPERATURA_LABELS, type ClienteTemperatura } from '@/types/clientes.types';
+import { type ClienteTemperatura } from '@/types/clientes.types';
 
 // Resultado agora é opcional - aprovação direta
 const formSchema = z.object({
@@ -149,20 +143,12 @@ export function ConcluirAtividadeDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Temperatura do Cliente (opcional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Manter atual" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
-                          <SelectItem key={temp} value={temp}>
-                            {CLIENTE_TEMPERATURA_LABELS[temp]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <TemperaturaSelector
+                        value={field.value as ClienteTemperatura | undefined}
+                        onValueChange={field.onChange}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

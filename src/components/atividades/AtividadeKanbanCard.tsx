@@ -2,13 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Phone, Users, MapPin, MessageSquare, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText, Thermometer } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { Atividade, AtividadeTipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
+import { TemperaturaSelector } from './TemperaturaSelector';
+import { useUpdateAtividade } from '@/hooks/useAtividades';
+import type { ClienteTemperatura } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   ligacao: Phone,
@@ -23,11 +25,6 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   administrativa: Briefcase,
 };
 
-const TEMP_COLORS: Record<string, string> = {
-  frio: 'bg-blue-100 text-blue-700',
-  morno: 'bg-amber-100 text-amber-700',
-  quente: 'bg-red-100 text-red-700',
-};
 
 interface AtividadeKanbanCardProps {
   atividade: Atividade;
@@ -38,6 +35,11 @@ interface AtividadeKanbanCardProps {
 export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: AtividadeKanbanCardProps) {
   const navigate = useNavigate();
   const TipoIcon = TIPO_ICONS[atividade.tipo];
+  const updateAtividade = useUpdateAtividade();
+
+  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+    updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
+  };
 
   const handleConverterProposta = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -63,9 +65,11 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
           <span className="text-sm font-medium truncate">{atividade.titulo}</span>
         </div>
         {atividade.temperatura_cliente && (
-          <Badge variant="secondary" className={cn('text-[10px] shrink-0', TEMP_COLORS[atividade.temperatura_cliente])}>
-            {atividade.temperatura_cliente}
-          </Badge>
+          <TemperaturaSelector
+            value={atividade.temperatura_cliente}
+            onValueChange={handleTemperaturaChange}
+            compact
+          />
         )}
       </div>
 

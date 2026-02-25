@@ -92,6 +92,57 @@ export type Database = {
         }
         Relationships: []
       }
+      atividade_historico: {
+        Row: {
+          atividade_id: string
+          campo_alterado: string | null
+          created_at: string
+          id: string
+          observacao: string | null
+          tipo_evento: string
+          user_id: string | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          atividade_id: string
+          campo_alterado?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          tipo_evento: string
+          user_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          atividade_id?: string
+          campo_alterado?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          tipo_evento?: string
+          user_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividade_historico_atividade_id_fkey"
+            columns: ["atividade_id"]
+            isOneToOne: false
+            referencedRelation: "atividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividade_historico_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atividades: {
         Row: {
           atividade_etapa_id: string | null
