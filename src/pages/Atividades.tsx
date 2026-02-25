@@ -32,6 +32,7 @@ import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeF
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
+import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
 import { Shield } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -660,6 +661,7 @@ export default function Atividades() {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Título</TableHead>
                         <TableHead>Cliente</TableHead>
+                        <TableHead>Temp.</TableHead>
                         <TableHead className="hidden lg:table-cell">Corretor</TableHead>
                         <TableHead className="hidden lg:table-cell">Gestor</TableHead>
                         <TableHead>Data/Hora</TableHead>
@@ -671,7 +673,7 @@ export default function Atividades() {
                     <TableBody>
                       {atividades?.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                             Nenhuma atividade encontrada
                           </TableCell>
                         </TableRow>
@@ -734,6 +736,13 @@ export default function Atividades() {
                                 </div>
                               </TableCell>
                               <TableCell>{atividade.cliente?.nome || '-'}</TableCell>
+                              <TableCell onClick={(e) => e.stopPropagation()}>
+                                <TemperaturaSelector
+                                  value={atividade.temperatura_cliente}
+                                  onValueChange={(temp) => updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } })}
+                                  compact
+                                />
+                              </TableCell>
                               <TableCell className="hidden lg:table-cell">{atividade.corretor?.nome_completo || '-'}</TableCell>
                               <TableCell className="hidden lg:table-cell">{atividade.gestor?.full_name || '-'}</TableCell>
                               <TableCell>
