@@ -1,18 +1,30 @@
 
 
-# Unificar Cor das Tabs para #F5941E
+# Unificar Todas as Cores do Sidebar para #F5941E
 
 ## Resumo
 
-Trocar a cor ciano (`#06B6D4`) da tab "Atividades" para laranja (`#F5941E`) em ambas as paginas, igualando todas as tabs.
+Alterar a propriedade `color` de todos os 11 grupos do menu lateral para `#F5941E` (laranja), unificando a identidade visual.
 
 ## Alteracoes
 
-### `src/pages/Forecast.tsx`
-- Tab "Atividades": trocar `#06B6D4` por `#F5941E` nas classes `data-[state=active]`
+### Arquivo: `src/components/layout/Sidebar.tsx`
 
-### `src/pages/Negociacoes.tsx`
-- Tab "Atividades": trocar `#06B6D4` por `#F5941E` nas classes `data-[state=active]`
+Trocar o valor de `color` em cada grupo:
 
-Duas linhas alteradas, uma em cada arquivo.
+| Grupo | Cor Atual | Nova Cor |
+|---|---|---|
+| Planejamento | `#10B981` | `#F5941E` |
+| Empreendimentos | `#10B981` | `#F5941E` |
+| Clientes | `#8B5CF6` | `#F5941E` |
+| Comercial | `#F5941E` | (ja esta) |
+| Diario de Bordo | `#06B6D4` | `#F5941E` |
+| Contratos | `#60A5FA` | `#F5941E` |
+| Financeiro | `#F59E0B` | `#F5941E` |
+| Parceiros | `#EC4899` | `#F5941E` |
+| Marketing | `#EC4899` | `#F5941E` |
+| Eventos | `#06B6D4` | `#F5941E` |
+| Sistema | `#94A3B8` | `#F5941E` |
+
+Sao 10 linhas alteradas (Comercial ja usa a cor correta).
 
