@@ -21,6 +21,8 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   acompanhamento: PackageCheck,
   treinamento: GraduationCap,
   administrativa: Briefcase,
+  negociacao: Handshake,
+  contra_proposta_atividade: MessageSquare,
 };
 
 const TIPO_COLORS: Record<AtividadeTipo, string> = {
@@ -34,6 +36,8 @@ const TIPO_COLORS: Record<AtividadeTipo, string> = {
   acompanhamento: 'bg-cyan-500',
   treinamento: 'bg-amber-500',
   administrativa: 'bg-slate-500',
+  negociacao: 'bg-violet-500',
+  contra_proposta_atividade: 'bg-rose-500',
 };
 
 // Formatar intervalo de datas para exibição

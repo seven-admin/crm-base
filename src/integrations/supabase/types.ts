@@ -5335,6 +5335,39 @@ export type Database = {
           },
         ]
       }
+      tipos_atendimento_config: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          ordem: number
+          tipo_atividade: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          ordem?: number
+          tipo_atividade: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          ordem?: number
+          tipo_atividade?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tipos_parcela: {
         Row: {
           codigo: string

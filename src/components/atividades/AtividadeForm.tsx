@@ -48,6 +48,8 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   meeting: Video,
   reuniao: Users,
   visita: MapPin,
+  negociacao: Handshake,
+  contra_proposta_atividade: MessageSquare,
   atendimento: MessageSquare,
   fechamento: Handshake,
   assinatura: PenTool,
@@ -58,7 +60,7 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
 
 const formSchema = z
   .object({
-    tipo: z.enum(['ligacao', 'meeting', 'reuniao', 'visita', 'atendimento', 'fechamento', 'assinatura', 'acompanhamento', 'treinamento', 'administrativa']),
+    tipo: z.enum(['ligacao', 'meeting', 'reuniao', 'visita', 'atendimento', 'fechamento', 'assinatura', 'acompanhamento', 'treinamento', 'administrativa', 'negociacao', 'contra_proposta_atividade']),
     subtipo: z.enum(['primeiro_atendimento', 'retorno']).optional(),
     categoria: z.enum(['seven', 'incorporadora', 'imobiliaria', 'cliente']),
     titulo: z.string().min(1, 'Título é obrigatório'),
@@ -263,10 +265,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-input hover:border-primary hover:bg-primary/5 transition-all"
               >
                 <Handshake className="h-10 w-10 text-primary" />
-                <div className="text-center">
-                  <span className="text-sm font-semibold text-foreground">Negociação</span>
-                  <p className="text-xs text-muted-foreground mt-1">Atendimento, Assinatura</p>
-                </div>
+                <span className="text-sm font-semibold text-foreground">Atendimento</span>
               </button>
               <button
                 type="button"
@@ -277,10 +276,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-input hover:border-cyan-500 hover:bg-cyan-500/5 transition-all"
               >
                 <ClipboardList className="h-10 w-10 text-cyan-500" />
-                <div className="text-center">
-                  <span className="text-sm font-semibold text-foreground">Atividade</span>
-                  <p className="text-xs text-muted-foreground mt-1">Ligação, Reunião, Visita...</p>
-                </div>
+                <span className="text-sm font-semibold text-foreground">Atividades Diárias</span>
               </button>
             </div>
           </div>

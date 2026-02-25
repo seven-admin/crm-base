@@ -2,13 +2,13 @@
 
 import type { ClienteTemperatura } from './clientes.types';
 
-export type AtividadeTipo = 'ligacao' | 'meeting' | 'reuniao' | 'visita' | 'atendimento' | 'fechamento' | 'assinatura' | 'acompanhamento' | 'treinamento' | 'administrativa';
+export type AtividadeTipo = 'ligacao' | 'meeting' | 'reuniao' | 'visita' | 'atendimento' | 'fechamento' | 'assinatura' | 'acompanhamento' | 'treinamento' | 'administrativa' | 'negociacao' | 'contra_proposta_atividade';
 
 // Tipos que aparecem no Forecast (pipeline comercial)
 export const TIPOS_FORECAST: AtividadeTipo[] = ['atendimento', 'fechamento', 'assinatura'];
 
 // Tipos de negociação (atividades comerciais que podem virar proposta)
-export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'assinatura'];
+export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
 
 // Tipos que aparecem no Diário de Bordo (rotina operacional)
 export const TIPOS_DIARIO: AtividadeTipo[] = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa'];
@@ -39,6 +39,8 @@ export const ATIVIDADE_TIPO_LABELS: Record<AtividadeTipo, string> = {
   acompanhamento: 'Acompanhamento',
   treinamento: 'Treinamento',
   administrativa: 'Staff Seven',
+  negociacao: 'Negociação',
+  contra_proposta_atividade: 'Contra Proposta',
 };
 
 export const ATIVIDADE_CATEGORIA_LABELS: Record<AtividadeCategoria, string> = {

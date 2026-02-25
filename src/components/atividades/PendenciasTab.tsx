@@ -22,6 +22,8 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   acompanhamento: PackageCheck,
   treinamento: GraduationCap,
   administrativa: Briefcase,
+  negociacao: Handshake,
+  contra_proposta_atividade: Headphones,
 };
 
 interface PendenciasTabProps {

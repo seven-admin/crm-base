@@ -41,6 +41,8 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   acompanhamento: PackageCheck,
   treinamento: GraduationCap,
   administrativa: Briefcase,
+  negociacao: Handshake,
+  contra_proposta_atividade: Headphones,
 };
 
 const STATUS_COLORS: Record<AtividadeStatus, string> = {
@@ -60,6 +62,8 @@ const TIPO_COLORS: Record<AtividadeTipo, string> = {
   acompanhamento: 'bg-sky-100 text-sky-800 border-sky-200',
   treinamento: 'bg-amber-100 text-amber-800 border-amber-200',
   administrativa: 'bg-slate-100 text-slate-800 border-slate-200',
+  negociacao: 'bg-violet-100 text-violet-800 border-violet-200',
+  contra_proposta_atividade: 'bg-rose-100 text-rose-800 border-rose-200',
 };
 
 const TEMPERATURA_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
