@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Atividade, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_COLORS, ATIVIDADE_CATEGORIA_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS } from '@/types/atividades.types';
-import { CLIENTE_TEMPERATURA_COLORS } from '@/types/clientes.types';
+import { CLIENTE_TEMPERATURA_COLORS, type ClienteTemperatura } from '@/types/clientes.types';
+import { TemperaturaSelector } from './TemperaturaSelector';
+import { useUpdateAtividade } from '@/hooks/useAtividades';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
   ligacao: Phone,
@@ -66,6 +68,11 @@ interface AtividadeCardProps {
 export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdminCreated = false }: AtividadeCardProps) {
   const Icon = TIPO_ICONS[atividade.tipo];
   const isVencida = atividade.status === 'pendente' && new Date(atividade.data_fim) < new Date();
+  const updateAtividade = useUpdateAtividade();
+
+  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+    updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
+  };
 
   if (compact) {
     return (
@@ -190,12 +197,11 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
               <div className="flex items-center gap-1.5 text-xs">
                 <Users className="h-3 w-3 text-muted-foreground" />
                 <span className="text-foreground">{atividade.cliente.nome}</span>
-                <Badge 
-                  variant="outline" 
-                  className={cn('text-[10px] px-1 py-0', CLIENTE_TEMPERATURA_COLORS[atividade.cliente.temperatura])}
-                >
-                  {atividade.cliente.temperatura}
-                </Badge>
+                <TemperaturaSelector
+                  value={atividade.temperatura_cliente}
+                  onValueChange={handleTemperaturaChange}
+                  compact
+                />
               </div>
             )}
 
