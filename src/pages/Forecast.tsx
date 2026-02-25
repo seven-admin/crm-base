@@ -1,23 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, ClipboardList, Monitor, X, Settings, ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ListChecks } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
-import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
-import { AtividadeForm } from '@/components/atividades/AtividadeForm';
-import { useTVLayoutConfig } from '@/hooks/useTVLayoutConfig';
-import { TVLayoutConfigDialog } from '@/components/tv-layout';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCreateAtividade, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import {
   Select,
@@ -28,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import { formatarMoeda } from '@/lib/formatters';
 
 const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
@@ -41,8 +32,6 @@ const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; ico
 const CATEGORIAS: AtividadeCategoria[] = ['seven', 'incorporadora', 'imobiliaria', 'cliente'];
 
 export default function Forecast() {
-  const { role } = useAuth();
-  const isSuperAdmin = role === 'super_admin';
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
   const { data: gestores } = useGestoresProduto();
@@ -50,29 +39,9 @@ export default function Forecast() {
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
   const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);
 
-  // Dados por aba
   const { data: resumoNegociacoes, isLoading: loadingNegociacoes } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_NEGOCIACAO);
   const { data: resumoAtividades, isLoading: loadingAtividades } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_DIARIO);
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [modoLote, setModoLote] = useState(false);
-  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
-  const createAtividade = useCreateAtividade();
-  const createAtividadesParaGestores = useCreateAtividadesParaGestores();
-
-  const handleSubmit = (data: AtividadeFormSubmitData) => {
-    if (data.gestorIds && data.gestorIds.length > 0) {
-      createAtividadesParaGestores.mutate(
-        { formData: data.formData, gestorIds: data.gestorIds },
-        { onSuccess: () => setDialogOpen(false) }
-      );
-    } else {
-      createAtividade.mutate(data.formData, {
-        onSuccess: () => setDialogOpen(false),
-      });
-    }
-  };
 
   const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -89,7 +58,6 @@ export default function Forecast() {
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
               dados={dados?.[cat]}
-              onBadgeClick={modoLote ? (statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup }) : undefined}
             />
           );
         })
@@ -217,25 +185,6 @@ export default function Forecast() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" asChild>
-              <Link to="/atividades">
-                <ClipboardList className="h-4 w-4 mr-2" />
-                Ver Atividades
-              </Link>
-            </Button>
-            {isSuperAdmin && (
-              <Button
-                variant={modoLote ? 'default' : 'outline'}
-                onClick={() => setModoLote(!modoLote)}
-              >
-                <ListChecks className="h-4 w-4 mr-2" />
-                {modoLote ? 'Sair do Lote' : 'Ações em Lote'}
-              </Button>
-            )}
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Atividade
-            </Button>
           </div>
         </div>
 
@@ -262,32 +211,6 @@ export default function Forecast() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Dialog Nova Atividade */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Nova Atividade</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto -mx-6 px-6">
-            <AtividadeForm
-              onSubmit={handleSubmit}
-              isLoading={createAtividade.isPending}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Batch Status */}
-      <ForecastBatchStatusDialog
-        open={batchDialog.open}
-        onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
-        categoria={batchDialog.categoria}
-        statusGroup={batchDialog.statusGroup}
-        gestorId={gestorId}
-        dataInicio={dataInicio}
-        dataFim={dataFim}
-      />
     </MainLayout>
   );
 }
