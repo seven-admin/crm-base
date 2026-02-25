@@ -70,16 +70,10 @@ const TIPO_COLORS: Record<AtividadeTipo, string> = {
 export default function Atividades() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const contexto = searchParams.get('contexto') as 'forecast' | 'diario' | null;
-  
-  const tiposPermitidos = useMemo(() => {
-    if (contexto === 'forecast') return TIPOS_FORECAST;
-    if (contexto === 'diario') return TIPOS_DIARIO;
-    return undefined; // sem contexto = todos os tipos
-  }, [contexto]);
+  const tiposPermitidos = undefined; // listagem unificada - todos os tipos
 
-  const pageTitle = contexto === 'forecast' ? 'Negociações' : contexto === 'diario' ? 'Diário de Bordo - Atividades' : 'Atividades';
-  const pageSubtitle = contexto === 'forecast' ? 'Atendimentos, fechamentos e assinaturas' : contexto === 'diario' ? 'Ligações, reuniões, visitas e acompanhamentos' : 'Gerencie as atividades comerciais e operacionais';
+  const pageTitle = 'Atividades';
+  const pageSubtitle = 'Gerencie todas as atividades';
 
   const [view, setView] = useState<'lista' | 'calendario' | 'pendencias'>('lista');
   const [filters, setFilters] = useState<AtividadeFilters>({});
