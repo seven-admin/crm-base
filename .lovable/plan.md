@@ -1,30 +1,28 @@
 
 
-# Unificar Todas as Cores do Sidebar para #F5941E
+# Reverter Cores do Sidebar (manter apenas Comercial e Diario de Bordo em #F5941E)
 
 ## Resumo
 
-Alterar a propriedade `color` de todos os 11 grupos do menu lateral para `#F5941E` (laranja), unificando a identidade visual.
+Reverter as cores dos grupos do sidebar para seus valores originais, mantendo apenas **Comercial** e **Diario de Bordo** com `#F5941E`.
 
 ## Alteracoes
 
 ### Arquivo: `src/components/layout/Sidebar.tsx`
 
-Trocar o valor de `color` em cada grupo:
-
-| Grupo | Cor Atual | Nova Cor |
+| Grupo | Cor Atual | Reverter Para |
 |---|---|---|
-| Planejamento | `#10B981` | `#F5941E` |
-| Empreendimentos | `#10B981` | `#F5941E` |
-| Clientes | `#8B5CF6` | `#F5941E` |
-| Comercial | `#F5941E` | (ja esta) |
-| Diario de Bordo | `#06B6D4` | `#F5941E` |
-| Contratos | `#60A5FA` | `#F5941E` |
-| Financeiro | `#F59E0B` | `#F5941E` |
-| Parceiros | `#EC4899` | `#F5941E` |
-| Marketing | `#EC4899` | `#F5941E` |
-| Eventos | `#06B6D4` | `#F5941E` |
-| Sistema | `#94A3B8` | `#F5941E` |
+| Planejamento | `#F5941E` | `#10B981` |
+| Empreendimentos | `#F5941E` | `#10B981` |
+| Clientes | `#F5941E` | `#8B5CF6` |
+| Comercial | `#F5941E` | (manter) |
+| Diario de Bordo | `#F5941E` | (manter) |
+| Contratos | `#F5941E` | `#60A5FA` |
+| Financeiro | `#F5941E` | `#F59E0B` |
+| Parceiros | `#F5941E` | `#EC4899` |
+| Marketing | `#F5941E` | `#EC4899` |
+| Eventos | `#F5941E` | `#06B6D4` |
+| Sistema | `#F5941E` | `#94A3B8` |
 
-Sao 10 linhas alteradas (Comercial ja usa a cor correta).
+9 linhas alteradas. Comercial e Diario de Bordo permanecem com `#F5941E`.
 
