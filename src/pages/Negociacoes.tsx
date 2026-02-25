@@ -13,6 +13,9 @@ import { NegociacaoHistoricoTimeline } from '@/components/negociacoes/Negociacao
 import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
 import { useNegociacoesKanban, useNegociacoesPaginated, useDeleteNegociacao } from '@/hooks/useNegociacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
+import { useAtividades } from '@/hooks/useAtividades';
+import { useAtividadeEtapas } from '@/hooks/useAtividadeEtapas';
+import { TIPOS_NEGOCIACAO } from '@/types/atividades.types';
 import { Card } from '@/components/ui/card';
 import { formatarMoedaCompacta } from '@/lib/formatters';
 import { Negociacao } from '@/types/negociacoes.types';
@@ -235,13 +238,71 @@ const Funil = () => {
         </TabsContent>
 
         <TabsContent value="atividades" className="mt-0">
-          <div className="min-h-[500px]">
-            <AtividadeKanbanBoard />
-          </div>
+          <AtividadesMetricsAndBoard />
         </TabsContent>
       </Tabs>
     </MainLayout>
   );
 };
+function AtividadesMetricsAndBoard() {
+  const { data: atividadesData } = useAtividades({
+    filters: { tipos: TIPOS_NEGOCIACAO },
+    page: 1,
+    pageSize: 500,
+  });
+  const { data: atividadeEtapas = [] } = useAtividadeEtapas();
+
+  const atividades = atividadesData?.items || [];
+  const totalAtividades = atividadesData?.count || atividades.length;
+  const pendentes = atividades.filter(a => a.status === 'pendente').length;
+  const concluidas = atividades.filter(a => a.status === 'concluida').length;
+
+  const countPerEtapa = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const a of atividades) {
+      const etapaId = (a as any).atividade_etapa_id;
+      if (!etapaId) continue;
+      acc[etapaId] = (acc[etapaId] || 0) + 1;
+    }
+    return acc;
+  }, [atividades]);
+
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Total de Atividades</p>
+          <p className="text-2xl font-bold">{totalAtividades}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Pendentes</p>
+          <p className="text-2xl font-bold">{pendentes}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Concluídas</p>
+          <p className="text-2xl font-bold">{concluidas}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Por Etapa</p>
+          <div className="flex gap-1 mt-1 flex-wrap">
+            {atividadeEtapas.map((etapa) => (
+              <div
+                key={etapa.id}
+                className="px-1.5 py-0.5 rounded text-xs text-white"
+                style={{ backgroundColor: etapa.cor }}
+                title={etapa.nome}
+              >
+                {countPerEtapa[etapa.id] || 0}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <div className="min-h-[500px]">
+        <AtividadeKanbanBoard />
+      </div>
+    </>
+  );
+}
 
 export default Funil;
