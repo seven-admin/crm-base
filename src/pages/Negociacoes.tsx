@@ -112,7 +112,7 @@ const Funil = () => {
             <LayoutGrid className="h-4 w-4" />
             Propostas
           </TabsTrigger>
-          <TabsTrigger value="atividades" className="gap-1.5 data-[state=active]:text-[#06B6D4] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#06B6D4]">
+          <TabsTrigger value="atividades" className="gap-1.5 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
             <ClipboardList className="h-4 w-4" />
             Atividades
           </TabsTrigger>
