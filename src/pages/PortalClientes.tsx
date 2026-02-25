@@ -8,22 +8,11 @@ import { useClientes, useCreateCliente, useUpdateCliente } from '@/hooks/useClie
 import { useAuth } from '@/contexts/AuthContext';
 import { ClienteForm } from '@/components/clientes/ClienteForm';
 import { formatarTelefone } from '@/lib/documentUtils';
-import { Plus, Search, User, Phone, Mail, AlertCircle, Thermometer, Loader2 } from 'lucide-react';
+import { Plus, Search, User, Phone, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { useMeuCorretor } from '@/hooks/useMeuCorretor';
 import { useUserImobiliaria } from '@/hooks/useUserImobiliaria';
 import { toast } from 'sonner';
 
-const TEMPERATURA_LABELS: Record<string, string> = {
-  frio: 'Frio',
-  morno: 'Morno',
-  quente: 'Quente',
-};
-
-const TEMPERATURA_COLORS: Record<string, string> = {
-  frio: 'bg-blue-100 text-blue-800',
-  morno: 'bg-yellow-100 text-yellow-800',
-  quente: 'bg-red-100 text-red-800',
-};
 
 export default function PortalClientes() {
   const { role } = useAuth();
@@ -186,12 +175,6 @@ export default function PortalClientes() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold truncate">{cliente.nome}</h3>
-                      {cliente.temperatura && (
-                        <Badge className={TEMPERATURA_COLORS[cliente.temperatura]}>
-                          <Thermometer className="h-3 w-3 mr-1" />
-                          {TEMPERATURA_LABELS[cliente.temperatura]}
-                        </Badge>
-                      )}
                     </div>
                     
                     {cliente.telefone && (

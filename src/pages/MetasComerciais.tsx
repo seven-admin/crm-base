@@ -81,6 +81,7 @@ const MetasComerciais = () => {
   const [showCopiarMetas, setShowCopiarMetas] = useState(false);
   const [copiaOrigem, setCopiaOrigem] = useState({ mes: format(new Date(), 'MM'), ano: currentYear.toString() });
   const [copiaDestino, setCopiaDestino] = useState({ mes: '', ano: '' });
+  const [metaTipo, setMetaTipo] = useState<'comercial' | 'atividades'>('comercial');
 
   const { isAdmin } = usePermissions();
   const { data: empreendimentos } = useEmpreendimentos();
@@ -164,6 +165,7 @@ const MetasComerciais = () => {
     setMetaGestorId('');
     setMetaPeriodicidade('mensal');
     setMetaSemanaDate(undefined);
+    setMetaTipo('comercial');
     setShowEditMeta(true);
   };
 
@@ -188,6 +190,7 @@ const MetasComerciais = () => {
     setMetaEscopo(metaItem.gestor_id ? 'gestor' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
     setMetaEmpreendimentoId(metaItem.empreendimento_id || '');
     setMetaGestorId(metaItem.gestor_id || '');
+    setMetaTipo((metaItem as any).tipo || 'comercial');
     setShowEditMeta(true);
   };
 
@@ -210,12 +213,13 @@ const MetasComerciais = () => {
         empreendimento_id: metaEscopo === 'empreendimento' ? metaEmpreendimentoId : null,
         gestor_id: metaEscopo === 'gestor' ? metaGestorId : null,
         corretor_id: null,
-        meta_valor: metaValor || 0,
-        meta_unidades: parseInt(metaUnidades) || 0,
+        meta_valor: metaTipo === 'comercial' ? (metaValor || 0) : 0,
+        meta_unidades: metaTipo === 'comercial' ? (parseInt(metaUnidades) || 0) : 0,
         meta_visitas: parseInt(metaVisitas) || 0,
         meta_atendimentos: parseInt(metaAtendimentos) || 0,
         meta_treinamentos: parseInt(metaTreinamentos) || 0,
-        meta_propostas: parseInt(metaPropostas) || 0,
+        meta_propostas: metaTipo === 'comercial' ? (parseInt(metaPropostas) || 0) : 0,
+        tipo: metaTipo,
       });
       toast.success('Meta salva com sucesso!');
       setShowEditMeta(false);
@@ -718,6 +722,43 @@ const MetasComerciais = () => {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {/* Tipo de Meta */}
+            {!editingMeta && (
+              <div className="space-y-2">
+                <Label>Tipo de Meta</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMetaTipo('comercial')}
+                    className={cn(
+                      'flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors',
+                      metaTipo === 'comercial'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-input hover:bg-accent'
+                    )}
+                  >
+                    <DollarSign className="h-6 w-6" />
+                    <span className="text-sm font-medium">Comercial</span>
+                    <span className="text-xs text-muted-foreground text-center">Valor, unidades, propostas</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMetaTipo('atividades')}
+                    className={cn(
+                      'flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors',
+                      metaTipo === 'atividades'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-input hover:bg-accent'
+                    )}
+                  >
+                    <Target className="h-6 w-6" />
+                    <span className="text-sm font-medium">Atividades</span>
+                    <span className="text-xs text-muted-foreground text-center">Visitas, atend., treinamentos</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Periodicidade */}
             <div className="space-y-2">
               <Label>Periodicidade</Label>
@@ -868,72 +909,86 @@ const MetasComerciais = () => {
               </div>
             )}
 
-            {/* Meta de Valor */}
-            <div className="space-y-2">
-              <Label htmlFor="metaValor">Meta de Valor (R$)</Label>
-              <CurrencyInput
-                id="metaValor"
-                value={metaValor}
-                onChange={setMetaValor}
-                placeholder="Ex: 5.000.000,00"
-              />
-            </div>
-            
-            {/* Meta de Unidades */}
-            <div className="space-y-2">
-              <Label htmlFor="metaUnidades">Meta de Unidades</Label>
-              <Input
-                id="metaUnidades"
-                type="number"
-                value={metaUnidades}
-                onChange={(e) => setMetaUnidades(e.target.value)}
-                placeholder="Ex: 20"
-              />
-            </div>
+            {/* Campos Comerciais */}
+            {metaTipo === 'comercial' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="metaValor">Meta de Valor (R$)</Label>
+                  <CurrencyInput
+                    id="metaValor"
+                    value={metaValor}
+                    onChange={setMetaValor}
+                    placeholder="Ex: 5.000.000,00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="metaUnidades">Meta de Unidades</Label>
+                  <Input
+                    id="metaUnidades"
+                    type="number"
+                    value={metaUnidades}
+                    onChange={(e) => setMetaUnidades(e.target.value)}
+                    placeholder="Ex: 20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="metaPropostas">Meta de Propostas</Label>
+                  <Input
+                    id="metaPropostas"
+                    type="number"
+                    value={metaPropostas}
+                    onChange={(e) => setMetaPropostas(e.target.value)}
+                    placeholder="Ex: 15"
+                  />
+                </div>
+              </>
+            )}
 
-            {/* Novas metas de atividades */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="metaVisitas">Meta de Visitas</Label>
-                <Input
-                  id="metaVisitas"
-                  type="number"
-                  value={metaVisitas}
-                  onChange={(e) => setMetaVisitas(e.target.value)}
-                  placeholder="Ex: 30"
-                />
+            {/* Campos Atividades */}
+            {metaTipo === 'atividades' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="metaVisitas">Meta de Visitas</Label>
+                  <Input
+                    id="metaVisitas"
+                    type="number"
+                    value={metaVisitas}
+                    onChange={(e) => setMetaVisitas(e.target.value)}
+                    placeholder="Ex: 30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="metaAtendimentos">Meta de Atendimentos</Label>
+                  <Input
+                    id="metaAtendimentos"
+                    type="number"
+                    value={metaAtendimentos}
+                    onChange={(e) => setMetaAtendimentos(e.target.value)}
+                    placeholder="Ex: 50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="metaTreinamentos">Meta de Treinamentos</Label>
+                  <Input
+                    id="metaTreinamentos"
+                    type="number"
+                    value={metaTreinamentos}
+                    onChange={(e) => setMetaTreinamentos(e.target.value)}
+                    placeholder="Ex: 4"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="metaLigacoes">Meta de Ligações</Label>
+                  <Input
+                    id="metaLigacoes"
+                    type="number"
+                    value={metaPropostas}
+                    onChange={(e) => setMetaPropostas(e.target.value)}
+                    placeholder="Ex: 100"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="metaAtendimentos">Meta de Atendimentos</Label>
-                <Input
-                  id="metaAtendimentos"
-                  type="number"
-                  value={metaAtendimentos}
-                  onChange={(e) => setMetaAtendimentos(e.target.value)}
-                  placeholder="Ex: 50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="metaTreinamentos">Meta de Treinamentos</Label>
-                <Input
-                  id="metaTreinamentos"
-                  type="number"
-                  value={metaTreinamentos}
-                  onChange={(e) => setMetaTreinamentos(e.target.value)}
-                  placeholder="Ex: 4"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="metaPropostas">Meta de Propostas</Label>
-                <Input
-                  id="metaPropostas"
-                  type="number"
-                  value={metaPropostas}
-                  onChange={(e) => setMetaPropostas(e.target.value)}
-                  placeholder="Ex: 15"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <DialogFooter>

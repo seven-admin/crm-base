@@ -20,15 +20,12 @@ import { Loader2 } from 'lucide-react';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import {
   ClienteFase,
-  ClienteTemperatura,
   CLIENTE_FASE_LABELS,
-  CLIENTE_TEMPERATURA_LABELS,
 } from '@/types/clientes.types';
 
 export interface AcaoEmLoteData {
   gestor_id?: string | null;
   fase?: ClienteFase;
-  temperatura?: ClienteTemperatura | null;
 }
 
 type FieldAction = 'keep' | 'set' | 'clear';
@@ -57,8 +54,6 @@ export function AcaoEmLoteDialog({
   const [faseAction, setFaseAction] = useState<FieldAction>('keep');
   const [faseValue, setFaseValue] = useState<ClienteFase>('prospecto');
 
-  const [temperaturaAction, setTemperaturaAction] = useState<FieldAction>('keep');
-  const [temperaturaValue, setTemperaturaValue] = useState<ClienteTemperatura>('morno');
 
   const handleConfirm = () => {
     const data: AcaoEmLoteData = {};
@@ -72,13 +67,6 @@ export function AcaoEmLoteDialog({
     if (faseAction === 'set') {
       data.fase = faseValue;
     }
-
-    if (temperaturaAction === 'set') {
-      data.temperatura = temperaturaValue;
-    } else if (temperaturaAction === 'clear') {
-      data.temperatura = null;
-    }
-
     // Only submit if at least one field was changed
     if (Object.keys(data).length === 0) {
       return;
@@ -94,14 +82,12 @@ export function AcaoEmLoteDialog({
       setGestorValue('');
       setFaseAction('keep');
       setFaseValue('prospecto');
-      setTemperaturaAction('keep');
-      setTemperaturaValue('morno');
     }
     onOpenChange(newOpen);
   };
 
   const hasChanges =
-    gestorAction !== 'keep' || faseAction !== 'keep' || temperaturaAction !== 'keep';
+    gestorAction !== 'keep' || faseAction !== 'keep';
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -172,41 +158,6 @@ export function AcaoEmLoteDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(CLIENTE_FASE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Temperatura */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Temperatura</Label>
-            <Select
-              value={temperaturaAction}
-              onValueChange={(v) => setTemperaturaAction(v as FieldAction)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="keep">Não alterar</SelectItem>
-                <SelectItem value="set">Definir para...</SelectItem>
-                <SelectItem value="clear">Remover temperatura</SelectItem>
-              </SelectContent>
-            </Select>
-            {temperaturaAction === 'set' && (
-              <Select
-                value={temperaturaValue}
-                onValueChange={(v) => setTemperaturaValue(v as ClienteTemperatura)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(CLIENTE_TEMPERATURA_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>

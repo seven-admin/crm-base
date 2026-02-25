@@ -35,9 +35,6 @@ const applyFilters = (query: any, filters?: ClienteFilters) => {
   if (filters?.fase) {
     query = query.eq('fase', filters.fase);
   }
-  if (filters?.temperatura) {
-    query = query.eq('temperatura', filters.temperatura);
-  }
   if (filters?.corretor_id) {
     query = query.eq('corretor_id', filters.corretor_id);
   }
@@ -132,7 +129,7 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
         countQuery = countQuery.or(`nome.ilike.%${filters.search}%,email.ilike.%${filters.search}%,cpf.ilike.%${filters.search}%,telefone.ilike.%${filters.search}%`);
       }
       if (filters?.fase) countQuery = countQuery.eq('fase', filters.fase);
-      if (filters?.temperatura) countQuery = countQuery.eq('temperatura', filters.temperatura);
+      
       if (filters?.corretor_id) countQuery = countQuery.eq('corretor_id', filters.corretor_id);
       if (filters?.imobiliaria_id) countQuery = countQuery.eq('imobiliaria_id', filters.imobiliaria_id);
       if (filters?.origem) countQuery = countQuery.eq('origem', filters.origem);
@@ -314,8 +311,7 @@ export function useCreateCliente() {
     mutationFn: async (data: ClienteFormData) => {
       const insertData = {
         ...normalizeClienteForSave(data),
-        fase: data.fase || 'prospecto',
-        temperatura: data.temperatura || 'frio'
+        fase: data.fase || 'prospecto'
       };
 
       const { data: cliente, error } = await supabase

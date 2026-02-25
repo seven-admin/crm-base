@@ -265,6 +265,7 @@ export function useCreateMeta() {
       meta_atendimentos?: number;
       meta_treinamentos?: number;
       meta_propostas?: number;
+      tipo?: string;
     }) => {
       const { data: result, error } = await supabase
         .from('metas_comerciais' as any)
@@ -280,6 +281,7 @@ export function useCreateMeta() {
           meta_atendimentos: data.meta_atendimentos || 0,
           meta_treinamentos: data.meta_treinamentos || 0,
           meta_propostas: data.meta_propostas || 0,
+          tipo: data.tipo || 'comercial',
         }, {
           onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per',
         })

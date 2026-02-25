@@ -1,0 +1,1 @@
+ALTER TABLE public.metas_comerciais ADD COLUMN IF NOT EXISTS tipo text NOT NULL DEFAULT 'comercial';
