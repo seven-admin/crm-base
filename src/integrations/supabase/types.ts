@@ -53,8 +53,48 @@ export type Database = {
           },
         ]
       }
+      atividade_etapas: {
+        Row: {
+          cor: string
+          cor_bg: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_final: boolean
+          is_inicial: boolean
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          cor_bg?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_final?: boolean
+          is_inicial?: boolean
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          cor_bg?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_final?: boolean
+          is_inicial?: boolean
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       atividades: {
         Row: {
+          atividade_etapa_id: string | null
           categoria: string
           cliente_id: string | null
           corretor_id: string | null
@@ -82,6 +122,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          atividade_etapa_id?: string | null
           categoria?: string
           cliente_id?: string | null
           corretor_id?: string | null
@@ -109,6 +150,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          atividade_etapa_id?: string | null
           categoria?: string
           cliente_id?: string | null
           corretor_id?: string | null
@@ -136,6 +178,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atividades_atividade_etapa_id_fkey"
+            columns: ["atividade_etapa_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_etapas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "atividades_cliente_id_fkey"
             columns: ["cliente_id"]

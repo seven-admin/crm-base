@@ -4,6 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,7 @@ import { useFunis, useFunilEtapas, useDeleteFunil, useDuplicarFunil } from '@/ho
 import { usePermissions } from '@/hooks/usePermissions';
 import { FunilForm } from '@/components/negociacoes/FunilForm';
 import { EtapasEditor } from '@/components/negociacoes/EtapasEditor';
+import { AtividadeEtapasEditor } from '@/components/atividades/AtividadeEtapasEditor';
 import type { Funil } from '@/types/funis.types';
 
 export default function ConfiguracaoFunis() {
@@ -62,7 +64,6 @@ export default function ConfiguracaoFunis() {
     }
   };
 
-  // Aguarda carregamento das permissões
   if (permissionsLoading) {
     return (
       <MainLayout>
@@ -73,7 +74,6 @@ export default function ConfiguracaoFunis() {
     );
   }
 
-  // Verifica se é Super Admin
   if (!isSuperAdmin()) {
     return (
       <MainLayout>
@@ -89,98 +89,111 @@ export default function ConfiguracaoFunis() {
   }
 
   return (
-    <MainLayout title="Configuração de Negociações" subtitle="Gerencie o pipeline e as etapas das negociações">
-      <div className="space-y-6">
-        <div className="flex justify-end">
-          <Button onClick={handleNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Pipeline
-          </Button>
-        </div>
+    <MainLayout title="Configurações Comerciais" subtitle="Gerencie pipelines, etapas de propostas e atividades">
+      <Tabs defaultValue="propostas" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="propostas">Propostas</TabsTrigger>
+          <TabsTrigger value="atividades">Atividades</TabsTrigger>
+        </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Lista de Pipelines */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Pipelines</h2>
+        <TabsContent value="propostas" className="mt-0">
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <Button onClick={handleNew}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Pipeline
+              </Button>
+            </div>
 
-            {isLoading ? (
-              <Card>
-                <CardContent className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                </CardContent>
-              </Card>
-            ) : funis.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-muted-foreground mb-4">
-                    Nenhum pipeline configurado
-                  </p>
-                  <Button variant="outline" onClick={handleNew}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar Primeiro Pipeline
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {funis.map((funil) => (
-                  <FunilCard
-                    key={funil.id}
-                    funil={funil}
-                    isSelected={selectedFunil?.id === funil.id}
-                    onSelect={() => setSelectedFunil(funil)}
-                    onEdit={() => handleEdit(funil)}
-                    onDuplicate={() => handleDuplicate(funil)}
-                    onDelete={() => setDeleteConfirm(funil)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Editor de Etapas */}
-          <div className="lg:col-span-2">
-            {selectedFunil ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Lista de Pipelines */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">{selectedFunil.nome}</h2>
-                    {selectedFunil.descricao && (
-                      <p className="text-sm text-muted-foreground">
-                        {selectedFunil.descricao}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedFunil.is_default && (
-                      <Badge variant="secondary">
-                        <Star className="h-3 w-3 mr-1" />
-                        Padrão
-                      </Badge>
-                    )}
-                    {selectedFunil.empreendimento && (
-                      <Badge variant="outline">
-                        <Building2 className="h-3 w-3 mr-1" />
-                        {selectedFunil.empreendimento.nome}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-lg font-semibold">Pipelines</h2>
 
-                <EtapasEditor funilId={selectedFunil.id} />
+                {isLoading ? (
+                  <Card>
+                    <CardContent className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                    </CardContent>
+                  </Card>
+                ) : funis.length === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                      <p className="text-muted-foreground mb-4">
+                        Nenhum pipeline configurado
+                      </p>
+                      <Button variant="outline" onClick={handleNew}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Primeiro Pipeline
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-2">
+                    {funis.map((funil) => (
+                      <FunilCard
+                        key={funil.id}
+                        funil={funil}
+                        isSelected={selectedFunil?.id === funil.id}
+                        onSelect={() => setSelectedFunil(funil)}
+                        onEdit={() => handleEdit(funil)}
+                        onDuplicate={() => handleDuplicate(funil)}
+                        onDelete={() => setDeleteConfirm(funil)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <p className="text-muted-foreground">
-                    Selecione um pipeline para editar suas etapas
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+
+              {/* Editor de Etapas */}
+              <div className="lg:col-span-2">
+                {selectedFunil ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold">{selectedFunil.nome}</h2>
+                        {selectedFunil.descricao && (
+                          <p className="text-sm text-muted-foreground">
+                            {selectedFunil.descricao}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {selectedFunil.is_default && (
+                          <Badge variant="secondary">
+                            <Star className="h-3 w-3 mr-1" />
+                            Padrão
+                          </Badge>
+                        )}
+                        {selectedFunil.empreendimento && (
+                          <Badge variant="outline">
+                            <Building2 className="h-3 w-3 mr-1" />
+                            {selectedFunil.empreendimento.nome}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <EtapasEditor funilId={selectedFunil.id} />
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                      <p className="text-muted-foreground">
+                        Selecione um pipeline para editar suas etapas
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="atividades" className="mt-0">
+          <AtividadeEtapasEditor />
+        </TabsContent>
+      </Tabs>
 
       <FunilForm
         open={formOpen}
@@ -278,7 +291,6 @@ function FunilCard({
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
-        {/* Preview das etapas */}
         <div className="flex items-center gap-1">
           {etapas.slice(0, 6).map((etapa) => (
             <div

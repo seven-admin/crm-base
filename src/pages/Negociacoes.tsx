@@ -99,8 +99,8 @@ const Funil = () => {
 
   return (
     <MainLayout
-      title="Propostas"
-      subtitle="Gerencie suas propostas e atividades comerciais"
+      title="Negociações"
+      subtitle="Gerencie suas negociações e atividades comerciais"
     >
       {/* Main Tabs: Propostas / Atividades */}
       <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'propostas' | 'atividades')} className="w-full">
