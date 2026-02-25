@@ -1,21 +1,20 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, ClipboardList, Monitor, X, Settings, ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ListChecks } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
-
 import { AtividadeForm } from '@/components/atividades/AtividadeForm';
 import { useTVLayoutConfig } from '@/hooks/useTVLayoutConfig';
 import { TVLayoutConfigDialog } from '@/components/tv-layout';
-import { useResumoAtividades } from '@/hooks/useForecast';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
-import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateAtividade, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
@@ -27,11 +26,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import { formatarMoeda } from '@/lib/formatters';
+
+const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
+  seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+  incorporadora: { icon: Building2, iconColor: 'text-chart-2', bgColor: 'bg-chart-2/10' },
+  imobiliaria: { icon: Users, iconColor: 'text-chart-3', bgColor: 'bg-chart-3/10' },
+  cliente: { icon: UserCheck, iconColor: 'text-chart-4', bgColor: 'bg-chart-4/10' },
+};
+
+const CATEGORIAS: AtividadeCategoria[] = ['seven', 'incorporadora', 'imobiliaria', 'cliente'];
 
 export default function Forecast() {
   const { role } = useAuth();
@@ -39,30 +46,20 @@ export default function Forecast() {
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
   const { data: gestores } = useGestoresProduto();
-  
+
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
   const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);
-  
-  const { data: resumo, isLoading, refetch } = useResumoAtividades(gestorId, dataInicio, dataFim, undefined, TIPOS_FORECAST);
-  const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_FORECAST);
-  const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
 
-  const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
-    seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    incorporadora: { icon: Building2, iconColor: 'text-chart-2', bgColor: 'bg-chart-2/10' },
-    imobiliaria: { icon: Users, iconColor: 'text-chart-3', bgColor: 'bg-chart-3/10' },
-    cliente: { icon: UserCheck, iconColor: 'text-chart-4', bgColor: 'bg-chart-4/10' },
-  };
+  // Dados por aba
+  const { data: resumoNegociacoes, isLoading: loadingNegociacoes } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_NEGOCIACAO);
+  const { data: resumoAtividades, isLoading: loadingAtividades } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_DIARIO);
+  const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [modoLote, setModoLote] = useState(false);
   const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
-  const [modoTV, setModoTV] = useState(false);
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  const [ultimaAtualizacao, setUltimaAtualizacao] = useState(new Date());
   const createAtividade = useCreateAtividade();
   const createAtividadesParaGestores = useCreateAtividadesParaGestores();
-  const { config, visibleItems, toggleVisibility, reorder, resetToDefault } = useTVLayoutConfig('forecast');
 
   const handleSubmit = (data: AtividadeFormSubmitData) => {
     if (data.gestorIds && data.gestorIds.length > 0) {
@@ -77,39 +74,12 @@ export default function Forecast() {
     }
   };
 
-  const toggleModoTV = async () => {
-    if (!modoTV) {
-      try {
-        await document.documentElement.requestFullscreen?.();
-        setModoTV(true);
-        setUltimaAtualizacao(new Date());
-      } catch (e) {
-        console.error('Fullscreen não suportado:', e);
-      }
-    } else {
-      try { await document.exitFullscreen?.(); } catch {}
-      setModoTV(false);
-    }
-  };
-
-  useEffect(() => {
-    const h = () => { if (!document.fullscreenElement) setModoTV(false); };
-    document.addEventListener('fullscreenchange', h);
-    return () => document.removeEventListener('fullscreenchange', h);
-  }, []);
-
-  useEffect(() => {
-    if (!modoTV) return;
-    const interval = setInterval(() => { refetch(); setUltimaAtualizacao(new Date()); }, 60000);
-    return () => clearInterval(interval);
-  }, [modoTV, refetch]);
-
-  const renderKPIs = () => (
+  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {loadingCategorias ? (
+      {loading ? (
         [...Array(4)].map((_, i) => <Skeleton key={i} className="h-40" />)
       ) : (
-        (['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+        CATEGORIAS.map((cat) => {
           const cfg = CATEGORIA_CONFIG[cat];
           return (
             <CategoriaCard
@@ -118,7 +88,7 @@ export default function Forecast() {
               icon={cfg.icon}
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
-              dados={resumoCategorias?.[cat]}
+              dados={dados?.[cat]}
               onBadgeClick={modoLote ? (statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup }) : undefined}
             />
           );
@@ -199,57 +169,6 @@ export default function Forecast() {
     </div>
   );
 
-  // TV Widget renderer
-  const renderTVWidget = (itemId: string) => {
-    switch (itemId) {
-      case 'kpis':
-        return <div key={itemId}>{renderKPIs()}</div>;
-      case 'financeiro':
-        return <div key={itemId}>{renderFinanceiroKPIs()}</div>;
-      default:
-        return null;
-    }
-  };
-
-  // Modo TV
-  if (modoTV) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background overflow-auto">
-        <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4 flex items-center justify-between z-10">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-foreground">FORECAST</h1>
-            <span className="text-sm font-medium text-primary uppercase">
-              {format(competencia, "MMM/yyyy", { locale: ptBR })}
-            </span>
-            <span className="text-muted-foreground text-sm">
-              Última atualização: {format(ultimaAtualizacao, "HH:mm", { locale: ptBR })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setConfigDialogOpen(true)} className="text-muted-foreground hover:text-foreground">
-              <Settings className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={toggleModoTV} className="text-muted-foreground hover:text-foreground">
-              <X className="h-5 w-5 mr-2" />
-              Sair (ESC)
-            </Button>
-          </div>
-        </div>
-        <div className="p-6 space-y-6">
-          {visibleItems.map(item => renderTVWidget(item.id))}
-        </div>
-        <TVLayoutConfigDialog
-          open={configDialogOpen}
-          onOpenChange={setConfigDialogOpen}
-          config={config}
-          onToggleVisibility={toggleVisibility}
-          onReorder={reorder}
-          onReset={resetToDefault}
-        />
-      </div>
-    );
-  }
-
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -272,15 +191,15 @@ export default function Forecast() {
               </Button>
             </div>
             <div className="flex gap-1">
-              <Button 
-                variant={format(competencia, 'yyyy-MM') === format(new Date(), 'yyyy-MM') ? 'default' : 'outline'} 
+              <Button
+                variant={format(competencia, 'yyyy-MM') === format(new Date(), 'yyyy-MM') ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCompetencia(new Date())}
               >
                 Este mês
               </Button>
-              <Button 
-                variant={format(competencia, 'yyyy-MM') === format(subMonths(new Date(), 1), 'yyyy-MM') ? 'default' : 'outline'} 
+              <Button
+                variant={format(competencia, 'yyyy-MM') === format(subMonths(new Date(), 1), 'yyyy-MM') ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCompetencia(subMonths(new Date(), 1))}
               >
@@ -298,10 +217,6 @@ export default function Forecast() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={toggleModoTV}>
-              <Monitor className="h-4 w-4 mr-2" />
-              Modo TV
-            </Button>
             <Button variant="outline" asChild>
               <Link to="/atividades">
                 <ClipboardList className="h-4 w-4 mr-2" />
@@ -324,12 +239,28 @@ export default function Forecast() {
           </div>
         </div>
 
-        {/* KPIs Financeiros */}
-        {renderFinanceiroKPIs()}
+        {/* Tabs: Negociações / Atividades */}
+        <Tabs defaultValue="negociacoes">
+          <TabsList>
+            <TabsTrigger value="negociacoes" className="gap-2">
+              <Handshake className="h-4 w-4" />
+              Negociações
+            </TabsTrigger>
+            <TabsTrigger value="atividades" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Atividades
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Cards por Categoria */}
-        {renderKPIs()}
+          <TabsContent value="negociacoes" className="space-y-6">
+            {renderFinanceiroKPIs()}
+            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes)}
+          </TabsContent>
 
+          <TabsContent value="atividades" className="space-y-6">
+            {renderCategoriaCards(resumoAtividades, loadingAtividades)}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Dialog Nova Atividade */}
@@ -339,10 +270,9 @@ export default function Forecast() {
             <DialogTitle>Nova Atividade</DialogTitle>
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto -mx-6 px-6">
-            <AtividadeForm 
+            <AtividadeForm
               onSubmit={handleSubmit}
               isLoading={createAtividade.isPending}
-              tiposPermitidos={TIPOS_FORECAST}
             />
           </div>
         </DialogContent>

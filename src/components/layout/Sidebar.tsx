@@ -95,8 +95,7 @@ const menuGroups: MenuGroup[] = [
     color: '#F5941E',
     items: [
       { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Negociações', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
-      { icon: Kanban, label: 'Propostas', path: '/negociacoes', moduleName: 'negociacoes' },
+      { icon: Handshake, label: 'Negociações', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
       { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
     ],
