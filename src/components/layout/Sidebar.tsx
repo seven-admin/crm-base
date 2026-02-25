@@ -95,10 +95,10 @@ const menuGroups: MenuGroup[] = [
     color: '#F5941E',
     items: [
       { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
-      { icon: Kanban, label: 'Fichas de Proposta', path: '/negociacoes', moduleName: 'negociacoes' },
-      { icon: ClipboardCheck, label: 'Solicitações', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
-      { icon: Target, label: 'Metas Comerciais', path: '/metas-comerciais', moduleName: 'forecast' },
+      { icon: ClipboardList, label: 'Negociações', path: '/atividades?contexto=forecast', moduleName: 'atividades' },
+      { icon: Kanban, label: 'Propostas', path: '/negociacoes', moduleName: 'negociacoes' },
+      { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
+      { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
     ],
   },
   {
@@ -106,8 +106,7 @@ const menuGroups: MenuGroup[] = [
     icon: BookOpen,
     color: '#06B6D4',
     items: [
-      { icon: BarChart2, label: 'Dashboard', path: '/diario-bordo', moduleName: 'forecast' },
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades?contexto=diario', moduleName: 'atividades' },
+      { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
     ],
   },
   {

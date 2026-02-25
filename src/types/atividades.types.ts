@@ -7,6 +7,9 @@ export type AtividadeTipo = 'ligacao' | 'meeting' | 'reuniao' | 'visita' | 'aten
 // Tipos que aparecem no Forecast (pipeline comercial)
 export const TIPOS_FORECAST: AtividadeTipo[] = ['atendimento', 'fechamento', 'assinatura'];
 
+// Tipos de negociação (atividades comerciais que podem virar proposta)
+export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'assinatura'];
+
 // Tipos que aparecem no Diário de Bordo (rotina operacional)
 export const TIPOS_DIARIO: AtividadeTipo[] = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa'];
 export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
