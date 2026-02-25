@@ -1,44 +1,46 @@
 
-# Adicionar Cards de Contadores na Aba Atividades
+# Aplicar Cores dos Modulos nas Tabs
 
-## Resumo
+## Contexto
 
-Adicionar a mesma barra de metricas (4 cards) que existe na aba "Propostas" tambem na aba "Atividades" em `/negociacoes`, com metricas adaptadas ao contexto de atividades.
+A sidebar define cores por modulo:
+- **Comercial**: Laranja `#F5941E`
+- **Diario de Bordo**: Ciano `#06B6D4`
 
-## Cards planejados
-
-| Card | Conteudo |
-|---|---|
-| Total de Atividades | Contagem total de atividades carregadas |
-| Pendentes | Quantidade com status "pendente" |
-| Concluidas | Quantidade com status "concluida" |
-| Por Etapa | Badges coloridas com contagem por etapa (mesmo estilo de Propostas) |
+As tabs de "Negociacoes/Propostas" e "Atividades" nas paginas Forecast e Negociacoes usam o estilo padrao (sem cor diferenciada). O objetivo e aplicar as cores corretas para manter a identidade visual dos modulos.
 
 ## Alteracoes
 
-### Arquivo: `src/pages/Negociacoes.tsx`
+### 1. `src/pages/Forecast.tsx`
 
-- Importar `useAtividades` e `useAtividadeEtapas` para obter os dados de atividades na pagina
-- Calcular metricas: total, pendentes, concluidas, contagem por etapa
-- Adicionar grid de 4 Cards acima do `AtividadeKanbanBoard` dentro do `TabsContent value="atividades"`
-- Usar exatamente o mesmo layout visual dos cards de Propostas (grid 2x4, mesmas classes)
+Aplicar cor nos TabsTrigger:
+- **Negociacoes**: icone e texto ativo em laranja `#F5941E`
+- **Atividades**: icone e texto ativo em ciano `#06B6D4`
 
-### Arquivo: `src/components/atividades/AtividadeKanbanBoard.tsx`
+Usar `data-[state=active]` do Radix para colorir a tab ativa, e aplicar cor no icone via style inline.
 
-- Nenhuma alteracao necessaria. Os dados serao buscados diretamente na pagina pai.
+### 2. `src/pages/Negociacoes.tsx`
 
-## Detalhes tecnicos
+Mesma logica para as tabs "Propostas" e "Atividades":
+- **Propostas**: cor laranja `#F5941E` (pertence ao modulo Comercial)
+- **Atividades**: cor ciano `#06B6D4` (pertence ao modulo Diario de Bordo)
 
-Os dados vem do mesmo hook `useAtividades` com filtro `TIPOS_NEGOCIACAO` que o Kanban ja usa. Para evitar duplicar a chamada, a pagina fara a query e passara os dados por props, ou fara uma query separada (mais simples, o React Query deduplica automaticamente).
+### Abordagem tecnica
+
+Adicionar classes inline nos TabsTrigger para colorir o estado ativo com a cor do modulo. Exemplo:
 
 ```text
-const { data: atividadesData } = useAtividades({
-  filters: { tipos: TIPOS_NEGOCIACAO },
-  page: 1, pageSize: 200,
-});
-const atividades = atividadesData?.items || [];
-const totalAtividades = atividades.length;
-const pendentes = atividades.filter(a => a.status === 'pendente').length;
-const concluidas = atividades.filter(a => a.status === 'concluida').length;
-// countPerEtapa similar ao countPerStage de propostas
+<TabsTrigger
+  value="negociacoes"
+  className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:border-[#F5941E]"
+>
 ```
+
+E no icone, manter a cor fixa do modulo para que funcione como indicador visual mesmo quando inativo (com opacidade reduzida no estado inativo).
+
+### Arquivos modificados
+
+| Arquivo | Alteracao |
+|---|---|
+| `src/pages/Forecast.tsx` | Colorir tabs Negociacoes (laranja) e Atividades (ciano) |
+| `src/pages/Negociacoes.tsx` | Colorir tabs Propostas (laranja) e Atividades (ciano) |
