@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Phone, Users, MapPin, Headphones, CheckCircle, XCircle, Trash2, Edit, List, Calendar, AlertCircle, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Plus, Phone, Users, MapPin, Headphones, CheckCircle, XCircle, Trash2, Edit, List, Calendar, AlertCircle, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,7 @@ import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { useClientes } from '@/hooks/useClientes';
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { Shield } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -68,17 +68,18 @@ const TIPO_COLORS: Record<AtividadeTipo, string> = {
 };
 
 export default function Atividades() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const contexto = searchParams.get('contexto') as 'forecast' | 'diario' | null;
   
   const tiposPermitidos = useMemo(() => {
     if (contexto === 'forecast') return TIPOS_FORECAST;
     if (contexto === 'diario') return TIPOS_DIARIO;
-    return undefined;
+    return undefined; // sem contexto = todos os tipos
   }, [contexto]);
 
-  const pageTitle = contexto === 'forecast' ? 'Atividades Comerciais' : contexto === 'diario' ? 'Diário de Bordo - Atividades' : 'Atividades';
-  const pageSubtitle = contexto === 'forecast' ? 'Atendimentos, fechamentos e assinaturas' : contexto === 'diario' ? 'Ligações, reuniões, visitas e acompanhamentos' : 'Gerencie as atividades comerciais';
+  const pageTitle = contexto === 'forecast' ? 'Negociações' : contexto === 'diario' ? 'Diário de Bordo - Atividades' : 'Atividades';
+  const pageSubtitle = contexto === 'forecast' ? 'Atendimentos, fechamentos e assinaturas' : contexto === 'diario' ? 'Ligações, reuniões, visitas e acompanhamentos' : 'Gerencie as atividades comerciais e operacionais';
 
   const [view, setView] = useState<'lista' | 'calendario' | 'pendencias'>('lista');
   const [filters, setFilters] = useState<AtividadeFilters>({});
@@ -830,6 +831,24 @@ export default function Atividades() {
                                         <Edit className="h-4 w-4" />
                                       </Button>
                                     </>
+                                  )}
+                                  {TIPOS_NEGOCIACAO.includes(atividade.tipo) && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const params = new URLSearchParams();
+                                        if (atividade.cliente_id) params.set('cliente_id', atividade.cliente_id);
+                                        if (atividade.empreendimento_id) params.set('empreendimento_id', atividade.empreendimento_id);
+                                        if (atividade.corretor_id) params.set('corretor_id', atividade.corretor_id);
+                                        params.set('atividade_origem_id', atividade.id);
+                                        navigate(`/negociacoes/nova?${params.toString()}`);
+                                      }}
+                                      title="Converter em Proposta"
+                                    >
+                                      <FileText className="h-4 w-4 text-primary" />
+                                    </Button>
                                   )}
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>

@@ -2,14 +2,15 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, LayoutGrid, List } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Plus, LayoutGrid, List, ClipboardList } from 'lucide-react';
 import { FunilKanbanBoard } from '@/components/negociacoes/FunilKanbanBoard';
 import { NegociacaoForm } from '@/components/negociacoes/NegociacaoForm';
 import { NegociacoesToolbar, type NegociacoesFilters } from '@/pages/negociacoes/NegociacoesToolbar';
 import { NegociacoesTable } from '@/pages/negociacoes/NegociacoesTable';
 import { MoverNegociacaoDialog } from '@/components/negociacoes/MoverNegociacaoDialog';
 import { NegociacaoHistoricoTimeline } from '@/components/negociacoes/NegociacaoHistoricoTimeline';
+import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
 import { useNegociacoesKanban, useNegociacoesPaginated, useDeleteNegociacao } from '@/hooks/useNegociacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
 import { Card } from '@/components/ui/card';
@@ -30,6 +31,7 @@ const Funil = () => {
   const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
   const [view, setView] = useState<'kanban' | 'lista'>('kanban');
+  const [mainTab, setMainTab] = useState<'propostas' | 'atividades'>('propostas');
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<NegociacoesFilters>({});
   
@@ -97,9 +99,23 @@ const Funil = () => {
 
   return (
     <MainLayout
-      title="Fichas de Proposta"
-      subtitle="Gerencie suas fichas de proposta"
+      title="Propostas"
+      subtitle="Gerencie suas propostas e atividades comerciais"
     >
+      {/* Main Tabs: Propostas / Atividades */}
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'propostas' | 'atividades')} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="propostas" className="gap-1.5">
+            <LayoutGrid className="h-4 w-4" />
+            Propostas
+          </TabsTrigger>
+          <TabsTrigger value="atividades" className="gap-1.5">
+            <ClipboardList className="h-4 w-4" />
+            Atividades
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="propostas" className="mt-0">
       {/* Metrics Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
@@ -216,6 +232,14 @@ const Funil = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
+
+        <TabsContent value="atividades" className="mt-0">
+          <div className="min-h-[500px]">
+            <AtividadeKanbanBoard />
+          </div>
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 };

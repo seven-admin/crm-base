@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,7 +40,7 @@ import { useGestoresProduto } from '@/hooks/useGestores';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Atividade, AtividadeFormData, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO } from '@/types/atividades.types';
 import { CLIENTE_TEMPERATURA_LABELS, type ClienteTemperatura } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
@@ -104,7 +104,9 @@ export interface AtividadeFormProps {
 
 export function AtividadeForm(props: AtividadeFormProps) {
   const { initialData, onSubmit, isLoading, defaultClienteId, lockCliente, tiposPermitidos } = props;
-  const tiposVisiveis = tiposPermitidos || (Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]);
+  const [modo, setModo] = useState<'negociacao' | 'atividade' | null>(tiposPermitidos ? null : null);
+  const tiposVisiveis = tiposPermitidos || (modo === 'negociacao' ? TIPOS_NEGOCIACAO : modo === 'atividade' ? TIPOS_DIARIO : (Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]));
+  const showModoSelection = !tiposPermitidos && !initialData;
   const { user } = useAuth();
   const { isSuperAdmin } = usePermissions();
   const { data: clientes = [] } = useClientes();
@@ -255,8 +257,62 @@ export function AtividadeForm(props: AtividadeFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        {/* Mode selection - only when no tiposPermitidos and not editing */}
+        {showModoSelection && !modo && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">Selecione o tipo de registro</p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setModo('negociacao');
+                  form.setValue('tipo', 'atendimento');
+                }}
+                className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-input hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <Handshake className="h-10 w-10 text-primary" />
+                <div className="text-center">
+                  <span className="text-sm font-semibold text-foreground">Negociação</span>
+                  <p className="text-xs text-muted-foreground mt-1">Atendimento, Assinatura</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModo('atividade');
+                  form.setValue('tipo', 'ligacao');
+                }}
+                className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-input hover:border-cyan-500 hover:bg-cyan-500/5 transition-all"
+              >
+                <ClipboardList className="h-10 w-10 text-cyan-500" />
+                <div className="text-center">
+                  <span className="text-sm font-semibold text-foreground">Atividade</span>
+                  <p className="text-xs text-muted-foreground mt-1">Ligação, Reunião, Visita...</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Show form content only when mode is selected or not needed */}
+        {(modo !== null || !showModoSelection) && (
+          <>
         {/* Step indicator */}
         <div className="flex items-center gap-3 mb-2">
+          {showModoSelection && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setModo(null);
+                setStep(1);
+              }}
+              className="shrink-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
           <div className="flex items-center gap-2 flex-1">
             <div className={cn(
               'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
@@ -901,6 +957,8 @@ export function AtividadeForm(props: AtividadeFormProps) {
               </Button>
             </div>
           </div>
+        )}
+          </>
         )}
       </form>
     </Form>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,13 @@ interface UnidadeSelecionada {
 export default function NovaPropostaComercial() {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const isEditMode = !!editId;
+  
+  // Pre-fill from query params (conversion from atividade)
+  const prefillClienteId = searchParams.get('cliente_id');
+  const prefillEmpreendimentoId = searchParams.get('empreendimento_id');
+  const prefillCorretorId = searchParams.get('corretor_id');
   
   const createNegociacao = useCreateNegociacao();
   const updateNegociacao = useUpdateNegociacao();
@@ -37,12 +43,12 @@ export default function NovaPropostaComercial() {
   const { data: condicoesExistentes = [] } = useNegociacaoCondicoesPagamento(editId);
   
   // Form state
-  const [clienteId, setClienteId] = useState<string | null>(null);
+  const [clienteId, setClienteId] = useState<string | null>(prefillClienteId);
   const [clienteNome, setClienteNome] = useState<string>('');
-  const [empreendimentoId, setEmpreendimentoId] = useState<string | null>(null);
+  const [empreendimentoId, setEmpreendimentoId] = useState<string | null>(prefillEmpreendimentoId);
   const [empreendimentoNome, setEmpreendimentoNome] = useState<string>('');
   const [unidades, setUnidades] = useState<UnidadeSelecionada[]>([]);
-  const [corretorId, setCorretorId] = useState<string | null>(null);
+  const [corretorId, setCorretorId] = useState<string | null>(prefillCorretorId);
   const [imobiliariaId, setImobiliariaId] = useState<string | null>(null);
   const [condicoes, setCondicoes] = useState<LocalCondicao[]>([]);
   const [apresentacaoOpen, setApresentacaoOpen] = useState(false);
