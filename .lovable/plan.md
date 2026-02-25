@@ -1,59 +1,60 @@
 
+# Renomear Botoes do Modal e Criar Tipos de Atendimento Configuraveis
 
-# Reorganizar Sidebar: Mover "Diario de Bordo" para dentro de "Comercial"
+## 1. Renomear botoes do modal "Nova Atividade"
 
-## O que sera feito
+No `AtividadeForm.tsx` (linhas 253-286):
+- Botao "Negociacao" -> "Atendimento" (manter icone Handshake)
+- Botao "Atividade" -> "Atividades Diarias" (manter icone ClipboardList)
+- Remover as descricoes abaixo dos nomes ("Atendimento, Assinatura" e "Ligacao, Reuniao, Visita...")
 
-Eliminar o grupo "Diario de Bordo" como grupo pai separado e mover seu item ("Atividades") para dentro do grupo "Comercial", renomeando-o para "Diario de Bordo". A ordem final do grupo Comercial sera:
+## 2. Novos tipos de atendimento comercial
 
-1. Diario de Bordo (antes: Atividades, path `/atividades`)
-2. Forecast
-3. Negociacoes
-4. Solicitacao de Reserva
-5. Metas
+Atualmente `TIPOS_NEGOCIACAO = ['atendimento', 'assinatura']`. Precisa incluir novos tipos vinculados ao kanban de negociacoes:
 
-## Alteracao unica
+- **Atendimento** (ja existe)
+- **Negociacao** (novo tipo - `negociacao`)
+- **Contra Proposta** (novo tipo - `contra_proposta_atividade`)
 
-### Arquivo: `src/components/layout/Sidebar.tsx` (linhas 90-106)
+### Alteracoes em `src/types/atividades.types.ts`:
+- Adicionar `'negociacao'` e `'contra_proposta_atividade'` ao type `AtividadeTipo`
+- Adicionar labels e icones correspondentes
+- Atualizar `TIPOS_NEGOCIACAO` para incluir os novos tipos
 
-**Remover** o grupo "Diario de Bordo" (linhas 100-106) e **adicionar** o item como primeiro do grupo "Comercial":
+### Alteracoes em `src/components/atividades/AtividadeForm.tsx`:
+- Adicionar icones para os novos tipos
+- Quando modo = 'negociacao' (agora chamado 'Atendimento'), mostrar os 3 tipos: Atendimento, Negociacao, Contra Proposta
 
-```text
-Antes:
-  Comercial -> [Forecast, Negociacoes, Solicitacao de Reserva, Metas]
-  Diario de Bordo -> [Atividades]
+## 3. Configuracao dos tipos de atendimento no painel comercial
 
-Depois:
-  Comercial -> [Diario de Bordo, Forecast, Negociacoes, Solicitacao de Reserva, Metas]
-```
+Adicionar uma nova aba "Tipos de Atendimento" na pagina `ConfiguracaoNegociacoes.tsx` (ou incorporar na aba "Atividades" existente) onde o admin pode:
+- Ver os tipos de atendimento vinculados ao kanban de negociacoes
+- Ativar/desativar tipos
+- Definir quais tipos aparecem no modo "Atendimento" do formulario
 
-Concretamente, o grupo Comercial ficara:
+Para isso sera necessario:
+- Criar tabela `tipos_atendimento_config` no banco (id, nome, tipo_atividade, ativo, ordem, created_at)
+- Criar hook `useTiposAtendimento` para CRUD
+- Criar componente `TiposAtendimentoEditor` no painel de configuracoes
 
-```typescript
-{
-  label: 'Comercial',
-  icon: Target,
-  items: [
-    { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
-    { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
-    { icon: Handshake, label: 'Negociações', path: '/negociacoes', moduleName: 'negociacoes' },
-    { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
-    { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
-  ],
-},
-```
+**Alternativa simples (recomendada)**: Usar a aba "Atividades" ja existente em Configuracoes Comerciais para adicionar uma secao de "Tipos de Atendimento" que configura quais tipos de atividade pertencem ao modo Atendimento vs Atividades Diarias.
 
-E o bloco do grupo "Diario de Bordo" (linhas 100-106) sera removido completamente.
+## 4. Mover "Configuracoes Comerciais" para o menu Comercial
 
-### Verificacao de cores do sidebar
+No `Sidebar.tsx`:
+- Remover `{ icon: GitBranch, label: 'Configuracoes Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config' }` do grupo "Sistema" (linha 156)
+- Adicionar ao grupo "Comercial" (apos Metas, linha 98):
+  `{ icon: GitBranch, label: 'Configuracoes Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config', adminOnly: true }`
 
-O hook `useSidebarColors` mapeia cores por label de grupo. A cor que estava em "Diario de Bordo" nao sera mais usada. O item herdara a cor do grupo "Comercial" automaticamente.
-
-## Arquivos modificados
+## Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `src/components/layout/Sidebar.tsx` | Mover item e remover grupo |
-
-Nenhuma outra alteracao necessaria (rotas, paginas e permissoes permanecem iguais).
-
+| `src/types/atividades.types.ts` | Adicionar novos tipos de atividade |
+| `src/components/atividades/AtividadeForm.tsx` | Renomear botoes e remover descricoes |
+| `src/components/atividades/AtividadeKanbanCard.tsx` | Adicionar icones dos novos tipos |
+| `src/components/layout/Sidebar.tsx` | Mover Config Comerciais para grupo Comercial |
+| `src/pages/ConfiguracaoNegociacoes.tsx` | Adicionar secao de tipos de atendimento |
+| Migration SQL | Tabela de configuracao de tipos de atendimento |
+| `src/hooks/useTiposAtendimento.ts` | Novo hook para gerenciar tipos |
+| `src/components/negociacoes/TiposAtendimentoEditor.tsx` | Novo editor de tipos |
