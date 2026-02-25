@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreVertical, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, ClipboardCheck } from 'lucide-react';
+import { MoreVertical, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, ClipboardCheck, Eye, RefreshCw } from 'lucide-react';
 import { Negociacao } from '@/types/negociacoes.types';
 import { cn } from '@/lib/utils';
 import { useValidacaoFichaProposta } from '@/hooks/useValidacaoFichaProposta';
@@ -28,10 +28,13 @@ interface NegociacaoCardProps {
   onHistorico: (negociacao: Negociacao) => void;
   onExcluir: (negociacao: Negociacao) => void;
   onGerarProposta?: (negociacao: Negociacao) => void;
+  onEnviarParaAnalise?: (negociacao: Negociacao) => void;
   onEnviarProposta?: (negociacao: Negociacao) => void;
   onAceitarProposta?: (negociacao: Negociacao) => void;
   onRecusarProposta?: (negociacao: Negociacao) => void;
   onSolicitarReserva?: (negociacao: Negociacao) => void;
+  onReenviarParaAnalise?: (negociacao: Negociacao) => void;
+  onEditarProposta?: (negociacao: Negociacao) => void;
 }
 
 export const NegociacaoCard = memo(function NegociacaoCard({ 
@@ -42,10 +45,13 @@ export const NegociacaoCard = memo(function NegociacaoCard({
   onHistorico, 
   onExcluir,
   onGerarProposta,
+  onEnviarParaAnalise,
   onEnviarProposta,
   onAceitarProposta,
   onRecusarProposta,
-  onSolicitarReserva
+  onSolicitarReserva,
+  onReenviarParaAnalise,
+  onEditarProposta
 }: NegociacaoCardProps) {
   const navigate = useNavigate();
   const validacao = useValidacaoFichaProposta(negociacao);
@@ -66,6 +72,9 @@ export const NegociacaoCard = memo(function NegociacaoCard({
   // Cor da borda baseada no status
   const getBorderColor = () => {
     if (negociacao.status_proposta === 'aceita') return 'border-l-purple-500';
+    if (negociacao.status_proposta === 'aprovada_incorporador') return 'border-l-teal-500';
+    if (negociacao.status_proposta === 'em_analise') return 'border-l-yellow-500';
+    if (negociacao.status_proposta === 'contra_proposta') return 'border-l-orange-500';
     if (negociacao.status_proposta === 'enviada') return 'border-l-blue-500';
     if (negociacao.numero_proposta) return 'border-l-cyan-500';
     if (validacao.fichaCompleta) return 'border-l-green-500';
@@ -171,11 +180,39 @@ export const NegociacaoCard = memo(function NegociacaoCard({
                   Gerar Proposta
                 </DropdownMenuItem>
               )}
-              {negociacao.status_proposta === 'rascunho' && onEnviarProposta && (
+              {negociacao.status_proposta === 'rascunho' && onEnviarParaAnalise && (
+                <DropdownMenuItem onClick={() => onEnviarParaAnalise(negociacao)}>
+                  <Send className="h-4 w-4 mr-2" />
+                  Enviar para Análise
+                </DropdownMenuItem>
+              )}
+              {negociacao.status_proposta === 'em_analise' && (
+                <DropdownMenuItem disabled>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Aguardando Incorporador
+                </DropdownMenuItem>
+              )}
+              {negociacao.status_proposta === 'aprovada_incorporador' && onEnviarProposta && (
                 <DropdownMenuItem onClick={() => onEnviarProposta(negociacao)}>
                   <Send className="h-4 w-4 mr-2" />
-                  Enviar Proposta
+                  Enviar ao Cliente
                 </DropdownMenuItem>
+              )}
+              {negociacao.status_proposta === 'contra_proposta' && (
+                <>
+                  {onEditarProposta && (
+                    <DropdownMenuItem onClick={() => onEditarProposta(negociacao)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Proposta
+                    </DropdownMenuItem>
+                  )}
+                  {onReenviarParaAnalise && (
+                    <DropdownMenuItem onClick={() => onReenviarParaAnalise(negociacao)}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Reenviar para Análise
+                    </DropdownMenuItem>
+                  )}
+                </>
               )}
               {negociacao.status_proposta === 'enviada' && (
                 <>

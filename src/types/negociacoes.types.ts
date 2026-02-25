@@ -41,10 +41,13 @@ export const ETAPA_FUNIL_BG_COLORS: Record<EtapaFunil, string> = {
 // Status de Proposta (integrado à Negociação)
 // ====================================================
 
-export type StatusProposta = 'rascunho' | 'enviada' | 'aceita' | 'recusada' | 'expirada' | 'convertida';
+export type StatusProposta = 'rascunho' | 'em_analise' | 'aprovada_incorporador' | 'contra_proposta' | 'enviada' | 'aceita' | 'recusada' | 'expirada' | 'convertida';
 
 export const STATUS_PROPOSTA_LABELS: Record<StatusProposta, string> = {
   rascunho: 'Rascunho',
+  em_analise: 'Em Análise',
+  aprovada_incorporador: 'Aprovada pelo Incorporador',
+  contra_proposta: 'Contra Proposta',
   enviada: 'Enviada',
   aceita: 'Aceita',
   recusada: 'Recusada',
@@ -54,6 +57,9 @@ export const STATUS_PROPOSTA_LABELS: Record<StatusProposta, string> = {
 
 export const STATUS_PROPOSTA_COLORS: Record<StatusProposta, string> = {
   rascunho: 'bg-slate-500',
+  em_analise: 'bg-yellow-500',
+  aprovada_incorporador: 'bg-teal-500',
+  contra_proposta: 'bg-orange-500',
   enviada: 'bg-blue-500',
   aceita: 'bg-green-500',
   recusada: 'bg-red-500',
@@ -63,6 +69,9 @@ export const STATUS_PROPOSTA_COLORS: Record<StatusProposta, string> = {
 
 export const STATUS_PROPOSTA_TEXT_COLORS: Record<StatusProposta, string> = {
   rascunho: 'text-slate-600',
+  em_analise: 'text-yellow-600',
+  aprovada_incorporador: 'text-teal-600',
+  contra_proposta: 'text-orange-600',
   enviada: 'text-blue-600',
   aceita: 'text-green-600',
   recusada: 'text-red-600',
@@ -165,6 +174,11 @@ export interface Negociacao {
   data_conversao?: string;
   contrato_id?: string;
   simulacao_dados?: SimulacaoDados;
+  
+  // ====== Campos de Aprovação Incorporador ======
+  motivo_contra_proposta?: string;
+  aprovada_incorporador_em?: string;
+  aprovada_incorporador_por?: string;
   clientes?: NegociacaoCliente[];
   
   is_active: boolean;

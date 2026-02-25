@@ -257,11 +257,50 @@ export function useGerarProposta() {
   });
 }
 
+export function useEnviarParaAnalise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (negociacao: Negociacao) => {
+      const { error } = await db
+        .from('negociacoes')
+        .update({ status_proposta: 'em_analise' })
+        .eq('id', negociacao.id);
+
+      if (error) throw error;
+
+      // Disparar webhook (fire and forget)
+      const { dispararWebhook } = await import('@/lib/webhookUtils');
+      dispararWebhook('proposta_em_analise', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        numero_proposta: negociacao.numero_proposta,
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        valor_proposta: negociacao.valor_proposta,
+        valor_tabela: negociacao.valor_tabela,
+        corretor_nome: negociacao.corretor?.nome_completo,
+        link_portal: `${window.location.origin}/portal-incorporador/propostas`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
+      invalidateDashboards(queryClient);
+      toast.success('Proposta enviada para análise do incorporador!');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao enviar para análise: ' + error.message);
+    }
+  });
+}
+
 export function useEnviarProposta() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Agora só funciona a partir de aprovada_incorporador -> enviada
       const { error } = await db
         .from('negociacoes')
         .update({ status_proposta: 'enviada' })
@@ -274,10 +313,127 @@ export function useEnviarProposta() {
       queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
       queryClient.invalidateQueries({ queryKey: ['unidades'] });
       invalidateDashboards(queryClient);
-      toast.success('Proposta enviada com sucesso!');
+      toast.success('Proposta enviada ao cliente!');
     },
     onError: (error: Error) => {
       toast.error('Erro ao enviar proposta: ' + error.message);
+    }
+  });
+}
+
+export function useAprovarPropostaIncorporador() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (negociacao: Negociacao) => {
+      const { error } = await db
+        .from('negociacoes')
+        .update({ 
+          status_proposta: 'aprovada_incorporador',
+          aprovada_incorporador_em: new Date().toISOString(),
+          aprovada_incorporador_por: user?.id,
+        })
+        .eq('id', negociacao.id);
+
+      if (error) throw error;
+
+      const { dispararWebhook } = await import('@/lib/webhookUtils');
+      dispararWebhook('proposta_aprovada_incorporador', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        numero_proposta: negociacao.numero_proposta,
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        valor_proposta: negociacao.valor_proposta,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
+      invalidateDashboards(queryClient);
+      toast.success('Proposta aprovada pelo incorporador!');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao aprovar proposta: ' + error.message);
+    }
+  });
+}
+
+export function useNegarPropostaIncorporador() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ negociacao, motivo }: { negociacao: Negociacao; motivo: string }) => {
+      const { error } = await db
+        .from('negociacoes')
+        .update({ 
+          status_proposta: 'contra_proposta',
+          motivo_contra_proposta: motivo,
+          aprovada_incorporador_por: user?.id,
+        })
+        .eq('id', negociacao.id);
+
+      if (error) throw error;
+
+      const { dispararWebhook } = await import('@/lib/webhookUtils');
+      dispararWebhook('proposta_contra_proposta', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        numero_proposta: negociacao.numero_proposta,
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        motivo,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
+      invalidateDashboards(queryClient);
+      toast.success('Contra proposta registrada');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao registrar contra proposta: ' + error.message);
+    }
+  });
+}
+
+export function useReenviarParaAnalise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (negociacao: Negociacao) => {
+      const { error } = await db
+        .from('negociacoes')
+        .update({ 
+          status_proposta: 'em_analise',
+          motivo_contra_proposta: null,
+        })
+        .eq('id', negociacao.id);
+
+      if (error) throw error;
+
+      const { dispararWebhook } = await import('@/lib/webhookUtils');
+      dispararWebhook('proposta_em_analise', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        numero_proposta: negociacao.numero_proposta,
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        valor_proposta: negociacao.valor_proposta,
+        reenvio: true,
+        link_portal: `${window.location.origin}/portal-incorporador/propostas`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
+      invalidateDashboards(queryClient);
+      toast.success('Proposta reenviada para análise!');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao reenviar para análise: ' + error.message);
     }
   });
 }

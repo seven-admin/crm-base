@@ -6,7 +6,7 @@ import { NegociacaoForm } from './NegociacaoForm';
 import { NegociacaoHistoricoTimeline } from './NegociacaoHistoricoTimeline';
 import { NegociacaoCard } from './NegociacaoCard';
 import { PropostaDialog } from './PropostaDialog';
-import { useNegociacoes, useMoverNegociacao, useDeleteNegociacao, useConverterPropostaEmContrato, useSolicitarReserva } from '@/hooks/useNegociacoes';
+import { useNegociacoes, useMoverNegociacao, useDeleteNegociacao, useConverterPropostaEmContrato, useSolicitarReserva, useEnviarParaAnalise, useEnviarProposta, useReenviarParaAnalise } from '@/hooks/useNegociacoes';
 import { useCreateContrato } from '@/hooks/useContratos';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
 import { Negociacao } from '@/types/negociacoes.types';
@@ -46,6 +46,9 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   const createContratoMutation = useCreateContrato();
   const converterContratoMutation = useConverterPropostaEmContrato();
   const solicitarReservaMutation = useSolicitarReserva();
+  const enviarParaAnaliseMutation = useEnviarParaAnalise();
+  const enviarPropostaMutation = useEnviarProposta();
+  const reenviarParaAnaliseMutation = useReenviarParaAnalise();
 
   const [selectedNegociacao, setSelectedNegociacao] = useState<Negociacao | null>(null);
   const [targetEtapa, setTargetEtapa] = useState<FunilEtapa | undefined>();
@@ -117,10 +120,12 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     setPropostaOpen(true);
   };
 
-  const handleEnviarProposta = (negociacao: Negociacao) => {
-    setSelectedNegociacao(negociacao);
-    setPropostaMode('enviar');
-    setPropostaOpen(true);
+  const handleEnviarParaAnalise = async (negociacao: Negociacao) => {
+    await enviarParaAnaliseMutation.mutateAsync(negociacao);
+  };
+
+  const handleEnviarProposta = async (negociacao: Negociacao) => {
+    await enviarPropostaMutation.mutateAsync(negociacao.id);
   };
 
   const handleAceitarProposta = (negociacao: Negociacao) => {
@@ -132,6 +137,16 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   const handleRecusarProposta = (negociacao: Negociacao) => {
     setSelectedNegociacao(negociacao);
     setPropostaMode('recusar');
+    setPropostaOpen(true);
+  };
+
+  const handleReenviarParaAnalise = async (negociacao: Negociacao) => {
+    await reenviarParaAnaliseMutation.mutateAsync(negociacao);
+  };
+
+  const handleEditarProposta = (negociacao: Negociacao) => {
+    setSelectedNegociacao(negociacao);
+    setPropostaMode('view');
     setPropostaOpen(true);
   };
 
@@ -285,10 +300,13 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
             onHistorico={handleHistorico}
             onExcluir={handleExcluir}
             onGerarProposta={handleGerarProposta}
+            onEnviarParaAnalise={handleEnviarParaAnalise}
             onEnviarProposta={handleEnviarProposta}
             onAceitarProposta={handleAceitarProposta}
             onRecusarProposta={handleRecusarProposta}
             onSolicitarReserva={handleSolicitarReserva}
+            onReenviarParaAnalise={handleReenviarParaAnalise}
+            onEditarProposta={handleEditarProposta}
           />
         )}
       />

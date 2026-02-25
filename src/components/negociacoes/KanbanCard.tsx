@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Building2, User, Phone, Calendar, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, FilePlus2 } from 'lucide-react';
+import { MoreVertical, Building2, User, Phone, Calendar, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, FilePlus2, Eye, RefreshCw } from 'lucide-react';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,10 +22,13 @@ interface KanbanCardProps {
   onExcluir: (negociacao: Negociacao) => void;
   onDragStart: (e: React.DragEvent, negociacao: Negociacao) => void;
   onGerarProposta?: (negociacao: Negociacao) => void;
+  onEnviarParaAnalise?: (negociacao: Negociacao) => void;
   onEnviarProposta?: (negociacao: Negociacao) => void;
   onAceitarProposta?: (negociacao: Negociacao) => void;
   onRecusarProposta?: (negociacao: Negociacao) => void;
   onGerarContrato?: (negociacao: Negociacao) => void;
+  onReenviarParaAnalise?: (negociacao: Negociacao) => void;
+  onEditarProposta?: (negociacao: Negociacao) => void;
 }
 
 export function KanbanCard({ 
@@ -36,10 +39,13 @@ export function KanbanCard({
   onExcluir,
   onDragStart,
   onGerarProposta,
+  onEnviarParaAnalise,
   onEnviarProposta,
   onAceitarProposta,
   onRecusarProposta,
-  onGerarContrato
+  onGerarContrato,
+  onReenviarParaAnalise,
+  onEditarProposta
 }: KanbanCardProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -117,11 +123,39 @@ export function KanbanCard({
                 Gerar Proposta
               </DropdownMenuItem>
             )}
-            {negociacao.status_proposta === 'rascunho' && onEnviarProposta && (
+            {negociacao.status_proposta === 'rascunho' && onEnviarParaAnalise && (
+              <DropdownMenuItem onClick={() => onEnviarParaAnalise(negociacao)}>
+                <Send className="h-4 w-4 mr-2" />
+                Enviar para Análise
+              </DropdownMenuItem>
+            )}
+            {negociacao.status_proposta === 'em_analise' && (
+              <DropdownMenuItem disabled>
+                <Eye className="h-4 w-4 mr-2" />
+                Aguardando Incorporador
+              </DropdownMenuItem>
+            )}
+            {negociacao.status_proposta === 'aprovada_incorporador' && onEnviarProposta && (
               <DropdownMenuItem onClick={() => onEnviarProposta(negociacao)}>
                 <Send className="h-4 w-4 mr-2" />
-                Enviar Proposta
+                Enviar ao Cliente
               </DropdownMenuItem>
+            )}
+            {negociacao.status_proposta === 'contra_proposta' && (
+              <>
+                {onEditarProposta && (
+                  <DropdownMenuItem onClick={() => onEditarProposta(negociacao)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar Proposta
+                  </DropdownMenuItem>
+                )}
+                {onReenviarParaAnalise && (
+                  <DropdownMenuItem onClick={() => onReenviarParaAnalise(negociacao)}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reenviar para Análise
+                  </DropdownMenuItem>
+                )}
+              </>
             )}
             {negociacao.status_proposta === 'enviada' && (
               <>

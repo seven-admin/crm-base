@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2 } from 'lucide-react';
+import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
 import {
@@ -23,6 +23,7 @@ import {
   useRecusarProposta,
   useConverterPropostaEmContrato,
   useExcluirProposta,
+  useReenviarParaAnalise,
 } from '@/hooks/useNegociacoes';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -59,6 +60,7 @@ export function PropostaDialog({
   const recusarProposta = useRecusarProposta();
   const converterContrato = useConverterPropostaEmContrato();
   const excluirProposta = useExcluirProposta();
+  const reenviarParaAnalise = useReenviarParaAnalise();
 
   // Calculate default validity (30 days)
   useEffect(() => {
@@ -169,13 +171,24 @@ export function PropostaDialog({
     aceitarProposta.isPending ||
     recusarProposta.isPending ||
     converterContrato.isPending ||
-    excluirProposta.isPending;
+    excluirProposta.isPending ||
+    reenviarParaAnalise.isPending;
 
   const statusProposta = negociacao?.status_proposta;
   const isRascunho = statusProposta === 'rascunho';
-  
+  const isContraProposta = statusProposta === 'contra_proposta';
   const isAceita = statusProposta === 'aceita';
   const temProposta = !!negociacao?.numero_proposta;
+
+  const handleReenviarParaAnalise = async () => {
+    if (!negociacao) return;
+    try {
+      await reenviarParaAnalise.mutateAsync(negociacao);
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao reenviar para análise:', error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -198,6 +211,17 @@ export function PropostaDialog({
             )}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Alerta de Contra Proposta */}
+        {isContraProposta && negociacao?.motivo_contra_proposta && (
+          <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-orange-800 dark:text-orange-200">Contra Proposta do Incorporador</p>
+              <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">{negociacao.motivo_contra_proposta}</p>
+            </div>
+          </div>
+        )}
 
         {mode === 'recusar' ? (
           <div className="space-y-4 py-4">
@@ -295,7 +319,7 @@ export function PropostaDialog({
                   negociacaoId={negociacao.id}
                   empreendimentoId={negociacao.empreendimento_id}
                   valorReferencia={valorProposta || valorTabela}
-                  readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida'}
+                  readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida' || statusProposta === 'em_analise'}
                   onValidationChange={handleValidationChange}
                 />
               )}
@@ -357,6 +381,15 @@ export function PropostaDialog({
             >
               {recusarProposta.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmar Recusa
+            </Button>
+          )}
+
+          {/* Reenviar para Análise (contra proposta) */}
+          {isContraProposta && (
+            <Button onClick={handleReenviarParaAnalise} disabled={isLoading}>
+              {reenviarParaAnalise.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reenviar para Análise
             </Button>
           )}
 
