@@ -33,6 +33,8 @@ import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, Ativi
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
+import { ValidarDadosLeadDialog } from '@/components/negociacoes/ValidarDadosLeadDialog';
+import { useCliente } from '@/hooks/useClientes';
 import { Shield } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -91,6 +93,10 @@ export default function Atividades() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [validacaoOpen, setValidacaoOpen] = useState(false);
+  const [clienteIdParaValidar, setClienteIdParaValidar] = useState<string | undefined>(undefined);
+  const [atividadeParaConverter, setAtividadeParaConverter] = useState<Atividade | null>(null);
+  const { data: clienteParaValidar } = useCliente(clienteIdParaValidar);
 
   const ano = currentDate.getFullYear();
   const mes = currentDate.getMonth() + 1;
@@ -817,12 +823,17 @@ export default function Atividades() {
                                       size="icon"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const params = new URLSearchParams();
-                                        if (atividade.cliente_id) params.set('cliente_id', atividade.cliente_id);
-                                        if (atividade.empreendimento_id) params.set('empreendimento_id', atividade.empreendimento_id);
-                                        if (atividade.corretor_id) params.set('corretor_id', atividade.corretor_id);
-                                        params.set('atividade_origem_id', atividade.id);
-                                        navigate(`/negociacoes/nova?${params.toString()}`);
+                                        if (atividade.cliente_id) {
+                                          setAtividadeParaConverter(atividade);
+                                          setClienteIdParaValidar(atividade.cliente_id);
+                                          setValidacaoOpen(true);
+                                        } else {
+                                          const params = new URLSearchParams();
+                                          if (atividade.empreendimento_id) params.set('empreendimento_id', atividade.empreendimento_id);
+                                          if (atividade.corretor_id) params.set('corretor_id', atividade.corretor_id);
+                                          params.set('atividade_origem_id', atividade.id);
+                                          navigate(`/negociacoes/nova?${params.toString()}`);
+                                        }
                                       }}
                                       title="Converter em Proposta"
                                     >
@@ -978,6 +989,36 @@ export default function Atividades() {
         onOpenChange={(open) => {
           setDetalheDialogOpen(open);
           if (!open) setDetalheAtividadeId(null);
+        }}
+      />
+
+      {/* Dialog Validação de Dados do Cliente para Converter em Proposta */}
+      <ValidarDadosLeadDialog
+        open={validacaoOpen && !!clienteParaValidar}
+        onOpenChange={(open) => {
+          setValidacaoOpen(open);
+          if (!open) {
+            setClienteIdParaValidar(undefined);
+            setAtividadeParaConverter(null);
+          }
+        }}
+        lead={clienteParaValidar ?? null}
+        onComplete={() => {
+          setValidacaoOpen(false);
+          if (atividadeParaConverter) {
+            const params = new URLSearchParams();
+            if (atividadeParaConverter.cliente_id) params.set('cliente_id', atividadeParaConverter.cliente_id);
+            if (atividadeParaConverter.empreendimento_id) params.set('empreendimento_id', atividadeParaConverter.empreendimento_id);
+            if (atividadeParaConverter.corretor_id) params.set('corretor_id', atividadeParaConverter.corretor_id);
+            params.set('atividade_origem_id', atividadeParaConverter.id);
+            navigate(`/negociacoes/nova?${params.toString()}`);
+          }
+        }}
+        onEdit={() => {
+          setValidacaoOpen(false);
+          if (atividadeParaConverter?.cliente_id) {
+            navigate(`/clientes?edit=${atividadeParaConverter.cliente_id}`);
+          }
         }}
       />
     </MainLayout>
