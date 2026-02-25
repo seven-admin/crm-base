@@ -3217,6 +3217,7 @@ export type Database = {
           meta_valor: number
           meta_visitas: number
           periodicidade: string
+          tipo: string
           updated_at: string
         }
         Insert: {
@@ -3233,6 +3234,7 @@ export type Database = {
           meta_valor?: number
           meta_visitas?: number
           periodicidade?: string
+          tipo?: string
           updated_at?: string
         }
         Update: {
@@ -3249,6 +3251,7 @@ export type Database = {
           meta_valor?: number
           meta_visitas?: number
           periodicidade?: string
+          tipo?: string
           updated_at?: string
         }
         Relationships: [

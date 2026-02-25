@@ -31,13 +31,14 @@ export function useFunilTemperatura(
       const inicioStr = format(inicioMes, 'yyyy-MM-dd');
       const fimStr = format(fimMes, 'yyyy-MM-dd');
       
-      // Buscar clientes que têm atividades no período (sobreposição de datas)
+      // Buscar atividades de negociação com temperatura_cliente no período
       let atividadesQuery = supabase
         .from('atividades' as any)
-        .select('cliente_id')
+        .select('cliente_id, temperatura_cliente, data_inicio')
         .lte('data_inicio', fimStr)
         .gte('data_fim', inicioStr)
         .not('cliente_id', 'is', null)
+        .not('temperatura_cliente', 'is', null)
         .neq('status', 'cancelada');
       
       if (gestorId) {
@@ -52,8 +53,7 @@ export function useFunilTemperatura(
       
       if (atividadesError) throw atividadesError;
       
-      const clienteIds = Array.from(new Set((atividades || []).map((a: any) => a.cliente_id).filter(Boolean)));
-      if (clienteIds.length === 0) {
+      if (!atividades || atividades.length === 0) {
         return (['frio', 'morno', 'quente'] as ClienteTemperatura[]).map((temp) => ({
           temperatura: temp,
           quantidade: 0,
@@ -61,16 +61,21 @@ export function useFunilTemperatura(
         }));
       }
       
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('temperatura')
-        .eq('is_active', true)
-        .in('id', clienteIds);
-      if (error) throw error;
+      // Agrupar por cliente_id, pegar a temperatura da atividade mais recente
+      const clienteTemperaturaMap = new Map<string, { temperatura: ClienteTemperatura; data: string }>();
+      (atividades as any[]).forEach((ativ) => {
+        const existing = clienteTemperaturaMap.get(ativ.cliente_id);
+        if (!existing || ativ.data_inicio > existing.data) {
+          clienteTemperaturaMap.set(ativ.cliente_id, {
+            temperatura: ativ.temperatura_cliente as ClienteTemperatura,
+            data: ativ.data_inicio,
+          });
+        }
+      });
 
       const contagem: Record<ClienteTemperatura, number> = { frio: 0, morno: 0, quente: 0 };
-      (data || []).forEach((cliente: any) => {
-        if (cliente.temperatura in contagem) contagem[cliente.temperatura as ClienteTemperatura]++;
+      clienteTemperaturaMap.forEach(({ temperatura }) => {
+        if (temperatura in contagem) contagem[temperatura]++;
       });
 
       const total = Object.values(contagem).reduce((a, b) => a + b, 0);

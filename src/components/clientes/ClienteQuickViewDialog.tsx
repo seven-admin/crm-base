@@ -6,8 +6,6 @@ import { cn } from '@/lib/utils';
 import {
   CLIENTE_FASE_COLORS,
   CLIENTE_FASE_LABELS,
-  CLIENTE_TEMPERATURA_COLORS,
-  CLIENTE_TEMPERATURA_LABELS,
 } from '@/types/clientes.types';
 
 interface ClienteQuickViewDialogProps {
@@ -39,14 +37,6 @@ export function ClienteQuickViewDialog({
             <Badge variant="outline" className={cn('text-xs', CLIENTE_FASE_COLORS[cliente.fase])}>
               {CLIENTE_FASE_LABELS[cliente.fase]}
             </Badge>
-            {cliente.temperatura && (
-              <Badge
-                variant="outline"
-                className={cn('text-xs', CLIENTE_TEMPERATURA_COLORS[cliente.temperatura])}
-              >
-                {CLIENTE_TEMPERATURA_LABELS[cliente.temperatura]}
-              </Badge>
-            )}
             {cliente.origem && (
               <Badge variant="secondary" className="text-xs">
                 {cliente.origem}

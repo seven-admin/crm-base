@@ -15,18 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Cliente, ClienteTemperatura } from '@/types/clientes.types';
-import { CLIENTE_TEMPERATURA_LABELS, CLIENTE_TEMPERATURA_COLORS } from '@/types/clientes.types';
+import type { Cliente } from '@/types/clientes.types';
 import { ClipboardList, Edit, MessageSquare, MoreVertical, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 
 type Props = {
   clientes: Cliente[];
@@ -38,7 +28,6 @@ type Props = {
   onQualificar: (id: string) => void;
   onMarcarPerdido: (id: string) => void;
   onReativar: (id: string) => void;
-  onUpdateTemperatura: (id: string, temperatura: ClienteTemperatura | null) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
@@ -54,7 +43,6 @@ export function ClientesTable({
   onQualificar,
   onMarcarPerdido,
   onReativar,
-  onUpdateTemperatura,
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
@@ -85,7 +73,6 @@ export function ClientesTable({
             <TableHead>Cidade</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Gestor de Produto</TableHead>
-            <TableHead>Temperatura</TableHead>
             <TableHead className="w-[50px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -111,32 +98,6 @@ export function ClientesTable({
               <TableCell>{cliente.endereco_cidade || '-'}</TableCell>
               <TableCell>{cliente.endereco_uf || '-'}</TableCell>
               <TableCell>{(cliente as any).gestor?.full_name || '-'}</TableCell>
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Select
-                  value={cliente.temperatura || '_none'}
-                  onValueChange={(value) => {
-                    onUpdateTemperatura(
-                      cliente.id,
-                      value === '_none' ? null : (value as ClienteTemperatura)
-                    );
-                  }}
-                >
-                  <SelectTrigger className={cn(
-                    'h-8 w-[110px] text-xs',
-                    cliente.temperatura && CLIENTE_TEMPERATURA_COLORS[cliente.temperatura]
-                  )}>
-                    <SelectValue placeholder="—" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none">—</SelectItem>
-                    {(Object.keys(CLIENTE_TEMPERATURA_LABELS) as ClienteTemperatura[]).map((temp) => (
-                      <SelectItem key={temp} value={temp}>
-                        {CLIENTE_TEMPERATURA_LABELS[temp]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

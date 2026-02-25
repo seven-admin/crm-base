@@ -262,7 +262,6 @@ export interface ClienteInteracaoFormData {
 export interface ClienteFilters {
   search?: string;
   fase?: ClienteFase;
-  temperatura?: ClienteTemperatura;
   origem?: string;
   corretor_id?: string;
   imobiliaria_id?: string;
