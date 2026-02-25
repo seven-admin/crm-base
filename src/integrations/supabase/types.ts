@@ -3712,6 +3712,8 @@ export type Database = {
       negociacoes: {
         Row: {
           aprovada_em: string | null
+          aprovada_incorporador_em: string | null
+          aprovada_incorporador_por: string | null
           cliente_id: string
           codigo: string
           condicao_pagamento: string | null
@@ -3743,6 +3745,7 @@ export type Database = {
           indice_correcao: string | null
           is_active: boolean
           modalidade_id: string | null
+          motivo_contra_proposta: string | null
           motivo_perda: string | null
           motivo_recusa: string | null
           motivo_rejeicao: string | null
@@ -3768,6 +3771,8 @@ export type Database = {
         }
         Insert: {
           aprovada_em?: string | null
+          aprovada_incorporador_em?: string | null
+          aprovada_incorporador_por?: string | null
           cliente_id: string
           codigo: string
           condicao_pagamento?: string | null
@@ -3799,6 +3804,7 @@ export type Database = {
           indice_correcao?: string | null
           is_active?: boolean
           modalidade_id?: string | null
+          motivo_contra_proposta?: string | null
           motivo_perda?: string | null
           motivo_recusa?: string | null
           motivo_rejeicao?: string | null
@@ -3824,6 +3830,8 @@ export type Database = {
         }
         Update: {
           aprovada_em?: string | null
+          aprovada_incorporador_em?: string | null
+          aprovada_incorporador_por?: string | null
           cliente_id?: string
           codigo?: string
           condicao_pagamento?: string | null
@@ -3855,6 +3863,7 @@ export type Database = {
           indice_correcao?: string | null
           is_active?: boolean
           modalidade_id?: string | null
+          motivo_contra_proposta?: string | null
           motivo_perda?: string | null
           motivo_recusa?: string | null
           motivo_rejeicao?: string | null

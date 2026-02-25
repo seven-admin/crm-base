@@ -75,6 +75,7 @@ const PortalIncorporadorForecast = lazy(() => import("./pages/portal-incorporado
 const PortalIncorporadorMarketing = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorMarketing"));
 const PortalIncorporadorPlanejamento = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPlanejamento"));
 const PortalIncorporadorDisponibilidade = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDisponibilidade"));
+const PortalIncorporadorPropostas = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPropostas"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -361,6 +362,7 @@ const App = () => (
               <Route path="marketing" element={<PortalIncorporadorMarketing />} />
               <Route path="planejamento" element={<PortalIncorporadorPlanejamento />} />
               <Route path="disponibilidade" element={<PortalIncorporadorDisponibilidade />} />
+              <Route path="propostas" element={<PortalIncorporadorPropostas />} />
             </Route>
             
             
