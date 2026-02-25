@@ -96,6 +96,7 @@ const menuGroupsDef = [
       { icon: Handshake, label: 'Negociações', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
       { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
+      { icon: GitBranch, label: 'Configurações Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config', adminOnly: true },
     ],
   },
   {
@@ -153,7 +154,7 @@ const menuGroupsDef = [
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
-      { icon: GitBranch, label: 'Configurações Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config' },
+      
       { icon: Settings, label: 'Configurações', path: '/configuracoes', moduleName: 'configuracoes' },
     ],
   },

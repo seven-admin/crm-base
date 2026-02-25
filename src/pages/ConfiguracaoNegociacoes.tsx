@@ -27,6 +27,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { FunilForm } from '@/components/negociacoes/FunilForm';
 import { EtapasEditor } from '@/components/negociacoes/EtapasEditor';
 import { AtividadeEtapasEditor } from '@/components/atividades/AtividadeEtapasEditor';
+import { TiposAtendimentoEditor } from '@/components/negociacoes/TiposAtendimentoEditor';
 import type { Funil } from '@/types/funis.types';
 
 export default function ConfiguracaoFunis() {
@@ -191,7 +192,10 @@ export default function ConfiguracaoFunis() {
         </TabsContent>
 
         <TabsContent value="atividades" className="mt-0">
-          <AtividadeEtapasEditor />
+          <div className="space-y-6">
+            <TiposAtendimentoEditor />
+            <AtividadeEtapasEditor />
+          </div>
         </TabsContent>
       </Tabs>
 
