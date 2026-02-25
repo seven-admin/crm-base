@@ -91,17 +91,11 @@ const menuGroupsDef = [
     label: 'Comercial',
     icon: Target,
     items: [
+      { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
       { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
       { icon: Handshake, label: 'Negociações', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
       { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
-    ],
-  },
-  {
-    label: 'Diário de Bordo',
-    icon: BookOpen,
-    items: [
-      { icon: ClipboardList, label: 'Atividades', path: '/atividades', moduleName: 'atividades' },
     ],
   },
   {
