@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, LayoutGrid, List, ClipboardList } from 'lucide-react';
+import { Plus, LayoutGrid, List, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FunilKanbanBoard } from '@/components/negociacoes/FunilKanbanBoard';
 import { NegociacaoForm } from '@/components/negociacoes/NegociacaoForm';
 import { NegociacoesToolbar, type NegociacoesFilters } from '@/pages/negociacoes/NegociacoesToolbar';
@@ -245,8 +247,16 @@ const Funil = () => {
   );
 };
 function AtividadesMetricsAndBoard() {
+  const [competencia, setCompetencia] = useState(new Date());
+
+  // For the overlap filter logic in useAtividades:
+  // filters.data_inicio uses lte('data_inicio', value) → pass endOfMonth
+  // filters.data_fim uses gte('data_fim', value) → pass startOfMonth
+  const dataInicioFilter = format(endOfMonth(competencia), 'yyyy-MM-dd');
+  const dataFimFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
+
   const { data: atividadesData } = useAtividades({
-    filters: { tipos: TIPOS_NEGOCIACAO },
+    filters: { tipos: TIPOS_NEGOCIACAO, data_inicio: dataInicioFilter, data_fim: dataFimFilter },
     page: 1,
     pageSize: 500,
   });
@@ -267,8 +277,29 @@ function AtividadesMetricsAndBoard() {
     return acc;
   }, [atividades]);
 
+  const mesLabel = format(competencia, 'MMMM yyyy', { locale: ptBR });
+  const isCurrentMonth = isSameMonth(competencia, new Date());
+
   return (
     <>
+      {/* Month Navigator */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => subMonths(prev, 1))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-lg font-semibold capitalize min-w-[160px] text-center">{mesLabel}</span>
+          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => addMonths(prev, 1))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        {!isCurrentMonth && (
+          <Button variant="ghost" size="sm" onClick={() => setCompetencia(new Date())}>
+            Este mês
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">Total de Atividades</p>
@@ -299,7 +330,7 @@ function AtividadesMetricsAndBoard() {
         </Card>
       </div>
       <div className="min-h-[500px]">
-        <AtividadeKanbanBoard />
+        <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} />
       </div>
     </>
   );

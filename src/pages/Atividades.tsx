@@ -27,7 +27,7 @@ import { useAtividade, useAtividades, useAtividadesStatusResumo, useDeleteAtivid
 import { useSuperAdminIds } from '@/hooks/useSuperAdminIds';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
-import { useClientes } from '@/hooks/useClientes';
+
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
@@ -112,7 +112,7 @@ export default function Atividades() {
   const { data: atividadesVencidas, isLoading: isLoadingVencidas } = useAtividadesVencidas();
   const { data: gestores } = useGestoresProduto();
   const { data: empreendimentos } = useEmpreendimentos();
-  const { data: clientes } = useClientes();
+  
   const { data: superAdminIds } = useSuperAdminIds();
   const createAtividade = useCreateAtividade();
   const createAtividadesParaGestores = useCreateAtividadesParaGestores();
@@ -385,7 +385,7 @@ export default function Atividades() {
                 <CardTitle className="text-base">Filtros</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                   <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo, subtipo: v === 'all' ? undefined : filters.subtipo })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Tipo" />
@@ -437,18 +437,6 @@ export default function Atividades() {
                     </SelectContent>
                   </Select>
 
-                  <Select value={filters.created_by || ''} onValueChange={(v) => setFilters({ ...filters, created_by: v === 'all' ? undefined : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Criado por" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {gestores?.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
                   <Select value={filters.empreendimento_id || ''} onValueChange={(v) => setFilters({ ...filters, empreendimento_id: v === 'all' ? undefined : v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Empreendimento" />
@@ -457,18 +445,6 @@ export default function Atividades() {
                       <SelectItem value="all">Todos</SelectItem>
                       {empreendimentos?.map((e) => (
                         <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={filters.cliente_id || ''} onValueChange={(v) => setFilters({ ...filters, cliente_id: v === 'all' ? undefined : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {clientes?.slice(0, 50).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

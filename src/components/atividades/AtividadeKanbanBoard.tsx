@@ -15,14 +15,23 @@ const FALLBACK_COLUMNS: KanbanColumn[] = [
   { id: 'cancelada', title: 'Cancelada', color: '#94A3B8', bgColor: 'hsl(var(--accent))' },
 ];
 
-export function AtividadeKanbanBoard() {
+interface AtividadeKanbanBoardProps {
+  dataInicio?: string;
+  dataFim?: string;
+}
+
+export function AtividadeKanbanBoard({ dataInicio, dataFim }: AtividadeKanbanBoardProps) {
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const alterarStatus = useAlterarStatusEmLote();
 
   const { data: etapasConfig = [] } = useAtividadeEtapas();
 
   const { data: atividadesData, isLoading } = useAtividades({
-    filters: { tipos: TIPOS_NEGOCIACAO },
+    filters: {
+      tipos: TIPOS_NEGOCIACAO,
+      ...(dataInicio ? { data_inicio: dataInicio } : {}),
+      ...(dataFim ? { data_fim: dataFim } : {}),
+    },
     page: 1,
     pageSize: 200,
   });
