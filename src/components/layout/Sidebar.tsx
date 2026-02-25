@@ -169,7 +169,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
-      { icon: GitBranch, label: 'Configurar Negociações', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config' },
+      { icon: GitBranch, label: 'Configurações Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config' },
       { icon: Settings, label: 'Configurações', path: '/configuracoes', moduleName: 'configuracoes' },
     ],
   },
