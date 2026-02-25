@@ -66,7 +66,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Planejamento',
     icon: ClipboardList,
-    color: '#F5941E',
+    color: '#10B981',
     items: [
       { icon: ClipboardList, label: 'Cronograma', path: '/planejamento', moduleName: 'planejamento' },
       { icon: Settings, label: 'Configurações', path: '/planejamento/configuracoes', moduleName: 'planejamento_config', adminOnly: true },
@@ -75,7 +75,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Empreendimentos',
     icon: Building2,
-    color: '#F5941E',
+    color: '#10B981',
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
       { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
@@ -84,7 +84,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Clientes',
     icon: Users,
-    color: '#F5941E',
+    color: '#8B5CF6',
     items: [
       { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
     ],
@@ -111,7 +111,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Contratos',
     icon: FileSignature,
-    color: '#F5941E',
+    color: '#60A5FA',
     items: [
       { icon: FileCheck, label: 'Gestão de Contratos', path: '/contratos', moduleName: 'contratos' },
       { icon: FilePlus, label: 'Templates', path: '/contratos?tab=templates', moduleName: 'contratos_templates' },
@@ -122,7 +122,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Financeiro',
     icon: DollarSign,
-    color: '#F5941E',
+    color: '#F59E0B',
     items: [
       { icon: Wallet, label: 'Fluxo de Caixa', path: '/financeiro', moduleName: 'financeiro_fluxo' },
       { icon: BarChart2, label: 'DRE', path: '/dre', moduleName: 'financeiro_dre' },
@@ -133,7 +133,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Parceiros',
     icon: Handshake,
-    color: '#F5941E',
+    color: '#EC4899',
     items: [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
       { icon: Building, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias' },
@@ -143,7 +143,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Marketing',
     icon: Palette,
-    color: '#F5941E',
+    color: '#EC4899',
     items: [
       { icon: BarChart2, label: 'Dashboard', path: '/marketing/dashboard', moduleName: 'projetos_marketing' },
       { icon: Palette, label: 'Atividades', path: '/marketing', moduleName: 'projetos_marketing' },
@@ -155,7 +155,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Eventos',
     icon: CalendarDays,
-    color: '#F5941E',
+    color: '#06B6D4',
     items: [
       { icon: CalendarDays, label: 'Listagem', path: '/eventos', moduleName: 'eventos' },
       { icon: Calendar, label: 'Calendário', path: '/eventos/calendario', moduleName: 'eventos' },
@@ -165,7 +165,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Sistema',
     icon: Settings,
-    color: '#F5941E',
+    color: '#94A3B8',
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
