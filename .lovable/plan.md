@@ -1,75 +1,81 @@
 
+# Plano: Metas de Atividades + Migrar Temperatura para Atividades de Negociacao
 
-# Configuracao de Cores do Sidebar
+## Parte 1: Selecao de tipo de meta em /metas-comerciais
 
-## Resumo
+Ao criar uma nova meta, o formulario passara a ter uma selecao inicial entre dois modos:
 
-Criar uma secao dentro da tab "Personalização" em `/configuracoes` que permita ao administrador selecionar a cor de cada grupo do sidebar. As cores serao salvas na tabela `configuracoes_sistema` e lidas dinamicamente pelo Sidebar.
+- **Metas Comerciais**: fluxo atual (meta de valor, unidades, propostas)
+- **Metas de Atividades**: nova opcao focada em metas operacionais (visitas, atendimentos, ligacoes, treinamentos)
 
-## Como vai funcionar
+### Alteracoes
 
-Na aba "Personalizacao", abaixo dos campos existentes, aparecera uma secao "Cores do Menu Lateral" com uma lista de todos os 11 grupos do sidebar. Cada grupo tera um campo de selecao de cor (color picker nativo do HTML via `<input type="color">`) ao lado do nome do grupo e seu icone. O administrador altera as cores e clica "Salvar Alteracoes" normalmente.
+**`src/pages/MetasComerciais.tsx`**
+- Adicionar estado `metaTipo` com valores `'comercial' | 'atividades'`
+- No dialog de criacao, antes dos campos, renderizar dois botoes/cards de selecao para o tipo
+- Quando `comercial`: exibir campos atuais (meta_valor, meta_unidades, meta_propostas)
+- Quando `atividades`: exibir campos de atividades (meta_visitas, meta_atendimentos, meta_treinamentos, meta_ligacoes)
+- O salvamento usa a mesma tabela `metas_comerciais` - os campos ja existem (meta_visitas, meta_atendimentos, meta_treinamentos)
 
-## Alteracoes
+**Banco de dados**: adicionar coluna `tipo` (text, default 'comercial') na tabela `metas_comerciais` para diferenciar e filtrar os dois tipos.
 
-### 1. Banco de dados: inserir configuracoes iniciais
+---
 
-Criar registros na tabela `configuracoes_sistema` para cada grupo do sidebar com as cores padrao atuais:
+## Parte 2: Migrar Temperatura de Clientes para Atividades de Negociacao
 
-| Chave | Valor | Categoria |
-|---|---|---|
-| `sidebar_cor_planejamento` | `#10B981` | `sidebar` |
-| `sidebar_cor_empreendimentos` | `#10B981` | `sidebar` |
-| `sidebar_cor_clientes` | `#8B5CF6` | `sidebar` |
-| `sidebar_cor_comercial` | `#F5941E` | `sidebar` |
-| `sidebar_cor_diario_de_bordo` | `#F5941E` | `sidebar` |
-| `sidebar_cor_contratos` | `#60A5FA` | `sidebar` |
-| `sidebar_cor_financeiro` | `#F59E0B` | `sidebar` |
-| `sidebar_cor_parceiros` | `#EC4899` | `sidebar` |
-| `sidebar_cor_marketing` | `#EC4899` | `sidebar` |
-| `sidebar_cor_eventos` | `#06B6D4` | `sidebar` |
-| `sidebar_cor_sistema` | `#94A3B8` | `sidebar` |
+O conceito de temperatura (frio/morno/quente) sera removido do cadastro de clientes e passara a existir exclusivamente nas atividades vinculadas a negociacoes (tipos: Atendimento e Assinatura). A temperatura ja existe no campo `temperatura_cliente` da tabela `atividades`.
 
-### 2. Hook: `useSidebarColors`
+### O que muda
 
-Novo hook em `src/hooks/useSidebarColors.ts` que:
-- Busca as configuracoes com categoria `sidebar` usando `useConfiguracoesSistema('sidebar')`
-- Retorna um mapa `{ [grupoLabel]: corHex }` com fallback para as cores padrao hardcoded
-- Exporta as cores padrao como constante para uso no formulario
+**Remover temperatura do modulo de Clientes:**
+- `src/pages/clientes/ClientesTable.tsx`: remover coluna "Temperatura" e o select inline
+- `src/pages/clientes/ClientesMobileCards.tsx`: remover select de temperatura
+- `src/components/clientes/ClienteQuickViewDialog.tsx`: remover badge de temperatura
+- `src/pages/PortalClientes.tsx`: remover badge de temperatura
+- `src/hooks/useClientes.ts`: remover filtro por temperatura, remover `useAtualizarTemperatura`, remover default `temperatura: 'frio'` na criacao
+- `src/types/clientes.types.ts`: manter os tipos/labels (sao reutilizados pelas atividades), mas remover `temperatura` do `ClienteFilters`
 
-### 3. Componente: `SidebarColorsConfig`
+**Remover propagacao atividade -> cliente:**
+- `src/components/atividades/AtividadeForm.tsx`: remover o trecho que faz `updateClienteMutation` para propagar temperatura ao cliente
 
-Novo componente em `src/components/configuracoes/SidebarColorsConfig.tsx`:
-- Lista os 11 grupos com icone, nome e um `<input type="color">` ao lado
-- Mostra uma preview da cor selecionada
-- Botao "Restaurar Padrao" para voltar as cores originais
-- Integra com o botao "Salvar" existente da tab personalizacao
+**Manter temperatura nas atividades de negociacao:**
+- O campo `temperatura_cliente` na tabela `atividades` e no formulario de atividades permanece inalterado
+- `AtividadeForm.tsx`: manter o campo de selecao de temperatura (ja existe)
+- `ConcluirAtividadeDialog.tsx`: manter campo de temperatura ao concluir
+- `AtividadeDetalheDialog.tsx`: manter exibicao da temperatura
+- `AtividadeCard.tsx`: continua exibindo temperatura do `atividade.temperatura_cliente` (ajustar para nao depender de `cliente.temperatura`)
 
-### 4. Pagina Configuracoes (`src/pages/Configuracoes.tsx`)
+**Ajustar Funil de Temperatura (Forecast):**
+- `src/hooks/useForecast.ts` (`useFunilTemperatura`): alterar para buscar temperatura de `atividades.temperatura_cliente` ao inves de `clientes.temperatura`. Agrupar pela temperatura mais recente da ultima atividade de negociacao do cliente.
+- `src/components/forecast/FunilTemperatura.tsx`: sem alteracoes visuais, apenas os dados mudam.
 
-- Importar e renderizar `SidebarColorsConfig` dentro da tab "personalizacao", abaixo da secao de copyright
-- Passar as funcoes de estado e salvar ja existentes
+**Banco de dados:**
+- Nao remover a coluna `temperatura` da tabela `clientes` imediatamente (evitar breaking change). Apenas parar de usa-la no frontend.
 
-### 5. Sidebar (`src/components/layout/Sidebar.tsx`)
+### Resumo dos arquivos afetados
 
-- Importar `useSidebarColors`
-- Substituir as cores hardcoded no array `menuGroups` pelas cores dinamicas retornadas pelo hook
-- Manter as cores atuais como fallback caso a configuracao ainda nao exista
+| Arquivo | Acao |
+|---|---|
+| `src/pages/MetasComerciais.tsx` | Adicionar selecao comercial/atividades no form |
+| `src/pages/clientes/ClientesTable.tsx` | Remover coluna e select de temperatura |
+| `src/pages/clientes/ClientesMobileCards.tsx` | Remover select de temperatura |
+| `src/components/clientes/ClienteQuickViewDialog.tsx` | Remover badge temperatura |
+| `src/pages/PortalClientes.tsx` | Remover badge temperatura |
+| `src/hooks/useClientes.ts` | Remover filtro, hook e default de temperatura |
+| `src/types/clientes.types.ts` | Remover temperatura de ClienteFilters |
+| `src/components/atividades/AtividadeForm.tsx` | Remover propagacao para cliente |
+| `src/components/atividades/AtividadeCard.tsx` | Usar `temperatura_cliente` da atividade |
+| `src/hooks/useForecast.ts` | Buscar temperatura de atividades ao inves de clientes |
+| Migration SQL | Adicionar coluna `tipo` em `metas_comerciais` |
 
 ### Detalhes tecnicos
 
 ```text
-Fluxo:
-  configuracoes_sistema (DB)
-        |
-        v
-  useSidebarColors (hook) --> Sidebar (aplica cores)
-        |
-        v
-  SidebarColorsConfig (form) --> Salva via useUpdateConfiguracoes
+Funil de Temperatura (novo fluxo):
+  atividades (tipo IN negociacao, status != cancelada)
+    -> agrupar por cliente_id
+    -> pegar temperatura_cliente da atividade mais recente
+    -> contar frio/morno/quente
 ```
 
-- O `menuGroups` deixa de ser `const` estatico e passa a ser gerado via `useMemo` dentro do componente `Sidebar`, mesclando a estrutura fixa com as cores do banco
-- O color picker usa `<input type="color" />` nativo, sem dependencias extras
-- As cores padrao ficam em uma constante exportada para reutilizacao
-
+A coluna `temperatura` no banco de clientes sera preservada mas ignorada pelo frontend, permitindo rollback se necessario.
