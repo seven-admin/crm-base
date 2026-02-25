@@ -108,11 +108,11 @@ const Funil = () => {
       {/* Main Tabs: Propostas / Atividades */}
       <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'propostas' | 'atividades')} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="propostas" className="gap-1.5">
+          <TabsTrigger value="propostas" className="gap-1.5 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
             <LayoutGrid className="h-4 w-4" />
             Propostas
           </TabsTrigger>
-          <TabsTrigger value="atividades" className="gap-1.5">
+          <TabsTrigger value="atividades" className="gap-1.5 data-[state=active]:text-[#06B6D4] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#06B6D4]">
             <ClipboardList className="h-4 w-4" />
             Atividades
           </TabsTrigger>
