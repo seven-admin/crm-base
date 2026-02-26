@@ -9,7 +9,7 @@ const TEMPERATURAS: { value: ClienteTemperatura; label: string; activeClass: str
 
 interface TemperaturaSelectorProps {
   value?: ClienteTemperatura | null;
-  onValueChange: (temp: ClienteTemperatura) => void;
+  onValueChange: (temp: ClienteTemperatura | null) => void;
   compact?: boolean;
   disabled?: boolean;
 }
@@ -26,7 +26,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
             disabled={disabled}
             onClick={(e) => {
               e.stopPropagation();
-              if (!isActive) onValueChange(temp.value);
+              onValueChange(isActive ? null : temp.value);
             }}
             className={cn(
               'border rounded-full font-medium transition-colors',
