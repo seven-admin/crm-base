@@ -64,6 +64,10 @@ export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?
         query = query.not('numero_proposta', 'is', null);
       }
 
+      if (filters?.temperatura) {
+        query = query.eq('cliente.temperatura', filters.temperatura);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -90,7 +94,7 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
           funil_etapa_id,
           gestor_id,
           ordem_kanban,
-          cliente:clientes(id, nome),
+          cliente:clientes(id, nome, temperatura),
           empreendimento:empreendimentos(id, nome),
           gestor:profiles!gestor_id(id, full_name),
           unidades:negociacao_unidades(id)
@@ -116,6 +120,10 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
 
       if (filters?.com_proposta === true) {
         query = query.not('numero_proposta', 'is', null);
+      }
+
+      if (filters?.temperatura) {
+        query = query.eq('cliente.temperatura', filters.temperatura);
       }
 
       const { data, error } = await query;
@@ -1306,6 +1314,7 @@ export interface NegociacoesPaginatedFilters {
   gestor_id?: string;
   status_proposta?: string;
   funil_etapa_id?: string;
+  temperatura?: string;
   page?: number;
   pageSize?: number;
 }
@@ -1328,6 +1337,7 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
       if (filters.status_proposta) query = query.eq('status_proposta', filters.status_proposta);
       if (filters.funil_etapa_id) query = query.eq('funil_etapa_id', filters.funil_etapa_id);
       if (filters.search) query = query.ilike('cliente.nome', `%${filters.search}%`);
+      if (filters.temperatura) query = query.eq('cliente.temperatura', filters.temperatura);
 
       const { count, error } = await query;
       if (error) throw error;
@@ -1362,6 +1372,7 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
       if (filters.status_proposta) query = query.eq('status_proposta', filters.status_proposta);
       if (filters.funil_etapa_id) query = query.eq('funil_etapa_id', filters.funil_etapa_id);
       if (filters.search) query = query.ilike('cliente.nome', `%${filters.search}%`);
+      if (filters.temperatura) query = query.eq('cliente.temperatura', filters.temperatura);
 
       const { data, error } = await query;
       if (error) throw error;

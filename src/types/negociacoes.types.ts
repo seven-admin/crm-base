@@ -3,6 +3,7 @@ import type { Cliente } from './clientes.types';
 
 // Re-export Cliente types for backward compatibility
 export type { Cliente, ClienteFormData, ClienteFase, ClienteTemperatura } from './clientes.types';
+import type { ClienteTemperatura } from './clientes.types';
 export { CLIENTE_ORIGENS } from './clientes.types';
 
 // Legacy types - mantidas para compatibilidade com histórico
@@ -329,4 +330,5 @@ export interface NegociacaoFilters {
   funil_etapa_id?: string;
   status_proposta?: StatusProposta;
   com_proposta?: boolean;
+  temperatura?: ClienteTemperatura;
 }

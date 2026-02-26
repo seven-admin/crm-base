@@ -171,6 +171,7 @@ export interface AtividadeFilters {
   data_inicio?: string;
   data_fim?: string;
   tipos?: AtividadeTipo[];
+  temperatura_cliente?: ClienteTemperatura;
 }
 
 export interface ConfiguracoesAtividades {
