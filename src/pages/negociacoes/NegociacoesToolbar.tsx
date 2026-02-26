@@ -12,6 +12,13 @@ import { useCorretores } from '@/hooks/useCorretores';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
 import { STATUS_PROPOSTA_LABELS, StatusProposta } from '@/types/negociacoes.types';
+import type { ClienteTemperatura } from '@/types/clientes.types';
+
+const TEMPERATURA_OPTIONS: { value: ClienteTemperatura; label: string }[] = [
+  { value: 'frio', label: '❄️ Frio' },
+  { value: 'morno', label: '🌤️ Morno' },
+  { value: 'quente', label: '🔥 Quente' },
+];
 
 export interface NegociacoesFilters {
   search?: string;
@@ -20,6 +27,7 @@ export interface NegociacoesFilters {
   gestor_id?: string;
   status_proposta?: string;
   funil_etapa_id?: string;
+  temperatura?: ClienteTemperatura;
 }
 
 interface NegociacoesToolbarProps {
@@ -127,6 +135,21 @@ export function NegociacoesToolbar({ filters, onFiltersChange }: NegociacoesTool
             <SelectItem value="all">Todas Etapas</SelectItem>
             {etapas.map((etapa) => (
               <SelectItem key={etapa.id} value={etapa.id}>{etapa.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.temperatura || 'all'}
+          onValueChange={(v) => updateFilter('temperatura', v === 'all' ? undefined : v)}
+        >
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Temperatura" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas Temperaturas</SelectItem>
+            {TEMPERATURA_OPTIONS.map((t) => (
+              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

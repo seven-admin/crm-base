@@ -13,6 +13,7 @@ import { NegociacoesTable } from '@/pages/negociacoes/NegociacoesTable';
 import { MoverNegociacaoDialog } from '@/components/negociacoes/MoverNegociacaoDialog';
 import { NegociacaoHistoricoTimeline } from '@/components/negociacoes/NegociacaoHistoricoTimeline';
 import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
+import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
 import { useNegociacoesKanban, useNegociacoesPaginated, useDeleteNegociacao } from '@/hooks/useNegociacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
 import { useAtividades } from '@/hooks/useAtividades';
@@ -53,7 +54,8 @@ const Funil = () => {
     corretor_id: filters.corretor_id,
     funil_etapa_id: filters.funil_etapa_id,
     status_proposta: filters.status_proposta as any,
-  }), [filters.empreendimento_id, filters.corretor_id, filters.funil_etapa_id, filters.status_proposta]);
+    temperatura: filters.temperatura as any,
+  }), [filters.empreendimento_id, filters.corretor_id, filters.funil_etapa_id, filters.status_proposta, filters.temperatura]);
 
   const { data: negociacoesKanban = [], isLoading: isLoadingKanban } = useNegociacoesKanban(
     kanbanFilters,
@@ -248,6 +250,7 @@ const Funil = () => {
 };
 function AtividadesMetricsAndBoard() {
   const [competencia, setCompetencia] = useState(new Date());
+  const [temperaturaFilter, setTemperaturaFilter] = useState<import('@/types/clientes.types').ClienteTemperatura | undefined>(undefined);
 
   // For the overlap filter logic in useAtividades:
   // filters.data_inicio uses lte('data_inicio', value) → pass endOfMonth
@@ -256,7 +259,7 @@ function AtividadesMetricsAndBoard() {
   const dataFimFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
 
   const { data: atividadesData } = useAtividades({
-    filters: { tipos: TIPOS_NEGOCIACAO, data_inicio: dataInicioFilter, data_fim: dataFimFilter },
+    filters: { tipos: TIPOS_NEGOCIACAO, data_inicio: dataInicioFilter, data_fim: dataFimFilter, temperatura_cliente: temperaturaFilter },
     page: 1,
     pageSize: 500,
   });
@@ -282,7 +285,7 @@ function AtividadesMetricsAndBoard() {
 
   return (
     <>
-      {/* Month Navigator */}
+      {/* Month Navigator + Temperatura Filter */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => subMonths(prev, 1))}>
@@ -293,11 +296,14 @@ function AtividadesMetricsAndBoard() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        {!isCurrentMonth && (
-          <Button variant="ghost" size="sm" onClick={() => setCompetencia(new Date())}>
-            Este mês
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} />
+          {!isCurrentMonth && (
+            <Button variant="ghost" size="sm" onClick={() => setCompetencia(new Date())}>
+              Este mês
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -330,7 +336,7 @@ function AtividadesMetricsAndBoard() {
         </Card>
       </div>
       <div className="min-h-[500px]">
-        <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} />
+        <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} temperaturaFilter={temperaturaFilter} />
       </div>
     </>
   );

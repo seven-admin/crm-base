@@ -7,6 +7,7 @@ import { useAtividades, useAlterarStatusEmLote, useAtividade } from '@/hooks/use
 import { useAtividadeEtapas } from '@/hooks/useAtividadeEtapas';
 import type { Atividade } from '@/types/atividades.types';
 import { TIPOS_NEGOCIACAO } from '@/types/atividades.types';
+import type { ClienteTemperatura } from '@/types/clientes.types';
 import type { KanbanColumn } from '@/components/ui/kanban/types';
 
 const FALLBACK_COLUMNS: KanbanColumn[] = [
@@ -18,9 +19,10 @@ const FALLBACK_COLUMNS: KanbanColumn[] = [
 interface AtividadeKanbanBoardProps {
   dataInicio?: string;
   dataFim?: string;
+  temperaturaFilter?: ClienteTemperatura;
 }
 
-export function AtividadeKanbanBoard({ dataInicio, dataFim }: AtividadeKanbanBoardProps) {
+export function AtividadeKanbanBoard({ dataInicio, dataFim, temperaturaFilter }: AtividadeKanbanBoardProps) {
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const alterarStatus = useAlterarStatusEmLote();
 
@@ -31,6 +33,7 @@ export function AtividadeKanbanBoard({ dataInicio, dataFim }: AtividadeKanbanBoa
       tipos: TIPOS_NEGOCIACAO,
       ...(dataInicio ? { data_inicio: dataInicio } : {}),
       ...(dataFim ? { data_fim: dataFim } : {}),
+      ...(temperaturaFilter ? { temperatura_cliente: temperaturaFilter } : {}),
     },
     page: 1,
     pageSize: 200,
