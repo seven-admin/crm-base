@@ -1,60 +1,41 @@
 
-# Renomear Botoes do Modal e Criar Tipos de Atendimento Configuraveis
+# Adicionar funcao de des-selecionar temperatura no TemperaturaSelector
 
-## 1. Renomear botoes do modal "Nova Atividade"
+## O que sera feito
 
-No `AtividadeForm.tsx` (linhas 253-286):
-- Botao "Negociacao" -> "Atendimento" (manter icone Handshake)
-- Botao "Atividade" -> "Atividades Diarias" (manter icone ClipboardList)
-- Remover as descricoes abaixo dos nomes ("Atendimento, Assinatura" e "Ligacao, Reuniao, Visita...")
+Alterar o componente `TemperaturaSelector` para permitir que o usuario clique em uma temperatura ja selecionada para limpa-la (voltar para `null`). Atualmente, clicar na temperatura ativa nao faz nada (linha 29: `if (!isActive) onValueChange(temp.value)`).
 
-## 2. Novos tipos de atendimento comercial
+## Alteracao
 
-Atualmente `TIPOS_NEGOCIACAO = ['atendimento', 'assinatura']`. Precisa incluir novos tipos vinculados ao kanban de negociacoes:
+### Arquivo: `src/components/atividades/TemperaturaSelector.tsx`
 
-- **Atendimento** (ja existe)
-- **Negociacao** (novo tipo - `negociacao`)
-- **Contra Proposta** (novo tipo - `contra_proposta_atividade`)
+1. Mudar o tipo do `onValueChange` para aceitar `null`: `onValueChange: (temp: ClienteTemperatura | null) => void`
+2. Na linha 29, trocar a logica do click: se ja esta ativo, chamar `onValueChange(null)`; senao, chamar `onValueChange(temp.value)`
 
-### Alteracoes em `src/types/atividades.types.ts`:
-- Adicionar `'negociacao'` e `'contra_proposta_atividade'` ao type `AtividadeTipo`
-- Adicionar labels e icones correspondentes
-- Atualizar `TIPOS_NEGOCIACAO` para incluir os novos tipos
+```typescript
+onClick={(e) => {
+  e.stopPropagation();
+  onValueChange(isActive ? null : temp.value);
+}}
+```
 
-### Alteracoes em `src/components/atividades/AtividadeForm.tsx`:
-- Adicionar icones para os novos tipos
-- Quando modo = 'negociacao' (agora chamado 'Atendimento'), mostrar os 3 tipos: Atendimento, Negociacao, Contra Proposta
+### Arquivos que chamam `onValueChange` com temperatura
 
-## 3. Configuracao dos tipos de atendimento no painel comercial
+Os handlers que recebem o valor precisam aceitar `null`. Verificar e ajustar:
 
-Adicionar uma nova aba "Tipos de Atendimento" na pagina `ConfiguracaoNegociacoes.tsx` (ou incorporar na aba "Atividades" existente) onde o admin pode:
-- Ver os tipos de atendimento vinculados ao kanban de negociacoes
-- Ativar/desativar tipos
-- Definir quais tipos aparecem no modo "Atendimento" do formulario
+- `AtividadeDetalheDialog.tsx` - `handleTemperaturaChange`
+- `AtividadeKanbanCard.tsx` - `handleTemperaturaChange`
+- `AtividadeCard.tsx` - handler de temperatura
+- `Atividades.tsx` - handler na tabela
+- `ConcluirAtividadeDialog.tsx` - handler de conclusao
 
-Para isso sera necessario:
-- Criar tabela `tipos_atendimento_config` no banco (id, nome, tipo_atividade, ativo, ordem, created_at)
-- Criar hook `useTiposAtendimento` para CRUD
-- Criar componente `TiposAtendimentoEditor` no painel de configuracoes
+Em cada um, o tipo do parametro muda de `ClienteTemperatura` para `ClienteTemperatura | null` e o mutation envia `temperatura_cliente: temp` (que agora pode ser `null`).
 
-**Alternativa simples (recomendada)**: Usar a aba "Atividades" ja existente em Configuracoes Comerciais para adicionar uma secao de "Tipos de Atendimento" que configura quais tipos de atividade pertencem ao modo Atendimento vs Atividades Diarias.
-
-## 4. Mover "Configuracoes Comerciais" para o menu Comercial
-
-No `Sidebar.tsx`:
-- Remover `{ icon: GitBranch, label: 'Configuracoes Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config' }` do grupo "Sistema" (linha 156)
-- Adicionar ao grupo "Comercial" (apos Metas, linha 98):
-  `{ icon: GitBranch, label: 'Configuracoes Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config', adminOnly: true }`
-
-## Resumo de arquivos
+## Resumo
 
 | Arquivo | Acao |
 |---|---|
-| `src/types/atividades.types.ts` | Adicionar novos tipos de atividade |
-| `src/components/atividades/AtividadeForm.tsx` | Renomear botoes e remover descricoes |
-| `src/components/atividades/AtividadeKanbanCard.tsx` | Adicionar icones dos novos tipos |
-| `src/components/layout/Sidebar.tsx` | Mover Config Comerciais para grupo Comercial |
-| `src/pages/ConfiguracaoNegociacoes.tsx` | Adicionar secao de tipos de atendimento |
-| Migration SQL | Tabela de configuracao de tipos de atendimento |
-| `src/hooks/useTiposAtendimento.ts` | Novo hook para gerenciar tipos |
-| `src/components/negociacoes/TiposAtendimentoEditor.tsx` | Novo editor de tipos |
+| `TemperaturaSelector.tsx` | Permitir toggle (clique no ativo = null) |
+| Componentes que usam o seletor | Ajustar tipo do handler para aceitar null |
+
+Alteracao simples e localizada, sem mudancas no banco ou na API.
