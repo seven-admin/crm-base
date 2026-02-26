@@ -45,7 +45,7 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
   const [clienteIdParaValidar, setClienteIdParaValidar] = useState<string | undefined>(undefined);
   const { data: clienteCompleto } = useCliente(clienteIdParaValidar);
 
-  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+  const handleTemperaturaChange = (temp: ClienteTemperatura | null) => {
     updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
   };
 

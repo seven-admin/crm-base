@@ -74,7 +74,7 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
   const isVencida = atividade.status === 'pendente' && new Date(atividade.data_fim) < new Date();
   const updateAtividade = useUpdateAtividade();
 
-  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+  const handleTemperaturaChange = (temp: ClienteTemperatura | null) => {
     updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
   };
 

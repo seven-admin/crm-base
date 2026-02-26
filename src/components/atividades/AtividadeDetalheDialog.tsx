@@ -83,7 +83,7 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
     ? TEMPERATURA_LABELS[atividade.temperatura_cliente] 
     : null;
 
-  const handleTemperaturaChange = (temp: ClienteTemperatura) => {
+  const handleTemperaturaChange = (temp: ClienteTemperatura | null) => {
     if (atividade) {
       updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } });
     }
