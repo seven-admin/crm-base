@@ -1,41 +1,54 @@
 
-# Adicionar funcao de des-selecionar temperatura no TemperaturaSelector
+# Adicionar Filtro de Temperatura nas abas Propostas e Atividades
 
-## O que sera feito
+## Contexto
 
-Alterar o componente `TemperaturaSelector` para permitir que o usuario clique em uma temperatura ja selecionada para limpa-la (voltar para `null`). Atualmente, clicar na temperatura ativa nao faz nada (linha 29: `if (!isActive) onValueChange(temp.value)`).
+Na pagina de Negociacoes (/negociacoes), adicionar filtro por temperatura em ambas as abas:
+- **Propostas**: temperatura vem do `cliente.temperatura` (relacao)
+- **Atividades**: temperatura vem do campo `temperatura_cliente` da atividade
 
-## Alteracao
+## 1. Filtro de Temperatura na aba Propostas
 
-### Arquivo: `src/components/atividades/TemperaturaSelector.tsx`
+### `src/pages/negociacoes/NegociacoesToolbar.tsx`
+- Adicionar `temperatura?: ClienteTemperatura` ao `NegociacoesFilters`
+- Adicionar um novo Select com opcoes: Todas Temperaturas, Frio, Morno, Quente
 
-1. Mudar o tipo do `onValueChange` para aceitar `null`: `onValueChange: (temp: ClienteTemperatura | null) => void`
-2. Na linha 29, trocar a logica do click: se ja esta ativo, chamar `onValueChange(null)`; senao, chamar `onValueChange(temp.value)`
+### `src/types/negociacoes.types.ts`
+- Adicionar `temperatura?: ClienteTemperatura` ao `NegociacaoFilters`
 
-```typescript
-onClick={(e) => {
-  e.stopPropagation();
-  onValueChange(isActive ? null : temp.value);
-}}
-```
+### `src/hooks/useNegociacoes.ts`
+- Nas funcoes `useNegociacoesKanban` e `useNegociacoesPaginated`, aplicar filtro `eq('cliente.temperatura', filters.temperatura)` quando presente
 
-### Arquivos que chamam `onValueChange` com temperatura
+### `src/pages/Negociacoes.tsx`
+- Passar `filters.temperatura` no `kanbanFilters`
 
-Os handlers que recebem o valor precisam aceitar `null`. Verificar e ajustar:
+## 2. Filtro de Temperatura na aba Atividades
 
-- `AtividadeDetalheDialog.tsx` - `handleTemperaturaChange`
-- `AtividadeKanbanCard.tsx` - `handleTemperaturaChange`
-- `AtividadeCard.tsx` - handler de temperatura
-- `Atividades.tsx` - handler na tabela
-- `ConcluirAtividadeDialog.tsx` - handler de conclusao
+### `src/pages/Negociacoes.tsx` (componente `AtividadesMetricsAndBoard`)
+- Adicionar estado local `temperaturaFilter`
+- Renderizar o mesmo seletor de temperatura (TemperaturaSelector ou Select) acima do board
+- Passar o filtro para `AtividadeKanbanBoard`
 
-Em cada um, o tipo do parametro muda de `ClienteTemperatura` para `ClienteTemperatura | null` e o mutation envia `temperatura_cliente: temp` (que agora pode ser `null`).
+### `src/components/atividades/AtividadeKanbanBoard.tsx`
+- Adicionar prop `temperaturaFilter?: ClienteTemperatura`
+- Passar no filtro do `useAtividades`
 
-## Resumo
+### `src/types/atividades.types.ts`
+- Adicionar `temperatura_cliente?: ClienteTemperatura` ao `AtividadeFilters`
+
+### `src/hooks/useAtividades.ts`
+- Na funcao `applyAtividadesFilters`, adicionar: `if (filters?.temperatura_cliente) q = q.eq('temperatura_cliente', filters.temperatura_cliente)`
+
+## Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `TemperaturaSelector.tsx` | Permitir toggle (clique no ativo = null) |
-| Componentes que usam o seletor | Ajustar tipo do handler para aceitar null |
+| `NegociacoesToolbar.tsx` | Adicionar Select de temperatura |
+| `negociacoes.types.ts` | Adicionar campo temperatura ao NegociacaoFilters |
+| `useNegociacoes.ts` | Aplicar filtro de temperatura nas queries |
+| `Negociacoes.tsx` | Passar temperatura nos filtros kanban + adicionar filtro na aba atividades |
+| `AtividadeKanbanBoard.tsx` | Aceitar prop de temperatura e filtrar |
+| `atividades.types.ts` | Adicionar temperatura_cliente ao AtividadeFilters |
+| `useAtividades.ts` | Aplicar filtro temperatura_cliente |
 
-Alteracao simples e localizada, sem mudancas no banco ou na API.
+O filtro visual sera um Select igual aos demais filtros existentes, com opcoes: Frio, Morno, Quente.
