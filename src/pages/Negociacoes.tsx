@@ -1,24 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, LayoutGrid, List, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, LayoutGrid, List } from 'lucide-react';
 import { FunilKanbanBoard } from '@/components/negociacoes/FunilKanbanBoard';
 import { NegociacaoForm } from '@/components/negociacoes/NegociacaoForm';
 import { NegociacoesToolbar, type NegociacoesFilters } from '@/pages/negociacoes/NegociacoesToolbar';
 import { NegociacoesTable } from '@/pages/negociacoes/NegociacoesTable';
 import { MoverNegociacaoDialog } from '@/components/negociacoes/MoverNegociacaoDialog';
 import { NegociacaoHistoricoTimeline } from '@/components/negociacoes/NegociacaoHistoricoTimeline';
-import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
-import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
 import { useNegociacoesKanban, useNegociacoesPaginated, useDeleteNegociacao } from '@/hooks/useNegociacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
-import { useAtividades } from '@/hooks/useAtividades';
-import { useAtividadeEtapas } from '@/hooks/useAtividadeEtapas';
-import { TIPOS_NEGOCIACAO } from '@/types/atividades.types';
 import { Card } from '@/components/ui/card';
 import { formatarMoedaCompacta } from '@/lib/formatters';
 import { Negociacao } from '@/types/negociacoes.types';
@@ -37,7 +30,6 @@ const Funil = () => {
   const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
   const [view, setView] = useState<'kanban' | 'lista'>('kanban');
-  const [mainTab, setMainTab] = useState<'propostas' | 'atividades'>('propostas');
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<NegociacoesFilters>({});
   
@@ -48,7 +40,7 @@ const Funil = () => {
 
   const deleteNegociacao = useDeleteNegociacao();
 
-  // Kanban filters (only empreendimento/corretor)
+  // Kanban filters
   const kanbanFilters = useMemo(() => ({
     empreendimento_id: filters.empreendimento_id,
     corretor_id: filters.corretor_id,
@@ -71,7 +63,7 @@ const Funil = () => {
 
   const { data: etapas = [] } = useEtapasPadraoAtivas();
 
-  // Metrics (use kanban data when available, otherwise table)
+  // Metrics
   const metricsSource = view === 'kanban' ? negociacoesKanban : negociacoesTabela;
   const totalNegociacoes = view === 'kanban' ? negociacoesKanban.length : total;
   const valorTotal = useMemo(
@@ -107,22 +99,8 @@ const Funil = () => {
   return (
     <MainLayout
       title="Negociações"
-      subtitle="Gerencie suas negociações e atividades comerciais"
+      subtitle="Gerencie suas negociações e propostas comerciais"
     >
-      {/* Main Tabs: Propostas / Atividades */}
-      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'propostas' | 'atividades')} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="propostas" className="gap-1.5 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
-            <LayoutGrid className="h-4 w-4" />
-            Propostas
-          </TabsTrigger>
-          <TabsTrigger value="atividades" className="gap-1.5 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
-            <ClipboardList className="h-4 w-4" />
-            Atividades
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="propostas" className="mt-0">
       {/* Metrics Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
@@ -239,107 +217,8 @@ const Funil = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-        </TabsContent>
-
-        <TabsContent value="atividades" className="mt-0">
-          <AtividadesMetricsAndBoard />
-        </TabsContent>
-      </Tabs>
     </MainLayout>
   );
 };
-function AtividadesMetricsAndBoard() {
-  const [competencia, setCompetencia] = useState(new Date());
-  const [temperaturaFilter, setTemperaturaFilter] = useState<import('@/types/clientes.types').ClienteTemperatura | undefined>(undefined);
-
-  // For the overlap filter logic in useAtividades:
-  // filters.data_inicio uses lte('data_inicio', value) → pass endOfMonth
-  // filters.data_fim uses gte('data_fim', value) → pass startOfMonth
-  const dataInicioFilter = format(endOfMonth(competencia), 'yyyy-MM-dd');
-  const dataFimFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
-
-  const { data: atividadesData } = useAtividades({
-    filters: { tipos: TIPOS_NEGOCIACAO, data_inicio: dataInicioFilter, data_fim: dataFimFilter, temperatura_cliente: temperaturaFilter },
-    page: 1,
-    pageSize: 500,
-  });
-  const { data: atividadeEtapas = [] } = useAtividadeEtapas();
-
-  const atividades = atividadesData?.items || [];
-  const totalAtividades = atividadesData?.count || atividades.length;
-  const pendentes = atividades.filter(a => a.status === 'pendente').length;
-  const concluidas = atividades.filter(a => a.status === 'concluida').length;
-
-  const countPerEtapa = useMemo(() => {
-    const acc: Record<string, number> = {};
-    for (const a of atividades) {
-      const etapaId = (a as any).atividade_etapa_id;
-      if (!etapaId) continue;
-      acc[etapaId] = (acc[etapaId] || 0) + 1;
-    }
-    return acc;
-  }, [atividades]);
-
-  const mesLabel = format(competencia, 'MMMM yyyy', { locale: ptBR });
-  const isCurrentMonth = isSameMonth(competencia, new Date());
-
-  return (
-    <>
-      {/* Month Navigator + Temperatura Filter */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => subMonths(prev, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-lg font-semibold capitalize min-w-[160px] text-center">{mesLabel}</span>
-          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => addMonths(prev, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} />
-          {!isCurrentMonth && (
-            <Button variant="ghost" size="sm" onClick={() => setCompetencia(new Date())}>
-              Este mês
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Total de Atividades</p>
-          <p className="text-2xl font-bold">{totalAtividades}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Pendentes</p>
-          <p className="text-2xl font-bold">{pendentes}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Concluídas</p>
-          <p className="text-2xl font-bold">{concluidas}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Por Etapa</p>
-          <div className="flex gap-1 mt-1 flex-wrap">
-            {atividadeEtapas.map((etapa) => (
-              <div
-                key={etapa.id}
-                className="px-1.5 py-0.5 rounded text-xs text-white"
-                style={{ backgroundColor: etapa.cor }}
-                title={etapa.nome}
-              >
-                {countPerEtapa[etapa.id] || 0}
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-      <div className="min-h-[500px]">
-        <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} temperaturaFilter={temperaturaFilter} />
-      </div>
-    </>
-  );
-}
 
 export default Funil;
