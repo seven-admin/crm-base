@@ -1,54 +1,37 @@
 
-# Adicionar Filtro de Temperatura nas abas Propostas e Atividades
+# Mover aba Atividades de Negociações para Diário de Bordo
 
-## Contexto
+## O que sera feito
 
-Na pagina de Negociacoes (/negociacoes), adicionar filtro por temperatura em ambas as abas:
-- **Propostas**: temperatura vem do `cliente.temperatura` (relacao)
-- **Atividades**: temperatura vem do campo `temperatura_cliente` da atividade
+1. Remover a aba "Atividades" e o componente `AtividadesMetricsAndBoard` da pagina `/negociacoes` (`src/pages/Negociacoes.tsx`)
+2. Adicionar uma estrutura de abas no Diario de Bordo (`src/pages/DiarioBordo.tsx`) com duas abas: "Resumo" (conteudo atual) e "Atividades" (kanban de atividades comerciais movido de Negociacoes)
+3. Mover a funcao `AtividadesMetricsAndBoard` para o Diario de Bordo (ou extrair para componente separado)
 
-## 1. Filtro de Temperatura na aba Propostas
-
-### `src/pages/negociacoes/NegociacoesToolbar.tsx`
-- Adicionar `temperatura?: ClienteTemperatura` ao `NegociacoesFilters`
-- Adicionar um novo Select com opcoes: Todas Temperaturas, Frio, Morno, Quente
-
-### `src/types/negociacoes.types.ts`
-- Adicionar `temperatura?: ClienteTemperatura` ao `NegociacaoFilters`
-
-### `src/hooks/useNegociacoes.ts`
-- Nas funcoes `useNegociacoesKanban` e `useNegociacoesPaginated`, aplicar filtro `eq('cliente.temperatura', filters.temperatura)` quando presente
+## Detalhes tecnicos
 
 ### `src/pages/Negociacoes.tsx`
-- Passar `filters.temperatura` no `kanbanFilters`
+- Remover a aba "Atividades" do `TabsList` principal (linhas 107-112)
+- Remover o `TabsContent value="atividades"` (linhas 244-246)
+- Remover o componente `AtividadesMetricsAndBoard` (linhas 251-343)
+- Remover estado `mainTab` e simplificar -- a pagina deixa de ter abas principais (fica so Propostas)
+- Remover imports nao utilizados: `AtividadeKanbanBoard`, `TemperaturaSelector`, `useAtividades`, `useAtividadeEtapas`, `TIPOS_NEGOCIACAO`, `isSameMonth`
 
-## 2. Filtro de Temperatura na aba Atividades
+### `src/pages/DiarioBordo.tsx`
+- Adicionar `Tabs` com duas abas: "Resumo" (conteudo atual: cards de categoria + visitas) e "Atividades" (kanban comercial)
+- Importar e incluir o componente `AtividadesMetricsAndBoard` (movido de Negociacoes) na aba "Atividades"
+- Adicionar imports necessarios: `Tabs, TabsList, TabsTrigger, TabsContent`, `AtividadeKanbanBoard`, `TemperaturaSelector`, `useAtividades`, `useAtividadeEtapas`, `TIPOS_NEGOCIACAO`, `Card`, `isSameMonth`
 
-### `src/pages/Negociacoes.tsx` (componente `AtividadesMetricsAndBoard`)
-- Adicionar estado local `temperaturaFilter`
-- Renderizar o mesmo seletor de temperatura (TemperaturaSelector ou Select) acima do board
-- Passar o filtro para `AtividadeKanbanBoard`
+### Estrutura final do Diario de Bordo
 
-### `src/components/atividades/AtividadeKanbanBoard.tsx`
-- Adicionar prop `temperaturaFilter?: ClienteTemperatura`
-- Passar no filtro do `useAtividades`
+```text
++------------------------------------------+
+| Diario de Bordo          [filtros/acoes]  |
++------------------------------------------+
+| [Resumo]  [Atividades]                    |
++------------------------------------------+
+| (conteudo da aba selecionada)             |
++------------------------------------------+
+```
 
-### `src/types/atividades.types.ts`
-- Adicionar `temperatura_cliente?: ClienteTemperatura` ao `AtividadeFilters`
-
-### `src/hooks/useAtividades.ts`
-- Na funcao `applyAtividadesFilters`, adicionar: `if (filters?.temperatura_cliente) q = q.eq('temperatura_cliente', filters.temperatura_cliente)`
-
-## Resumo de arquivos
-
-| Arquivo | Acao |
-|---|---|
-| `NegociacoesToolbar.tsx` | Adicionar Select de temperatura |
-| `negociacoes.types.ts` | Adicionar campo temperatura ao NegociacaoFilters |
-| `useNegociacoes.ts` | Aplicar filtro de temperatura nas queries |
-| `Negociacoes.tsx` | Passar temperatura nos filtros kanban + adicionar filtro na aba atividades |
-| `AtividadeKanbanBoard.tsx` | Aceitar prop de temperatura e filtrar |
-| `atividades.types.ts` | Adicionar temperatura_cliente ao AtividadeFilters |
-| `useAtividades.ts` | Aplicar filtro temperatura_cliente |
-
-O filtro visual sera um Select igual aos demais filtros existentes, com opcoes: Frio, Morno, Quente.
+- **Aba Resumo**: Cards por categoria + Visitas por Empreendimento (conteudo atual)
+- **Aba Atividades**: Navegador de mes + filtro temperatura + metricas + Kanban de atividades comerciais (movido de Negociacoes)
