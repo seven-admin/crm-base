@@ -1,124 +1,93 @@
 
-# Correção definitiva: Portal do Incorporador /propostas continua vazio
+# Exibir dados completos da proposta no Portal do Incorporador
 
-## Diagnóstico confirmado (com evidência)
+## Problemas identificados
 
-Eu validei o fluxo atual e encontrei a causa raiz real do “continua sem exibir”:
+### 1. Cliente aparece como null (RLS)
+O campo `cliente` retorna `null` na resposta da API porque a policy de `clientes` para incorporador exige que o `gestor_id` do cliente esteja vinculado ao empreendimento. O cliente "CLIENTE TESTE CRM SEVEN" tem `gestor_id = NULL`, logo a policy nao faz match.
 
-1. A tela `/portal-incorporador/propostas` está renderizando normalmente (não é erro de UI).
-2. A requisição da página para `negociacoes` está sendo feita e retorna **200 com array vazio**:
-   - `GET /rest/v1/negociacoes?...`
-   - `Response Body: []`
-3. No banco, a negociação existe e está correta:
-   - `NEG-00024`
-   - `status_proposta = em_analise`
-   - `funil_etapa_id = ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35`
-   - `is_active = true`
-4. O usuário logado é `incorporador` e está vinculado ao empreendimento da negociação em `user_empreendimentos`.
+**Solucao**: Criar nova policy SELECT em `clientes` que permita incorporador ver clientes vinculados a negociacoes dos seus empreendimentos.
 
-Conclusão: o problema agora **não é status/filtro frontend**, e sim **RLS de leitura em `negociacoes`** para incorporador.
+### 2. Condicoes de pagamento inacessiveis (RLS)
+A policy de SELECT em `negociacao_condicoes_pagamento` so permite admin, gestor_produto e corretor. Incorporador nao consegue ler.
 
----
+**Solucao**: Adicionar policy SELECT para incorporador na tabela `negociacao_condicoes_pagamento`.
 
-## Causa raiz técnica
+### 3. UI do card incompleta
+O card atual so mostra: codigo, status, cliente, empreendimento, valor tabela, valor proposta, corretor. Faltam dados importantes para decisao do incorporador.
 
-As policies atuais de `SELECT` em `public.negociacoes` permitem leitura para:
-- admin
-- gestor_produto
-- corretor dono da negociação
+**Solucao**: Refatorar o card para exibir:
 
-Mas **não existe policy explícita de SELECT para incorporador** com vínculo de empreendimento.  
-Resultado: a query retorna `[]` mesmo havendo registro válido.
-
-Também há um segundo ponto preventivo:
-- `negociacao_unidades` também não tem `SELECT` adequado para incorporador.
-- Isso pode quebrar efeitos colaterais no fluxo de aprovação (ex.: não carregar unidades da proposta para marcar status corretamente).
-
----
-
-## Plano de implementação
-
-## 1) Migration SQL: liberar leitura de negociações para incorporador vinculado ao empreendimento
-Criar nova policy de `SELECT` em `public.negociacoes` baseada em acesso ao empreendimento.
-
-Proposta:
-```sql
-create policy "Incorporadores can view negociacoes from linked empreendimentos"
-on public.negociacoes
-for select
-to authenticated
-using (
-  is_incorporador(auth.uid())
-  and user_has_empreendimento_access(auth.uid(), empreendimento_id)
-);
+```text
++--------------------------------------------------+
+| PROP-00001 | NEG-00024        [Badge: Em Analise] |
++--------------------------------------------------+
+| Cliente: CLIENTE TESTE CRM SEVEN                 |
+| CPF: xxx.xxx.xxx-xx | Email | Telefone           |
+| Empreendimento: EMPREENDIMENTO TESTE              |
+| Corretor: ...                                     |
++--------------------------------------------------+
+| UNIDADES                                          |
+| Bloco 01 - Unidade 101 | R$ 500.000,00           |
++--------------------------------------------------+
+| VALORES                                           |
+| Valor Tabela: R$ 500.000  Valor Proposta: R$ ... |
+| Desconto: -X%                                     |
++--------------------------------------------------+
+| CONDICOES DE PAGAMENTO                            |
+| 1x Mensal Serie - R$ 500.000,00 (Boleto)         |
++--------------------------------------------------+
+| [Contra Proposta]            [Aprovar]            |
++--------------------------------------------------+
 ```
 
-Observação:
-- Mantém segurança por vínculo (`user_has_empreendimento_access`).
-- Não abre acesso público.
-- Aproveita função já usada em outras partes do sistema.
+---
 
-## 2) Migration SQL: liberar leitura de itens (negociacao_unidades) para incorporador
-Criar policy de `SELECT` em `public.negociacao_unidades` para permitir embed/uso da relação quando a negociação for acessível.
+## Plano de implementacao
 
-Proposta:
+### Migration SQL (2 novas policies)
+
+**Policy 1** - Incorporador pode ver clientes que estao em negociacoes dos seus empreendimentos:
 ```sql
-create policy "Incorporadores can view negociacao_unidades from linked empreendimentos"
-on public.negociacao_unidades
-for select
-to authenticated
-using (
-  exists (
-    select 1
-    from public.negociacoes n
-    where n.id = negociacao_unidades.negociacao_id
-      and is_incorporador(auth.uid())
-      and user_has_empreendimento_access(auth.uid(), n.empreendimento_id)
+CREATE POLICY "Incorporadores can view clientes from negociacoes"
+ON public.clientes FOR SELECT TO authenticated
+USING (
+  public.is_incorporador(auth.uid())
+  AND id IN (
+    SELECT n.cliente_id FROM public.negociacoes n
+    WHERE public.user_has_empreendimento_access(auth.uid(), n.empreendimento_id)
   )
 );
 ```
 
-## 3) Frontend: manter filtro resiliente já implementado
-No `PortalIncorporadorPropostas.tsx`, o filtro atual já está correto e resiliente:
-- `status_proposta = 'em_analise'`
-- fallback por `funil_etapa_id = etapa de análise` quando status ausente
+**Policy 2** - Incorporador pode ver condicoes de pagamento das negociacoes acessiveis:
+```sql
+CREATE POLICY "Incorporadores can view negociacao_condicoes_pagamento"
+ON public.negociacao_condicoes_pagamento FOR SELECT TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.negociacoes n
+    WHERE n.id = negociacao_condicoes_pagamento.negociacao_id
+      AND public.is_incorporador(auth.uid())
+      AND public.user_has_empreendimento_access(auth.uid(), n.empreendimento_id)
+  )
+);
+```
 
-Não precisa nova mudança funcional aqui para este bug específico, apenas validar após ajuste de RLS.
+### Frontend - PortalIncorporadorPropostas.tsx
 
-## 4) Verificação ponta a ponta (obrigatória)
-Após aplicar policies:
-1. Recarregar `/portal-incorporador/propostas`
-2. Confirmar que `GET /negociacoes` retorna `NEG-00024`
-3. Confirmar card em “Propostas Aguardando Aprovação”
-4. Testar ação **Aprovar** e **Contra Proposta**
-5. Validar efeitos:
-   - transição de etapa/status
-   - atualização de unidades (quando aplicável)
-   - proposta sai de “Aguardando” e vai para “Recentes”
+1. Adicionar hook `useNegociacaoCondicoesPagamento` ou buscar condicoes inline
+2. Expandir o card com secoes:
+   - **Dados do cliente**: nome, CPF, email, telefone
+   - **Unidades**: bloco + numero + valor de cada unidade vinculada
+   - **Valores**: valor tabela, valor proposta, desconto
+   - **Condicoes de pagamento**: tipo parcela, quantidade, valor, forma de pagamento
+3. Usar `formatarMoeda` do `@/lib/formatters` para consistencia
+4. Buscar condicoes de pagamento junto com os dados da negociacao (query adicional ou hook dedicado)
 
----
+### Arquivos modificados
 
-## Arquivos/recursos impactados
-
-- **Banco (migration SQL)**:
-  - `public.negociacoes` (nova policy SELECT para incorporador)
-  - `public.negociacao_unidades` (nova policy SELECT para incorporador)
-- **Frontend**:
-  - sem alteração obrigatória para esta causa raiz (filtro já está correto no arquivo de propostas)
-
----
-
-## Riscos e cuidados
-
-- Evitar policy ampla demais (`true`) para não vazar negociações.
-- Reutilizar `user_has_empreendimento_access` para manter padrão de autorização do projeto.
-- Conferir nomes das policies para não duplicar com nome já existente.
-- Caso exista conflito de policy legada, ajustar com `drop policy if exists ...` antes de criar.
-
----
-
-## Resultado esperado após implementação
-
-- O incorporador passa a visualizar as propostas pendentes corretamente em `/portal-incorporador/propostas`.
-- `NEG-00024` aparece imediatamente.
-- O fluxo de aprovação/contra proposta funciona com os dados completos necessários.
+| Arquivo | Mudanca |
+|---------|---------|
+| Migration SQL | 2 novas policies RLS (clientes + negociacao_condicoes_pagamento) |
+| `PortalIncorporadorPropostas.tsx` | Card expandido com todos os dados da proposta |
