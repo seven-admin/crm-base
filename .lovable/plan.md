@@ -1,28 +1,23 @@
 
-# Temperatura vazia com popover no displayMode
+# Padronizar formato dos badges de temperatura no displayMode
 
 ## Problema
-Quando nao ha temperatura selecionada no `displayMode`, o componente exibe apenas um "-" estatico sem possibilidade de interacao. O usuario nao consegue definir uma temperatura a partir da tabela.
+Na tabela de atividades, o badge "Quente" aparece visivelmente maior que o badge "Frio", apesar de ambos usarem as mesmas classes CSS (`text-[10px] px-1.5 py-0`). A diferenca ocorre porque os emojis (fogo vs floco de neve) renderizam com tamanhos diferentes, inflando o badge de forma inconsistente.
 
 ## Solucao
 
 ### Arquivo: `src/components/atividades/TemperaturaSelector.tsx`
 
-Alterar o bloco `if (!selected)` (linhas 28-30) para, em vez de retornar um `<span>` simples, retornar o mesmo `Popover` usado quando ha valor selecionado, mas com o "-" como trigger.
+Adicionar classes de controle de altura e alinhamento ao botao trigger do displayMode (linha 71-82) para garantir formato identico independente do emoji:
 
-O "-" sera um botao clicavel que abre o popover com as 3 opcoes de temperatura, permitindo ao usuario definir uma temperatura diretamente na tabela.
+- Adicionar `inline-flex items-center h-5 leading-none` ao botao trigger (badge selecionado)
+- Aplicar o mesmo padrao aos botoes dentro do PopoverContent (ambos blocos: vazio e com selecao)
+- Garantir que todos os botoes de temperatura usem exatamente as mesmas classes de dimensionamento
 
-### Mudanca especifica (linhas 28-30)
-
-Substituir:
-```tsx
-if (!selected) {
-  return <span className="text-muted-foreground text-xs">-</span>;
-}
+### Classes padrao para todos os botoes de temperatura no displayMode:
+```
+'inline-flex items-center h-5 leading-none border rounded-full font-medium transition-colors text-[10px] px-1.5 py-0'
 ```
 
-Por um bloco que envolve o "-" em um `Popover` com as mesmas opcoes de selecao, reutilizando o mesmo `PopoverContent` ja existente abaixo.
-
 ### Resultado
-- Sem temperatura: exibe "-" clicavel que abre popover com Frio/Morno/Quente
-- Com temperatura: comportamento atual mantido (badge clicavel com popover)
+Todos os badges (Frio, Morno, Quente) terao exatamente a mesma altura e formato, tanto como trigger quanto como opcoes no popover.
