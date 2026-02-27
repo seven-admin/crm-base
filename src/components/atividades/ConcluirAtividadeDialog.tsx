@@ -147,6 +147,7 @@ export function ConcluirAtividadeDialog({
                       <TemperaturaSelector
                         value={field.value as ClienteTemperatura | undefined}
                         onValueChange={field.onChange}
+                        context="atividade"
                       />
                     </FormControl>
                     <FormMessage />

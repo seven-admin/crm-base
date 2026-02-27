@@ -303,6 +303,7 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
               <TemperaturaSelector
                 value={atividade.temperatura_cliente}
                 onValueChange={handleTemperaturaChange}
+                context="atividade"
               />
             </div>
 

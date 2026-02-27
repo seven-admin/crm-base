@@ -97,6 +97,7 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
               value={atividade.temperatura_cliente}
               onValueChange={handleTemperaturaChange}
               compact
+              context="atividade"
             />
           )}
         </div>

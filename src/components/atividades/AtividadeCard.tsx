@@ -205,6 +205,7 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
                   value={atividade.temperatura_cliente}
                   onValueChange={handleTemperaturaChange}
                   compact
+                  context="atividade"
                 />
               </div>
             )}
