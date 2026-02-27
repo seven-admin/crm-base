@@ -2,6 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, format, subMonths } from 'date-fns';
 import { dispararWebhook, getUsuarioLogado } from '@/lib/webhookUtils';
+import { getClientesHistoricosIds } from '@/lib/contratoFilters';
+
+/** Helper: aplica exclusão de clientes históricos na query de contratos */
+function applyHistoricoFilter(query: any, ids: string[]) {
+  if (ids.length > 0) {
+    return query.not('cliente_id', 'in', `(${ids.join(',')})`);
+  }
+  return query;
+}
 
 export interface MetaComercial {
   id: string;
@@ -62,6 +71,7 @@ export function useVendasRealizadasMes(competencia: Date, empreendimentoId?: str
     queryFn: async () => {
       const inicio = startOfMonth(competencia);
       const fim = endOfMonth(competencia);
+      const historicosIds = await getClientesHistoricosIds();
       
       let query = supabase
         .from('contratos')
@@ -69,6 +79,8 @@ export function useVendasRealizadasMes(competencia: Date, empreendimentoId?: str
         .eq('status', 'assinado')
         .gte('data_assinatura', format(inicio, 'yyyy-MM-dd'))
         .lte('data_assinatura', format(fim, 'yyyy-MM-dd'));
+      
+      query = applyHistoricoFilter(query, historicosIds);
       
       if (empreendimentoId) {
         query = query.eq('empreendimento_id', empreendimentoId);
@@ -127,6 +139,7 @@ export function useRankingCorretoresMes(competencia: Date, empreendimentoId?: st
     queryFn: async () => {
       const inicio = startOfMonth(competencia);
       const fim = endOfMonth(competencia);
+      const historicosIds = await getClientesHistoricosIds();
       
       let query = supabase
         .from('contratos')
@@ -140,6 +153,8 @@ export function useRankingCorretoresMes(competencia: Date, empreendimentoId?: st
         .gte('data_assinatura', format(inicio, 'yyyy-MM-dd'))
         .lte('data_assinatura', format(fim, 'yyyy-MM-dd'))
         .not('corretor_id', 'is', null);
+      
+      query = applyHistoricoFilter(query, historicosIds);
       
       if (empreendimentoId) {
         query = query.eq('empreendimento_id', empreendimentoId);
@@ -193,13 +208,16 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
         metaQuery = metaQuery.is('empreendimento_id', null);
       }
 
-      // Bulk query 2: all signed contracts in the period
+      // Bulk query 2: all signed contracts in the period (excl. histórico)
+      const historicosIds = await getClientesHistoricosIds();
       let vendaQuery = supabase
         .from('contratos')
         .select('valor_contrato, data_assinatura')
         .eq('status', 'assinado')
         .gte('data_assinatura', inicioPeríodo)
         .lte('data_assinatura', fimPeríodo);
+      
+      vendaQuery = applyHistoricoFilter(vendaQuery, historicosIds);
       
       if (empreendimentoId) {
         vendaQuery = vendaQuery.eq('empreendimento_id', empreendimentoId);
@@ -415,11 +433,16 @@ export function useMetasVsRealizadoPorEmpreendimento(competencia: Date) {
           .select('empreendimento_id, meta_valor')
           .eq('competencia', competenciaStr)
           .not('empreendimento_id', 'is', null),
-        supabase.from('contratos')
-          .select('valor_contrato, empreendimento_id')
-          .eq('status', 'assinado')
-          .gte('data_assinatura', format(inicio, 'yyyy-MM-dd'))
-          .lte('data_assinatura', format(fim, 'yyyy-MM-dd')),
+        (async () => {
+          const historicosIds = await getClientesHistoricosIds();
+          let q = supabase.from('contratos')
+            .select('valor_contrato, empreendimento_id')
+            .eq('status', 'assinado')
+            .gte('data_assinatura', format(inicio, 'yyyy-MM-dd'))
+            .lte('data_assinatura', format(fim, 'yyyy-MM-dd'));
+          q = applyHistoricoFilter(q, historicosIds);
+          return q;
+        })(),
       ]);
 
       // Build lookup maps
