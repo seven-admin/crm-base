@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
+import { getClientesHistoricosIds } from '@/lib/contratoFilters';
 
 // Stats gerais do dashboard
 export function useDashboardStats() {
@@ -14,33 +15,48 @@ export function useDashboardStats() {
       const startOfLastMonth = startOfMonth(subMonths(now, 1));
       const endOfLastMonth = endOfMonth(subMonths(now, 1));
 
+      // Buscar IDs de clientes históricos para exclusão
+      const historicosIds = await getClientesHistoricosIds();
+
       // Total em vendas (contratos assinados)
-      const { data: totalVendasData } = await supabase
+      let totalVendasQuery = supabase
         .from('contratos')
         .select('valor_contrato')
         .eq('is_active', true)
         .eq('status', 'assinado');
+      if (historicosIds.length > 0) {
+        totalVendasQuery = totalVendasQuery.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data: totalVendasData } = await totalVendasQuery;
 
       const totalVendas = totalVendasData?.reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
 
       // Vendas do mês atual
-      const { data: vendasMesData } = await supabase
+      let vendasMesQuery = supabase
         .from('contratos')
         .select('valor_contrato')
         .eq('is_active', true)
         .eq('status', 'assinado')
         .gte('data_assinatura', startOfCurrentMonth.toISOString());
+      if (historicosIds.length > 0) {
+        vendasMesQuery = vendasMesQuery.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data: vendasMesData } = await vendasMesQuery;
 
       const vendasMes = vendasMesData?.reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
 
       // Vendas do mês anterior (para comparação)
-      const { data: vendasMesAnteriorData } = await supabase
+      let vendasMesAnteriorQuery = supabase
         .from('contratos')
         .select('valor_contrato')
         .eq('is_active', true)
         .eq('status', 'assinado')
         .gte('data_assinatura', startOfLastMonth.toISOString())
         .lte('data_assinatura', endOfLastMonth.toISOString());
+      if (historicosIds.length > 0) {
+        vendasMesAnteriorQuery = vendasMesAnteriorQuery.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data: vendasMesAnteriorData } = await vendasMesAnteriorQuery;
 
       const vendasMesAnterior = vendasMesAnteriorData?.reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
 
@@ -104,13 +120,18 @@ export function useVendasPorMes() {
     refetchInterval: 2 * 60 * 1000, // Atualiza a cada 2 minutos
     queryFn: async () => {
       const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
+      const historicosIds = await getClientesHistoricosIds();
       
-      const { data } = await supabase
+      let query = supabase
         .from('contratos')
         .select('valor_contrato, data_assinatura')
         .eq('is_active', true)
         .eq('status', 'assinado')
         .gte('data_assinatura', sixMonthsAgo.toISOString());
+      if (historicosIds.length > 0) {
+        query = query.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data } = await query;
 
       const monthlyTotals = new Map<string, number>();
       
@@ -144,12 +165,17 @@ export function usePerformanceCorretores() {
     queryKey: ['performance-corretores'],
     refetchInterval: 2 * 60 * 1000, // Atualiza a cada 2 minutos
     queryFn: async () => {
-      const { data: contratos } = await supabase
+      const historicosIds = await getClientesHistoricosIds();
+      let query = supabase
         .from('contratos')
         .select(`valor_contrato, corretor_id, corretores (id, nome_completo)`)
         .eq('is_active', true)
         .eq('status', 'assinado')
         .not('corretor_id', 'is', null);
+      if (historicosIds.length > 0) {
+        query = query.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data: contratos } = await query;
 
       const corretoresMap = new Map<string, { nome: string; vendas: number; unidades: number }>();
 
@@ -200,11 +226,16 @@ export function useVendasPorEmpreendimento() {
   return useQuery({
     queryKey: ['vendas-por-empreendimento'],
     queryFn: async () => {
-      const { data: contratos } = await supabase
+      const historicosIds = await getClientesHistoricosIds();
+      let query = supabase
         .from('contratos')
         .select(`valor_contrato, empreendimento_id, empreendimentos (id, nome)`)
         .eq('is_active', true)
         .eq('status', 'assinado');
+      if (historicosIds.length > 0) {
+        query = query.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data: contratos } = await query;
 
       const empreendimentosMap = new Map<string, { nome: string; vendas: number; quantidade: number }>();
 
@@ -233,7 +264,8 @@ export function useVendasPorPeriodo(dataInicio: Date, dataFim: Date) {
   return useQuery({
     queryKey: ['vendas-periodo', dataInicio.toISOString(), dataFim.toISOString()],
     queryFn: async () => {
-      const { data } = await supabase
+      const historicosIds = await getClientesHistoricosIds();
+      let query = supabase
         .from('contratos')
         .select(`id, numero, valor_contrato, data_assinatura, clientes (nome), empreendimentos (nome), corretores (nome_completo)`)
         .eq('is_active', true)
@@ -241,6 +273,10 @@ export function useVendasPorPeriodo(dataInicio: Date, dataFim: Date) {
         .gte('data_assinatura', dataInicio.toISOString())
         .lte('data_assinatura', dataFim.toISOString())
         .order('data_assinatura', { ascending: false });
+      if (historicosIds.length > 0) {
+        query = query.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+      const { data } = await query;
 
       return data?.map((c) => ({
         id: c.id,

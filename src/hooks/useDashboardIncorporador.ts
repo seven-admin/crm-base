@@ -57,13 +57,17 @@ export function useDashboardIncorporador() {
         .in('status', ['pendente', 'triado', 'em_producao'])
         .eq('is_active', true);
 
-      // Buscar contratos em andamento
+      // Buscar contratos em andamento (excluindo comprador histórico)
       const { data: contratos } = await supabase
         .from('contratos')
-        .select('id')
+        .select('id, cliente:clientes(nome)')
         .in('empreendimento_id', empreendimentoIds)
         .in('status', ['em_geracao', 'enviado_incorporador', 'enviado_assinatura'])
         .eq('is_active', true);
+
+      const contratosValidos = (contratos || []).filter(
+        (c: any) => !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
+      );
 
       // Calcular estatísticas
       const totalUnidades = unidades?.length || 0;
@@ -80,7 +84,7 @@ export function useDashboardIncorporador() {
         unidadesVendidas,
         reservasAtivas,
         briefingsPendentes: briefings?.length || 0,
-        contratosEmAndamento: contratos?.length || 0,
+        contratosEmAndamento: contratosValidos.length,
         valorTotalVendido,
       };
     },
