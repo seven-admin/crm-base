@@ -233,7 +233,23 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     if (sourceColumn === destinationColumn) return;
 
     const destEtapa = etapas.find(e => e.id === destinationColumn);
+    const srcEtapa = etapas.find(e => e.id === sourceColumn);
     if (!destEtapa) return;
+
+    // Bloqueio: não pode sair de Atendimento sem proposta
+    if (srcEtapa?.is_inicial && !destEtapa.is_inicial && !negociacao.numero_proposta) {
+      setSelectedNegociacao(negociacao);
+      setPropostaMode('gerar');
+      setPropostaOpen(true);
+      toast.info('Gere uma proposta para avançar a negociação.');
+      return;
+    }
+
+    // Bloqueio geral: nenhuma etapa após Atendimento sem proposta
+    if (!destEtapa.is_inicial && !negociacao.numero_proposta) {
+      toast.error('É necessário gerar uma proposta antes de avançar.');
+      return;
+    }
 
     // For final stages (success or loss), open dialog for additional info
     if (destEtapa.is_final_perda || destEtapa.is_final_sucesso) {
