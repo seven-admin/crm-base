@@ -461,6 +461,7 @@ export default function Atividades() {
               <TemperaturaSelector
                 value={kanbanTemperatura}
                 onValueChange={(temp) => setKanbanTemperatura(temp ?? undefined)}
+                context="atividade"
               />
             </div>
             <AtividadeKanbanBoard
@@ -593,6 +594,7 @@ export default function Atividades() {
               <TemperaturaSelector
                 value={filters.temperatura_cliente}
                 onValueChange={(temp) => setFilters({ ...filters, temperatura_cliente: temp ?? undefined })}
+                context="atividade"
               />
             </div>
 
@@ -848,6 +850,7 @@ export default function Atividades() {
                                   value={atividade.temperatura_cliente}
                                   onValueChange={(temp) => updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } })}
                                   displayMode
+                                  context="atividade"
                                 />
                               </TableCell>
                               <TableCell className="hidden lg:table-cell">{atividade.corretor?.nome_completo || '-'}</TableCell>

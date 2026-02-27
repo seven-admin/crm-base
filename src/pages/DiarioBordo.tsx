@@ -232,7 +232,7 @@ function AtividadesMetricsAndBoard({ competencia }: { competencia: Date }) {
   return (
     <>
       <div className="flex items-center justify-end mb-4">
-        <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} />
+        <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} context="atividade" />
       </div>
       <div className="min-h-[500px]">
         <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} temperaturaFilter={temperaturaFilter} />

@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 
 const TEMPERATURAS: { value: ClienteTemperatura; label: string; emoji: string; activeClass: string; inactiveClass: string }[] = [
@@ -9,6 +11,11 @@ const TEMPERATURAS: { value: ClienteTemperatura; label: string; emoji: string; a
   { value: 'quente', label: 'Quente', emoji: '🔥', activeClass: 'bg-red-500 text-white border-red-500', inactiveClass: 'border-red-300 text-red-600 hover:bg-red-50' },
 ];
 
+const CONTEXT_LABELS = {
+  atividade: 'Proximidade com o parceiro',
+  negociacao: 'Proximidade com a próxima etapa',
+};
+
 interface TemperaturaSelectorProps {
   value?: ClienteTemperatura | null;
   onValueChange: (temp: ClienteTemperatura | null) => void;
@@ -16,9 +23,11 @@ interface TemperaturaSelectorProps {
   disabled?: boolean;
   /** When true, shows only the selected badge (or "-") with a popover to change */
   displayMode?: boolean;
+  /** Contextual label explaining what temperature means */
+  context?: 'atividade' | 'negociacao';
 }
 
-export function TemperaturaSelector({ value, onValueChange, compact = false, disabled = false, displayMode = false }: TemperaturaSelectorProps) {
+export function TemperaturaSelector({ value, onValueChange, compact = false, disabled = false, displayMode = false, context }: TemperaturaSelectorProps) {
   const [open, setOpen] = useState(false);
 
   // Display mode: show only selected badge or "-"
@@ -39,6 +48,9 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" align="start" onClick={(e) => e.stopPropagation()}>
+            {context && (
+              <p className="text-[10px] text-muted-foreground mb-1.5 px-0.5">{CONTEXT_LABELS[context]}</p>
+            )}
             <div className="flex gap-1">
               {TEMPERATURAS.map((temp) => (
                 <button
@@ -84,6 +96,9 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2" align="start" onClick={(e) => e.stopPropagation()}>
+          {context && (
+            <p className="text-[10px] text-muted-foreground mb-1.5 px-0.5">{CONTEXT_LABELS[context]}</p>
+          )}
           <div className="flex gap-1">
             {TEMPERATURAS.map((temp) => {
               const isActive = value === temp.value;
@@ -115,8 +130,11 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
   }
 
   // Default inline mode
+  const contextLabel = context ? CONTEXT_LABELS[context] : undefined;
+
   return (
-    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex gap-1">
       {TEMPERATURAS.map((temp) => {
         const isActive = value === temp.value;
         return (
@@ -139,6 +157,19 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
           </button>
         );
       })}
+      </div>
+      {contextLabel && (
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="text-xs">{contextLabel}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 }
