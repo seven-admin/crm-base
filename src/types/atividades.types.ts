@@ -13,6 +13,9 @@ export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'negociacao', '
 // Tipos que exibem o cronômetro de tempo
 export const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = ['atendimento', 'visita', 'negociacao'];
 
+// Tipos que são exclusivamente categoria "cliente" (fluxo comercial)
+export const TIPOS_CATEGORIA_CLIENTE: AtividadeTipo[] = ['atendimento', 'fechamento', 'assinatura', 'negociacao', 'contra_proposta_atividade'];
+
 // Tipos que aparecem no Diário de Bordo (rotina operacional)
 export const TIPOS_DIARIO: AtividadeTipo[] = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa'];
 export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
