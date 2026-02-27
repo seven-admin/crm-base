@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+// Collapsible removed - Corretor/Imobiliária moved to Step 3
 import {
   Select,
   SelectContent,
@@ -119,7 +119,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const { data: gestorData } = useGestorEmpreendimentos();
   const { data: gestores = [] } = useGestoresProduto();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const [atribuirParaGestores, setAtribuirParaGestores] = useState(false);
   const [todosGestores, setTodosGestores] = useState(false);
@@ -322,12 +322,24 @@ export function AtividadeForm(props: AtividadeFormProps) {
           <div className="flex items-center gap-2 flex-1">
             <div className={cn(
               'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
-              step === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              step === 2 ? 'bg-primary text-primary-foreground' : step > 2 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
             )}>
               2
             </div>
             <span className={cn('text-sm', step === 2 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
               Detalhes
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-border" />
+          <div className="flex items-center gap-2 flex-1">
+            <div className={cn(
+              'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
+              step === 3 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            )}>
+              3
+            </div>
+            <span className={cn('text-sm', step === 3 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+              Responsáveis
             </span>
           </div>
         </div>
@@ -823,87 +835,25 @@ export function AtividadeForm(props: AtividadeFormProps) {
               />
             )}
 
-            {/* Mais opções */}
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button type="button" variant="ghost" className="w-full justify-between text-muted-foreground">
-                  <span>Mais opções</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 pt-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="corretor_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Corretor</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {corretores.map((corretor) => (
-                              <SelectItem key={corretor.id} value={corretor.id}>
-                                {corretor.nome_completo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="imobiliaria_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Imobiliária</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {imobiliarias.map((imob) => (
-                              <SelectItem key={imob.id} value={imob.id}>
-                                {imob.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="observacoes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Observações</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Adicione observações sobre a atividade..."
-                          className="resize-none"
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CollapsibleContent>
-            </Collapsible>
+            {/* Observações */}
+            <FormField
+              control={form.control}
+              name="observacoes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Observações</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Adicione observações sobre a atividade..."
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Follow-up */}
             <div className="space-y-3">
@@ -964,9 +914,78 @@ export function AtividadeForm(props: AtividadeFormProps) {
               )}
             </div>
 
-            {/* Botões Voltar + Submit */}
+            {/* Botões Voltar + Próximo */}
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Voltar
+              </Button>
+              <Button type="button" className="flex-1" onClick={() => setStep(3)}>
+                Próximo
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ========== STEP 3 - Responsáveis ========== */}
+        {step === 3 && (
+          <div className="space-y-4">
+            {/* Corretor */}
+            <FormField
+              control={form.control}
+              name="corretor_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Corretor (opcional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o corretor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {corretores.map((corretor) => (
+                        <SelectItem key={corretor.id} value={corretor.id}>
+                          {corretor.nome_completo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Imobiliária */}
+            <FormField
+              control={form.control}
+              name="imobiliaria_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Imobiliária (opcional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a imobiliária" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {imobiliarias.map((imob) => (
+                        <SelectItem key={imob.id} value={imob.id}>
+                          {imob.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Botões Voltar + Salvar */}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(2)}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Voltar
               </Button>
