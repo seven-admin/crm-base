@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Phone, Users, MapPin, Headphones, CheckCircle, XCircle, Trash2, Edit, List, Calendar, AlertCircle, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText } from 'lucide-react';
+import { Plus, Phone, Users, MapPin, Headphones, CheckCircle, XCircle, Trash2, Edit, List, Calendar, AlertCircle, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText, LayoutGrid } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+// Input not needed anymore (date filter replaced by Select)
 import { Checkbox } from '@/components/ui/checkbox';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -23,7 +23,8 @@ import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalhe
 import { PendenciasTab } from '@/components/atividades/PendenciasTab';
 import { AgendaCalendario } from '@/components/agenda/AgendaCalendario';
 import { AgendaDia } from '@/components/agenda/AgendaDia';
-import { useAtividade, useAtividades, useAtividadesStatusResumo, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesHoje, useAtividadesVencidas, useConcluirAtividadesEmLote, useReabrirAtividadesEmLote, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
+import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
+import { useAtividade, useAtividades, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesVencidas, useConcluirAtividadesEmLote, useReabrirAtividadesEmLote, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
 import { useSuperAdminIds } from '@/hooks/useSuperAdminIds';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
@@ -31,6 +32,7 @@ import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
+import type { ClienteTemperatura } from '@/types/clientes.types';
 import { cn } from '@/lib/utils';
 import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
 import { ValidarDadosLeadDialog } from '@/components/negociacoes/ValidarDadosLeadDialog';
@@ -82,7 +84,8 @@ export default function Atividades() {
   const pageTitle = 'Atividades';
   const pageSubtitle = 'Gerencie todas as atividades';
 
-  const [view, setView] = useState<'lista' | 'calendario' | 'pendencias'>('lista');
+  const [view, setView] = useState<'lista' | 'kanban' | 'calendario' | 'pendencias'>('lista');
+  const [kanbanTemperatura, setKanbanTemperatura] = useState<ClienteTemperatura | undefined>(undefined);
   const [filters, setFilters] = useState<AtividadeFilters>({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -116,10 +119,8 @@ export default function Atividades() {
   const totalPages = atividadesData?.totalPages || 1;
   const totalItems = atividadesData?.count || 0;
 
-  const { data: resumoStatus } = useAtividadesStatusResumo({ filters: effectiveFilters });
   const { data: atividadesMes, isLoading: isLoadingMes } = useAgendaMensal(ano, mes, undefined, effectiveFilters);
   const { data: atividadesDia } = useAgendaDia(selectedDate);
-  const { data: atividadesHoje } = useAtividadesHoje(effectiveFilters);
   const { data: atividadesVencidas, isLoading: isLoadingVencidas } = useAtividadesVencidas();
   const { data: gestores } = useGestoresProduto();
   const { data: empreendimentos } = useEmpreendimentos();
@@ -292,11 +293,15 @@ export default function Atividades() {
       <div className="space-y-6">
         {/* Header com toggle de visualização */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={view} onValueChange={(v) => setView(v as 'lista' | 'calendario' | 'pendencias')}>
+        <Tabs value={view} onValueChange={(v) => setView(v as 'lista' | 'kanban' | 'calendario' | 'pendencias')}>
             <TabsList>
               <TabsTrigger value="lista" className="gap-2">
                 <List className="h-4 w-4" />
                 <span className="hidden sm:inline">Lista</span>
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Kanban</span>
               </TabsTrigger>
               <TabsTrigger value="calendario" className="gap-2">
                 <Calendar className="h-4 w-4" />
@@ -344,28 +349,7 @@ export default function Atividades() {
           </div>
         </div>
 
-        {/* Resumo (visível em lista e calendário) */}
-        {view !== 'pendencias' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Atividades Hoje</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-primary">{atividadesHoje?.length || 0}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Este Mês</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">{atividadesMes?.length || 0}</div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+
 
         {/* View: Pendências */}
         {view === 'pendencias' && (
@@ -387,119 +371,144 @@ export default function Atividades() {
           />
         )}
 
+        {/* View: Kanban */}
+        {view === 'kanban' && (
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <TemperaturaSelector
+                value={kanbanTemperatura}
+                onValueChange={(temp) => setKanbanTemperatura(temp ?? undefined)}
+              />
+            </div>
+            <AtividadeKanbanBoard
+              dataInicio={filters.data_inicio}
+              dataFim={filters.data_fim}
+              temperaturaFilter={kanbanTemperatura}
+              tipos={undefined}
+            />
+          </div>
+        )}
+
         {/* View: Lista */}
         {view === 'lista' && (
           <>
             {/* Filtros */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Filtros</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-                  <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo, subtipo: v === 'all' ? undefined : filters.subtipo })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {(tiposPermitidos || Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => (
-                        <SelectItem key={tipo} value={tipo}>{ATIVIDADE_TIPO_LABELS[tipo]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo, subtipo: v === 'all' ? undefined : filters.subtipo })}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {(tiposPermitidos || Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => (
+                    <SelectItem key={tipo} value={tipo}>{ATIVIDADE_TIPO_LABELS[tipo]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                  {/* Filtro de subtipo - só aparece quando tipo selecionado aceita subtipo */}
-                  {filters.tipo && TIPOS_COM_SUBTIPO.includes(filters.tipo) && (
-                    <Select value={filters.subtipo || ''} onValueChange={(v) => setFilters({ ...filters, subtipo: v === 'all' ? undefined : v as AtividadeSubtipo })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Classificação" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas</SelectItem>
-                        {Object.entries(ATIVIDADE_SUBTIPO_LABELS).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+              {/* Filtro de subtipo - só aparece quando tipo selecionado aceita subtipo */}
+              {filters.tipo && TIPOS_COM_SUBTIPO.includes(filters.tipo) && (
+                <Select value={filters.subtipo || ''} onValueChange={(v) => setFilters({ ...filters, subtipo: v === 'all' ? undefined : v as AtividadeSubtipo })}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Classificação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {Object.entries(ATIVIDADE_SUBTIPO_LABELS).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
-                  <Select value={filters.status || ''} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? undefined : v as AtividadeStatus })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {Object.entries(ATIVIDADE_STATUS_LABELS).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <Select value={filters.status || ''} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? undefined : v as AtividadeStatus })}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {Object.entries(ATIVIDADE_STATUS_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                  <Select value={filters.responsavel_id || ''} onValueChange={(v) => setFilters({ ...filters, responsavel_id: v === 'all' ? undefined : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Responsável" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {gestores?.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <Select value={filters.responsavel_id || ''} onValueChange={(v) => setFilters({ ...filters, responsavel_id: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {gestores?.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                  <Select value={filters.empreendimento_id || ''} onValueChange={(v) => setFilters({ ...filters, empreendimento_id: v === 'all' ? undefined : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Empreendimento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {empreendimentos?.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <Select value={filters.empreendimento_id || ''} onValueChange={(v) => setFilters({ ...filters, empreendimento_id: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Empreendimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {empreendimentos?.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                  <Input
-                    type="date"
-                    value={filters.data_inicio || ''}
-                    onChange={(e) => setFilters({ ...filters, data_inicio: e.target.value || undefined })}
-                    placeholder="Data início"
-                  />
+              <Select
+                value={filters.data_inicio ? `${filters.data_inicio}` : 'all'}
+                onValueChange={(v) => {
+                  if (v === 'all') {
+                    setFilters({ ...filters, data_inicio: undefined, data_fim: undefined });
+                  } else {
+                    const [y, m] = v.split('-').map(Number);
+                    const start = new Date(y, m - 1, 1);
+                    const end = endOfMonth(start);
+                    setFilters({
+                      ...filters,
+                      data_inicio: format(start, 'yyyy-MM-dd'),
+                      data_fim: format(end, 'yyyy-MM-dd'),
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const d = subMonths(new Date(), i);
+                    const val = format(d, 'yyyy-MM-01');
+                    const label = format(d, "MMMM yyyy", { locale: ptBR });
+                    return (
+                      <SelectItem key={val} value={val}>
+                        {label.charAt(0).toUpperCase() + label.slice(1)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
 
-                  <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Itens" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="20">20 / pág</SelectItem>
-                      <SelectItem value="50">50 / pág</SelectItem>
-                      <SelectItem value="100">100 / pág</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Itens" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20 / pág</SelectItem>
+                  <SelectItem value="50">50 / pág</SelectItem>
+                  <SelectItem value="100">100 / pág</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {/* Resumo por status (total filtrado) */}
-            <Card>
-              <CardContent className="py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className={cn('border', STATUS_COLORS.pendente)}>
-                    Pendentes: {resumoStatus?.pendente ?? 0}
-                  </Badge>
-                  <Badge variant="outline" className={cn('border', STATUS_COLORS.concluida)}>
-                    Concluídas: {resumoStatus?.concluida ?? 0}
-                  </Badge>
-                  <Badge variant="outline" className={cn('border', STATUS_COLORS.cancelada)}>
-                    Canceladas: {resumoStatus?.cancelada ?? 0}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Total: {resumoStatus?.total ?? totalItems}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+              <TemperaturaSelector
+                value={filters.temperatura_cliente}
+                onValueChange={(temp) => setFilters({ ...filters, temperatura_cliente: temp ?? undefined })}
+              />
+            </div>
+
 
             {/* Lista - Mobile Card View */}
             <div className="md:hidden space-y-3">
