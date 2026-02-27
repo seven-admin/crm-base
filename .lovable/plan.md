@@ -1,44 +1,48 @@
 
+# Correcao: Negociacoes nao carregam + Propostas nao aparecem no Portal
 
-# Desativar/Ativar Empreendimento com Toggle
+## Problemas identificados
 
-## Objetivo
-Adicionar um Switch na pagina de detalhe do empreendimento que permite desativar (ocultar de todos) ou reativar o empreendimento. Diferente da exclusao, eh uma acao reversivel e visivel apenas para admin/gestor.
+### Problema 1 - Erro 400 em TODAS as queries de negociacoes
+A query `useNegociacoes` usa o join `gestor:profiles!gestor_id(id, full_name)`, mas a foreign key `negociacoes_gestor_id_fkey` aponta para `auth.users(id)` e nao para `profiles(id)`. O PostgREST nao consegue resolver esse caminho, retornando erro 400 em TODA listagem de negociacoes (kanban, portal, etc).
+
+### Problema 2 - Proposta sem status
+A negociacao criada tem `status_proposta = NULL`. O portal do incorporador filtra por `status_proposta = 'em_analise'`, entao mesmo corrigindo o erro 400, a proposta nao apareceria.
 
 ## Solucao
 
-### Arquivo: `src/pages/EmpreendimentoDetalhe.tsx`
+### 1. Migration: Alterar FK do gestor_id para apontar para profiles
 
-1. Importar `Switch` de `@/components/ui/switch` e o hook `useUpdateEmpreendimento` (ja existente)
-2. Adicionar um Switch na area de acoes do header (ao lado dos botoes Editar/Excluir), visivel apenas para `canDelete` (super_admin/admin):
+```sql
+ALTER TABLE public.negociacoes 
+  DROP CONSTRAINT negociacoes_gestor_id_fkey;
 
-```tsx
-<div className="flex items-center gap-2">
-  <Switch
-    checked={empreendimento.is_active}
-    onCheckedChange={(checked) => {
-      updateEmpreendimento.mutate({ id, data: { is_active: checked } });
-    }}
-  />
-  <span className="text-sm text-muted-foreground">
-    {empreendimento.is_active ? 'Ativo' : 'Inativo'}
-  </span>
-</div>
+ALTER TABLE public.negociacoes
+  ADD CONSTRAINT negociacoes_gestor_id_fkey 
+  FOREIGN KEY (gestor_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
 ```
 
-3. Quando `is_active = false`, exibir um banner de alerta no topo da pagina informando que o empreendimento esta desativado e nao aparece para os demais usuarios.
+Isso permite que o PostgREST resolva `profiles!gestor_id` corretamente. Como `profiles.id` eh o mesmo UUID de `auth.users.id`, nao ha quebra de dados.
 
-### Arquivo: `src/hooks/useEmpreendimentos.ts`
+### 2. Corrigir queries de negociacoes (useNegociacoes.ts)
 
-O `useUpdateEmpreendimento` ja suporta atualizar qualquer campo parcial, incluindo `is_active`. Nenhuma alteracao necessaria no hook.
+Existem multiplas queries que usam `gestor:profiles!gestor_id`. Apos a migration, elas passarao a funcionar sem alteracao de codigo. Porem, vou verificar se ha queries redundantes (useNegociacoesKanban, etc) e garantir consistencia.
 
-A query `useEmpreendimentos` ja filtra por `.eq('is_active', true)`, entao empreendimentos desativados serao automaticamente ocultados de todas as listagens (pagina principal, portal do corretor, selects, etc).
+### 3. Fluxo de status_proposta na criacao
 
-O `useEmpreendimento` (detalhe individual) **nao** filtra por `is_active`, permitindo que admins ainda acessem a pagina de detalhe via URL direta.
+Atualmente, ao criar uma negociacao, o `status_proposta` nao eh definido. Preciso verificar em que momento ele deveria ser setado para `em_analise`. Opcoes:
+- Setar automaticamente ao criar a negociacao quando ela chega na etapa "Analise de Proposta"
+- Ou, como solucao imediata, permitir que o portal mostre TODAS as negociacoes dos empreendimentos do incorporador (nao apenas as com status `em_analise`), e exibir o status de cada uma
 
-### Resultado
-- Admin/super_admin ve o toggle na pagina de detalhe
-- Ao desativar, o empreendimento some de todas as listagens
-- Um banner amarelo aparece no detalhe indicando que esta inativo
-- A acao eh reversivel: basta reativar pelo switch
+A abordagem mais correta: quando a negociacao for movida para a etapa "Analise de Proposta" (`ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35`), setar automaticamente `status_proposta = 'em_analise'`. Isso sera feito no hook `useMoverNegociacao`.
 
+## Arquivos modificados
+
+| Arquivo | Mudanca |
+|---------|---------|
+| Migration SQL | Alterar FK gestor_id de auth.users para profiles |
+| `src/hooks/useNegociacoes.ts` | No `useMoverNegociacao`, setar `status_proposta = 'em_analise'` quando etapa destino for "Analise de Proposta" |
+
+## Resultado esperado
+- Todas as queries de negociacoes voltam a funcionar (kanban, listagem, portal)
+- Ao mover negociacao para "Analise de Proposta", ela aparece automaticamente no portal do incorporador
