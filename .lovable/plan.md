@@ -1,95 +1,44 @@
 
-# Aprovacao/Rejeicao de Propostas pelo Incorporador com Transicao Automatica + Webhook em Toda Movimentacao
 
-## Resumo
+# Desativar/Ativar Empreendimento com Toggle
 
-Quando o incorporador **aprovar** uma proposta, a negociacao transita automaticamente para a etapa **"Ganho"** (final sucesso). Quando **rejeitar** (contra proposta), transita para a etapa **"Contra Proposta"**. Alem disso, toda movimentacao de etapa no kanban passa a disparar webhook com dados completos. Tambem sera criada a funcionalidade de **comentarios** na proposta pelo incorporador.
+## Objetivo
+Adicionar um Switch na pagina de detalhe do empreendimento que permite desativar (ocultar de todos) ou reativar o empreendimento. Diferente da exclusao, eh uma acao reversivel e visivel apenas para admin/gestor.
 
----
+## Solucao
 
-## 1. Tabela de Comentarios de Negociacao (migration)
+### Arquivo: `src/pages/EmpreendimentoDetalhe.tsx`
 
-Criar `negociacao_comentarios` seguindo o padrao de `atividade_comentarios`:
+1. Importar `Switch` de `@/components/ui/switch` e o hook `useUpdateEmpreendimento` (ja existente)
+2. Adicionar um Switch na area de acoes do header (ao lado dos botoes Editar/Excluir), visivel apenas para `canDelete` (super_admin/admin):
 
-```sql
-CREATE TABLE public.negociacao_comentarios (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  negociacao_id UUID NOT NULL REFERENCES public.negociacoes(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
-  comentario TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE public.negociacao_comentarios ENABLE ROW LEVEL SECURITY;
-
--- Policies: qualquer usuario autenticado pode ler/criar comentarios das negociacoes que tem acesso
-CREATE POLICY "Authenticated users can read comments"
-  ON public.negociacao_comentarios FOR SELECT
-  TO authenticated USING (true);
-
-CREATE POLICY "Authenticated users can insert comments"
-  ON public.negociacao_comentarios FOR INSERT
-  TO authenticated WITH CHECK (auth.uid() = user_id);
+```tsx
+<div className="flex items-center gap-2">
+  <Switch
+    checked={empreendimento.is_active}
+    onCheckedChange={(checked) => {
+      updateEmpreendimento.mutate({ id, data: { is_active: checked } });
+    }}
+  />
+  <span className="text-sm text-muted-foreground">
+    {empreendimento.is_active ? 'Ativo' : 'Inativo'}
+  </span>
+</div>
 ```
 
-## 2. Hook: `useAprovarPropostaIncorporador` - Adicionar transicao de etapa
+3. Quando `is_active = false`, exibir um banner de alerta no topo da pagina informando que o empreendimento esta desativado e nao aparece para os demais usuarios.
 
-Apos atualizar `status_proposta = 'aprovada_incorporador'`, tambem:
-- Atualizar `funil_etapa_id` para o ID da etapa "Ganho" (`9f3b1157-9fc9-4873-a323-4bd89e58f193`)
-- Atualizar `data_fechamento`
-- Marcar unidades como `vendida`
-- Registrar no `negociacao_historico`
+### Arquivo: `src/hooks/useEmpreendimentos.ts`
 
-## 3. Hook: `useNegarPropostaIncorporador` - Adicionar transicao de etapa
+O `useUpdateEmpreendimento` ja suporta atualizar qualquer campo parcial, incluindo `is_active`. Nenhuma alteracao necessaria no hook.
 
-Apos atualizar `status_proposta = 'contra_proposta'`, tambem:
-- Atualizar `funil_etapa_id` para o ID da etapa "Contra Proposta" (`0ce3c47e-b603-4f62-8205-8ff9931452c1`)
-- Registrar no `negociacao_historico`
+A query `useEmpreendimentos` ja filtra por `.eq('is_active', true)`, entao empreendimentos desativados serao automaticamente ocultados de todas as listagens (pagina principal, portal do corretor, selects, etc).
 
-## 4. Webhook em TODA movimentacao de etapa
+O `useEmpreendimento` (detalhe individual) **nao** filtra por `is_active`, permitindo que admins ainda acessem a pagina de detalhe via URL direta.
 
-Atualmente o webhook so dispara para etapas finais (sucesso/perda). Alterar `useMoverNegociacao` para disparar webhook `negociacao_movida` em **toda** transicao, com payload completo (dados da negociacao, cliente, empreendimento, corretor, unidades, etapa anterior e nova).
+### Resultado
+- Admin/super_admin ve o toggle na pagina de detalhe
+- Ao desativar, o empreendimento some de todas as listagens
+- Um banner amarelo aparece no detalhe indicando que esta inativo
+- A acao eh reversivel: basta reativar pelo switch
 
-## 5. Comentarios no Portal do Incorporador
-
-Na pagina `PortalIncorporadorPropostas.tsx`:
-- Adicionar campo de comentario no card da proposta (input + botao)
-- Listar comentarios existentes
-- Hook `useNegociacaoComentarios` (query) e `useAddNegociacaoComentario` (mutation)
-
-## 6. Webhook nos hooks de aprovacao/rejeicao
-
-Os hooks `useAprovarPropostaIncorporador` e `useNegarPropostaIncorporador` ja disparam webhooks de proposta. Agora tambem dispararao webhook `negociacao_movida` com a transicao de etapa.
-
----
-
-## Arquivos modificados
-
-| Arquivo | Mudanca |
-|---------|---------|
-| Migration SQL | Criar tabela `negociacao_comentarios` |
-| `src/hooks/useNegociacoes.ts` | Alterar `useAprovarPropostaIncorporador`, `useNegarPropostaIncorporador`, `useMoverNegociacao` |
-| `src/hooks/useNegociacaoComentarios.ts` | **Novo** - hooks para comentarios |
-| `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` | Adicionar secao de comentarios nos cards |
-
-## Detalhes tecnicos
-
-### Etapas mapeadas (IDs do banco):
-- **Contra Proposta**: `0ce3c47e-b603-4f62-8205-8ff9931452c1`
-- **Ganho** (final sucesso): `9f3b1157-9fc9-4873-a323-4bd89e58f193`
-
-### Webhook `negociacao_movida` - payload:
-```json
-{
-  "negociacao_id": "...",
-  "codigo": "NEG-00001",
-  "etapa_anterior": "Analise de Proposta",
-  "etapa_nova": "Ganho",
-  "cliente_nome": "...",
-  "empreendimento_nome": "...",
-  "corretor_nome": "...",
-  "valor_negociacao": 500000,
-  "unidades": [...],
-  "observacao": "..."
-}
-```
