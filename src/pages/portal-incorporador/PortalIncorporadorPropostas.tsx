@@ -92,8 +92,13 @@ export default function PortalIncorporadorPropostas() {
   const [negarDialog, setNegarDialog] = useState<Negociacao | null>(null);
   const [motivoContra, setMotivoContra] = useState('');
 
+  const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
+
   const propostasEmAnalise = todasNegociacoes.filter(
-    n => n.status_proposta === 'em_analise' && empreendimentoIds.includes(n.empreendimento_id)
+    n => empreendimentoIds.includes(n.empreendimento_id) && (
+      n.status_proposta === 'em_analise' || 
+      (n.funil_etapa_id === ETAPA_ANALISE_PROPOSTA && !n.status_proposta)
+    )
   );
 
   const propostasResolvidas = todasNegociacoes.filter(
