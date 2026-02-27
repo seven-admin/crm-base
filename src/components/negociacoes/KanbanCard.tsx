@@ -9,13 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Building2, User, Phone, Calendar, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, FilePlus2, Eye, RefreshCw } from 'lucide-react';
+import { MoreVertical, Building2, User, Phone, Calendar, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, FilePlus2, Eye, RefreshCw, MessageSquare } from 'lucide-react';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface KanbanCardProps {
   negociacao: Negociacao;
+  comentariosCount?: number;
   onMover: (negociacao: Negociacao) => void;
   onEditar: (negociacao: Negociacao) => void;
   onHistorico: (negociacao: Negociacao) => void;
@@ -33,6 +34,7 @@ interface KanbanCardProps {
 
 export function KanbanCard({ 
   negociacao, 
+  comentariosCount = 0,
   onMover, 
   onEditar, 
   onHistorico, 
@@ -241,10 +243,18 @@ export function KanbanCard({
       </div>
 
       <div className="flex items-center justify-between mt-3 pt-2 border-t">
-        <span className="text-xs text-muted-foreground">
-          <Calendar className="h-3 w-3 inline mr-1" />
-          {diasNaEtapa}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 inline mr-1" />
+            {diasNaEtapa}
+          </span>
+          {comentariosCount > 0 && (
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground" title={`${comentariosCount} comentário(s)`}>
+              <MessageSquare className="h-3 w-3" />
+              {comentariosCount}
+            </span>
+          )}
+        </div>
         {valorExibido && (
           <span className="text-xs font-medium text-primary">
             {formatCurrency(valorExibido)}

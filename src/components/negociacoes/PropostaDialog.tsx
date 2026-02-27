@@ -17,6 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
+import { ComentariosTab } from './ComentariosTab';
+import { MessageSquare } from 'lucide-react';
 import {
   useGerarProposta,
   useAceitarProposta,
@@ -238,9 +240,13 @@ export function PropostaDialog({
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="dados">Dados da Proposta</TabsTrigger>
               <TabsTrigger value="condicoes">Condições de Pagamento</TabsTrigger>
+              <TabsTrigger value="comentarios" className="gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Comentários
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dados" className="space-y-4 mt-4">
@@ -323,6 +329,10 @@ export function PropostaDialog({
                   onValidationChange={handleValidationChange}
                 />
               )}
+            </TabsContent>
+
+            <TabsContent value="comentarios" className="mt-4">
+              {negociacao && <ComentariosTab negociacaoId={negociacao.id} />}
             </TabsContent>
           </Tabs>
         )}
