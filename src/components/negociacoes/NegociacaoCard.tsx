@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreVertical, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, ClipboardCheck, Eye, RefreshCw } from 'lucide-react';
+import { MoreVertical, ArrowRight, History, Edit, Trash2, FileText, Send, Check, X, ClipboardCheck, Eye, RefreshCw, MessageSquare } from 'lucide-react';
 import { Negociacao } from '@/types/negociacoes.types';
 import { cn } from '@/lib/utils';
 import { useValidacaoFichaProposta } from '@/hooks/useValidacaoFichaProposta';
@@ -23,6 +23,7 @@ import { useValidacaoFichaProposta } from '@/hooks/useValidacaoFichaProposta';
 interface NegociacaoCardProps {
   negociacao: Negociacao;
   isDragging?: boolean;
+  comentariosCount?: number;
   onMover: (negociacao: Negociacao) => void;
   onEditar: (negociacao: Negociacao) => void;
   onHistorico: (negociacao: Negociacao) => void;
@@ -40,6 +41,7 @@ interface NegociacaoCardProps {
 export const NegociacaoCard = memo(function NegociacaoCard({ 
   negociacao, 
   isDragging = false,
+  comentariosCount = 0,
   onMover, 
   onEditar, 
   onHistorico, 
@@ -167,6 +169,20 @@ export const NegociacaoCard = memo(function NegociacaoCard({
               
               <DropdownMenuSeparator />
               
+              {/* Ver Proposta - always available when numero_proposta exists */}
+              {negociacao.numero_proposta && onEditarProposta && (
+                <DropdownMenuItem onClick={() => onEditarProposta(negociacao)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Ver Proposta
+                  {comentariosCount > 0 && (
+                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 h-4">
+                      <MessageSquare className="h-3 w-3 mr-0.5" />
+                      {comentariosCount}
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              )}
+
               {!negociacao.numero_proposta && validacao.podesolicitarReserva && onSolicitarReserva && (
                 <DropdownMenuItem onClick={() => onSolicitarReserva(negociacao)}>
                   <ClipboardCheck className="h-4 w-4 mr-2" />
@@ -262,16 +278,31 @@ export const NegociacaoCard = memo(function NegociacaoCard({
         )}
       </div>
 
-      {/* Linha 3: Valor + Gestor */}
+      {/* Linha 3: Valor + Comentários + Gestor */}
       <div className="px-2 pb-2 flex items-center justify-between">
         <span className="text-[10px] font-semibold text-primary">
           {formatCurrencyCompact(valorExibido)}
         </span>
-        {negociacao.gestor?.full_name && (
-          <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
-            👤 {negociacao.gestor.full_name.split(' ')[0]}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {comentariosCount > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  {comentariosCount}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs">{comentariosCount} comentário(s)</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {negociacao.gestor?.full_name && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+              👤 {negociacao.gestor.full_name.split(' ')[0]}
+            </span>
+          )}
+        </div>
       </div>
     </Card>
   );

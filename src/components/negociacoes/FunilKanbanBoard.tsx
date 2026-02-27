@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { KanbanBoard, KanbanColumnType } from '@/components/ui/kanban';
 import { MoverNegociacaoDialog, ContratoSolicitadoData } from './MoverNegociacaoDialog';
 import { NegociacaoForm } from './NegociacaoForm';
@@ -24,6 +26,29 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { formatarMoedaCompacta } from '@/lib/formatters';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
+function useComentariosCount(negociacaoIds: string[]) {
+  return useQuery({
+    queryKey: ['negociacao-comentarios-count', negociacaoIds],
+    enabled: negociacaoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from('negociacao_comentarios')
+        .select('negociacao_id')
+        .in('negociacao_id', negociacaoIds);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      for (const row of data || []) {
+        counts[row.negociacao_id] = (counts[row.negociacao_id] || 0) + 1;
+      }
+      return counts;
+    },
+    staleTime: 30000,
+  });
+}
 
 interface FunilKanbanBoardProps {
   filters?: {
@@ -73,6 +98,13 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   const displayNegociacoes = optimisticNegociacoes ?? negociacoes;
 
   const isLoading = etapasLoading || negociacoesLoading;
+
+  // Fetch comment counts for all negociacoes with proposals
+  const negociacaoIdsComProposta = useMemo(
+    () => displayNegociacoes.filter(n => !!n.numero_proposta).map(n => n.id),
+    [displayNegociacoes]
+  );
+  const { data: comentariosCountMap = {} } = useComentariosCount(negociacaoIdsComProposta);
 
   // Convert dynamic stages to kanban columns
   const columns: KanbanColumnType[] = useMemo(() => 
@@ -295,6 +327,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
           <NegociacaoCard
             negociacao={negociacao}
             isDragging={isDragging}
+            comentariosCount={comentariosCountMap[negociacao.id] || 0}
             onMover={handleMover}
             onEditar={handleEditar}
             onHistorico={handleHistorico}
