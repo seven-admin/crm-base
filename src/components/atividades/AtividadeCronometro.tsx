@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Square, Clock } from 'lucide-react';
+import { Play, Square, Clock, RotateCcw } from 'lucide-react';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { cn } from '@/lib/utils';
 
@@ -77,6 +77,17 @@ export function AtividadeCronometro({
     });
   }, [atividadeId, cronometroInicio, updateAtividade]);
 
+  const handleReset = useCallback(() => {
+    updateAtividade.mutate({
+      id: atividadeId,
+      data: {
+        cronometro_inicio: null,
+        cronometro_fim: null,
+        duracao_minutos: null,
+      } as any,
+    });
+  }, [atividadeId, updateAtividade]);
+
   // Estado parado (sem início)
   if (isIdle) {
     return (
@@ -127,9 +138,19 @@ export function AtividadeCronometro({
     <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/30">
       <Clock className="h-4 w-4 text-muted-foreground" />
       <span className="text-sm text-muted-foreground">Duração:</span>
-      <span className="text-sm font-medium text-foreground">
+      <span className="text-sm font-medium text-foreground flex-1">
         {duracaoMinutos ? formatDuration(duracaoMinutos) : '-'}
       </span>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleReset}
+        disabled={disabled || updateAtividade.isPending}
+        className="gap-1.5"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        Reiniciar
+      </Button>
     </div>
   );
 }
