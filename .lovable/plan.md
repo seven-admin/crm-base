@@ -1,41 +1,54 @@
 
-# Paginacao e limpeza automatica de logs de webhook
+# Reiniciar contadores (sequences) do sistema
 
 ## O que sera feito
 
-1. **Paginacao no historico de disparos** -- o hook `useWebhookLogs` passara a usar paginacao server-side (com `count: 'exact'` e `range`), e o componente `WebhookLogsSection` exibira controles de pagina usando o `PaginationControls` ja existente no projeto.
+Criar uma edge function `reset-sequence` que permite reiniciar qualquer sequencia do banco para um valor especifico, e adicionar uma interface na pagina de Configuracoes para gerenciar isso.
 
-2. **Botao para limpar logs antigos** -- um botao "Limpar antigos" na barra de ferramentas que apaga logs anteriores ao mes corrente (via edge function, pois DELETE precisa de service_role).
+## Sequences disponiveis
 
-3. **Rotina automatica (cron)** -- um job `pg_cron` que executa mensalmente a limpeza de logs anteriores ao primeiro dia do mes corrente.
+| Sequencia | Prefixo | Valor atual |
+|-----------|---------|-------------|
+| negociacao_codigo_seq | NEG- | 24 |
+| negociacao_proposta_seq | PROP- | 7 |
+| proposta_numero_seq | (ano-) | 1 |
+| briefing_codigo_seq | BRF- | 62 |
+| projeto_codigo_seq | MKT- | 62 |
+| contrato_numero_seq | CONT- | 32 |
+| comissao_numero_seq | COM- | 3 |
+| evento_codigo_seq | EVT- | 2 |
+| reserva_protocolo_seq | RES- | 1 |
 
 ## Arquivos impactados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/hooks/useWebhooks.ts` | Alterar `useWebhookLogs` para aceitar `page`/`pageSize`, retornar `{ logs, total, page, totalPages }`. Adicionar mutation `useCleanOldWebhookLogs`. |
-| `src/components/configuracoes/WebhookLogsSection.tsx` | Adicionar estado de pagina, usar `PaginationControls`, adicionar botao "Limpar antigos" com confirmacao. |
-| `supabase/functions/cleanup-webhook-logs/index.ts` | Nova edge function que deleta logs com `created_at < primeiro dia do mes corrente` usando service_role. |
-| Migration SQL | Habilitar `pg_cron` + `pg_net` e criar job mensal para invocar a edge function de limpeza. |
+| `supabase/functions/reset-sequence/index.ts` | Nova edge function que executa `ALTER SEQUENCE ... RESTART WITH` usando service_role |
+| `src/components/configuracoes/SequencesResetSection.tsx` | Novo componente com lista de sequences, valor atual e botao para reiniciar cada uma |
+| `src/hooks/useSequences.ts` | Hook com query para buscar valores atuais e mutation para chamar a edge function |
+| `src/pages/Configuracoes.tsx` | Adicionar nova aba "Contadores" (visivel apenas para super_admin) |
+| `supabase/config.toml` | Registrar `reset-sequence` com `verify_jwt = false` |
 
 ## Detalhes tecnicos
 
-### Paginacao (useWebhookLogs)
+### Edge function reset-sequence
 
-```text
-useWebhookLogs(webhookId?, page = 1, pageSize = 20)
-  -> select('*', { count: 'exact' })
-  -> .range(from, to)
-  -> retorna { logs, total, page, totalPages }
-```
+- Recebe POST com `{ sequence_name: string, restart_value: number }`
+- Valida que `sequence_name` esta numa whitelist fixa das 9 sequences permitidas (previne SQL injection)
+- Executa via Supabase Admin client: `ALTER SEQUENCE {name} RESTART WITH {value}`
+- Requer autenticacao -- valida o JWT do usuario e verifica se e super_admin
 
-### Edge function cleanup-webhook-logs
+### Hook useSequences
 
-- Recebe POST com `service_role` auth
-- Executa DELETE em `webhook_logs` onde `created_at < date_trunc('month', now())`
-- Retorna quantidade de registros removidos
+- `useSequenceValues()`: query que chama uma database function `get_all_sequence_values()` para retornar os valores atuais
+- `useResetSequence()`: mutation que invoca a edge function
 
-### Cron job
+### Migration SQL
 
-- Frequencia: todo dia 1 de cada mes as 03:00 UTC
-- Chama a edge function `cleanup-webhook-logs` via `net.http_post`
+- Criar funcao `get_all_sequence_values()` que retorna uma tabela com (seq_name, last_value) para as 9 sequences, chamavel via RPC
+
+### Componente SequencesResetSection
+
+- Tabela com colunas: Nome do contador, Prefixo, Valor atual, Campo para novo valor, Botao reiniciar
+- Confirmacao via AlertDialog antes de executar
+- Apenas super_admin tem acesso (mesma logica das outras abas)
