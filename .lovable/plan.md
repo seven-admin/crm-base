@@ -1,47 +1,41 @@
 
-# Incluir codigo e numero_proposta no payload do webhook comentario_proposta
+# Paginacao e limpeza automatica de logs de webhook
 
-## Problema
+## O que sera feito
 
-O webhook `comentario_proposta` envia apenas dados minimos (negociacao_id, comentario, autor, origem). Os codigos da negociacao (`codigo`, ex: NEG-00024) e da proposta (`numero_proposta`, ex: PROP-00007) nao estao sendo enviados.
+1. **Paginacao no historico de disparos** -- o hook `useWebhookLogs` passara a usar paginacao server-side (com `count: 'exact'` e `range`), e o componente `WebhookLogsSection` exibira controles de pagina usando o `PaginationControls` ja existente no projeto.
 
-## Solucao
+2. **Botao para limpar logs antigos** -- um botao "Limpar antigos" na barra de ferramentas que apaga logs anteriores ao mes corrente (via edge function, pois DELETE precisa de service_role).
 
-Alterar o `onSuccess` do `useAddNegociacaoComentario` em `src/hooks/useNegociacaoComentarios.ts` para:
+3. **Rotina automatica (cron)** -- um job `pg_cron` que executa mensalmente a limpeza de logs anteriores ao primeiro dia do mes corrente.
 
-1. Buscar os dados completos da negociacao (com joins de cliente, empreendimento, corretor, unidades) antes de disparar o webhook
-2. Incluir `codigo`, `numero_proposta`, `status_proposta`, dados do cliente, empreendimento, corretor, unidades e valores no payload
-
-## Arquivo impactado
+## Arquivos impactados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/hooks/useNegociacaoComentarios.ts` | Substituir disparo simples por query enriquecida + payload completo |
+| `src/hooks/useWebhooks.ts` | Alterar `useWebhookLogs` para aceitar `page`/`pageSize`, retornar `{ logs, total, page, totalPages }`. Adicionar mutation `useCleanOldWebhookLogs`. |
+| `src/components/configuracoes/WebhookLogsSection.tsx` | Adicionar estado de pagina, usar `PaginationControls`, adicionar botao "Limpar antigos" com confirmacao. |
+| `supabase/functions/cleanup-webhook-logs/index.ts` | Nova edge function que deleta logs com `created_at < primeiro dia do mes corrente` usando service_role. |
+| Migration SQL | Habilitar `pg_cron` + `pg_net` e criar job mensal para invocar a edge function de limpeza. |
 
 ## Detalhes tecnicos
 
-No `onSuccess`, executar em paralelo `getUsuarioLogado()` e uma query na tabela `negociacoes` com joins:
+### Paginacao (useWebhookLogs)
 
 ```text
-db.from('negociacoes')
-  .select('id, codigo, numero_proposta, status_proposta, valor_tabela, valor_proposta, desconto_percentual,
-    cliente:clientes!cliente_id(id, nome, cpf, email, telefone),
-    empreendimento:empreendimentos!empreendimento_id(id, nome),
-    corretor:corretores!corretor_id(id, nome_completo),
-    unidades:negociacao_unidades(valor_tabela, valor_proposta,
-      unidade:unidades!unidade_id(numero, codigo, bloco:blocos!bloco_id(nome)))')
-  .eq('id', negociacaoId)
-  .maybeSingle()
+useWebhookLogs(webhookId?, page = 1, pageSize = 20)
+  -> select('*', { count: 'exact' })
+  -> .range(from, to)
+  -> retorna { logs, total, page, totalPages }
 ```
 
-O payload enriquecido incluira:
-- `negociacao_id`, `codigo`, `numero_proposta`, `status_proposta`
-- `comentario`, `autor` (id, nome, telefone), `origem`
-- `cliente` (id, nome, cpf, email, telefone)
-- `empreendimento` (id, nome)
-- `corretor` (id, nome)
-- `unidades` (array com numero, bloco, valores)
-- `valores` (valor_tabela, valor_proposta, desconto_percentual)
-- `link` (URL direta para a negociacao)
+### Edge function cleanup-webhook-logs
 
-Se a query de enriquecimento falhar, o webhook dispara com dados minimos como fallback.
+- Recebe POST com `service_role` auth
+- Executa DELETE em `webhook_logs` onde `created_at < date_trunc('month', now())`
+- Retorna quantidade de registros removidos
+
+### Cron job
+
+- Frequencia: todo dia 1 de cada mes as 03:00 UTC
+- Chama a edge function `cleanup-webhook-logs` via `net.http_post`
