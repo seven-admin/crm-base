@@ -41,7 +41,7 @@ import { useGestoresProduto } from '@/hooks/useGestores';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Atividade, AtividadeFormData, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, TIPOS_CATEGORIA_CLIENTE } from '@/types/atividades.types';
 import { CLIENTE_TEMPERATURA_LABELS, type ClienteTemperatura } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
@@ -176,6 +176,10 @@ export function AtividadeForm(props: AtividadeFormProps) {
   useEffect(() => {
     if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
       form.setValue('subtipo', undefined);
+    }
+    // Auto-set categoria "cliente" para tipos do fluxo comercial
+    if (TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual)) {
+      form.setValue('categoria', 'cliente');
     }
   }, [tipoAtual, form]);
 
@@ -405,7 +409,8 @@ export function AtividadeForm(props: AtividadeFormProps) {
               />
             )}
 
-            {/* Categoria */}
+            {/* Categoria - hidden when tipo is exclusively "cliente" */}
+            {!TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual) && (
             <FormField
               control={form.control}
               name="categoria"
@@ -438,6 +443,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
                 </FormItem>
               )}
             />
+            )}
 
             {/* Atribuir para Gestores - Apenas Super Admin em modo criação */}
             {isSuperAdmin() && !initialData && gestores.length > 0 && (
