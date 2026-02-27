@@ -87,6 +87,13 @@ const formSchema = z
         message: 'Data de fim deve ser igual ou posterior à data de início',
       });
     }
+    if (TIPOS_NEGOCIACAO.includes(values.tipo as any) && !values.cliente_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['cliente_id'],
+        message: 'Cliente é obrigatório para atividades de negociação',
+      });
+    }
   });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -723,7 +730,9 @@ export function AtividadeForm(props: AtividadeFormProps) {
               name="cliente_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cliente (opcional)</FormLabel>
+                  <FormLabel>
+                    Cliente {TIPOS_NEGOCIACAO.includes(tipoAtual as any) ? <span className="text-destructive">*</span> : '(opcional)'}
+                  </FormLabel>
                   <div className="flex gap-2">
                     <Select
                       onValueChange={field.onChange}

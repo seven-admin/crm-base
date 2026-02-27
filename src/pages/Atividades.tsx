@@ -847,7 +847,7 @@ export default function Atividades() {
                                 <TemperaturaSelector
                                   value={atividade.temperatura_cliente}
                                   onValueChange={(temp) => updateAtividade.mutate({ id: atividade.id, data: { temperatura_cliente: temp } })}
-                                  compact
+                                  displayMode
                                 />
                               </TableCell>
                               <TableCell className="hidden lg:table-cell">{atividade.corretor?.nome_completo || '-'}</TableCell>
