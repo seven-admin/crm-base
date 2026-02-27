@@ -1,57 +1,50 @@
 
+Objetivo: corrigir a visibilidade das mensagens do incorporador para superadmin no sistema interno.
 
-# Corrigir filtro de propostas e botoes no Portal do Incorporador
+Diagnóstico confirmado:
+- As mensagens existem no banco (há comentários na negociação NEG-00024, status `em_analise`).
+- Permissão não é o problema: as policies atuais permitem leitura para usuários autenticados (incluindo superadmin).
+- O bloqueio é de fluxo de tela: no card interno (`NegociacaoCard`), quando a proposta está em `em_analise`, o menu mostra apenas “Aguardando Incorporador” desabilitado e não oferece ação para abrir o `PropostaDialog` (onde está a aba de comentários).
 
-## Problema
+Implementação proposta:
 
-Duas questoes relacionadas:
-1. Propostas desaparecem do portal quando o status muda para `rascunho` ou `enviada` (fora do filtro atual)
-2. Quando uma proposta retorna para analise apos contra-proposta (status volta para `em_analise` via `useReenviarParaAnalise`), os botoes de Aprovar/Contra Proposta nao aparecem
+1) Tornar o `PropostaDialog` acessível em todos os status com proposta
+- Arquivo: `src/components/negociacoes/NegociacaoCard.tsx`
+- Ajuste:
+  - Adicionar uma ação de menu “Ver proposta / comentários” (ou “Abrir proposta”) para qualquer negociação com `numero_proposta`.
+  - Essa ação deve chamar `onEditarProposta(negociacao)` (modo `view`), inclusive quando `status_proposta === 'em_analise'`.
+  - Manter “Aguardando Incorporador” apenas como status informativo, sem bloquear abertura do dialog.
 
-## Solucao
+2) Garantir consistência no Kanban interno
+- Arquivo: `src/components/negociacoes/FunilKanbanBoard.tsx`
+- Ajuste:
+  - Reutilizar o fluxo já existente `handleEditarProposta` + `PropostaDialog mode="view"` para a nova ação.
+  - Confirmar que o estado `selectedNegociacao` é preenchido corretamente para abrir diretamente na negociação selecionada.
 
-Alterar o arquivo `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`:
+3) Corrigir sinalização visual de comentários no card realmente usado
+- Arquivo: `src/components/negociacoes/NegociacaoCard.tsx`
+- Ajuste:
+  - Adicionar indicador de comentários neste componente (não no `KanbanCard`, que hoje não é o card renderizado pelo funil).
+  - Exibir ícone + contagem quando houver comentários, para o superadmin localizar rapidamente cards com interação do incorporador.
 
-### 1. Ampliar filtro "Aguardando Aprovacao" (com botoes)
+4) Otimização de busca de contagem (sem sobrecarregar o front)
+- Arquivos: hooks/board de negociações
+- Ajuste técnico:
+  - Evitar query por card para contagem de comentários.
+  - Opção recomendada: incluir contagem agregada junto dos dados de negociações (campo derivado/consulta agregada), e passar como prop para `NegociacaoCard`.
+  - Se preferir fase 1 rápida: mostrar apenas ícone “tem comentário” usando cache do dialog; depois otimizar para contagem agregada.
 
-Manter propostas com `status_proposta === 'em_analise'` -- isso ja cobre o cenario de reenvio, pois `useReenviarParaAnalise` seta o status de volta para `em_analise`. O `showActions={true}` ja esta correto nesta secao. Adicionar tambem o fallback da etapa sem status.
+5) Validação funcional pós-ajuste
+- Cenários de teste:
+  - Superadmin abre uma negociação em `em_analise` e consegue entrar no `PropostaDialog`.
+  - Aba “Comentários” exibe histórico do incorporador.
+  - Superadmin responde e o comentário aparece no portal do incorporador.
+  - Card no kanban mostra indicador de comentário.
+  - Fluxos de outros status (`rascunho`, `contra_proposta`, `enviada`) continuam sem regressão.
 
-### 2. Nova secao "Em Preparacao" (sem botoes)
+Impacto esperado:
+- Superadmin volta a encontrar as mensagens no sistema sem depender de status específico.
+- Comentários deixam de ficar “escondidos” por bloqueio de navegação.
+- Melhor rastreabilidade visual no kanban interno.
 
-Filtrar propostas com `status_proposta` em `['rascunho', 'enviada']` que possuam `numero_proposta` preenchido. Exibir com `showActions={false}` e badge informativo do status atual.
-
-### 3. Verificacao explicita para reenvio apos contra-proposta
-
-A logica atual coloca propostas com `status_proposta === 'contra_proposta'` na secao "Propostas Recentes" (sem botoes). Quando o time interno reenvia, o status muda para `em_analise` e a proposta DEVE migrar para "Aguardando Aprovacao" COM botoes.
-
-O problema potencial: se o cache do React Query nao invalidou corretamente, a proposta pode permanecer na secao errada. Para garantir:
-- Confirmar que o filtro de `propostasResolvidas` NAO captura `em_analise` (ja esta correto no codigo atual)
-- Confirmar que `propostasEmAnalise` captura `em_analise` independente de historico anterior (ja esta correto)
-- Adicionar `refetchInterval` ou `refetchOnWindowFocus: true` ao `useNegociacoes` do portal para garantir que mudancas feitas pelo time interno reflitam rapidamente no portal do incorporador
-
-### 4. Secao "Propostas Recentes" (sem botoes)
-
-Manter como esta: `aprovada_incorporador` e `contra_proposta`.
-
-## Arquivo impactado
-
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` | Ampliar filtros, adicionar secao "Em Preparacao", adicionar `refetchInterval` para atualizar dados automaticamente |
-
-## Detalhes tecnicos
-
-```text
-Fluxo de status e visibilidade no portal:
-
-rascunho ──► "Em Preparacao" (sem botoes)
-enviada ──► "Em Preparacao" (sem botoes)
-em_analise ──► "Aguardando Aprovacao" (COM botoes: Aprovar / Contra Proposta)
-contra_proposta ──► "Propostas Recentes" (sem botoes)
-  └── time interno reenvia ──► em_analise ──► volta para "Aguardando Aprovacao" COM botoes
-aprovada_incorporador ──► "Propostas Recentes" (sem botoes)
-```
-
-- Adicionar `refetchInterval: 30000` (30s) ao hook para que o portal atualize automaticamente quando o time interno reenvia uma proposta
-- Cards na secao "Em Preparacao" exibem badge com o status atual (Rascunho/Enviada) para o incorporador acompanhar o progresso
-
+Se aprovado, implemento exatamente esses pontos em sequência (primeiro acessibilidade do dialog em `em_analise`, depois indicador visual no card usado pelo funil).
