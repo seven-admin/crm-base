@@ -335,17 +335,43 @@ export function useAprovarPropostaIncorporador() {
 
   return useMutation({
     mutationFn: async (negociacao: Negociacao) => {
+      const ETAPA_GANHO_ID = '9f3b1157-9fc9-4873-a323-4bd89e58f193';
+      const etapaAnteriorId = negociacao.funil_etapa_id;
+
+      // 1. Atualizar negociação: status + transição para Ganho
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'aprovada_incorporador',
           aprovada_incorporador_em: new Date().toISOString(),
           aprovada_incorporador_por: user?.id,
+          funil_etapa_id: ETAPA_GANHO_ID,
+          data_fechamento: new Date().toISOString().split('T')[0],
         })
         .eq('id', negociacao.id);
 
       if (error) throw error;
 
+      // 2. Marcar unidades como vendida
+      if (negociacao.unidades && negociacao.unidades.length > 0) {
+        await supabase
+          .from('unidades')
+          .update({ status: 'vendida' })
+          .in('id', negociacao.unidades.map(u => u.unidade_id));
+      }
+
+      // 3. Registrar no histórico
+      await db
+        .from('negociacao_historico')
+        .insert({
+          negociacao_id: negociacao.id,
+          user_id: user?.id,
+          funil_etapa_anterior_id: etapaAnteriorId,
+          funil_etapa_nova_id: ETAPA_GANHO_ID,
+          observacao: 'Proposta aprovada pelo incorporador – transição automática para Ganho'
+        });
+
+      // 4. Webhooks
       const { dispararWebhook } = await import('@/lib/webhookUtils');
       dispararWebhook('proposta_aprovada_incorporador', {
         negociacao_id: negociacao.id,
@@ -355,10 +381,31 @@ export function useAprovarPropostaIncorporador() {
         empreendimento_nome: negociacao.empreendimento?.nome,
         valor_proposta: negociacao.valor_proposta,
       });
+
+      // 5. Webhook de movimentação
+      dispararWebhook('negociacao_movida', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        etapa_anterior: negociacao.funil_etapa?.nome || 'Desconhecida',
+        etapa_nova: 'Ganho',
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        corretor_nome: negociacao.corretor?.nome_completo,
+        valor_negociacao: negociacao.valor_negociacao,
+        valor_proposta: negociacao.valor_proposta,
+        unidades: negociacao.unidades?.map(u => ({
+          unidade_id: u.unidade_id,
+          numero: u.unidade?.numero,
+          bloco: u.unidade?.bloco?.nome,
+          valor: u.valor_proposta || u.valor_unidade,
+        })),
+        observacao: 'Aprovada pelo incorporador',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
       queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['unidades'] });
       invalidateDashboards(queryClient);
       toast.success('Proposta aprovada pelo incorporador!');
     },
@@ -374,17 +421,34 @@ export function useNegarPropostaIncorporador() {
 
   return useMutation({
     mutationFn: async ({ negociacao, motivo }: { negociacao: Negociacao; motivo: string }) => {
+      const ETAPA_CONTRA_PROPOSTA_ID = '0ce3c47e-b603-4f62-8205-8ff9931452c1';
+      const etapaAnteriorId = negociacao.funil_etapa_id;
+
+      // 1. Atualizar negociação: status + transição para Contra Proposta
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'contra_proposta',
           motivo_contra_proposta: motivo,
           aprovada_incorporador_por: user?.id,
+          funil_etapa_id: ETAPA_CONTRA_PROPOSTA_ID,
         })
         .eq('id', negociacao.id);
 
       if (error) throw error;
 
+      // 2. Registrar no histórico
+      await db
+        .from('negociacao_historico')
+        .insert({
+          negociacao_id: negociacao.id,
+          user_id: user?.id,
+          funil_etapa_anterior_id: etapaAnteriorId,
+          funil_etapa_nova_id: ETAPA_CONTRA_PROPOSTA_ID,
+          observacao: `Contra proposta: ${motivo}`
+        });
+
+      // 3. Webhooks
       const { dispararWebhook } = await import('@/lib/webhookUtils');
       dispararWebhook('proposta_contra_proposta', {
         negociacao_id: negociacao.id,
@@ -393,6 +457,26 @@ export function useNegarPropostaIncorporador() {
         cliente_nome: negociacao.cliente?.nome,
         empreendimento_nome: negociacao.empreendimento?.nome,
         motivo,
+      });
+
+      // 4. Webhook de movimentação
+      dispararWebhook('negociacao_movida', {
+        negociacao_id: negociacao.id,
+        codigo: negociacao.codigo,
+        etapa_anterior: negociacao.funil_etapa?.nome || 'Desconhecida',
+        etapa_nova: 'Contra Proposta',
+        cliente_nome: negociacao.cliente?.nome,
+        empreendimento_nome: negociacao.empreendimento?.nome,
+        corretor_nome: negociacao.corretor?.nome_completo,
+        valor_negociacao: negociacao.valor_negociacao,
+        valor_proposta: negociacao.valor_proposta,
+        unidades: negociacao.unidades?.map(u => ({
+          unidade_id: u.unidade_id,
+          numero: u.unidade?.numero,
+          bloco: u.unidade?.bloco?.nome,
+          valor: u.valor_proposta || u.valor_unidade,
+        })),
+        observacao: motivo,
       });
     },
     onSuccess: () => {
@@ -944,74 +1028,87 @@ export function useMoverNegociacao() {
 
       if (histError) throw histError;
 
-      // Dispatch webhooks for final stages
-      if (targetEtapa?.is_final_sucesso || targetEtapa?.is_final_perda) {
-        try {
-          // Fetch complete negotiation data for webhook payload
-          const { data: negociacaoCompleta } = await db
-            .from('negociacoes')
-            .select(`
-              *,
-              cliente:clientes(id, nome, email, telefone, cpf, whatsapp),
-              empreendimento:empreendimentos(id, nome),
-              corretor:corretores(id, nome_completo, email, telefone),
-              imobiliaria:imobiliarias(id, nome),
-              unidades:negociacao_unidades(
-                unidade_id,
-                valor_unidade,
-                valor_proposta,
-                unidade:unidades(id, numero, valor, bloco:blocos(nome))
-              )
-            `)
-            .eq('id', id)
-            .single();
+      // Dispatch webhook for EVERY stage transition
+      try {
+        const { data: negociacaoCompleta } = await db
+          .from('negociacoes')
+          .select(`
+            *,
+            cliente:clientes(id, nome, email, telefone, cpf, whatsapp),
+            empreendimento:empreendimentos(id, nome),
+            corretor:corretores(id, nome_completo, email, telefone),
+            imobiliaria:imobiliarias(id, nome),
+            funil_etapa:funil_etapas(id, nome),
+            unidades:negociacao_unidades(
+              unidade_id,
+              valor_unidade,
+              valor_proposta,
+              unidade:unidades(id, numero, valor, bloco:blocos(nome))
+            )
+          `)
+          .eq('id', id)
+          .single();
 
-          const evento = targetEtapa.is_final_sucesso ? 'negociacao_fechada' : 'negociacao_perdida';
-          
-          const webhookPayload = {
-            evento,
-            dados: {
-              negociacao_id: id,
-              negociacao_codigo: negociacaoCompleta?.codigo,
-              cliente_id: negociacaoCompleta?.cliente_id,
-              cliente_nome: negociacaoCompleta?.cliente?.nome,
-              cliente_email: negociacaoCompleta?.cliente?.email,
-              cliente_telefone: negociacaoCompleta?.cliente?.telefone || negociacaoCompleta?.cliente?.whatsapp,
-              cliente_cpf: negociacaoCompleta?.cliente?.cpf,
-              empreendimento_id: negociacaoCompleta?.empreendimento_id,
-              empreendimento_nome: negociacaoCompleta?.empreendimento?.nome,
-              corretor_id: negociacaoCompleta?.corretor_id,
-              corretor_nome: negociacaoCompleta?.corretor?.nome_completo,
-              imobiliaria_id: negociacaoCompleta?.imobiliaria_id,
-              imobiliaria_nome: negociacaoCompleta?.imobiliaria?.nome,
-              valor_negociacao: negociacaoCompleta?.valor_negociacao,
-              data_fechamento: updateData.data_fechamento,
-              motivo_perda: targetEtapa.is_final_perda ? data.motivo_perda : undefined,
-              observacao: data.observacao,
-              unidades: negociacaoCompleta?.unidades?.map((u: { unidade_id: string; valor_unidade: number; valor_proposta: number; unidade: { numero: string; valor: number; bloco: { nome: string } } }) => ({
-                unidade_id: u.unidade_id,
-                numero: u.unidade?.numero,
-                bloco: u.unidade?.bloco?.nome,
-                valor_tabela: u.unidade?.valor,
-                valor_negociado: u.valor_proposta || u.valor_unidade
-              }))
-            }
-          };
-
-          // Dispatch webhook (fire and forget - don't block the mutation)
-          supabase.functions.invoke('webhook-dispatcher', {
-            body: webhookPayload
-          }).then(({ error: webhookError }) => {
-            if (webhookError) {
-              console.error('Erro ao disparar webhook:', webhookError);
-            } else {
-              console.log(`Webhook ${evento} disparado com sucesso`);
-            }
-          });
-        } catch (webhookErr) {
-          // Log but don't fail the mutation
-          console.error('Erro ao preparar webhook:', webhookErr);
+        // Buscar nome da etapa anterior
+        let etapaAnteriorNome = 'Desconhecida';
+        if (etapa_anterior_id) {
+          const { data: etapaAnterior } = await db
+            .from('funil_etapas')
+            .select('nome')
+            .eq('id', etapa_anterior_id)
+            .maybeSingle();
+          if (etapaAnterior) etapaAnteriorNome = etapaAnterior.nome;
         }
+
+        const { dispararWebhook } = await import('@/lib/webhookUtils');
+
+        // Webhook universal de movimentação
+        dispararWebhook('negociacao_movida', {
+          negociacao_id: id,
+          codigo: negociacaoCompleta?.codigo,
+          etapa_anterior: etapaAnteriorNome,
+          etapa_nova: negociacaoCompleta?.funil_etapa?.nome || 'Desconhecida',
+          cliente_nome: negociacaoCompleta?.cliente?.nome,
+          cliente_email: negociacaoCompleta?.cliente?.email,
+          cliente_telefone: negociacaoCompleta?.cliente?.telefone || negociacaoCompleta?.cliente?.whatsapp,
+          empreendimento_nome: negociacaoCompleta?.empreendimento?.nome,
+          corretor_nome: negociacaoCompleta?.corretor?.nome_completo,
+          imobiliaria_nome: negociacaoCompleta?.imobiliaria?.nome,
+          valor_negociacao: negociacaoCompleta?.valor_negociacao,
+          valor_proposta: negociacaoCompleta?.valor_proposta,
+          unidades: negociacaoCompleta?.unidades?.map((u: { unidade_id: string; valor_unidade: number; valor_proposta: number; unidade: { numero: string; valor: number; bloco: { nome: string } } }) => ({
+            unidade_id: u.unidade_id,
+            numero: u.unidade?.numero,
+            bloco: u.unidade?.bloco?.nome,
+            valor_tabela: u.unidade?.valor,
+            valor_negociado: u.valor_proposta || u.valor_unidade,
+          })),
+          observacao: data.observacao,
+          motivo_perda: targetEtapa?.is_final_perda ? data.motivo_perda : undefined,
+          data_fechamento: targetEtapa?.is_final_sucesso ? updateData.data_fechamento : undefined,
+        });
+
+        // Manter webhooks legados para etapas finais
+        if (targetEtapa?.is_final_sucesso || targetEtapa?.is_final_perda) {
+          const evento = targetEtapa.is_final_sucesso ? 'negociacao_fechada' : 'negociacao_perdida';
+          dispararWebhook(evento, {
+            negociacao_id: id,
+            negociacao_codigo: negociacaoCompleta?.codigo,
+            cliente_id: negociacaoCompleta?.cliente_id,
+            cliente_nome: negociacaoCompleta?.cliente?.nome,
+            cliente_email: negociacaoCompleta?.cliente?.email,
+            cliente_cpf: negociacaoCompleta?.cliente?.cpf,
+            empreendimento_nome: negociacaoCompleta?.empreendimento?.nome,
+            corretor_nome: negociacaoCompleta?.corretor?.nome_completo,
+            imobiliaria_nome: negociacaoCompleta?.imobiliaria?.nome,
+            valor_negociacao: negociacaoCompleta?.valor_negociacao,
+            data_fechamento: updateData.data_fechamento,
+            motivo_perda: targetEtapa.is_final_perda ? data.motivo_perda : undefined,
+            observacao: data.observacao,
+          });
+        }
+      } catch (webhookErr) {
+        console.error('Erro ao preparar webhook:', webhookErr);
       }
 
       return { id, targetEtapa };

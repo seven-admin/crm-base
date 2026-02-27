@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNegociacoes, useAprovarPropostaIncorporador, useNegarPropostaIncorporador } from '@/hooks/useNegociacoes';
 import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useNegociacaoComentarios, useAddNegociacaoComentario } from '@/hooks/useNegociacaoComentarios';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +17,69 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, X, FileText, Loader2, Building2, User, DollarSign, AlertCircle } from 'lucide-react';
+import { Check, X, FileText, Loader2, Building2, User, DollarSign, AlertCircle, MessageSquare, Send } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+function ComentariosSection({ negociacaoId }: { negociacaoId: string }) {
+  const { data: comentarios = [], isLoading } = useNegociacaoComentarios(negociacaoId);
+  const addComentario = useAddNegociacaoComentario();
+  const [texto, setTexto] = useState('');
+
+  const handleSubmit = async () => {
+    if (!texto.trim()) return;
+    await addComentario.mutateAsync({ negociacaoId, comentario: texto.trim() });
+    setTexto('');
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <MessageSquare className="h-3.5 w-3.5" />
+        Comentários
+      </div>
+
+      {/* Input */}
+      <div className="flex gap-2">
+        <Textarea
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Adicionar comentário..."
+          rows={2}
+          className="text-xs min-h-[48px]"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSubmit}
+          disabled={addComentario.isPending || !texto.trim()}
+          className="self-end"
+        >
+          {addComentario.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+        </Button>
+      </div>
+
+      {/* Lista */}
+      {isLoading ? (
+        <Skeleton className="h-8 w-full" />
+      ) : comentarios.length > 0 ? (
+        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+          {comentarios.map((c) => (
+            <div key={c.id} className="bg-muted/50 rounded px-2.5 py-1.5 text-xs">
+              <div className="flex justify-between items-center mb-0.5">
+                <span className="font-medium">{c.user?.full_name || 'Usuário'}</span>
+                <span className="text-muted-foreground text-[10px]">
+                  {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: ptBR })}
+                </span>
+              </div>
+              <p className="text-muted-foreground">{c.comentario}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function PortalIncorporadorPropostas() {
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
@@ -29,7 +92,6 @@ export default function PortalIncorporadorPropostas() {
   const [negarDialog, setNegarDialog] = useState<Negociacao | null>(null);
   const [motivoContra, setMotivoContra] = useState('');
 
-  // Filtrar propostas em_analise dos empreendimentos do incorporador
   const propostasEmAnalise = todasNegociacoes.filter(
     n => n.status_proposta === 'em_analise' && empreendimentoIds.includes(n.empreendimento_id)
   );
@@ -141,6 +203,9 @@ export default function PortalIncorporadorPropostas() {
               <p className="text-xs text-muted-foreground mt-0.5">{neg.motivo_contra_proposta}</p>
             </div>
           )}
+
+          {/* Seção de comentários */}
+          <ComentariosSection negociacaoId={neg.id} />
         </CardContent>
       </Card>
     );
@@ -159,7 +224,6 @@ export default function PortalIncorporadorPropostas() {
 
   return (
     <div className="space-y-6">
-      {/* Propostas pendentes */}
       <div>
         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
@@ -183,7 +247,6 @@ export default function PortalIncorporadorPropostas() {
         )}
       </div>
 
-      {/* Propostas já resolvidas */}
       {propostasResolvidas.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-3">Propostas Recentes</h2>
