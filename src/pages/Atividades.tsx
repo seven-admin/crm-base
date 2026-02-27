@@ -374,7 +374,90 @@ export default function Atividades() {
         {/* View: Kanban */}
         {view === 'kanban' && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={filters.tipo || ''} onValueChange={(v) => setFilters({ ...filters, tipo: v === 'all' ? undefined : v as AtividadeTipo, subtipo: v === 'all' ? undefined : filters.subtipo })}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((tipo) => (
+                    <SelectItem key={tipo} value={tipo}>{ATIVIDADE_TIPO_LABELS[tipo]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.status || ''} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? undefined : v as AtividadeStatus })}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {Object.entries(ATIVIDADE_STATUS_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.responsavel_id || ''} onValueChange={(v) => setFilters({ ...filters, responsavel_id: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {gestores?.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.empreendimento_id || ''} onValueChange={(v) => setFilters({ ...filters, empreendimento_id: v === 'all' ? undefined : v })}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Empreendimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {empreendimentos?.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.data_inicio ? `${filters.data_inicio}` : 'all'}
+                onValueChange={(v) => {
+                  if (v === 'all') {
+                    setFilters({ ...filters, data_inicio: undefined, data_fim: undefined });
+                  } else {
+                    const [y, m] = v.split('-').map(Number);
+                    const start = new Date(y, m - 1, 1);
+                    const end = endOfMonth(start);
+                    setFilters({
+                      ...filters,
+                      data_inicio: format(start, 'yyyy-MM-dd'),
+                      data_fim: format(end, 'yyyy-MM-dd'),
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const d = subMonths(new Date(), i);
+                    const val = format(d, 'yyyy-MM-01');
+                    const label = format(d, "MMMM yyyy", { locale: ptBR });
+                    return (
+                      <SelectItem key={val} value={val}>
+                        {label.charAt(0).toUpperCase() + label.slice(1)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+
               <TemperaturaSelector
                 value={kanbanTemperatura}
                 onValueChange={(temp) => setKanbanTemperatura(temp ?? undefined)}
@@ -385,6 +468,10 @@ export default function Atividades() {
               dataFim={filters.data_fim}
               temperaturaFilter={kanbanTemperatura}
               tipos={undefined}
+              tipo={filters.tipo}
+              status={filters.status}
+              responsavelId={filters.responsavel_id}
+              empreendimentoId={filters.empreendimento_id}
             />
           </div>
         )}
