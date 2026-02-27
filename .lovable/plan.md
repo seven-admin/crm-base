@@ -1,127 +1,132 @@
 
-# Filtrar Comprador Historico e Integrar Contratos ao Fluxo de Ganho
+# Corrigir Filtro de Comprador Historico e Unificar Criacao de Contrato
 
-## Problema 1: Comprador Historico aparece na lista e dashboards de contratos
+## Problema 1: Filtro de Comprador Historico incompleto
 
-A screenshot mostra contratos vinculados a "COMPRADOR HISTORICO (PRE-SISTEMA)" na lista e nos contadores. Esses registros sao de vendas historicas importadas e nao devem aparecer nas listagens normais nem inflar os KPIs.
+O filtro foi aplicado apenas em `useContratos.ts` e `useContratosStats.ts`, mas falta em 4 outros hooks que consultam contratos:
 
-## Problema 2: Coluna Unidades explodindo o layout
+- `src/hooks/useDashboardExecutivo.ts` -- contagem e valores de contratos no dashboard executivo
+- `src/hooks/useRelatorios.ts` -- 6 queries diferentes (total vendas, vendas mes, vendas mes anterior, evolucao, por corretor, por empreendimento, ultimas vendas)
+- `src/hooks/useDashboardIncorporador.ts` -- contratos em andamento
+- `src/hooks/useBonificacoes.ts` -- contagem de unidades vendidas
 
-Contratos com muitas unidades (ex: JD. IGUATEMI com centenas) mostram todos os numeros em texto corrido, quebrando o layout da tabela.
+### Solucao
 
-## Problema 3: Criacao automatica de contrato ao ganhar negociacao
+A abordagem mais sustentavel e criar uma helper function reutilizavel para o filtro, mas como o Supabase JS nao permite subqueries, o filtro precisa ser feito pos-fetch. A melhor opcao e fazer um join com clientes em cada query e filtrar no JS.
 
-Atualmente o checkbox "Criar contrato automaticamente" e opcional no MoverNegociacaoDialog. O pedido e que ao mover para "Ganho", o contrato seja criado automaticamente.
+Porem, como nem todas as queries fazem join com clientes, a solucao mais pratica e:
+1. Buscar os IDs dos clientes historicos uma unica vez
+2. Adicionar `.not('cliente_id', 'in', ...)` nas queries
 
----
+Na verdade, como sao poucos IDs, a solucao mais simples e manter o filtro JS pos-fetch, adicionando o join com `clientes(nome)` onde necessario.
 
-## Alteracoes
+**Arquivos a modificar:**
+- `src/hooks/useDashboardExecutivo.ts` -- adicionar join com clientes e filtro
+- `src/hooks/useRelatorios.ts` -- adicionar filtro em todas as 6+ queries
+- `src/hooks/useDashboardIncorporador.ts` -- adicionar filtro
+- `src/hooks/useBonificacoes.ts` -- adicionar filtro
 
-### 1. Filtrar Comprador Historico nos hooks de contratos
+## Problema 2: Contrato nao criado na aprovacao do incorporador
 
-**Arquivo: `src/hooks/useContratos.ts`**
+O `useAprovarPropostaIncorporador` move a negociacao para Ganho e marca unidades como vendidas, mas NAO cria contrato. A logica de auto-criacao de contrato so existe em `useMoverNegociacao`.
 
-Adicionar filtro nas queries `useContratos` e `useContratosPaginated` para excluir contratos cujo cliente seja "COMPRADOR HISTORICO (PRE-SISTEMA)":
+### Solucao
+
+Adicionar a mesma logica de criacao automatica de contrato no `useAprovarPropostaIncorporador`, reutilizando o mesmo padrao ja existente em `useMoverNegociacao`:
 
 ```text
-// Na query, apos .eq('is_active', true), adicionar:
-.not('cliente_id', 'in', `(select id from clientes where nome ilike '%COMPRADOR HISTÓRICO%')`)
+// Apos marcar unidades como vendidas (linha 449):
+// Auto-criar contrato
+try {
+  const { data: contratoCriado } = await db
+    .from('contratos')
+    .insert({
+      numero: 'TEMP',
+      cliente_id: negociacao.cliente_id,
+      empreendimento_id: negociacao.empreendimento_id,
+      corretor_id: negociacao.corretor_id,
+      imobiliaria_id: negociacao.imobiliaria_id,
+      valor_contrato: negociacao.valor_proposta || negociacao.valor_negociacao,
+      negociacao_id: negociacao.id,
+      status: 'em_geracao',
+    })
+    .select('id')
+    .single();
+
+  if (contratoCriado && negociacao.unidades?.length > 0) {
+    await db.from('contrato_unidades').insert(
+      negociacao.unidades.map(u => ({
+        contrato_id: contratoCriado.id,
+        unidade_id: u.unidade_id,
+      }))
+    );
+  }
+} catch (err) {
+  console.error('Erro ao auto-criar contrato:', err);
+}
 ```
 
-Como o Supabase JS nao suporta subqueries inline facilmente, a abordagem sera filtrar no frontend apos o fetch, ou usar um filtro via join. A solucao mais simples e filtrar os resultados no JS:
+Tambem adicionar invalidacao das queries de contratos no onSuccess:
+```text
+queryClient.invalidateQueries({ queryKey: ['contratos'] });
+queryClient.invalidateQueries({ queryKey: ['contratos-paginated'] });
+queryClient.invalidateQueries({ queryKey: ['contratos-stats'] });
+```
 
+## Resumo de arquivos modificados
+
+1. `src/hooks/useDashboardExecutivo.ts` -- filtro comprador historico
+2. `src/hooks/useRelatorios.ts` -- filtro comprador historico em 6+ queries
+3. `src/hooks/useDashboardIncorporador.ts` -- filtro comprador historico
+4. `src/hooks/useBonificacoes.ts` -- filtro comprador historico
+5. `src/hooks/useNegociacoes.ts` -- adicionar auto-criacao de contrato no `useAprovarPropostaIncorporador`
+
+## Detalhes tecnicos
+
+### Helper de filtro (padrao a aplicar)
+
+Para queries que ja fazem join com clientes:
 ```text
 const resultado = (data || []).filter(c => 
   !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
 );
 ```
 
-Isso sera aplicado em:
-- `useContratos` (linha 44-46)
-- `useContratosPaginated` (linha 89-97)
+Para queries que NAO fazem join com clientes, adicionar o select de `clientes(nome)` e aplicar o mesmo filtro.
 
-**Arquivo: `src/hooks/useContratosStats.ts`**
+### useDashboardExecutivo.ts
 
-Adicionar o mesmo filtro nos dados do dashboard, excluindo contratos com cliente historico de todos os calculos (total, porStatus, valorPipeline, etc.):
-
+A query de contratos (linha 101-104) nao faz join com clientes. Alterar para:
 ```text
-const contratosValidos = (contratos || []).filter(c => 
-  !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
-);
+let contratosQ = supabase
+  .from('contratos')
+  .select('id, valor_contrato, data_assinatura, empreendimento_id, created_at, cliente:clientes(nome)')
+  .eq('is_active', true)
 ```
+E filtrar o resultado.
 
-### 2. Truncar coluna de Unidades na tabela
+### useRelatorios.ts
 
-**Arquivo: `src/components/contratos/ContratosTable.tsx`**
+Sao 6+ queries independentes. Cada uma precisa:
+1. Adicionar `cliente:clientes(nome)` ao select
+2. Filtrar pos-fetch
 
-Em vez de listar todas as unidades em texto corrido, truncar com limite e mostrar contagem:
+### useBonificacoes.ts
 
+A query usa `count` (linha 152-155). Como nao retorna dados, precisamos mudar a abordagem:
+- Em vez de `select('id', { count: 'exact' })`, buscar os IDs e filtrar, depois contar manualmente.
+- Ou: buscar os cliente_ids historicos primeiro e usar `.not('cliente_id', 'in', ...)` para excluir no SQL.
+
+A segunda opcao e mais eficiente. Criar uma funcao utilitaria:
 ```text
-// Antes
-const unidades = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean).join(', ') || '-';
-
-// Depois
-const unidadesList = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean) || [];
-const MAX_SHOW = 5;
-const unidades = unidadesList.length <= MAX_SHOW
-  ? unidadesList.join(', ')
-  : `${unidadesList.slice(0, MAX_SHOW).join(', ')} +${unidadesList.length - MAX_SHOW}`;
-```
-
-Aplicar tanto na versao desktop (linha 227) quanto mobile (linha 178). Adicionar `max-w-[200px] truncate` na celula para garantir que nao estoure.
-
-### 3. Auto-criar contrato ao mover para Ganho
-
-**Arquivo: `src/hooks/useNegociacoes.ts`**
-
-No `useMoverNegociacao`, apos a movimentacao para etapa `is_final_sucesso` (linha 1173), adicionar logica para criar o contrato automaticamente sem precisar do checkbox:
-
-```text
-// Apos marcar unidades como vendidas (linha 1187)
-if (targetEtapa?.is_final_sucesso) {
-  // ... codigo existente de unidades ...
-  
-  // Auto-criar contrato
-  try {
-    const { data: negCompleta } = await db
-      .from('negociacoes')
-      .select('cliente_id, empreendimento_id, corretor_id, imobiliaria_id, valor_negociacao, valor_proposta, status_proposta')
-      .eq('id', id)
-      .single();
-
-    if (negCompleta) {
-      // Se tem proposta aceita, usar converterNegociacaoEmContrato
-      // Senao, criar contrato diretamente
-      await db.from('contratos').insert({
-        numero: 'TEMP',
-        cliente_id: negCompleta.cliente_id,
-        empreendimento_id: negCompleta.empreendimento_id,
-        corretor_id: negCompleta.corretor_id,
-        imobiliaria_id: negCompleta.imobiliaria_id,
-        valor_contrato: negCompleta.valor_proposta || negCompleta.valor_negociacao,
-        negociacao_id: id,
-        status: 'em_geracao',
-      });
-    }
-  } catch (err) {
-    console.error('Erro ao auto-criar contrato:', err);
-  }
+// src/lib/contratoFilters.ts
+export async function getClientesHistoricosIds() {
+  const { data } = await supabase
+    .from('clientes')
+    .select('id')
+    .ilike('nome', '%COMPRADOR HISTÓRICO%');
+  return (data || []).map(c => c.id);
 }
 ```
 
-Tambem remover o checkbox "Criar contrato automaticamente" do `MoverNegociacaoDialog.tsx` ja que agora e automatico, substituindo por um aviso informativo:
-
-```text
-// Substituir o bloco do Checkbox (linhas 146-162) por:
-<div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-  Um contrato sera criado automaticamente ao confirmar.
-</div>
-```
-
-### Arquivos modificados
-
-- `src/hooks/useContratos.ts` -- filtrar comprador historico
-- `src/hooks/useContratosStats.ts` -- filtrar comprador historico dos KPIs
-- `src/components/contratos/ContratosTable.tsx` -- truncar unidades
-- `src/hooks/useNegociacoes.ts` -- auto-criar contrato no Ganho
-- `src/components/negociacoes/MoverNegociacaoDialog.tsx` -- remover checkbox, adicionar aviso
+Usar isso em `useBonificacoes.ts` com `.not('cliente_id', 'in', `(${ids.join(',')})`)`.
