@@ -3972,6 +3972,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "negociacoes_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "negociacoes_imobiliaria_id_fkey"
             columns: ["imobiliaria_id"]
             isOneToOne: false

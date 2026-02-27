@@ -971,9 +971,16 @@ export function useMoverNegociacao() {
       targetEtapa?: { is_final_sucesso: boolean; is_final_perda: boolean };
       data: MoverNegociacaoData 
     }) => {
+      const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
+
       const updateData: Record<string, unknown> = {
         funil_etapa_id: data.funil_etapa_id
       };
+
+      // Auto-set status_proposta when moving to "Análise de Proposta"
+      if (data.funil_etapa_id === ETAPA_ANALISE_PROPOSTA) {
+        updateData.status_proposta = 'em_analise';
+      }
 
       // Handle final loss stage
       if (targetEtapa?.is_final_perda) {
