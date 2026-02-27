@@ -1,45 +1,57 @@
 
-# Reorganizar formulario de atividades: Observacoes + 3a etapa
+# Duas alteracoes na tela de Atividades
 
-## Resumo
-Mover o campo "Observacoes" para fora do Collapsible (exibindo diretamente na Etapa 2), e transformar o conteudo atual de "Mais opcoes" (Corretor e Imobiliaria) em uma terceira etapa do wizard.
+## 1. Temperatura na tabela: exibir apenas o label selecionado (ou "-")
 
-## Alteracoes no arquivo `src/components/atividades/AtividadeForm.tsx`
+### Problema atual
+Na listagem (tabela), a coluna "Temperatura" usa o `TemperaturaSelector` com 3 botoes (Frio, Morno, Quente) sempre visiveis, ocupando espaco e poluindo a tabela.
 
-### 1. Atualizar o state de step para suportar 3 etapas
-- Mudar `useState<1 | 2>(1)` para `useState<1 | 2 | 3>(1)`
-- Atualizar o step indicator para exibir 3 circulos (Configuracao, Detalhes, Responsaveis)
+### Solucao
+Substituir o `TemperaturaSelector` na tabela por um display simples:
+- Se a atividade tem temperatura selecionada: exibir apenas o badge correspondente (ex: "Quente" com cor vermelha) como um botao clicavel que abre um pequeno popover/dropdown para alterar
+- Se nao tem temperatura: exibir apenas "-"
 
-### 2. Mover Observacoes para antes do bloco "Mais opcoes"
-- Extrair o FormField de `observacoes` (linhas 887-904) de dentro do `CollapsibleContent`
-- Posiciona-lo na Etapa 2, logo apos a secao de Temperatura do Cliente (linha ~824) e antes do Follow-up
+**Alternativa mais simples**: manter o `TemperaturaSelector` mas adicionar uma prop `displayMode` que, quando ativa, mostra apenas o label selecionado (clicavel para expandir os 3 botoes) ou "-" quando vazio.
 
-### 3. Remover o Collapsible inteiro
-- Eliminar o `Collapsible` / `CollapsibleTrigger` / `CollapsibleContent` (linhas 826-906)
-- Os campos Corretor e Imobiliaria serao movidos para a Etapa 3
+### Arquivo alterado
+- `src/components/atividades/TemperaturaSelector.tsx` -- adicionar prop `displayOnly` ou criar modo compacto que mostra so o valor selecionado
+- `src/pages/Atividades.tsx` (linha ~847) -- usar o novo modo
 
-### 4. Criar a Etapa 3 - Responsaveis
-- Novo bloco `{step === 3 && (...)}` contendo:
-  - Corretor (select)
-  - Imobiliaria (select)
-  - Botoes "Voltar" (volta para step 2) e "Salvar" (submit)
+### Comportamento
+- Sem selecao: renderiza `<span>-</span>`
+- Com selecao: renderiza apenas o badge ativo (ex: "Quente" em vermelho), clicavel para abrir os 3 botoes e permitir troca
 
-### 5. Ajustar navegacao
-- Etapa 2: botao "Proximo" agora vai para step 3 (em vez de submit direto). Botao "Voltar" volta para step 1.
-- Etapa 3: botao "Voltar" volta para step 2. Botao "Salvar" faz o submit.
-- Na Etapa 2, o botao submit atual sera substituido por "Proximo" para ir a Etapa 3.
+---
 
-### 6. Step indicator visual
-Atualizar o indicador de etapas para mostrar 3 passos:
+## 2. Cliente obrigatorio para atividades de negociacao
 
-```text
-(1) Configuracao --- (2) Detalhes --- (3) Responsaveis
+### Problema atual
+O campo `cliente_id` no formulario de atividades e opcional (`z.string().optional()`). Para atividades do tipo negociacao (`TIPOS_NEGOCIACAO`: atendimento, negociacao, contra_proposta_atividade), o cliente deveria ser obrigatorio.
+
+### Solucao
+Adicionar validacao condicional no schema Zod (dentro do `superRefine` existente na linha 82) que verifica:
+- Se o tipo pertence a `TIPOS_NEGOCIACAO`, entao `cliente_id` deve estar preenchido
+- Caso contrario, permanece opcional
+
+Alem disso, exibir indicacao visual no label do campo Cliente (asterisco "*") quando o tipo for de negociacao.
+
+### Arquivos alterados
+- `src/components/atividades/AtividadeForm.tsx`:
+  - Adicionar validacao no `superRefine` do schema Zod para exigir `cliente_id` quando tipo esta em `TIPOS_NEGOCIACAO`
+  - Adicionar asterisco no label "Cliente" quando tipo for de negociacao
+  - O botao "+ Novo Cliente" ja existe e continuara disponivel
+
+### Detalhes tecnicos
+
+No `superRefine`:
+```typescript
+if (TIPOS_NEGOCIACAO.includes(values.tipo) && !values.cliente_id) {
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: ['cliente_id'],
+    message: 'Cliente é obrigatório para atividades de negociação',
+  });
+}
 ```
 
-## Estrutura final das etapas
-
-| Etapa | Conteudo |
-|---|---|
-| 1 - Configuracao | Tipo, Subtipo, Categoria, Gestores (super admin) |
-| 2 - Detalhes | Titulo, Datas, Horarios, Prazo, Cliente, Empreendimento, Temperatura, **Observacoes**, Follow-up |
-| 3 - Responsaveis | Corretor, Imobiliaria |
+Como o schema e definido fora do componente, sera necessario mover a validacao condicional para o `handleNextStep` / `handleSubmit` ou usar `superRefine` que ja tem acesso a todos os campos.
