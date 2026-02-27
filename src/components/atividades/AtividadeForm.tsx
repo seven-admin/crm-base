@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus } from 'lucide-react';
+import { NovoClienteRapidoDialog } from './NovoClienteRapidoDialog';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -119,6 +120,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const { data: gestores = [] } = useGestoresProduto();
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [showNovoCliente, setShowNovoCliente] = useState(false);
   const [atribuirParaGestores, setAtribuirParaGestores] = useState(false);
   const [todosGestores, setTodosGestores] = useState(false);
   const [gestoresSelecionados, setGestoresSelecionados] = useState<string[]>([]);
@@ -704,27 +706,49 @@ export function AtividadeForm(props: AtividadeFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cliente (opcional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!!lockCliente}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um cliente" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {clientesProspecto.map((cliente) => (
-                        <SelectItem key={cliente.id} value={cliente.id}>
-                          {cliente.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!!lockCliente}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um cliente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientesProspecto.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {cliente.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!lockCliente && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => setShowNovoCliente(true)}
+                        title="Novo Cliente"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            <NovoClienteRapidoDialog
+              open={showNovoCliente}
+              onOpenChange={setShowNovoCliente}
+              onClienteCriado={(id) => {
+                form.setValue('cliente_id', id);
+              }}
             />
 
             {/* Empreendimento */}

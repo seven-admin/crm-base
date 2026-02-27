@@ -33,6 +33,7 @@ import { ClienteTelefonesEditor } from './ClienteTelefonesEditor';
 import { ClienteConjugeSelect } from './ClienteConjugeSelect';
 import { ClienteSociosEditor } from './ClienteSociosEditor';
 import { useAuth } from '@/contexts/AuthContext';
+import { useConfiguracao } from '@/hooks/useConfiguracoesSistema';
 
 // Função para verificar se é brasileiro
 const isBrasileiroNacionality = (nacionalidade: string | undefined): boolean => {
@@ -41,7 +42,7 @@ const isBrasileiroNacionality = (nacionalidade: string | undefined): boolean => 
   return normalized.includes('brasil') || normalized === 'brasileiro' || normalized === 'brasileira';
 };
 
-const formSchema = z.object({
+const formSchemaBase = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefone: z.string().optional(),
@@ -71,31 +72,35 @@ const formSchema = z.object({
   empreendimento_id: z.string().optional(),
   conjuge_id: z.string().optional(),
   observacoes: z.string().optional(),
-}).superRefine((data, ctx) => {
-  const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
-  
-  if (isBrasileiro) {
-    // Validar CPF apenas para brasileiros (se preenchido)
-    if (data.cpf && data.cpf.replace(/\D/g, '').length > 0 && !validarCPF(data.cpf)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'CPF inválido',
-        path: ['cpf'],
-      });
-    }
-  } else {
-    // Passaporte obrigatório para estrangeiros
-    if (!data.passaporte || data.passaporte.trim() === '') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Passaporte é obrigatório para estrangeiros',
-        path: ['passaporte'],
-      });
-    }
-  }
 });
 
-type FormData = z.infer<typeof formSchema>;
+// Schema with conditional CPF validation
+function createClienteSchema(validarCpf: boolean) {
+  return formSchemaBase.superRefine((data, ctx) => {
+    const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
+    
+    if (isBrasileiro && validarCpf) {
+      if (data.cpf && data.cpf.replace(/\D/g, '').length > 0 && !validarCPF(data.cpf)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'CPF inválido',
+          path: ['cpf'],
+        });
+      }
+    }
+    if (!isBrasileiro) {
+      if (!data.passaporte || data.passaporte.trim() === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Passaporte é obrigatório para estrangeiros',
+          path: ['passaporte'],
+        });
+      }
+    }
+  });
+}
+
+type FormData = z.infer<typeof formSchemaBase>;
 
 interface ClienteFormProps {
   initialData?: Cliente;
@@ -113,6 +118,10 @@ const STEPS = [
 export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const isStep4 = currentStep === 4;
+
+  const { data: configCpf } = useConfiguracao('validar_cpf_clientes');
+  const validarCpf = configCpf?.valor !== 'false';
+  const formSchema = createClienteSchema(validarCpf);
 
   const { corretores } = useCorretores(undefined, { enabled: isStep4 });
   const { data: gestores } = useGestoresProduto({ enabled: isStep4 });
