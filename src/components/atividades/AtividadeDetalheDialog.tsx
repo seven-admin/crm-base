@@ -13,12 +13,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
 import type { Atividade, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS, TIPOS_COM_CRONOMETRO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { AtividadeComentarios } from './AtividadeComentarios';
 import { AlterarStatusAtividadeDialog } from './AlterarStatusAtividadeDialog';
 import { TemperaturaSelector } from './TemperaturaSelector';
+import { AtividadeCronometro } from './AtividadeCronometro';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
 import type { ClienteTemperatura } from '@/types/clientes.types';
@@ -280,6 +281,17 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                   {atividade.motivo_cancelamento}
                 </p>
               </div>
+            )}
+
+            {/* Cronômetro (apenas para tipos com cronômetro) */}
+            {TIPOS_COM_CRONOMETRO.includes(atividade.tipo) && (
+              <AtividadeCronometro
+                atividadeId={atividade.id}
+                cronometroInicio={atividade.cronometro_inicio ?? null}
+                cronometroFim={atividade.cronometro_fim ?? null}
+                duracaoMinutos={atividade.duracao_minutos ?? null}
+                disabled={atividade.status !== 'pendente'}
+              />
             )}
 
             {/* Temperatura do Cliente */}
