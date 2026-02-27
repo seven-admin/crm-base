@@ -21,9 +21,13 @@ interface AtividadeKanbanBoardProps {
   dataFim?: string;
   temperaturaFilter?: ClienteTemperatura;
   tipos?: AtividadeTipo[];
+  tipo?: AtividadeTipo;
+  status?: string;
+  responsavelId?: string;
+  empreendimentoId?: string;
 }
 
-export function AtividadeKanbanBoard({ dataInicio, dataFim, temperaturaFilter, tipos }: AtividadeKanbanBoardProps) {
+export function AtividadeKanbanBoard({ dataInicio, dataFim, temperaturaFilter, tipos, tipo, status, responsavelId, empreendimentoId }: AtividadeKanbanBoardProps) {
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const alterarStatus = useAlterarStatusEmLote();
 
@@ -31,7 +35,10 @@ export function AtividadeKanbanBoard({ dataInicio, dataFim, temperaturaFilter, t
 
   const { data: atividadesData, isLoading } = useAtividades({
     filters: {
-      ...(tipos ? { tipos } : { tipos: TIPOS_NEGOCIACAO }),
+      ...(tipos ? { tipos } : tipos === undefined && tipo ? { tipo } : tipos === undefined ? {} : { tipos: TIPOS_NEGOCIACAO }),
+      ...(status ? { status: status as any } : {}),
+      ...(responsavelId ? { responsavel_id: responsavelId } : {}),
+      ...(empreendimentoId ? { empreendimento_id: empreendimentoId } : {}),
       ...(dataInicio ? { data_inicio: dataInicio } : {}),
       ...(dataFim ? { data_fim: dataFim } : {}),
       ...(temperaturaFilter ? { temperatura_cliente: temperaturaFilter } : {}),
