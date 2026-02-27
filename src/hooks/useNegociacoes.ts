@@ -26,7 +26,7 @@ export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?
         .from('negociacoes')
         .select(`
           *,
-          cliente:clientes(id, nome, email, telefone),
+          cliente:clientes(id, nome, cpf, email, telefone),
           empreendimento:empreendimentos(id, nome),
           corretor:corretores(id, nome_completo),
           imobiliaria:imobiliarias(id, nome),
