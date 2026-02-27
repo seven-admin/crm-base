@@ -1,57 +1,52 @@
 
-# Corrigir Filtro de Comprador Historico e Ajustar Fluxo de Contrato
+Objetivo
+- Remover definitivamente as “vendas históricas” (cliente COMPRADOR HISTÓRICO) de todas as contagens e somatórios de valor exibidos em /metas-comerciais.
 
-## Problema 1: Comprador Historico ainda aparece nas listagens de clientes
+Diagnóstico do que está acontecendo hoje
+- A tela de Metas Comerciais consome os hooks de `src/hooks/useMetasComerciais.ts`.
+- Nesse arquivo, os cálculos de valor e vendas vêm de queries em `contratos` sem exclusão de `cliente_id` histórico.
+- Foram encontrados 4 pontos críticos sem filtro:
+  1) `useVendasRealizadasMes` (card “Vendas Realizadas”, atingimento valor/unidades)
+  2) `useRankingCorretoresMes` (ranking por valor e unidades)
+  3) `useHistoricoMetas` (gráfico “Realizado vs Meta - últimos 6 meses”)
+  4) `useMetasVsRealizadoPorEmpreendimento` (gráfico comparativo por empreendimento)
+- Resultado: mesmo com correções em outros dashboards, em Metas Comerciais os contratos históricos continuam entrando no realizado.
 
-O filtro em `useClientes.ts` usa `.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')` -- sem acentos. Porem o banco armazena com acentos: `COMPRADOR HISTÓRICO (PRÉ-SISTEMA)`. Por isso o filtro nao funciona.
+Implementação proposta
+1) Padronizar filtro de histórico dentro de `useMetasComerciais.ts`
+- Importar `getClientesHistoricosIds` de `@/lib/contratoFilters`.
+- Em cada hook que consulta `contratos`, buscar IDs históricos no início da `queryFn`.
+- Aplicar exclusão via SQL quando houver IDs:
+  - `.not('cliente_id', 'in', \`(${historicosIds.join(',')})\`)`
+- Se não houver IDs, manter query normal (evita filtro inválido com lista vazia).
 
-O mesmo problema existe em `useClientesSelect.ts` que usa `.not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')` -- esse funciona porque usa `ilike` com os acentos corretos.
+2) Ajustar cada query de contratos usada em métricas de valor
+- `useVendasRealizadasMes`:
+  - Excluir cliente histórico antes de calcular `totalValor` e `totalUnidades`.
+- `useRankingCorretoresMes`:
+  - Excluir cliente histórico antes de agregar `valor` e `unidades` por corretor.
+- `useHistoricoMetas`:
+  - Excluir cliente histórico na bulk query de contratos para que `realizado` mensal não infle.
+- `useMetasVsRealizadoPorEmpreendimento`:
+  - Excluir cliente histórico na query `todasVendas` para corrigir barras de “Realizado”.
 
-### Solucao
+3) Garantir consistência com o padrão já adotado no projeto
+- Reutilizar o helper já existente (`getClientesHistoricosIds`) e o mesmo critério semântico global.
+- Não alterar comportamento de metas cadastradas; apenas remover histórico das vendas consideradas no realizado.
 
-**Arquivo: `src/hooks/useClientes.ts`**
+4) Validação após implementação
+- Em `/metas-comerciais`, validar para o mesmo mês/empreendimento:
+  - Card “Vendas Realizadas” reduzindo para o valor sem histórico.
+  - Atingimento (%) recalculado corretamente.
+  - Ranking de corretores sem vendas do cliente histórico.
+  - Histórico de 6 meses sem picos artificiais do legado.
+  - “Meta vs Realizado por Empreendimento” sem realizado inflado.
+- Conferir também com filtro “Todos os empreendimentos” e com empreendimento específico.
 
-Substituir todos os `.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')` por `.not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')` nas seguintes queries:
-- `useClientes` (linhas 69, 89)
-- `useClientesPaginated` (linhas 126, 151, 172)
+Riscos e cuidados
+- O filtro `in (...)` precisa ser aplicado apenas quando houver IDs (lista vazia quebraria a condição).
+- Todas as queries de contratos no arquivo devem manter o mesmo critério para evitar divergência entre cards e gráficos.
+- Manter `queryKey` atual (sem breaking change), pois a invalidação já ocorre nos pontos corretos.
 
-Sao 5 ocorrencias no total, todas com o mesmo problema: texto sem acentos.
-
-## Problema 2: Remover auto-criacao de contrato e permitir geracao manual
-
-O usuario solicitou que ao ganhar a proposta, o contrato NAO seja criado automaticamente. Em vez disso, a negociacao deve ficar "apta" para o usuario clicar em "Gerar Contrato" manualmente (o que ja importa as condicoes de pagamento).
-
-### Situacao atual
-
-- Ja existe `useConverterPropostaEmContrato` (linha 790 do useNegociacoes.ts) que faz tudo correto: cria contrato, copia unidades, copia condicoes de pagamento da negociacao, busca template, atualiza status para "convertida".
-- Ja existe o botao "Gerar Contrato" no `KanbanCard.tsx` (linha 178) e no `PropostaDialog.tsx` (linha 406), mas so aparece quando `status_proposta === 'aceita'`.
-- O problema: quando o incorporador aprova, o status vai para `aprovada_incorporador`, nao `aceita`. Entao o botao nunca aparece E o contrato e auto-criado.
-
-### Solucao
-
-1. **Arquivo: `src/hooks/useNegociacoes.ts`**
-   - `useAprovarPropostaIncorporador` (linhas 452-479): Remover todo o bloco de auto-criacao de contrato.
-   - `useMoverNegociacao` (linhas 1220-1260): Remover todo o bloco de auto-criacao de contrato.
-   - No `MoverNegociacaoDialog.tsx`, remover o aviso "Um contrato sera criado automaticamente" e substituir por "Apos confirmar, voce podera gerar o contrato manualmente."
-
-2. **Arquivo: `src/components/negociacoes/KanbanCard.tsx`**
-   - Alterar a condicao do botao "Gerar Contrato" (linha 178) de `status_proposta === 'aceita'` para incluir tambem `aprovada_incorporador`:
-   ```text
-   {['aceita', 'aprovada_incorporador'].includes(negociacao.status_proposta || '') && onGerarContrato && !negociacao.contrato_id && (
-   ```
-
-3. **Arquivo: `src/components/negociacoes/PropostaDialog.tsx`**
-   - Atualizar a condicao `isAceita` para incluir `aprovada_incorporador`:
-   ```text
-   const isAceita = negociacao?.status_proposta === 'aceita' || negociacao?.status_proposta === 'aprovada_incorporador';
-   ```
-
-Dessa forma, quando uma proposta for aprovada pelo incorporador (status = `aprovada_incorporador`), o botao "Gerar Contrato" aparece no card e no dialog. Ao clicar, o `useConverterPropostaEmContrato` existente executa toda a logica de criacao com importacao de condicoes de pagamento.
-
-## Resumo de arquivos modificados
-
-1. `src/hooks/useClientes.ts` -- corrigir filtro de acentos (5 ocorrencias)
-2. `src/hooks/useNegociacoes.ts` -- remover auto-criacao de contrato em 2 hooks
-3. `src/components/negociacoes/MoverNegociacaoDialog.tsx` -- atualizar mensagem informativa
-4. `src/components/negociacoes/KanbanCard.tsx` -- expandir condicao do botao "Gerar Contrato"
-5. `src/components/negociacoes/PropostaDialog.tsx` -- expandir condicao `isAceita`
+Arquivos impactados
+- `src/hooks/useMetasComerciais.ts` (único arquivo necessário para esta correção específica em Metas Comerciais).
