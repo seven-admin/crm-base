@@ -3762,6 +3762,7 @@ export type Database = {
           aprovada_em: string | null
           aprovada_incorporador_em: string | null
           aprovada_incorporador_por: string | null
+          atividade_origem_id: string | null
           cliente_id: string
           codigo: string
           condicao_pagamento: string | null
@@ -3821,6 +3822,7 @@ export type Database = {
           aprovada_em?: string | null
           aprovada_incorporador_em?: string | null
           aprovada_incorporador_por?: string | null
+          atividade_origem_id?: string | null
           cliente_id: string
           codigo: string
           condicao_pagamento?: string | null
@@ -3880,6 +3882,7 @@ export type Database = {
           aprovada_em?: string | null
           aprovada_incorporador_em?: string | null
           aprovada_incorporador_por?: string | null
+          atividade_origem_id?: string | null
           cliente_id?: string
           codigo?: string
           condicao_pagamento?: string | null
@@ -3936,6 +3939,13 @@ export type Database = {
           valor_total_fechamento?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "negociacoes_atividade_origem_id_fkey"
+            columns: ["atividade_origem_id"]
+            isOneToOne: false
+            referencedRelation: "atividades"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "negociacoes_cliente_id_fkey"
             columns: ["cliente_id"]

@@ -313,6 +313,32 @@ export function useGerarProposta() {
 
       if (error) throw error;
 
+      // Auto-mover de Atendimento para Negociação ao gerar proposta
+      try {
+        const { data: negAtual } = await db
+          .from('negociacoes')
+          .select('funil_etapa_id, funil_etapa:funil_etapas(is_inicial)')
+          .eq('id', id)
+          .single();
+
+        if (negAtual?.funil_etapa?.is_inicial) {
+          const { data: etapaNegociacao } = await db
+            .from('funil_etapas')
+            .select('id')
+            .eq('nome', 'Negociação')
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (etapaNegociacao) {
+            await db.from('negociacoes')
+              .update({ funil_etapa_id: etapaNegociacao.id })
+              .eq('id', id);
+          }
+        }
+      } catch (e) {
+        console.warn('[auto-mover] Erro ao mover negociação para etapa Negociação:', e);
+      }
+
       return { id, numero_proposta: numeroData };
     },
     onSuccess: (result) => {

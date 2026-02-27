@@ -1,0 +1,1 @@
+ALTER TABLE public.negociacoes ADD COLUMN atividade_origem_id uuid REFERENCES public.atividades(id);
