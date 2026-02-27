@@ -449,35 +449,6 @@ export function useAprovarPropostaIncorporador() {
           .in('id', negociacao.unidades.map(u => u.unidade_id));
       }
 
-      // Auto-criar contrato
-      try {
-        const { data: contratoCriado } = await db
-          .from('contratos')
-          .insert({
-            numero: 'TEMP',
-            cliente_id: negociacao.cliente_id,
-            empreendimento_id: negociacao.empreendimento_id,
-            corretor_id: negociacao.corretor_id,
-            imobiliaria_id: negociacao.imobiliaria_id,
-            valor_contrato: negociacao.valor_proposta || negociacao.valor_negociacao,
-            negociacao_id: negociacao.id,
-            status: 'em_geracao',
-          })
-          .select('id')
-          .single();
-
-        if (contratoCriado && negociacao.unidades && negociacao.unidades.length > 0) {
-          await db.from('contrato_unidades').insert(
-            negociacao.unidades.map(u => ({
-              contrato_id: contratoCriado.id,
-              unidade_id: u.unidade_id,
-            }))
-          );
-        }
-      } catch (err) {
-        console.error('Erro ao auto-criar contrato na aprovação do incorporador:', err);
-      }
-
       // 3. Registrar no histórico
       await db
         .from('negociacao_historico')
@@ -1217,44 +1188,6 @@ export function useMoverNegociacao() {
             .in('id', negUnidades.map((u: { unidade_id: string }) => u.unidade_id));
         }
 
-        // Auto-criar contrato
-        try {
-          const { data: negCompleta } = await db
-            .from('negociacoes')
-            .select('cliente_id, empreendimento_id, corretor_id, imobiliaria_id, valor_negociacao, valor_proposta')
-            .eq('id', id)
-            .single();
-
-          if (negCompleta) {
-            const unidadeIds = negUnidades?.map((u: { unidade_id: string }) => u.unidade_id) || [];
-            
-            const { data: contratoCriado } = await db
-              .from('contratos')
-              .insert({
-                numero: 'TEMP',
-                cliente_id: negCompleta.cliente_id,
-                empreendimento_id: negCompleta.empreendimento_id,
-                corretor_id: negCompleta.corretor_id,
-                imobiliaria_id: negCompleta.imobiliaria_id,
-                valor_contrato: negCompleta.valor_proposta || negCompleta.valor_negociacao,
-                negociacao_id: id,
-                status: 'em_geracao',
-              })
-              .select('id')
-              .single();
-
-            if (contratoCriado && unidadeIds.length > 0) {
-              await db
-                .from('contrato_unidades')
-                .insert(unidadeIds.map((uid: string) => ({
-                  contrato_id: contratoCriado.id,
-                  unidade_id: uid,
-                })));
-            }
-          }
-        } catch (err) {
-          console.error('Erro ao auto-criar contrato:', err);
-        }
       }
 
       const { error: updateError } = await db

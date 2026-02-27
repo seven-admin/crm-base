@@ -179,7 +179,7 @@ export function MoverNegociacaoDialog({
               
               <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-sm text-blue-700 dark:text-blue-300">
                 <Info className="h-4 w-4 flex-shrink-0" />
-                Um contrato será criado automaticamente ao confirmar.
+                Após confirmar, você poderá gerar o contrato manualmente.
               </div>
             </>
           )}

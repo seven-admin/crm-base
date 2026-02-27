@@ -175,7 +175,7 @@ export function KanbanCard({
                 )}
               </>
             )}
-            {negociacao.status_proposta === 'aceita' && onGerarContrato && !negociacao.contrato_id && (
+            {['aceita', 'aprovada_incorporador'].includes(negociacao.status_proposta || '') && onGerarContrato && !negociacao.contrato_id && (
               <DropdownMenuItem onClick={() => onGerarContrato(negociacao)}>
                 <FilePlus2 className="h-4 w-4 mr-2" />
                 Gerar Contrato

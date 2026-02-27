@@ -179,7 +179,7 @@ export function PropostaDialog({
   const statusProposta = negociacao?.status_proposta;
   const isRascunho = statusProposta === 'rascunho';
   const isContraProposta = statusProposta === 'contra_proposta';
-  const isAceita = statusProposta === 'aceita';
+  const isAceita = statusProposta === 'aceita' || statusProposta === 'aprovada_incorporador';
   const temProposta = !!negociacao?.numero_proposta;
 
   const handleReenviarParaAnalise = async () => {
