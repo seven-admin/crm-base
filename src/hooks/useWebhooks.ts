@@ -42,6 +42,7 @@ export const WEBHOOK_EVENTS = [
   { value: 'negociacao_fechada', label: 'Negociação Fechada (Sucesso)' },
   { value: 'negociacao_perdida', label: 'Negociação Perdida' },
   { value: 'reserva_criada', label: 'Reserva Criada' },
+  { value: 'comentario_proposta', label: 'Comentário em Proposta (Negociação)' },
 ];
 
 export function useWebhooks() {
