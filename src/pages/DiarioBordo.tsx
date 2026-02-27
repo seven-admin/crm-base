@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, ClipboardList, ChevronLeft, ChevronRight, ListChecks, BookOpen, LayoutGrid } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, subMonths, addMonths, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
@@ -17,8 +17,7 @@ import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoa
 import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
 import { useResumoAtividades } from '@/hooks/useForecast';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { useAtividades } from '@/hooks/useAtividades';
-import { useAtividadeEtapas } from '@/hooks/useAtividadeEtapas';
+
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_DIARIO, TIPOS_NEGOCIACAO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -189,7 +188,7 @@ export default function DiarioBordo() {
           </TabsContent>
 
           <TabsContent value="atividades">
-            <AtividadesMetricsAndBoard />
+            <AtividadesMetricsAndBoard competencia={competencia} />
           </TabsContent>
         </Tabs>
       </div>
@@ -224,89 +223,16 @@ export default function DiarioBordo() {
   );
 }
 
-function AtividadesMetricsAndBoard() {
-  const [competencia, setCompetencia] = useState(new Date());
+function AtividadesMetricsAndBoard({ competencia }: { competencia: Date }) {
   const [temperaturaFilter, setTemperaturaFilter] = useState<ClienteTemperatura | undefined>(undefined);
 
   const dataInicioFilter = format(endOfMonth(competencia), 'yyyy-MM-dd');
   const dataFimFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
 
-  const { data: atividadesData } = useAtividades({
-    filters: { tipos: TIPOS_NEGOCIACAO, data_inicio: dataInicioFilter, data_fim: dataFimFilter, temperatura_cliente: temperaturaFilter },
-    page: 1,
-    pageSize: 500,
-  });
-  const { data: atividadeEtapas = [] } = useAtividadeEtapas();
-
-  const atividades = atividadesData?.items || [];
-  const totalAtividades = atividadesData?.count || atividades.length;
-  const pendentes = atividades.filter(a => a.status === 'pendente').length;
-  const concluidas = atividades.filter(a => a.status === 'concluida').length;
-
-  const countPerEtapa = useMemo(() => {
-    const acc: Record<string, number> = {};
-    for (const a of atividades) {
-      const etapaId = (a as any).atividade_etapa_id;
-      if (!etapaId) continue;
-      acc[etapaId] = (acc[etapaId] || 0) + 1;
-    }
-    return acc;
-  }, [atividades]);
-
-  const mesLabel = format(competencia, 'MMMM yyyy', { locale: ptBR });
-  const isCurrentMonth = isSameMonth(competencia, new Date());
-
   return (
     <>
-      {/* Month Navigator + Temperatura Filter */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => subMonths(prev, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-lg font-semibold capitalize min-w-[160px] text-center">{mesLabel}</span>
-          <Button variant="outline" size="icon" onClick={() => setCompetencia(prev => addMonths(prev, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} />
-          {!isCurrentMonth && (
-            <Button variant="ghost" size="sm" onClick={() => setCompetencia(new Date())}>
-              Este mês
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Total de Atividades</p>
-          <p className="text-2xl font-bold">{totalAtividades}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Pendentes</p>
-          <p className="text-2xl font-bold">{pendentes}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Concluídas</p>
-          <p className="text-2xl font-bold">{concluidas}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Por Etapa</p>
-          <div className="flex gap-1 mt-1 flex-wrap">
-            {atividadeEtapas.map((etapa) => (
-              <div
-                key={etapa.id}
-                className="px-1.5 py-0.5 rounded text-xs text-white"
-                style={{ backgroundColor: etapa.cor }}
-                title={etapa.nome}
-              >
-                {countPerEtapa[etapa.id] || 0}
-              </div>
-            ))}
-          </div>
-        </Card>
+      <div className="flex items-center justify-end mb-4">
+        <TemperaturaSelector value={temperaturaFilter ?? null} onValueChange={(v) => setTemperaturaFilter(v ?? undefined)} />
       </div>
       <div className="min-h-[500px]">
         <AtividadeKanbanBoard dataInicio={dataInicioFilter} dataFim={dataFimFilter} temperaturaFilter={temperaturaFilter} />
