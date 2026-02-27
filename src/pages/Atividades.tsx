@@ -31,7 +31,7 @@ import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 
 import type { AtividadeFormSubmitData } from '@/components/atividades/AtividadeForm';
 import type { Atividade, AtividadeFilters, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, TIPOS_COM_SUBTIPO, ATIVIDADE_SUBTIPO_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS, TIPOS_FORECAST, TIPOS_DIARIO, TIPOS_NEGOCIACAO, TIPOS_COM_CRONOMETRO } from '@/types/atividades.types';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 import { cn } from '@/lib/utils';
 import { TemperaturaSelector } from '@/components/atividades/TemperaturaSelector';
@@ -772,6 +772,7 @@ export default function Atividades() {
                         <TableHead className="hidden lg:table-cell">Gestor</TableHead>
                         <TableHead>Data/Hora</TableHead>
                         <TableHead>Prazo</TableHead>
+                        <TableHead>Duração</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right w-[220px]">Ações</TableHead>
                       </TableRow>
@@ -869,6 +870,26 @@ export default function Atividades() {
                                       </Badge>
                                     )}
                                   </div>
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {atividade.cronometro_inicio && !atividade.cronometro_fim ? (
+                                  <Badge variant="outline" className="border-primary text-primary text-xs gap-1">
+                                    <span className="relative flex h-1.5 w-1.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+                                    </span>
+                                    Em andamento
+                                  </Badge>
+                                ) : atividade.duracao_minutos ? (
+                                  <span className="text-sm">
+                                    {atividade.duracao_minutos < 60
+                                      ? `${atividade.duracao_minutos} min`
+                                      : `${Math.floor(atividade.duracao_minutos / 60)}h ${atividade.duracao_minutos % 60 > 0 ? `${atividade.duracao_minutos % 60}m` : ''}`
+                                    }
+                                  </span>
                                 ) : (
                                   '-'
                                 )}

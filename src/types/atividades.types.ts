@@ -10,6 +10,9 @@ export const TIPOS_FORECAST: AtividadeTipo[] = ['atendimento', 'fechamento', 'as
 // Tipos de negociação (atividades comerciais que podem virar proposta)
 export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
 
+// Tipos que exibem o cronômetro de tempo
+export const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = ['atendimento', 'visita', 'negociacao'];
+
 // Tipos que aparecem no Diário de Bordo (rotina operacional)
 export const TIPOS_DIARIO: AtividadeTipo[] = ['ligacao', 'meeting', 'reuniao', 'acompanhamento', 'treinamento', 'visita', 'administrativa'];
 export type AtividadeStatus = 'pendente' | 'concluida' | 'cancelada';
@@ -123,6 +126,9 @@ export interface Atividade {
   motivo_cancelamento?: string | null;
   requer_followup: boolean;
   data_followup?: string | null;
+  cronometro_inicio?: string | null;
+  cronometro_fim?: string | null;
+  duracao_minutos?: number | null;
   created_at: string;
   updated_at: string;
 }

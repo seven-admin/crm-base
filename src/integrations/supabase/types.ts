@@ -151,10 +151,13 @@ export type Database = {
           corretor_id: string | null
           created_at: string
           created_by: string | null
+          cronometro_fim: string | null
+          cronometro_inicio: string | null
           data_fim: string
           data_followup: string | null
           data_inicio: string
           deadline_date: string | null
+          duracao_minutos: number | null
           empreendimento_id: string | null
           gestor_id: string | null
           hora_fim: string | null
@@ -179,10 +182,13 @@ export type Database = {
           corretor_id?: string | null
           created_at?: string
           created_by?: string | null
+          cronometro_fim?: string | null
+          cronometro_inicio?: string | null
           data_fim: string
           data_followup?: string | null
           data_inicio: string
           deadline_date?: string | null
+          duracao_minutos?: number | null
           empreendimento_id?: string | null
           gestor_id?: string | null
           hora_fim?: string | null
@@ -207,10 +213,13 @@ export type Database = {
           corretor_id?: string | null
           created_at?: string
           created_by?: string | null
+          cronometro_fim?: string | null
+          cronometro_inicio?: string | null
           data_fim?: string
           data_followup?: string | null
           data_inicio?: string
           deadline_date?: string | null
+          duracao_minutos?: number | null
           empreendimento_id?: string | null
           gestor_id?: string | null
           hora_fim?: string | null
