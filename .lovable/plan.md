@@ -1,81 +1,21 @@
 
+# Auto-definir categoria "Cliente" para atividades de Atendimento
 
-# Cronometro de Tempo para Atividades
+## Problema
+Quando o tipo da atividade e "Atendimento" (e possivelmente os demais tipos do fluxo comercial como fechamento, assinatura, negociacao, contra_proposta_atividade), a unica categoria possivel e "Cliente". Nao faz sentido exibir os 4 botoes de categoria nesse caso.
 
-## Objetivo
-Adicionar um cronometro (timer) nas atividades de tipo **atendimento**, **visita** e **negociacao** que permite iniciar e parar a contagem de tempo durante a execucao da atividade, registrando a duracao real.
+## Solucao
 
-## Alteracoes no Banco de Dados
+### Arquivo: `src/components/atividades/AtividadeForm.tsx`
 
-Adicionar 3 colunas na tabela `atividades`:
-- `cronometro_inicio` (timestamptz, nullable) -- momento em que o cronometro foi iniciado
-- `cronometro_fim` (timestamptz, nullable) -- momento em que o cronometro foi parado
-- `duracao_minutos` (integer, nullable) -- duracao total em minutos (calculada ao parar)
+1. **Definir quais tipos sao exclusivamente de cliente**: Criar uma constante local (ou importar `TIPOS_FORECAST` + `TIPOS_NEGOCIACAO`) para identificar os tipos que sao obrigatoriamente categoria "cliente". Tipos candidatos: `atendimento`, `fechamento`, `assinatura`, `negociacao`, `contra_proposta_atividade`.
 
-## Novo Componente: `AtividadeCronometro`
+2. **Auto-setar categoria ao selecionar o tipo**: No `useEffect` ou no handler de selecao de tipo, quando o tipo selecionado pertence a essa lista, chamar `form.setValue('categoria', 'cliente')` automaticamente.
 
-Componente React que exibe um cronometro interativo:
+3. **Esconder o bloco de Categoria**: Envolver o `FormField` de categoria (linhas 408-440) em uma condicional que so renderiza se o tipo **nao** pertence a lista de tipos exclusivos de cliente.
 
-- **Estado parado (sem inicio)**: Botao "Iniciar Cronometro" (icone Play)
-- **Estado rodando**: Display do tempo decorrido (HH:MM:SS) atualizado a cada segundo + Botao "Parar" (icone Square)
-- **Estado finalizado**: Display do tempo total com label "Duracao: Xh Ym"
+4. **Validacao**: No `handleNextStep`, pular a validacao de categoria quando ela ja foi auto-definida (o campo tera valor "cliente", entao a validacao do zod passa normalmente).
 
-Logica:
-- Ao clicar "Iniciar", grava `cronometro_inicio = now()` no banco via `useUpdateAtividade`
-- Enquanto rodando, calcula `agora - cronometro_inicio` a cada segundo com `setInterval`
-- Ao clicar "Parar", grava `cronometro_fim = now()` e `duracao_minutos = diff em minutos`
-- Se a pagina for recarregada com `cronometro_inicio` preenchido e `cronometro_fim` nulo, retoma a contagem automaticamente
-
-Arquivo: `src/components/atividades/AtividadeCronometro.tsx`
-
-## Integracao
-
-### 1. Tipos (`src/types/atividades.types.ts`)
-Adicionar campos `cronometro_inicio`, `cronometro_fim`, `duracao_minutos` na interface `Atividade`.
-
-### 2. Dialog de Detalhe (`AtividadeDetalheDialog.tsx`)
-Renderizar `<AtividadeCronometro>` para atividades pendentes do tipo atendimento, visita ou negociacao. Exibir duracao para atividades concluidas que tenham `duracao_minutos`.
-
-### 3. Hook `useAtividades.ts`
-Garantir que o `useUpdateAtividade` ja suporta atualizar campos arbitrarios (ja suporta via `Partial<AtividadeFormData>` + spread). Adicionar os novos campos ao select das queries.
-
-### 4. Tabela de Atividades (`Atividades.tsx`)
-Adicionar coluna "Duracao" na tabela (apos a coluna de horario), exibindo `duracao_minutos` formatado quando preenchido, ou um indicador de "Em andamento" quando `cronometro_inicio` esta preenchido sem `cronometro_fim`.
-
-## Tipos que exibem o cronometro
-
-Apenas: `atendimento`, `visita`, `negociacao`
-
-Definir constante:
-```typescript
-const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = ['atendimento', 'visita', 'negociacao'];
-```
-
-## Arquivos a criar/alterar
-
-| Arquivo | Acao |
-|---|---|
-| Migracao SQL | Adicionar 3 colunas na tabela atividades |
-| `src/components/atividades/AtividadeCronometro.tsx` | **Criar** - componente do cronometro |
-| `src/types/atividades.types.ts` | Adicionar campos na interface Atividade |
-| `src/components/atividades/AtividadeDetalheDialog.tsx` | Integrar cronometro |
-| `src/pages/Atividades.tsx` | Coluna "Duracao" na tabela |
-| `src/hooks/useAtividades.ts` | Garantir select dos novos campos |
-
-## UX do Cronometro
-
-```text
-+-------------------------------------------+
-|  [>] Iniciar Cronometro                    |   (estado inicial)
-+-------------------------------------------+
-
-+-------------------------------------------+
-|  00:12:34          [■] Parar               |   (rodando)
-+-------------------------------------------+
-
-+-------------------------------------------+
-|  Duracao: 45 min                           |   (finalizado)
-+-------------------------------------------+
-```
-
-O cronometro aparece dentro do dialog de detalhe e so e interativo quando a atividade esta pendente.
+### Resultado
+- Ao selecionar "Atendimento", "Fechamento", "Assinatura", "Negociacao" ou "Contra Proposta": categoria e automaticamente definida como "Cliente" e o seletor de categoria desaparece do formulario.
+- Para os demais tipos (Ligacao, Meeting, Reuniao, Visita, etc.): o seletor de categoria continua aparecendo normalmente com as 4 opcoes.
