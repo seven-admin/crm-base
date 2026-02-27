@@ -1,56 +1,52 @@
 
-# Plano: Reabrir Atividades em Lote (Forecast) + Cadastro Rapido de Cliente + Config CPF
+# Melhorias UX na aba Atividades do Diario de Bordo
 
-## 1. Reabrir atividades em lote no Forecast/Diario de Bordo
+## O que sera feito
 
-O `ForecastBatchStatusDialog` ja suporta alteracao de status em lote (pendente, concluida, cancelada) via `useAlterarStatusEmLote`. Quando o usuario seleciona "Pendente" como novo status, isso efetivamente reabre a atividade -- porem nao limpa os campos `resultado` e `motivo_cancelamento` como faz o `useReabrirAtividadesEmLote`.
+### 1. A aba Kanban ja existe -- apenas corrigir UX
+A aba "Atividades" com o Kanban ja esta presente no `DiarioBordo.tsx` (linha 156-159, conteudo na linha 191-193). Nao precisa adicionar no sidebar. O foco e melhorar a UX dessa aba.
 
-**Alteracao**: No `ForecastBatchStatusDialog`, quando o novo status for `pendente`, usar a logica de reabertura (limpar resultado e motivo_cancelamento) em vez do simples `useAlterarStatusEmLote`.
+### 2. Remover contadores gerais
+Remover os 4 cards de metricas (Total, Pendentes, Concluidas, Por Etapa) do `AtividadesMetricsAndBoard` (linhas 282-310). O Kanban ja mostra contagem por coluna.
 
-### Arquivo: `src/components/forecast/ForecastBatchStatusDialog.tsx`
-- Importar `useReabrirAtividadesEmLote` de `useAtividades`
-- No `handleConfirm`, se `novoStatus === 'pendente'`, chamar `reabrirEmLote.mutate(ids)` (que faz update com `status: pendente, resultado: null, motivo_cancelamento: null`)
-- Caso contrario, manter o fluxo atual com `alterarStatus`
+### 3. Unificar filtro de mes
+Remover o navegador de mes duplicado de dentro do `AtividadesMetricsAndBoard` (linhas 262-280). Passar a `competencia` do componente pai como prop, assim o filtro de mes do header controla ambas as abas.
 
-## 2. Cadastrar novo cliente pelo modal de atividade
+### 4. Reorganizar filtro de temperatura
+Manter apenas o `TemperaturaSelector` alinhado a direita em uma barra compacta acima do Kanban.
 
-Atualmente o select de cliente no `AtividadeForm` mostra apenas clientes existentes. Adicionar um botao "Novo Cliente" que abre um dialog inline para cadastro rapido (apenas nome, telefone, email).
+## Detalhes tecnicos
 
-### Arquivo: `src/components/atividades/AtividadeForm.tsx`
-- Adicionar estado para controlar dialog de novo cliente
-- Abaixo do Select de cliente, adicionar botao "+ Novo Cliente"
-- Criar um mini-dialog com campos: nome (obrigatorio), telefone, email
-- Ao salvar, usar `useCreateCliente` para criar o cliente e automaticamente setar o `cliente_id` no formulario
+### `src/pages/DiarioBordo.tsx`
 
-### Arquivo: novo `src/components/atividades/NovoClienteRapidoDialog.tsx`
-- Dialog simples com formulario de nome, telefone, email
-- Callback `onClienteCriado(id: string)` para retornar o ID do novo cliente
+**`AtividadesMetricsAndBoard`**:
+- Receber `competencia: Date` como prop (em vez de ter estado proprio)
+- Remover estado `competencia` e o navegador de mes interno
+- Remover os 4 cards de metricas (grid de cards)
+- Remover imports/logica de `countPerEtapa`, `totalAtividades`, `pendentes`, `concluidas`
+- Manter apenas: barra com filtro de temperatura + Kanban board
 
-## 3. Configuracao de validacao de CPF no sistema
+**Chamada no pai**:
+- Passar `competencia={competencia}` para `AtividadesMetricsAndBoard`
 
-Criar uma configuracao no sistema (`configuracoes_sistema`) que controla se a validacao de CPF esta ativa ou nao. Isso permite ativar/desativar sem alterar codigo.
+### Resultado visual da aba Atividades
 
-### Banco de dados (migracao)
-- Inserir registro: `INSERT INTO configuracoes_sistema (chave, valor, categoria) VALUES ('validar_cpf_clientes', 'true', 'cadastro')`
+```text
++--------------------------------------------------+
+| Diario de Bordo    [<- Mes ->] [Gestor] [+ Nova]  |
++--------------------------------------------------+
+| [Resumo]  [Atividades]                            |
++--------------------------------------------------+
+|                          [Filtro Temperatura]      |
+| +----------+ +----------+ +----------+            |
+| | Coluna 1 | | Coluna 2 | | Coluna 3 |            |
+| |  (3)     | |  (5)     | |  (2)     |            |
+| +----------+ +----------+ +----------+            |
++--------------------------------------------------+
+```
 
-### Arquivo: `src/pages/Configuracoes.tsx`
-- Adicionar nova aba "Cadastro" (ou secao dentro de aba existente) com um Switch "Validar CPF no cadastro de clientes"
-- Usar `useConfiguracao('validar_cpf_clientes')` para ler e `useUpdateConfiguracao` para salvar
-
-### Arquivo: `src/components/clientes/ClienteForm.tsx`
-- Importar `useConfiguracao('validar_cpf_clientes')`
-- No `superRefine`, condicionar a validacao de CPF ao valor da configuracao: se `valor === 'false'`, pular validacao
-
-### Hook: `src/hooks/useConfiguracoesSistema.ts`
-- Ja possui `useConfiguracao(chave)` -- nenhuma alteracao necessaria
-
-## Resumo de arquivos
+### Arquivo a alterar
 
 | Arquivo | Acao |
 |---|---|
-| `ForecastBatchStatusDialog.tsx` | Usar `useReabrirAtividadesEmLote` quando status = pendente |
-| `AtividadeForm.tsx` | Adicionar botao "+ Novo Cliente" com dialog rapido |
-| `NovoClienteRapidoDialog.tsx` | Novo componente: dialog de cadastro rapido de cliente |
-| `Configuracoes.tsx` | Adicionar aba/secao "Cadastro" com switch de validacao CPF |
-| `ClienteForm.tsx` | Condicionar validacao CPF a configuracao do sistema |
-| Migracao SQL | Inserir config `validar_cpf_clientes` na tabela `configuracoes_sistema` |
+| `src/pages/DiarioBordo.tsx` | Refatorar `AtividadesMetricsAndBoard`: receber `competencia` como prop, remover cards de metricas, remover navegador de mes duplicado, manter apenas filtro temperatura + Kanban |
