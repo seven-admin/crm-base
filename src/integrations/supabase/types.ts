@@ -5899,6 +5899,10 @@ export type Database = {
         Args: { p_gestor_id: string; p_motivo: string; p_negociacao_id: string }
         Returns: boolean
       }
+      reset_sequence_value: {
+        Args: { new_value: number; seq_name: string }
+        Returns: undefined
+      }
       user_has_empreendimento_access: {
         Args: { _empreendimento_id: string; _user_id: string }
         Returns: boolean

@@ -11,12 +11,13 @@ import { useSidebarColors, DEFAULT_SIDEBAR_COLORS, LABEL_TO_CHAVE } from '@/hook
 import { useWebhooks, useCreateWebhook, useUpdateWebhook, useDeleteWebhook, useTestarWebhook, WEBHOOK_EVENTS, type Webhook as WebhookType } from '@/hooks/useWebhooks';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil, Settings2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil, Settings2, Hash } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RolesManager } from '@/components/configuracoes/RolesManager';
 import { SidebarColorsConfig } from '@/components/configuracoes/SidebarColorsConfig';
 import { WebhookLogsSection } from '@/components/configuracoes/WebhookLogsSection';
 import { TermosEditor } from '@/components/configuracoes/TermosEditor';
+import { SequencesResetSection } from '@/components/configuracoes/SequencesResetSection';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -285,6 +286,15 @@ const Configuracoes = () => {
               >
                 <Settings2 className="h-4 w-4 mr-2" />
                 Cadastro
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger 
+                value="contadores"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+              >
+                <Hash className="h-4 w-4 mr-2" />
+                Contadores
               </TabsTrigger>
             )}
           </TabsList>
@@ -576,6 +586,10 @@ const Configuracoes = () => {
 
         <TabsContent value="cadastro">
           <CadastroSettings />
+        </TabsContent>
+
+        <TabsContent value="contadores">
+          <SequencesResetSection />
         </TabsContent>
 
       </Tabs>
