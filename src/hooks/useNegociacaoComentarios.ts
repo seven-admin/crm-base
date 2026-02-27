@@ -53,15 +53,62 @@ export function useAddNegociacaoComentario() {
       queryClient.invalidateQueries({ queryKey: ['negociacao-comentarios', variables.negociacaoId] });
       toast.success('Comentário adicionado');
 
-      // Fire-and-forget webhook
-      getUsuarioLogado().then((autor) => {
-        dispararWebhook('comentario_proposta', {
-          negociacao_id: variables.negociacaoId,
-          comentario: variables.comentario,
-          autor: autor ? { id: autor.id, nome: autor.nome } : null,
-          origem: user?.user_metadata?.role === 'incorporador' ? 'portal_incorporador' : 'sistema_interno',
-        });
-      });
+      // Fire-and-forget: enrich payload with full negotiation data
+      (async () => {
+        try {
+          const origem = user?.user_metadata?.role === 'incorporador' ? 'portal_incorporador' : 'sistema_interno';
+
+          const [autor, negResult] = await Promise.all([
+            getUsuarioLogado(),
+            db.from('negociacoes')
+              .select(`
+                id, codigo, numero_proposta, status_proposta, valor_tabela, valor_proposta, desconto_percentual,
+                cliente:clientes!cliente_id(id, nome, cpf, email, telefone),
+                empreendimento:empreendimentos!empreendimento_id(id, nome),
+                corretor:corretores!corretor_id(id, nome_completo),
+                unidades:negociacao_unidades(valor_tabela, valor_proposta,
+                  unidade:unidades!unidade_id(numero, codigo, bloco:blocos!bloco_id(nome)))
+              `)
+              .eq('id', variables.negociacaoId)
+              .maybeSingle(),
+          ]);
+
+          const neg = negResult?.data;
+
+          dispararWebhook('comentario_proposta', {
+            negociacao_id: variables.negociacaoId,
+            codigo: neg?.codigo ?? null,
+            numero_proposta: neg?.numero_proposta ?? null,
+            status_proposta: neg?.status_proposta ?? null,
+            comentario: variables.comentario,
+            autor: autor ? { id: autor.id, nome: autor.nome, telefone: autor.telefone } : null,
+            origem,
+            cliente: neg?.cliente ?? null,
+            empreendimento: neg?.empreendimento ?? null,
+            corretor: neg?.corretor ?? null,
+            unidades: neg?.unidades?.map((u: any) => ({
+              numero: u.unidade?.numero,
+              codigo: u.unidade?.codigo,
+              bloco: u.unidade?.bloco?.nome,
+              valor_tabela: u.valor_tabela,
+              valor_proposta: u.valor_proposta,
+            })) ?? [],
+            valores: {
+              valor_tabela: neg?.valor_tabela ?? null,
+              valor_proposta: neg?.valor_proposta ?? null,
+              desconto_percentual: neg?.desconto_percentual ?? null,
+            },
+            link: `${window.location.origin}/negociacoes?id=${variables.negociacaoId}`,
+          });
+        } catch (err) {
+          // Fallback: send minimal payload
+          dispararWebhook('comentario_proposta', {
+            negociacao_id: variables.negociacaoId,
+            comentario: variables.comentario,
+            origem: user?.user_metadata?.role === 'incorporador' ? 'portal_incorporador' : 'sistema_interno',
+          });
+        }
+      })();
     },
     onError: (error: Error) => {
       toast.error('Erro ao adicionar comentário: ' + error.message);
