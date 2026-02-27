@@ -1,132 +1,57 @@
 
-# Corrigir Filtro de Comprador Historico e Unificar Criacao de Contrato
+# Corrigir Filtro de Comprador Historico e Ajustar Fluxo de Contrato
 
-## Problema 1: Filtro de Comprador Historico incompleto
+## Problema 1: Comprador Historico ainda aparece nas listagens de clientes
 
-O filtro foi aplicado apenas em `useContratos.ts` e `useContratosStats.ts`, mas falta em 4 outros hooks que consultam contratos:
+O filtro em `useClientes.ts` usa `.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')` -- sem acentos. Porem o banco armazena com acentos: `COMPRADOR HISTÓRICO (PRÉ-SISTEMA)`. Por isso o filtro nao funciona.
 
-- `src/hooks/useDashboardExecutivo.ts` -- contagem e valores de contratos no dashboard executivo
-- `src/hooks/useRelatorios.ts` -- 6 queries diferentes (total vendas, vendas mes, vendas mes anterior, evolucao, por corretor, por empreendimento, ultimas vendas)
-- `src/hooks/useDashboardIncorporador.ts` -- contratos em andamento
-- `src/hooks/useBonificacoes.ts` -- contagem de unidades vendidas
+O mesmo problema existe em `useClientesSelect.ts` que usa `.not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')` -- esse funciona porque usa `ilike` com os acentos corretos.
 
 ### Solucao
 
-A abordagem mais sustentavel e criar uma helper function reutilizavel para o filtro, mas como o Supabase JS nao permite subqueries, o filtro precisa ser feito pos-fetch. A melhor opcao e fazer um join com clientes em cada query e filtrar no JS.
+**Arquivo: `src/hooks/useClientes.ts`**
 
-Porem, como nem todas as queries fazem join com clientes, a solucao mais pratica e:
-1. Buscar os IDs dos clientes historicos uma unica vez
-2. Adicionar `.not('cliente_id', 'in', ...)` nas queries
+Substituir todos os `.neq('nome', 'COMPRADOR HISTORICO (PRE-SISTEMA)')` por `.not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')` nas seguintes queries:
+- `useClientes` (linhas 69, 89)
+- `useClientesPaginated` (linhas 126, 151, 172)
 
-Na verdade, como sao poucos IDs, a solucao mais simples e manter o filtro JS pos-fetch, adicionando o join com `clientes(nome)` onde necessario.
+Sao 5 ocorrencias no total, todas com o mesmo problema: texto sem acentos.
 
-**Arquivos a modificar:**
-- `src/hooks/useDashboardExecutivo.ts` -- adicionar join com clientes e filtro
-- `src/hooks/useRelatorios.ts` -- adicionar filtro em todas as 6+ queries
-- `src/hooks/useDashboardIncorporador.ts` -- adicionar filtro
-- `src/hooks/useBonificacoes.ts` -- adicionar filtro
+## Problema 2: Remover auto-criacao de contrato e permitir geracao manual
 
-## Problema 2: Contrato nao criado na aprovacao do incorporador
+O usuario solicitou que ao ganhar a proposta, o contrato NAO seja criado automaticamente. Em vez disso, a negociacao deve ficar "apta" para o usuario clicar em "Gerar Contrato" manualmente (o que ja importa as condicoes de pagamento).
 
-O `useAprovarPropostaIncorporador` move a negociacao para Ganho e marca unidades como vendidas, mas NAO cria contrato. A logica de auto-criacao de contrato so existe em `useMoverNegociacao`.
+### Situacao atual
+
+- Ja existe `useConverterPropostaEmContrato` (linha 790 do useNegociacoes.ts) que faz tudo correto: cria contrato, copia unidades, copia condicoes de pagamento da negociacao, busca template, atualiza status para "convertida".
+- Ja existe o botao "Gerar Contrato" no `KanbanCard.tsx` (linha 178) e no `PropostaDialog.tsx` (linha 406), mas so aparece quando `status_proposta === 'aceita'`.
+- O problema: quando o incorporador aprova, o status vai para `aprovada_incorporador`, nao `aceita`. Entao o botao nunca aparece E o contrato e auto-criado.
 
 ### Solucao
 
-Adicionar a mesma logica de criacao automatica de contrato no `useAprovarPropostaIncorporador`, reutilizando o mesmo padrao ja existente em `useMoverNegociacao`:
+1. **Arquivo: `src/hooks/useNegociacoes.ts`**
+   - `useAprovarPropostaIncorporador` (linhas 452-479): Remover todo o bloco de auto-criacao de contrato.
+   - `useMoverNegociacao` (linhas 1220-1260): Remover todo o bloco de auto-criacao de contrato.
+   - No `MoverNegociacaoDialog.tsx`, remover o aviso "Um contrato sera criado automaticamente" e substituir por "Apos confirmar, voce podera gerar o contrato manualmente."
 
-```text
-// Apos marcar unidades como vendidas (linha 449):
-// Auto-criar contrato
-try {
-  const { data: contratoCriado } = await db
-    .from('contratos')
-    .insert({
-      numero: 'TEMP',
-      cliente_id: negociacao.cliente_id,
-      empreendimento_id: negociacao.empreendimento_id,
-      corretor_id: negociacao.corretor_id,
-      imobiliaria_id: negociacao.imobiliaria_id,
-      valor_contrato: negociacao.valor_proposta || negociacao.valor_negociacao,
-      negociacao_id: negociacao.id,
-      status: 'em_geracao',
-    })
-    .select('id')
-    .single();
+2. **Arquivo: `src/components/negociacoes/KanbanCard.tsx`**
+   - Alterar a condicao do botao "Gerar Contrato" (linha 178) de `status_proposta === 'aceita'` para incluir tambem `aprovada_incorporador`:
+   ```text
+   {['aceita', 'aprovada_incorporador'].includes(negociacao.status_proposta || '') && onGerarContrato && !negociacao.contrato_id && (
+   ```
 
-  if (contratoCriado && negociacao.unidades?.length > 0) {
-    await db.from('contrato_unidades').insert(
-      negociacao.unidades.map(u => ({
-        contrato_id: contratoCriado.id,
-        unidade_id: u.unidade_id,
-      }))
-    );
-  }
-} catch (err) {
-  console.error('Erro ao auto-criar contrato:', err);
-}
-```
+3. **Arquivo: `src/components/negociacoes/PropostaDialog.tsx`**
+   - Atualizar a condicao `isAceita` para incluir `aprovada_incorporador`:
+   ```text
+   const isAceita = negociacao?.status_proposta === 'aceita' || negociacao?.status_proposta === 'aprovada_incorporador';
+   ```
 
-Tambem adicionar invalidacao das queries de contratos no onSuccess:
-```text
-queryClient.invalidateQueries({ queryKey: ['contratos'] });
-queryClient.invalidateQueries({ queryKey: ['contratos-paginated'] });
-queryClient.invalidateQueries({ queryKey: ['contratos-stats'] });
-```
+Dessa forma, quando uma proposta for aprovada pelo incorporador (status = `aprovada_incorporador`), o botao "Gerar Contrato" aparece no card e no dialog. Ao clicar, o `useConverterPropostaEmContrato` existente executa toda a logica de criacao com importacao de condicoes de pagamento.
 
 ## Resumo de arquivos modificados
 
-1. `src/hooks/useDashboardExecutivo.ts` -- filtro comprador historico
-2. `src/hooks/useRelatorios.ts` -- filtro comprador historico em 6+ queries
-3. `src/hooks/useDashboardIncorporador.ts` -- filtro comprador historico
-4. `src/hooks/useBonificacoes.ts` -- filtro comprador historico
-5. `src/hooks/useNegociacoes.ts` -- adicionar auto-criacao de contrato no `useAprovarPropostaIncorporador`
-
-## Detalhes tecnicos
-
-### Helper de filtro (padrao a aplicar)
-
-Para queries que ja fazem join com clientes:
-```text
-const resultado = (data || []).filter(c => 
-  !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
-);
-```
-
-Para queries que NAO fazem join com clientes, adicionar o select de `clientes(nome)` e aplicar o mesmo filtro.
-
-### useDashboardExecutivo.ts
-
-A query de contratos (linha 101-104) nao faz join com clientes. Alterar para:
-```text
-let contratosQ = supabase
-  .from('contratos')
-  .select('id, valor_contrato, data_assinatura, empreendimento_id, created_at, cliente:clientes(nome)')
-  .eq('is_active', true)
-```
-E filtrar o resultado.
-
-### useRelatorios.ts
-
-Sao 6+ queries independentes. Cada uma precisa:
-1. Adicionar `cliente:clientes(nome)` ao select
-2. Filtrar pos-fetch
-
-### useBonificacoes.ts
-
-A query usa `count` (linha 152-155). Como nao retorna dados, precisamos mudar a abordagem:
-- Em vez de `select('id', { count: 'exact' })`, buscar os IDs e filtrar, depois contar manualmente.
-- Ou: buscar os cliente_ids historicos primeiro e usar `.not('cliente_id', 'in', ...)` para excluir no SQL.
-
-A segunda opcao e mais eficiente. Criar uma funcao utilitaria:
-```text
-// src/lib/contratoFilters.ts
-export async function getClientesHistoricosIds() {
-  const { data } = await supabase
-    .from('clientes')
-    .select('id')
-    .ilike('nome', '%COMPRADOR HISTÓRICO%');
-  return (data || []).map(c => c.id);
-}
-```
-
-Usar isso em `useBonificacoes.ts` com `.not('cliente_id', 'in', `(${ids.join(',')})`)`.
+1. `src/hooks/useClientes.ts` -- corrigir filtro de acentos (5 ocorrencias)
+2. `src/hooks/useNegociacoes.ts` -- remover auto-criacao de contrato em 2 hooks
+3. `src/components/negociacoes/MoverNegociacaoDialog.tsx` -- atualizar mensagem informativa
+4. `src/components/negociacoes/KanbanCard.tsx` -- expandir condicao do botao "Gerar Contrato"
+5. `src/components/negociacoes/PropostaDialog.tsx` -- expandir condicao `isAceita`
