@@ -773,7 +773,7 @@ export default function Atividades() {
                         <TableHead>Data/Hora</TableHead>
                         <TableHead>Prazo</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-right w-[220px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -880,44 +880,56 @@ export default function Atividades() {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-1">
-                                  {atividade.status === 'pendente' && (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleConcluir(atividade);
-                                        }}
-                                        title="Concluir"
-                                      >
-                                        <CheckCircle className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleCancelar(atividade);
-                                        }}
-                                        title="Cancelar"
-                                      >
-                                        <XCircle className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEdit(atividade);
-                                        }}
-                                        title="Editar"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                    </>
+                                  {/* Slot 1: Concluir */}
+                                  {atividade.status === 'pendente' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleConcluir(atividade);
+                                      }}
+                                      title="Concluir"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <div className="w-10" />
                                   )}
-                                  {TIPOS_NEGOCIACAO.includes(atividade.tipo) && (
+                                  {/* Slot 2: Cancelar */}
+                                  {atividade.status === 'pendente' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCancelar(atividade);
+                                      }}
+                                      title="Cancelar"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <div className="w-10" />
+                                  )}
+                                  {/* Slot 3: Editar */}
+                                  {atividade.status === 'pendente' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(atividade);
+                                      }}
+                                      title="Editar"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <div className="w-10" />
+                                  )}
+                                  {/* Slot 4: Converter em Proposta */}
+                                  {TIPOS_NEGOCIACAO.includes(atividade.tipo) ? (
                                     <Button
                                       variant="ghost"
                                       size="icon"
@@ -939,7 +951,10 @@ export default function Atividades() {
                                     >
                                       <FileText className="h-4 w-4 text-primary" />
                                     </Button>
+                                  ) : (
+                                    <div className="w-10" />
                                   )}
+                                  {/* Slot 5: Excluir */}
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <Button
