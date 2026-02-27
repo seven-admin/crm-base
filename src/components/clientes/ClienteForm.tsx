@@ -74,13 +74,25 @@ const formSchemaBase = z.object({
   observacoes: z.string().optional(),
 });
 
-// Schema with conditional CPF validation
-function createClienteSchema(validarCpf: boolean) {
+// Schema with conditional CPF requirement + always-on format validation
+function createClienteSchema(exigirCpf: boolean) {
   return formSchemaBase.superRefine((data, ctx) => {
     const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
     
-    if (isBrasileiro && validarCpf) {
-      if (data.cpf && data.cpf.replace(/\D/g, '').length > 0 && !validarCPF(data.cpf)) {
+    if (isBrasileiro) {
+      const cpfDigits = data.cpf?.replace(/\D/g, '') || '';
+
+      // Se exigir CPF, campo obrigatório
+      if (exigirCpf && cpfDigits.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'CPF é obrigatório',
+          path: ['cpf'],
+        });
+      }
+
+      // Sempre validar formato quando preenchido
+      if (cpfDigits.length > 0 && !validarCPF(data.cpf!)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'CPF inválido',
@@ -88,6 +100,7 @@ function createClienteSchema(validarCpf: boolean) {
         });
       }
     }
+
     if (!isBrasileiro) {
       if (!data.passaporte || data.passaporte.trim() === '') {
         ctx.addIssue({
@@ -120,8 +133,8 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
   const isStep4 = currentStep === 4;
 
   const { data: configCpf } = useConfiguracao('validar_cpf_clientes');
-  const validarCpf = configCpf?.valor !== 'false';
-  const formSchema = createClienteSchema(validarCpf);
+  const exigirCpf = configCpf?.valor !== 'false';
+  const formSchema = createClienteSchema(exigirCpf);
 
   const { corretores } = useCorretores(undefined, { enabled: isStep4 });
   const { data: gestores } = useGestoresProduto({ enabled: isStep4 });
@@ -402,7 +415,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                     name="cpf"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CPF</FormLabel>
+                        <FormLabel>CPF{exigirCpf ? ' *' : ''}</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="000.000.000-00" 
