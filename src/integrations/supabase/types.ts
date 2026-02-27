@@ -3555,6 +3555,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_negociacao_comentarios_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "negociacao_comentarios_negociacao_id_fkey"
             columns: ["negociacao_id"]
             isOneToOne: false
