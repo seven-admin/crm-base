@@ -1,34 +1,47 @@
 
 
-# Corrigir exibicao de comentarios do incorporador
+# Exibir comentarios do incorporador no sistema interno
 
-## Problema
+## Resumo
 
-A tabela `negociacao_comentarios` nao possui foreign key de `user_id` para `profiles`. O hook `useNegociacaoComentarios` tenta fazer um join `profiles!user_id(full_name)` que retorna erro 400 do PostgREST:
+Os comentarios do incorporador atualmente aparecem apenas no Portal do Incorporador. Vamos adiciona-los em dois lugares no sistema interno:
 
-```
-"Could not find a relationship between 'negociacao_comentarios' and 'profiles' in the schema cache"
-```
+1. **PropostaDialog** (Kanban) - Seção de comentários abaixo dos dados da proposta
+2. **KanbanCard** - Indicador visual de que há comentários do incorporador
 
-O INSERT funciona (status 201), mas o SELECT sempre falha, entao os comentarios nunca aparecem na tela.
+## Implementação
 
-## Solucao
+### 1. Adicionar seção de comentários no PropostaDialog
 
-### 1. Migration SQL - Adicionar foreign key
+No arquivo `src/components/negociacoes/PropostaDialog.tsx`:
+- Importar `useNegociacaoComentarios` e `useAddNegociacaoComentario`
+- Adicionar uma nova aba "Comentários" no TabsList (passando de 2 para 3 colunas)
+- Na aba, exibir a lista de comentários com autor e data, e um campo para o time interno responder
+- Reutilizar o mesmo padrão visual do `ComentariosSection` do portal
 
-Criar foreign key de `negociacao_comentarios.user_id` para `profiles.id`, permitindo o join via PostgREST.
+### 2. Indicador visual no KanbanCard
 
-Tambem verificar/adicionar RLS policy de SELECT para que o incorporador consiga ler os comentarios da negociacao.
+No arquivo `src/components/negociacoes/KanbanCard.tsx`:
+- Adicionar um ícone de balão de mensagem com contador quando existem comentários do incorporador
+- Usar `useNegociacaoComentarios` para buscar a contagem (ou receber via prop para evitar queries excessivas)
 
-### 2. Nenhuma mudanca no frontend
+### 3. RLS - SELECT para time interno
 
-O codigo do hook e do componente `ComentariosSection` ja esta correto. Basta corrigir a relacao no banco.
+Verificar se já existe policy de SELECT em `negociacao_comentarios` para usuários internos (super_admin, gestor_produto, etc). Se não houver, criar migration adicionando policy que permita leitura para `is_seven_team(auth.uid())` ou `is_admin(auth.uid())`.
 
----
+Criar também policy de INSERT para que o time interno possa responder aos comentários.
 
-## Detalhes tecnicos
+## Arquivos impactados
 
-| Arquivo | Mudanca |
+| Arquivo | Mudança |
 |---------|---------|
-| Migration SQL | `ALTER TABLE negociacao_comentarios ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES profiles(id)` + RLS policy SELECT para incorporador |
+| `src/components/negociacoes/PropostaDialog.tsx` | Nova aba "Comentários" com listagem e campo de resposta |
+| `src/components/negociacoes/KanbanCard.tsx` | Indicador visual de comentários pendentes |
+| Migration SQL (se necessário) | RLS SELECT/INSERT para time interno na tabela negociacao_comentarios |
 
+## Detalhes técnicos
+
+- A aba de comentários no PropostaDialog terá scroll limitado (max-h) para não dominar o dialog
+- Comentários serão exibidos em ordem cronológica reversa (mais recente primeiro)
+- O campo de resposta permite que gestores e corretores respondam diretamente ao incorporador
+- Os comentários são compartilhados: tanto incorporador quanto time interno veem todos os comentários da negociação
