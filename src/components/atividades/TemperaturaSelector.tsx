@@ -51,12 +51,13 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     setOpen(false);
                   }}
                   className={cn(
-                    'inline-flex items-center h-5 leading-none border rounded-full font-medium transition-colors text-[10px] px-1.5 py-0',
+                    'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
                     temp.inactiveClass,
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  {temp.emoji} {temp.label}
+                  <span>{temp.emoji}</span>
+                  <span>{temp.label}</span>
                 </button>
               ))}
             </div>
@@ -73,12 +74,13 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
             disabled={disabled}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              'inline-flex items-center h-5 leading-none border rounded-full font-medium transition-colors text-[10px] px-1.5 py-0 cursor-pointer',
+              'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px] cursor-pointer',
               selected.activeClass,
               disabled && 'opacity-50 cursor-not-allowed'
             )}
           >
-            {selected.emoji} {selected.label}
+            <span>{selected.emoji}</span>
+            <span>{selected.label}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2" align="start" onClick={(e) => e.stopPropagation()}>
@@ -96,12 +98,13 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     setOpen(false);
                   }}
                   className={cn(
-                    'inline-flex items-center h-5 leading-none border rounded-full font-medium transition-colors text-[10px] px-1.5 py-0',
+                    'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
                     isActive ? temp.activeClass : temp.inactiveClass,
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  {temp.emoji} {temp.label}
+                  <span>{temp.emoji}</span>
+                  <span>{temp.label}</span>
                 </button>
               );
             })}
