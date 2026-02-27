@@ -18,11 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send } from 'lucide-react';
+import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import PropostaCard from '@/components/portal-incorporador/PropostaCard';
 import { formatarMoeda } from '@/lib/formatters';
+import { STATUS_PROPOSTA_LABELS } from '@/types/negociacoes.types';
 
 // ─── Comentários ────────────────────────────────────────────────
 function ComentariosSection({ negociacaoId }: { negociacaoId: string }) {
@@ -99,7 +100,7 @@ function PropostaCardWithCondicoes({
 // ─── Página principal ───────────────────────────────────────────
 export default function PortalIncorporadorPropostas() {
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
-  const { data: todasNegociacoes = [], isLoading: loadingNegs } = useNegociacoes(undefined, { enabled: empreendimentoIds.length > 0 });
+  const { data: todasNegociacoes = [], isLoading: loadingNegs } = useNegociacoes(undefined, { enabled: empreendimentoIds.length > 0, refetchInterval: 30000 });
 
   const aprovarMutation = useAprovarPropostaIncorporador();
   const negarMutation = useNegarPropostaIncorporador();
@@ -115,6 +116,13 @@ export default function PortalIncorporadorPropostas() {
       empreendimentoIds.includes(n.empreendimento_id) &&
       (n.status_proposta === 'em_analise' ||
         (n.funil_etapa_id === ETAPA_ANALISE_PROPOSTA && !n.status_proposta))
+  );
+
+  const propostasEmPreparacao = todasNegociacoes.filter(
+    (n) =>
+      empreendimentoIds.includes(n.empreendimento_id) &&
+      ['rascunho', 'enviada'].includes(n.status_proposta || '') &&
+      !!n.numero_proposta
   );
 
   const propostasResolvidas = todasNegociacoes.filter(
@@ -185,6 +193,31 @@ export default function PortalIncorporadorPropostas() {
           </div>
         )}
       </div>
+
+      {/* Em Preparação */}
+      {propostasEmPreparacao.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Em Preparação
+            <Badge variant="outline">{propostasEmPreparacao.length}</Badge>
+          </h2>
+          <div className="grid gap-4">
+            {propostasEmPreparacao.map((neg) => (
+              <PropostaCardWithCondicoes
+                key={neg.id}
+                neg={neg}
+                showActions={false}
+                onAprovar={setAprovarDialog}
+                onContraProposta={(n) => {
+                  setNegarDialog(n);
+                  setMotivoContra('');
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Resolvidas */}
       {propostasResolvidas.length > 0 && (
