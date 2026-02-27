@@ -79,10 +79,11 @@ async function criarNotificacoesIncorporador(params: {
   }
 }
 
-export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?: boolean }) {
+export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?: boolean; refetchInterval?: number }) {
   return useQuery({
     queryKey: ['negociacoes', filters],
     enabled: options?.enabled ?? true,
+    refetchInterval: options?.refetchInterval,
     queryFn: async () => {
       let query = db
         .from('negociacoes')
