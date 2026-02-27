@@ -43,7 +43,10 @@ export function useContratos(filters?: ContratoFilters) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as unknown as Contrato[];
+      const resultado = (data || []).filter((c: any) => 
+        !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
+      );
+      return resultado as unknown as Contrato[];
     },
   });
 }
@@ -89,10 +92,14 @@ export function useContratosPaginated(filters?: ContratoFilters, page = 1, pageS
       const { data, error, count } = await query;
       if (error) throw error;
       
+      const contratos = (data || []).filter((c: any) => 
+        !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
+      );
+      
       return {
-        contratos: data as unknown as Contrato[],
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / pageSize),
+        contratos: contratos as unknown as Contrato[],
+        total: contratos.length,
+        totalPages: Math.ceil(contratos.length / pageSize),
       };
     },
   });

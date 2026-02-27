@@ -44,6 +44,11 @@ export function useContratosStats() {
 
       if (error) throw error;
 
+      // Filtrar comprador histórico
+      const contratosValidos = (contratos || []).filter((c: any) => 
+        !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
+      );
+
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -57,7 +62,7 @@ export function useContratosStats() {
 
       const contratosPendentes: ContratosStats['contratosPendentes'] = [];
 
-      (contratos || []).forEach((c) => {
+      contratosValidos.forEach((c) => {
         // Contar por status
         porStatus[c.status] = (porStatus[c.status] || 0) + 1;
 
@@ -99,7 +104,7 @@ export function useContratosStats() {
         : 0;
 
       return {
-        total: contratos?.length || 0,
+        total: contratosValidos.length,
         porStatus,
         valorPipeline,
         tempoMedioFechamento: totalFechados > 0 ? Math.round(somaDiasFechamento / totalFechados) : 0,
