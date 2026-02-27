@@ -6,6 +6,7 @@ interface Empreendimento {
   id: string;
   nome: string;
   status: string;
+  tipo?: string | null;
   endereco_cidade?: string | null;
   endereco_uf?: string | null;
 }
@@ -30,7 +31,7 @@ export function useIncorporadorEmpreendimentos(): UseIncorporadorEmpreendimentos
         .from('user_empreendimentos')
         .select(`
           empreendimento_id,
-          empreendimento:empreendimentos(id, nome, status, endereco_cidade, endereco_uf)
+          empreendimento:empreendimentos(id, nome, status, tipo, endereco_cidade, endereco_uf)
         `)
         .eq('user_id', user.id);
 
