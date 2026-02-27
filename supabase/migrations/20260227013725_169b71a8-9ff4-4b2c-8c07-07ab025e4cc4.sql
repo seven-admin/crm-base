@@ -1,0 +1,1 @@
+INSERT INTO configuracoes_sistema (chave, valor, categoria) VALUES ('validar_cpf_clientes', 'true', 'cadastro');

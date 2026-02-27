@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useConfiguracoesSistema, useUpdateConfiguracoes } from '@/hooks/useConfiguracoesSistema';
+import { useConfiguracoesSistema, useUpdateConfiguracoes, useConfiguracao, useUpdateConfiguracao } from '@/hooks/useConfiguracoesSistema';
 import { useSidebarColors, DEFAULT_SIDEBAR_COLORS, LABEL_TO_CHAVE } from '@/hooks/useSidebarColors';
 import { useWebhooks, useCreateWebhook, useUpdateWebhook, useDeleteWebhook, useTestarWebhook, WEBHOOK_EVENTS, type Webhook as WebhookType } from '@/hooks/useWebhooks';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil } from 'lucide-react';
+import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil, Settings2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { RolesManager } from '@/components/configuracoes/RolesManager';
 import { SidebarColorsConfig } from '@/components/configuracoes/SidebarColorsConfig';
@@ -57,6 +57,48 @@ const webhookFormSchema = z.object({
 });
 
 type WebhookFormData = z.infer<typeof webhookFormSchema>;
+
+function CadastroSettings() {
+  const { data: configCpf, isLoading } = useConfiguracao('validar_cpf_clientes');
+  const updateConfig = useUpdateConfiguracao();
+  const validarCpf = configCpf?.valor !== 'false';
+
+  const handleToggle = (checked: boolean) => {
+    updateConfig.mutate(
+      { chave: 'validar_cpf_clientes', valor: checked ? 'true' : 'false' },
+      { onSuccess: () => toast.success('Configuração salva!') }
+    );
+  };
+
+  return (
+    <div className="card-elevated p-4 md:p-6 animate-fade-in">
+      <h3 className="text-lg font-semibold text-foreground mb-6">
+        Configurações de Cadastro
+      </h3>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <p className="font-medium text-foreground">Validar CPF no cadastro de clientes</p>
+              <p className="text-sm text-muted-foreground">
+                Quando ativado, o sistema valida se o CPF informado é válido antes de salvar o cadastro.
+              </p>
+            </div>
+            <Switch
+              checked={validarCpf}
+              onCheckedChange={handleToggle}
+              disabled={updateConfig.isPending}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const Configuracoes = () => {
   const { data: configs, isLoading } = useConfiguracoesSistema();
@@ -234,6 +276,15 @@ const Configuracoes = () => {
               >
                 <FileText className="h-4 w-4 mr-2" />
                 Termos Legais
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger 
+                value="cadastro"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+              >
+                <Settings2 className="h-4 w-4 mr-2" />
+                Cadastro
               </TabsTrigger>
             )}
           </TabsList>
@@ -521,6 +572,10 @@ const Configuracoes = () => {
           <div className="card-elevated p-4 md:p-6 animate-fade-in">
             <TermosEditor />
           </div>
+        </TabsContent>
+
+        <TabsContent value="cadastro">
+          <CadastroSettings />
         </TabsContent>
 
       </Tabs>

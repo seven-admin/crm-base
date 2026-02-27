@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAlterarStatusEmLote } from '@/hooks/useAtividades';
+import { useAlterarStatusEmLote, useReabrirAtividadesEmLote } from '@/hooks/useAtividades';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -40,6 +40,7 @@ export function ForecastBatchStatusDialog({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [novoStatus, setNovoStatus] = useState<string>('');
   const alterarStatus = useAlterarStatusEmLote();
+  const reabrirEmLote = useReabrirAtividadesEmLote();
 
   // Build query filters based on statusGroup
   const { data: atividades, isLoading } = useQuery({
@@ -107,11 +108,18 @@ export function ForecastBatchStatusDialog({
 
   const handleConfirm = () => {
     if (selectedIds.size === 0 || !novoStatus) return;
-    alterarStatus.mutate(
-      { ids: Array.from(selectedIds), status: novoStatus },
-      { onSuccess: () => onOpenChange(false) }
-    );
+    const ids = Array.from(selectedIds);
+    if (novoStatus === 'pendente') {
+      reabrirEmLote.mutate(ids, { onSuccess: () => onOpenChange(false) });
+    } else {
+      alterarStatus.mutate(
+        { ids, status: novoStatus },
+        { onSuccess: () => onOpenChange(false) }
+      );
+    }
   };
+
+  const isPending = alterarStatus.isPending || reabrirEmLote.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -185,9 +193,9 @@ export function ForecastBatchStatusDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button
               onClick={handleConfirm}
-              disabled={selectedIds.size === 0 || !novoStatus || alterarStatus.isPending}
+              disabled={selectedIds.size === 0 || !novoStatus || isPending}
             >
-              {alterarStatus.isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
+              {isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
             </Button>
           </div>
         </div>
