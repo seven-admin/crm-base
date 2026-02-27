@@ -175,10 +175,11 @@ export function ContratosTable({
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {contratos.map((contrato) => {
-          const unidades = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean).join(', ') || '-';
+          const unidadesList = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean) || [];
+          const unidades = unidadesList.length <= 5 ? unidadesList.join(', ') : `${unidadesList.slice(0, 5).join(', ')} +${unidadesList.length - 5}`;
           
           return (
-            <Card 
+            <Card
               key={contrato.id} 
               className="p-4 cursor-pointer hover:bg-muted/50"
               onClick={() => onView?.(contrato.id)}
@@ -224,7 +225,8 @@ export function ContratosTable({
           </TableHeader>
           <TableBody>
             {contratos.map((contrato) => {
-              const unidades = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean).join(', ') || '-';
+              const unidadesList = contrato.unidades?.map(u => u.unidade?.numero).filter(Boolean) || [];
+              const unidades = unidadesList.length <= 5 ? unidadesList.join(', ') : `${unidadesList.slice(0, 5).join(', ')} +${unidadesList.length - 5}`;
               
               return (
                 <TableRow 
@@ -235,7 +237,7 @@ export function ContratosTable({
                   <TableCell className="font-medium">{contrato.numero}</TableCell>
                   <TableCell>{contrato.cliente?.nome || '-'}</TableCell>
                   <TableCell>{contrato.empreendimento?.nome || '-'}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{unidades}</TableCell>
+                  <TableCell className="hidden lg:table-cell max-w-[200px] truncate" title={unidadesList.join(', ')}>{unidades}</TableCell>
                   <TableCell>{formatCurrency(contrato.valor_contrato)}</TableCell>
                   <TableCell>
                     <Badge className={`${STATUS_COLORS[contrato.status]} text-white`}>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Info } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -53,7 +53,7 @@ export function MoverNegociacaoDialog({
   const [observacao, setObservacao] = useState('');
   const [motivoPerda, setMotivoPerda] = useState('');
   const [dataFechamento, setDataFechamento] = useState(new Date().toISOString().split('T')[0]);
-  const [criarContrato, setCriarContrato] = useState(false);
+  
 
   const moverMutation = useMoverNegociacao();
 
@@ -73,7 +73,6 @@ export function MoverNegociacaoDialog({
       setObservacao('');
       setMotivoPerda('');
       setDataFechamento(new Date().toISOString().split('T')[0]);
-      setCriarContrato(false);
     }
     onOpenChange(isOpen);
   };
@@ -99,18 +98,6 @@ export function MoverNegociacaoDialog({
         data_fechamento: selectedEtapa?.is_final_sucesso ? dataFechamento : undefined
       }
     });
-
-    // If user requested contract creation
-    if (criarContrato && selectedEtapa?.is_final_sucesso && onContratoSolicitado) {
-      onContratoSolicitado({
-        cliente_id: negociacao.cliente_id!,
-        empreendimento_id: negociacao.empreendimento_id!,
-        corretor_id: negociacao.corretor_id || undefined,
-        imobiliaria_id: negociacao.imobiliaria_id || undefined,
-        unidade_ids: negociacao.unidades?.map(u => u.unidade_id) || [],
-        valor_contrato: negociacao.valor_negociacao || undefined
-      });
-    }
 
     handleOpen(false);
   };
@@ -190,23 +177,9 @@ export function MoverNegociacaoDialog({
                 />
               </div>
               
-              <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
-                <Checkbox
-                  id="criar_contrato"
-                  checked={criarContrato}
-                  onCheckedChange={(checked) => setCriarContrato(checked === true)}
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="criar_contrato"
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    Criar contrato automaticamente
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Um contrato será criado com os dados desta negociação
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                <Info className="h-4 w-4 flex-shrink-0" />
+                Um contrato será criado automaticamente ao confirmar.
               </div>
             </>
           )}
