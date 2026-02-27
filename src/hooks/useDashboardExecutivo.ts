@@ -100,7 +100,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       // ============ PARALLEL GROUP 1: All independent queries ============
       let contratosQ = supabase
         .from('contratos')
-        .select('id, valor_contrato, data_assinatura, empreendimento_id, created_at')
+        .select('id, valor_contrato, data_assinatura, empreendimento_id, created_at, cliente:clientes(nome)')
         .eq('is_active', true)
         .eq('status', 'assinado');
       contratosQ = applyEmpFilter(contratosQ, empreendimentoId, empreendimentoIds);
@@ -170,31 +170,36 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
 
       const lancamentos = (lancamentosRaw as LancamentoRow[] | null) || [];
 
+      // Filtrar comprador histórico
+      const contratosValidos = (contratos || []).filter(
+        (c: any) => !c.cliente?.nome?.toUpperCase().includes('COMPRADOR HISTÓRICO')
+      );
+
       // ============ VENDAS ============
-      const contratosMesAtual = contratos?.filter(c => {
+      const contratosMesAtual = contratosValidos.filter(c => {
         const data = new Date(c.data_assinatura || c.created_at);
         return data >= inicioMesAtual && data <= fimMesAtual;
       }) || [];
 
-      const contratosMesAnterior = contratos?.filter(c => {
+      const contratosMesAnterior = contratosValidos.filter(c => {
         const data = new Date(c.data_assinatura || c.created_at);
         return data >= inicioMesAnterior && data <= fimMesAnterior;
-      }) || [];
+      });
 
-      const totalVendido = contratos?.reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
+      const totalVendido = contratosValidos.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
       const vendasMesAtual = contratosMesAtual.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
       const vendasMesAnterior = contratosMesAnterior.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
       const variacaoMensal = vendasMesAnterior > 0 
         ? ((vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100 
         : 0;
-      const ticketMedio = contratos?.length ? totalVendido / contratos.length : 0;
+      const ticketMedio = contratosValidos.length ? totalVendido / contratosValidos.length : 0;
 
       const tendenciaVendas: { mes: string; valor: number }[] = [];
       for (let i = 5; i >= 0; i--) {
         const mesRef = subMonths(hoje, i);
         const inicioMes = startOfMonth(mesRef);
         const fimMes = endOfMonth(mesRef);
-        const vendasMes = contratos?.filter(c => {
+        const vendasMes = contratosValidos.filter(c => {
           const data = new Date(c.data_assinatura || c.created_at);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
@@ -417,7 +422,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           vendasMesAnterior,
           variacaoMensal,
           ticketMedio,
-          unidadesVendidas: contratos?.length || 0,
+          unidadesVendidas: contratosValidos.length,
           tendencia: tendenciaVendas
         },
         negociacoes: {

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getClientesHistoricosIds } from '@/lib/contratoFilters';
 import { toast } from 'sonner';
 import type { 
   Bonificacao, 
@@ -149,14 +150,22 @@ export function useCalcularBonificacao() {
 
       if (fetchError) throw fetchError;
 
-      // Contar unidades vendidas no período
-      const { count, error: countError } = await supabase
+      // Contar unidades vendidas no período (excluindo comprador histórico)
+      const historicosIds = await getClientesHistoricosIds();
+
+      let contratosQuery = supabase
         .from('contratos')
         .select('id', { count: 'exact' })
         .eq('empreendimento_id', bonificacao.empreendimento_id)
         .gte('data_geracao', bonificacao.periodo_inicio)
         .lte('data_geracao', bonificacao.periodo_fim)
         .eq('status', 'assinado');
+
+      if (historicosIds.length > 0) {
+        contratosQuery = contratosQuery.not('cliente_id', 'in', `(${historicosIds.join(',')})`);
+      }
+
+      const { count, error: countError } = await contratosQuery;
 
       if (countError) throw countError;
 

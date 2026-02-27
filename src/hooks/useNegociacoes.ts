@@ -449,6 +449,35 @@ export function useAprovarPropostaIncorporador() {
           .in('id', negociacao.unidades.map(u => u.unidade_id));
       }
 
+      // Auto-criar contrato
+      try {
+        const { data: contratoCriado } = await db
+          .from('contratos')
+          .insert({
+            numero: 'TEMP',
+            cliente_id: negociacao.cliente_id,
+            empreendimento_id: negociacao.empreendimento_id,
+            corretor_id: negociacao.corretor_id,
+            imobiliaria_id: negociacao.imobiliaria_id,
+            valor_contrato: negociacao.valor_proposta || negociacao.valor_negociacao,
+            negociacao_id: negociacao.id,
+            status: 'em_geracao',
+          })
+          .select('id')
+          .single();
+
+        if (contratoCriado && negociacao.unidades && negociacao.unidades.length > 0) {
+          await db.from('contrato_unidades').insert(
+            negociacao.unidades.map(u => ({
+              contrato_id: contratoCriado.id,
+              unidade_id: u.unidade_id,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Erro ao auto-criar contrato na aprovação do incorporador:', err);
+      }
+
       // 3. Registrar no histórico
       await db
         .from('negociacao_historico')
@@ -535,6 +564,9 @@ export function useAprovarPropostaIncorporador() {
       queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
       queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
       queryClient.invalidateQueries({ queryKey: ['unidades'] });
+      queryClient.invalidateQueries({ queryKey: ['contratos'] });
+      queryClient.invalidateQueries({ queryKey: ['contratos-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['contratos-stats'] });
       invalidateDashboards(queryClient);
       toast.success('Proposta aprovada pelo incorporador!');
     },
