@@ -160,23 +160,61 @@ export interface WebhookLog {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
-export function useWebhookLogs(webhookId?: string) {
+export interface WebhookLogsResult {
+  logs: WebhookLog[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export function useWebhookLogs(webhookId?: string, page = 1, pageSize = 20) {
   return useQuery({
-    queryKey: ['webhook-logs', webhookId],
-    queryFn: async () => {
+    queryKey: ['webhook-logs', webhookId, page, pageSize],
+    queryFn: async (): Promise<WebhookLogsResult> => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
       let query = db
         .from('webhook_logs')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .limit(50);
+        .range(from, to);
 
       if (webhookId) {
         query = query.eq('webhook_id', webhookId);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data as WebhookLog[];
+      const total = count ?? 0;
+      return {
+        logs: (data ?? []) as WebhookLog[],
+        total,
+        page,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
+    },
+  });
+}
+
+export function useCleanOldWebhookLogs() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('cleanup-webhook-logs', {
+        method: 'POST',
+      });
+      if (error) throw error;
+      return data as { deleted: number };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['webhook-logs'] });
+      toast.success(`${data?.deleted ?? 0} logs antigos removidos`);
+    },
+    onError: (error) => {
+      console.error('Error cleaning webhook logs:', error);
+      toast.error('Erro ao limpar logs antigos');
     },
   });
 }
