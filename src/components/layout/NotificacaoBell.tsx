@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 const TIPO_ICONS: Record<string, string> = {
   nova_atividade: '📋',
   atividade_atribuida: '👤',
+  proposta_aprovada: '✅',
+  proposta_contra_proposta: '🔄',
   info: 'ℹ️',
 };
 

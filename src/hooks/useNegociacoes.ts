@@ -17,6 +17,68 @@ import { invalidateDashboards } from '@/lib/invalidateDashboards';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any; // TODO: regenerate types with `supabase gen types typescript` to remove this
 
+/**
+ * Cria notificações internas para gestor, corretor e super_admins
+ * quando o incorporador interage com uma proposta.
+ */
+async function criarNotificacoesIncorporador(params: {
+  tipo: string;
+  titulo: string;
+  mensagem: string;
+  negociacao: Negociacao;
+}) {
+  const { tipo, titulo, mensagem, negociacao } = params;
+
+  try {
+    // Buscar destinatários
+    const destinatarios = new Set<string>();
+
+    // 1. Gestor do empreendimento
+    if (negociacao.gestor_id) {
+      destinatarios.add(negociacao.gestor_id);
+    } else if (negociacao.empreendimento_id) {
+      const { data: gestorId } = await supabase
+        .rpc('get_gestor_empreendimento', { emp_id: negociacao.empreendimento_id });
+      if (gestorId) destinatarios.add(gestorId as string);
+    }
+
+    // 2. Corretor vinculado (buscar user_id via tabela corretores)
+    if (negociacao.corretor_id) {
+      const { data: corretor } = await supabase
+        .from('corretores')
+        .select('user_id')
+        .eq('id', negociacao.corretor_id)
+        .maybeSingle();
+      if (corretor?.user_id) destinatarios.add(corretor.user_id);
+    }
+
+    // 3. Todos os super_admins
+    const { data: superAdmins } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'super_admin');
+    if (superAdmins) {
+      superAdmins.forEach((sa: any) => destinatarios.add(sa.user_id));
+    }
+
+    // Inserir notificações em batch
+    if (destinatarios.size > 0) {
+      const notificacoes = Array.from(destinatarios).map(userId => ({
+        user_id: userId,
+        tipo,
+        titulo,
+        mensagem,
+        referencia_id: negociacao.id,
+        referencia_tipo: 'negociacao',
+      }));
+
+      await supabase.from('notificacoes').insert(notificacoes);
+    }
+  } catch (err) {
+    console.warn('[notificacoes] Erro ao criar notificações:', err);
+  }
+}
+
 export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['negociacoes', filters],
@@ -371,16 +433,48 @@ export function useAprovarPropostaIncorporador() {
           observacao: 'Proposta aprovada pelo incorporador – transição automática para Ganho'
         });
 
-      // 4. Webhooks
-      const { dispararWebhook } = await import('@/lib/webhookUtils');
-      dispararWebhook('proposta_aprovada_incorporador', {
+      // 4. Buscar dados complementares para webhook e notificações
+      const { dispararWebhook, getUsuarioLogado } = await import('@/lib/webhookUtils');
+      const incorporadorLogado = await getUsuarioLogado();
+
+      const webhookPayload = {
         negociacao_id: negociacao.id,
         codigo: negociacao.codigo,
         numero_proposta: negociacao.numero_proposta,
-        cliente_nome: negociacao.cliente?.nome,
-        empreendimento_nome: negociacao.empreendimento?.nome,
-        valor_proposta: negociacao.valor_proposta,
-      });
+        cliente: {
+          nome: negociacao.cliente?.nome,
+          cpf: (negociacao.cliente as any)?.cpf,
+          email: (negociacao.cliente as any)?.email,
+          telefone: (negociacao.cliente as any)?.telefone,
+        },
+        incorporador: {
+          id: incorporadorLogado?.id,
+          nome: incorporadorLogado?.nome,
+        },
+        empreendimento: {
+          id: negociacao.empreendimento_id,
+          nome: negociacao.empreendimento?.nome,
+        },
+        corretor: {
+          id: negociacao.corretor_id,
+          nome: negociacao.corretor?.nome_completo,
+        },
+        unidades: negociacao.unidades?.map(u => ({
+          unidade_id: u.unidade_id,
+          numero: u.unidade?.numero,
+          bloco: u.unidade?.bloco?.nome,
+          valor_tabela: u.valor_tabela,
+          valor_proposta: u.valor_proposta || u.valor_unidade,
+        })),
+        valores: {
+          valor_tabela: negociacao.valor_tabela,
+          valor_proposta: negociacao.valor_proposta,
+          desconto_percentual: negociacao.desconto_percentual,
+        },
+        link: `${window.location.origin}/negociacoes?id=${negociacao.id}`,
+      };
+
+      dispararWebhook('proposta_aprovada_incorporador', webhookPayload);
 
       // 5. Webhook de movimentação
       dispararWebhook('negociacao_movida', {
@@ -400,6 +494,14 @@ export function useAprovarPropostaIncorporador() {
           valor: u.valor_proposta || u.valor_unidade,
         })),
         observacao: 'Aprovada pelo incorporador',
+      });
+
+      // 6. Criar notificações internas
+      await criarNotificacoesIncorporador({
+        tipo: 'proposta_aprovada',
+        titulo: `Proposta ${negociacao.numero_proposta || negociacao.codigo} aprovada pelo incorporador`,
+        mensagem: `${negociacao.cliente?.nome} - ${negociacao.empreendimento?.nome} - R$ ${(negociacao.valor_proposta || 0).toLocaleString('pt-BR')}`,
+        negociacao,
       });
     },
     onSuccess: () => {
@@ -448,16 +550,49 @@ export function useNegarPropostaIncorporador() {
           observacao: `Contra proposta: ${motivo}`
         });
 
-      // 3. Webhooks
-      const { dispararWebhook } = await import('@/lib/webhookUtils');
-      dispararWebhook('proposta_contra_proposta', {
+      // 3. Buscar dados complementares para webhook e notificações
+      const { dispararWebhook, getUsuarioLogado } = await import('@/lib/webhookUtils');
+      const incorporadorLogado = await getUsuarioLogado();
+
+      const webhookPayload = {
         negociacao_id: negociacao.id,
         codigo: negociacao.codigo,
         numero_proposta: negociacao.numero_proposta,
-        cliente_nome: negociacao.cliente?.nome,
-        empreendimento_nome: negociacao.empreendimento?.nome,
+        cliente: {
+          nome: negociacao.cliente?.nome,
+          cpf: (negociacao.cliente as any)?.cpf,
+          email: (negociacao.cliente as any)?.email,
+          telefone: (negociacao.cliente as any)?.telefone,
+        },
+        incorporador: {
+          id: incorporadorLogado?.id,
+          nome: incorporadorLogado?.nome,
+        },
+        empreendimento: {
+          id: negociacao.empreendimento_id,
+          nome: negociacao.empreendimento?.nome,
+        },
+        corretor: {
+          id: negociacao.corretor_id,
+          nome: negociacao.corretor?.nome_completo,
+        },
+        unidades: negociacao.unidades?.map(u => ({
+          unidade_id: u.unidade_id,
+          numero: u.unidade?.numero,
+          bloco: u.unidade?.bloco?.nome,
+          valor_tabela: u.valor_tabela,
+          valor_proposta: u.valor_proposta || u.valor_unidade,
+        })),
+        valores: {
+          valor_tabela: negociacao.valor_tabela,
+          valor_proposta: negociacao.valor_proposta,
+          desconto_percentual: negociacao.desconto_percentual,
+        },
         motivo,
-      });
+        link: `${window.location.origin}/negociacoes?id=${negociacao.id}`,
+      };
+
+      dispararWebhook('proposta_contra_proposta', webhookPayload);
 
       // 4. Webhook de movimentação
       dispararWebhook('negociacao_movida', {
@@ -477,6 +612,14 @@ export function useNegarPropostaIncorporador() {
           valor: u.valor_proposta || u.valor_unidade,
         })),
         observacao: motivo,
+      });
+
+      // 5. Criar notificações internas
+      await criarNotificacoesIncorporador({
+        tipo: 'proposta_contra_proposta',
+        titulo: `Contra proposta recebida - ${negociacao.numero_proposta || negociacao.codigo}`,
+        mensagem: `${negociacao.cliente?.nome} - ${negociacao.empreendimento?.nome} - Motivo: ${motivo}`,
+        negociacao,
       });
     },
     onSuccess: () => {
