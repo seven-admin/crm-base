@@ -1,31 +1,48 @@
 
+# Adicionar tooltip contextual ao TemperaturaSelector
 
-# Quebra de linha entre emoji e texto no badge de temperatura
+## Objetivo
+Exibir um texto explicativo sobre o significado da temperatura, que muda conforme o contexto de uso:
+- **Atividades**: "Proximidade com o parceiro"
+- **Negociações**: "Proximidade com a próxima etapa"
 
-## Problema
-Em telas pequenas, o badge de temperatura quebra o texto de forma irregular porque emoji e label estao na mesma linha dentro de um espaco limitado.
-
-## Solucao
+## Solução
 
 ### Arquivo: `src/components/atividades/TemperaturaSelector.tsx`
 
-Nos botoes do `displayMode` (trigger e opcoes do popover), separar o emoji e o label em duas linhas usando `flex-col`, aumentando levemente a altura fixa para acomodar as duas linhas.
-
-Trocar de:
-```
-{temp.emoji} {temp.label}
-```
-
-Para:
+1. Adicionar uma nova prop `context` ao componente:
 ```tsx
-<span className="flex flex-col items-center leading-tight">
-  <span>{temp.emoji}</span>
-  <span>{temp.label}</span>
-</span>
+context?: 'atividade' | 'negociacao';
 ```
 
-E ajustar as classes do botao: trocar `h-5` por `h-auto py-0.5` e manter `px-1.5 text-[10px]` para ficar compacto.
+2. Quando `context` for informado, exibir um icone de info (lucide `Info`) ao lado do seletor, envolto em um `Tooltip` (já disponível em `@/components/ui/tooltip`), com o texto correspondente:
+   - `'atividade'` → "Proximidade com o parceiro"
+   - `'negociacao'` → "Proximidade com a próxima etapa"
 
-### Resultado
-Badge sempre compacto e consistente: emoji em cima, label embaixo, sem quebra irregular.
+3. No `displayMode`, o tooltip fica no `PopoverContent` como texto auxiliar acima das opções. No modo inline, fica como um pequeno icone `Info` ao lado dos badges.
 
+### Uso nos chamadores
+
+Atualizar os principais pontos de uso para passar a prop `context`:
+- `src/pages/Atividades.tsx` → `context="atividade"`
+- `src/components/atividades/ConcluirAtividadeDialog.tsx` → `context="atividade"`
+- `src/components/atividades/AtividadeDetalheDialog.tsx` → `context="atividade"`
+- `src/components/atividades/AtividadeKanbanCard.tsx` → `context="atividade"`
+- `src/components/atividades/AtividadeCard.tsx` → `context="atividade"`
+- `src/pages/DiarioBordo.tsx` → `context="atividade"`
+
+Negociações não usam o componente ainda, mas a prop fica pronta para uso futuro.
+
+## Detalhes técnicos
+
+No `TemperaturaSelector.tsx`:
+- Importar `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` de `@/components/ui/tooltip` e `Info` de `lucide-react`
+- Definir o mapa de textos:
+```tsx
+const CONTEXT_LABELS = {
+  atividade: 'Proximidade com o parceiro',
+  negociacao: 'Proximidade com a próxima etapa',
+};
+```
+- No `displayMode`, adicionar uma linha de texto descritivo (`text-[10px] text-muted-foreground`) dentro do `PopoverContent`, acima dos botões de seleção
+- No modo inline, envolver o `div` com um wrapper que inclui um icone `Info` com `Tooltip`
