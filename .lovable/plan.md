@@ -1,36 +1,81 @@
 
-# Corrigir desalinhamento dos botoes de acoes na tabela de Atividades
 
-## Problema
+# Cronometro de Tempo para Atividades
 
-Na coluna de acoes da tabela, o numero de botoes varia por linha:
-- **Pendente + tipo negociacao**: 5 botoes (Concluir, Cancelar, Editar, Converter, Excluir)
-- **Pendente + outros tipos**: 4 botoes (Concluir, Cancelar, Editar, Excluir)
-- **Concluida/Cancelada**: 1 botao (Excluir)
+## Objetivo
+Adicionar um cronometro (timer) nas atividades de tipo **atendimento**, **visita** e **negociacao** que permite iniciar e parar a contagem de tempo durante a execucao da atividade, registrando a duracao real.
 
-Isso faz com que o botao Excluir (e os outros) fiquem desalinhados entre linhas, como mostra a imagem.
+## Alteracoes no Banco de Dados
 
-## Solucao
+Adicionar 3 colunas na tabela `atividades`:
+- `cronometro_inicio` (timestamptz, nullable) -- momento em que o cronometro foi iniciado
+- `cronometro_fim` (timestamptz, nullable) -- momento em que o cronometro foi parado
+- `duracao_minutos` (integer, nullable) -- duracao total em minutos (calculada ao parar)
 
-Fixar a largura da celula de acoes e reservar espaco para todos os 5 botoes possiveis, usando placeholders invisiveis quando o botao nao se aplica.
+## Novo Componente: `AtividadeCronometro`
 
-### Arquivo: `src/pages/Atividades.tsx`
+Componente React que exibe um cronometro interativo:
 
-1. No `TableHead` da coluna de acoes, adicionar largura fixa: `className="w-[200px]"`
+- **Estado parado (sem inicio)**: Botao "Iniciar Cronometro" (icone Play)
+- **Estado rodando**: Display do tempo decorrido (HH:MM:SS) atualizado a cada segundo + Botao "Parar" (icone Square)
+- **Estado finalizado**: Display do tempo total com label "Duracao: Xh Ym"
 
-2. No bloco de acoes (linhas 882-969), reestruturar para sempre renderizar 5 slots:
-   - Slots 1-3 (Concluir, Cancelar, Editar): renderizar botoes se `status === 'pendente'`, senao renderizar `<div className="w-10" />` para cada slot vazio
-   - Slot 4 (Converter): renderizar botao se `TIPOS_NEGOCIACAO.includes(tipo)`, senao renderizar `<div className="w-10" />`
-   - Slot 5 (Excluir): sempre presente
+Logica:
+- Ao clicar "Iniciar", grava `cronometro_inicio = now()` no banco via `useUpdateAtividade`
+- Enquanto rodando, calcula `agora - cronometro_inicio` a cada segundo com `setInterval`
+- Ao clicar "Parar", grava `cronometro_fim = now()` e `duracao_minutos = diff em minutos`
+- Se a pagina for recarregada com `cronometro_inicio` preenchido e `cronometro_fim` nulo, retoma a contagem automaticamente
 
-Isso garante que cada linha ocupe o mesmo espaco horizontal e os botoes fiquem perfeitamente alinhados.
+Arquivo: `src/components/atividades/AtividadeCronometro.tsx`
 
-### Resultado visual
+## Integracao
 
-```text
-| Pendente  | [v] [x] [ed] [conv] [del] |
-| Pendente  | [v] [x] [ed]  ---   [del] |
-| Concluida | ---  --- ---   ---   [del] |
+### 1. Tipos (`src/types/atividades.types.ts`)
+Adicionar campos `cronometro_inicio`, `cronometro_fim`, `duracao_minutos` na interface `Atividade`.
+
+### 2. Dialog de Detalhe (`AtividadeDetalheDialog.tsx`)
+Renderizar `<AtividadeCronometro>` para atividades pendentes do tipo atendimento, visita ou negociacao. Exibir duracao para atividades concluidas que tenham `duracao_minutos`.
+
+### 3. Hook `useAtividades.ts`
+Garantir que o `useUpdateAtividade` ja suporta atualizar campos arbitrarios (ja suporta via `Partial<AtividadeFormData>` + spread). Adicionar os novos campos ao select das queries.
+
+### 4. Tabela de Atividades (`Atividades.tsx`)
+Adicionar coluna "Duracao" na tabela (apos a coluna de horario), exibindo `duracao_minutos` formatado quando preenchido, ou um indicador de "Em andamento" quando `cronometro_inicio` esta preenchido sem `cronometro_fim`.
+
+## Tipos que exibem o cronometro
+
+Apenas: `atendimento`, `visita`, `negociacao`
+
+Definir constante:
+```typescript
+const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = ['atendimento', 'visita', 'negociacao'];
 ```
 
-Todos os botoes ficam nas mesmas colunas independente do tipo/status.
+## Arquivos a criar/alterar
+
+| Arquivo | Acao |
+|---|---|
+| Migracao SQL | Adicionar 3 colunas na tabela atividades |
+| `src/components/atividades/AtividadeCronometro.tsx` | **Criar** - componente do cronometro |
+| `src/types/atividades.types.ts` | Adicionar campos na interface Atividade |
+| `src/components/atividades/AtividadeDetalheDialog.tsx` | Integrar cronometro |
+| `src/pages/Atividades.tsx` | Coluna "Duracao" na tabela |
+| `src/hooks/useAtividades.ts` | Garantir select dos novos campos |
+
+## UX do Cronometro
+
+```text
++-------------------------------------------+
+|  [>] Iniciar Cronometro                    |   (estado inicial)
++-------------------------------------------+
+
++-------------------------------------------+
+|  00:12:34          [■] Parar               |   (rodando)
++-------------------------------------------+
+
++-------------------------------------------+
+|  Duracao: 45 min                           |   (finalizado)
++-------------------------------------------+
+```
+
+O cronometro aparece dentro do dialog de detalhe e so e interativo quando a atividade esta pendente.
