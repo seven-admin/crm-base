@@ -3531,6 +3531,38 @@ export type Database = {
           },
         ]
       }
+      negociacao_comentarios: {
+        Row: {
+          comentario: string
+          created_at: string | null
+          id: string
+          negociacao_id: string
+          user_id: string | null
+        }
+        Insert: {
+          comentario: string
+          created_at?: string | null
+          id?: string
+          negociacao_id: string
+          user_id?: string | null
+        }
+        Update: {
+          comentario?: string
+          created_at?: string | null
+          id?: string
+          negociacao_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negociacao_comentarios_negociacao_id_fkey"
+            columns: ["negociacao_id"]
+            isOneToOne: false
+            referencedRelation: "negociacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negociacao_condicoes_pagamento: {
         Row: {
           com_correcao: boolean | null
