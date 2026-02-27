@@ -29,8 +29,10 @@ import {
   Trash2,
   DollarSign,
   History,
+  AlertTriangle,
 } from 'lucide-react';
-import { useEmpreendimento, useDeleteEmpreendimento } from '@/hooks/useEmpreendimentos';
+import { useEmpreendimento, useDeleteEmpreendimento, useUpdateEmpreendimento } from '@/hooks/useEmpreendimentos';
+import { Switch } from '@/components/ui/switch';
 import { EmpreendimentoForm } from '@/components/empreendimentos/EmpreendimentoForm';
 import { UnidadesTab } from '@/components/empreendimentos/UnidadesTab';
 import { TipologiasTab } from '@/components/empreendimentos/TipologiasTab';
@@ -63,6 +65,7 @@ export default function EmpreendimentoDetalhe() {
   const { data: empreendimento, isLoading } = useEmpreendimento(id);
   const isPredio = empreendimento?.tipo === 'predio';
   const deleteEmpreendimento = useDeleteEmpreendimento();
+  const updateEmpreendimento = useUpdateEmpreendimento();
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', {
@@ -115,7 +118,20 @@ export default function EmpreendimentoDetalhe() {
     (empreendimento.unidades_negociacao || 0);
 
   const headerActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
+      {canDelete && (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={empreendimento.is_active}
+            onCheckedChange={(checked) => {
+              updateEmpreendimento.mutate({ id: id!, data: { is_active: checked } as any });
+            }}
+          />
+          <span className="text-sm text-muted-foreground">
+            {empreendimento.is_active ? 'Ativo' : 'Inativo'}
+          </span>
+        </div>
+      )}
       <Button onClick={() => setFormOpen(true)}>
         <Edit className="h-4 w-4 mr-2" />
         Editar
@@ -177,6 +193,15 @@ export default function EmpreendimentoDetalhe() {
       metadata={locationMetadata}
       actions={headerActions}
     >
+
+      {!empreendimento.is_active && (
+        <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 mb-6">
+          <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0" />
+          <p className="text-sm text-yellow-700 dark:text-yellow-400">
+            Este empreendimento está <strong>desativado</strong> e não aparece nas listagens para os demais usuários.
+          </p>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
