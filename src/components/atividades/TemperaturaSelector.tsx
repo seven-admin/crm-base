@@ -26,7 +26,43 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
     const selected = TEMPERATURAS.find((t) => t.value === value);
 
     if (!selected) {
-      return <span className="text-muted-foreground text-xs">-</span>;
+      return (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={(e) => e.stopPropagation()}
+              className="text-muted-foreground text-xs cursor-pointer hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              -
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2" align="start" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-1">
+              {TEMPERATURAS.map((temp) => (
+                <button
+                  key={temp.value}
+                  type="button"
+                  disabled={disabled}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onValueChange(temp.value);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    'border rounded-full font-medium transition-colors text-[10px] px-1.5 py-0',
+                    temp.inactiveClass,
+                    disabled && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  {temp.emoji} {temp.label}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      );
     }
 
     return (
