@@ -1,47 +1,57 @@
 
 
-# Exibir comentarios do incorporador no sistema interno
+# Corrigir filtro de propostas e botoes no Portal do Incorporador
 
-## Resumo
+## Problema
 
-Os comentarios do incorporador atualmente aparecem apenas no Portal do Incorporador. Vamos adiciona-los em dois lugares no sistema interno:
+Duas questoes relacionadas:
+1. Propostas desaparecem do portal quando o status muda para `rascunho` ou `enviada` (fora do filtro atual)
+2. Quando uma proposta retorna para analise apos contra-proposta (status volta para `em_analise` via `useReenviarParaAnalise`), os botoes de Aprovar/Contra Proposta nao aparecem
 
-1. **PropostaDialog** (Kanban) - Seção de comentários abaixo dos dados da proposta
-2. **KanbanCard** - Indicador visual de que há comentários do incorporador
+## Solucao
 
-## Implementação
+Alterar o arquivo `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`:
 
-### 1. Adicionar seção de comentários no PropostaDialog
+### 1. Ampliar filtro "Aguardando Aprovacao" (com botoes)
 
-No arquivo `src/components/negociacoes/PropostaDialog.tsx`:
-- Importar `useNegociacaoComentarios` e `useAddNegociacaoComentario`
-- Adicionar uma nova aba "Comentários" no TabsList (passando de 2 para 3 colunas)
-- Na aba, exibir a lista de comentários com autor e data, e um campo para o time interno responder
-- Reutilizar o mesmo padrão visual do `ComentariosSection` do portal
+Manter propostas com `status_proposta === 'em_analise'` -- isso ja cobre o cenario de reenvio, pois `useReenviarParaAnalise` seta o status de volta para `em_analise`. O `showActions={true}` ja esta correto nesta secao. Adicionar tambem o fallback da etapa sem status.
 
-### 2. Indicador visual no KanbanCard
+### 2. Nova secao "Em Preparacao" (sem botoes)
 
-No arquivo `src/components/negociacoes/KanbanCard.tsx`:
-- Adicionar um ícone de balão de mensagem com contador quando existem comentários do incorporador
-- Usar `useNegociacaoComentarios` para buscar a contagem (ou receber via prop para evitar queries excessivas)
+Filtrar propostas com `status_proposta` em `['rascunho', 'enviada']` que possuam `numero_proposta` preenchido. Exibir com `showActions={false}` e badge informativo do status atual.
 
-### 3. RLS - SELECT para time interno
+### 3. Verificacao explicita para reenvio apos contra-proposta
 
-Verificar se já existe policy de SELECT em `negociacao_comentarios` para usuários internos (super_admin, gestor_produto, etc). Se não houver, criar migration adicionando policy que permita leitura para `is_seven_team(auth.uid())` ou `is_admin(auth.uid())`.
+A logica atual coloca propostas com `status_proposta === 'contra_proposta'` na secao "Propostas Recentes" (sem botoes). Quando o time interno reenvia, o status muda para `em_analise` e a proposta DEVE migrar para "Aguardando Aprovacao" COM botoes.
 
-Criar também policy de INSERT para que o time interno possa responder aos comentários.
+O problema potencial: se o cache do React Query nao invalidou corretamente, a proposta pode permanecer na secao errada. Para garantir:
+- Confirmar que o filtro de `propostasResolvidas` NAO captura `em_analise` (ja esta correto no codigo atual)
+- Confirmar que `propostasEmAnalise` captura `em_analise` independente de historico anterior (ja esta correto)
+- Adicionar `refetchInterval` ou `refetchOnWindowFocus: true` ao `useNegociacoes` do portal para garantir que mudancas feitas pelo time interno reflitam rapidamente no portal do incorporador
 
-## Arquivos impactados
+### 4. Secao "Propostas Recentes" (sem botoes)
 
-| Arquivo | Mudança |
+Manter como esta: `aprovada_incorporador` e `contra_proposta`.
+
+## Arquivo impactado
+
+| Arquivo | Mudanca |
 |---------|---------|
-| `src/components/negociacoes/PropostaDialog.tsx` | Nova aba "Comentários" com listagem e campo de resposta |
-| `src/components/negociacoes/KanbanCard.tsx` | Indicador visual de comentários pendentes |
-| Migration SQL (se necessário) | RLS SELECT/INSERT para time interno na tabela negociacao_comentarios |
+| `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` | Ampliar filtros, adicionar secao "Em Preparacao", adicionar `refetchInterval` para atualizar dados automaticamente |
 
-## Detalhes técnicos
+## Detalhes tecnicos
 
-- A aba de comentários no PropostaDialog terá scroll limitado (max-h) para não dominar o dialog
-- Comentários serão exibidos em ordem cronológica reversa (mais recente primeiro)
-- O campo de resposta permite que gestores e corretores respondam diretamente ao incorporador
-- Os comentários são compartilhados: tanto incorporador quanto time interno veem todos os comentários da negociação
+```text
+Fluxo de status e visibilidade no portal:
+
+rascunho ──► "Em Preparacao" (sem botoes)
+enviada ──► "Em Preparacao" (sem botoes)
+em_analise ──► "Aguardando Aprovacao" (COM botoes: Aprovar / Contra Proposta)
+contra_proposta ──► "Propostas Recentes" (sem botoes)
+  └── time interno reenvia ──► em_analise ──► volta para "Aguardando Aprovacao" COM botoes
+aprovada_incorporador ──► "Propostas Recentes" (sem botoes)
+```
+
+- Adicionar `refetchInterval: 30000` (30s) ao hook para que o portal atualize automaticamente quando o time interno reenvia uma proposta
+- Cards na secao "Em Preparacao" exibem badge com o status atual (Rascunho/Enviada) para o incorporador acompanhar o progresso
+
