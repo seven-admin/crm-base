@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.cleanup-webhook-logs]
 verify_jwt = false
+
+[functions.reset-sequence]
+verify_jwt = false
