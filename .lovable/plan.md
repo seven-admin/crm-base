@@ -1,38 +1,36 @@
 
-
-# Adicionar filtros completos na aba Kanban de Atividades
+# Corrigir desalinhamento dos botoes de acoes na tabela de Atividades
 
 ## Problema
-A aba Kanban em `/atividades` so tem o filtro de temperatura. Precisa ter os mesmos filtros da aba Lista: Tipo, Status, Responsavel, Empreendimento, Mes e Temperatura.
+
+Na coluna de acoes da tabela, o numero de botoes varia por linha:
+- **Pendente + tipo negociacao**: 5 botoes (Concluir, Cancelar, Editar, Converter, Excluir)
+- **Pendente + outros tipos**: 4 botoes (Concluir, Cancelar, Editar, Excluir)
+- **Concluida/Cancelada**: 1 botao (Excluir)
+
+Isso faz com que o botao Excluir (e os outros) fiquem desalinhados entre linhas, como mostra a imagem.
 
 ## Solucao
 
+Fixar a largura da celula de acoes e reservar espaco para todos os 5 botoes possiveis, usando placeholders invisiveis quando o botao nao se aplica.
+
 ### Arquivo: `src/pages/Atividades.tsx`
 
-Substituir o bloco da view Kanban (linhas 374-390) para incluir a mesma barra de filtros da lista, reutilizando o state `filters` ja existente:
+1. No `TableHead` da coluna de acoes, adicionar largura fixa: `className="w-[200px]"`
 
-- **Tipo** (Select): conectado a `filters.tipo`
-- **Status** (Select): conectado a `filters.status`
-- **Responsavel** (Select): conectado a `filters.responsavel_id`
-- **Empreendimento** (Select): conectado a `filters.empreendimento_id`
-- **Mes** (Select de mes/ano): conectado a `filters.data_inicio` / `filters.data_fim`
-- **Temperatura** (TemperaturaSelector): ja existente, manter `kanbanTemperatura`
+2. No bloco de acoes (linhas 882-969), reestruturar para sempre renderizar 5 slots:
+   - Slots 1-3 (Concluir, Cancelar, Editar): renderizar botoes se `status === 'pendente'`, senao renderizar `<div className="w-10" />` para cada slot vazio
+   - Slot 4 (Converter): renderizar botao se `TIPOS_NEGOCIACAO.includes(tipo)`, senao renderizar `<div className="w-10" />`
+   - Slot 5 (Excluir): sempre presente
 
-O `AtividadeKanbanBoard` ja recebe `dataInicio` e `dataFim` dos filters -- basta garantir que os novos filtros (tipo, status, responsavel, empreendimento) tambem sejam passados.
+Isso garante que cada linha ocupe o mesmo espaco horizontal e os botoes fiquem perfeitamente alinhados.
 
-### Arquivo: `src/components/atividades/AtividadeKanbanBoard.tsx`
-
-Adicionar props opcionais para os filtros adicionais: `responsavelId`, `empreendimentoId`, `status`, `tipo` -- e passa-los ao `useAtividades`.
-
-### Layout
+### Resultado visual
 
 ```text
-[Tipo] [Status] [Responsavel] [Empreendimento] [Mes]  [Temperatura]
-+----------+ +----------+ +----------+
-| Pendente | | Concluida| | Cancelada|
-|  (3)     | |  (5)     | |  (2)     |
-+----------+ +----------+ +----------+
+| Pendente  | [v] [x] [ed] [conv] [del] |
+| Pendente  | [v] [x] [ed]  ---   [del] |
+| Concluida | ---  --- ---   ---   [del] |
 ```
 
-Os filtros ficam em uma barra compacta `flex-wrap` acima do Kanban, identica ao padrao da lista.
-
+Todos os botoes ficam nas mesmas colunas independente do tipo/status.
