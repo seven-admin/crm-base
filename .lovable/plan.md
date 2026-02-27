@@ -1,93 +1,75 @@
 
-# Exibir dados completos da proposta no Portal do Incorporador
 
-## Problemas identificados
+# Webhook + Notificacoes ao Incorporador Interagir com Proposta
 
-### 1. Cliente aparece como null (RLS)
-O campo `cliente` retorna `null` na resposta da API porque a policy de `clientes` para incorporador exige que o `gestor_id` do cliente esteja vinculado ao empreendimento. O cliente "CLIENTE TESTE CRM SEVEN" tem `gestor_id = NULL`, logo a policy nao faz match.
+## Contexto atual
 
-**Solucao**: Criar nova policy SELECT em `clientes` que permita incorporador ver clientes vinculados a negociacoes dos seus empreendimentos.
+- **Webhooks**: Ja existem disparos de `proposta_aprovada_incorporador` e `proposta_contra_proposta` nos hooks `useAprovarPropostaIncorporador` e `useNegarPropostaIncorporador`. Porem, o payload nao inclui todas as informacoes relevantes (faltam dados do cliente, condicoes de pagamento, unidades detalhadas, e dados do incorporador que interagiu).
 
-### 2. Condicoes de pagamento inacessiveis (RLS)
-A policy de SELECT em `negociacao_condicoes_pagamento` so permite admin, gestor_produto e corretor. Incorporador nao consegue ler.
+- **Notificacoes internas**: O sistema tem tabela `notificacoes` e componente `NotificacaoBell`, mas nenhuma notificacao e criada quando o incorporador aprova ou envia contra proposta.
 
-**Solucao**: Adicionar policy SELECT para incorporador na tabela `negociacao_condicoes_pagamento`.
+- **Mensagem do incorporador (contra proposta)**: O campo `motivo_contra_proposta` ja e gravado na negociacao. Ele ja aparece em dois lugares:
+  1. No `PropostaCard.tsx` do portal do incorporador (para o proprio incorporador ver)
+  2. No `PropostaDialog.tsx` do Kanban interno (alerta laranja no topo do dialog quando o gestor abre a proposta)
 
-### 3. UI do card incompleta
-O card atual so mostra: codigo, status, cliente, empreendimento, valor tabela, valor proposta, corretor. Faltam dados importantes para decisao do incorporador.
-
-**Solucao**: Refatorar o card para exibir:
-
-```text
-+--------------------------------------------------+
-| PROP-00001 | NEG-00024        [Badge: Em Analise] |
-+--------------------------------------------------+
-| Cliente: CLIENTE TESTE CRM SEVEN                 |
-| CPF: xxx.xxx.xxx-xx | Email | Telefone           |
-| Empreendimento: EMPREENDIMENTO TESTE              |
-| Corretor: ...                                     |
-+--------------------------------------------------+
-| UNIDADES                                          |
-| Bloco 01 - Unidade 101 | R$ 500.000,00           |
-+--------------------------------------------------+
-| VALORES                                           |
-| Valor Tabela: R$ 500.000  Valor Proposta: R$ ... |
-| Desconto: -X%                                     |
-+--------------------------------------------------+
-| CONDICOES DE PAGAMENTO                            |
-| 1x Mensal Serie - R$ 500.000,00 (Boleto)         |
-+--------------------------------------------------+
-| [Contra Proposta]            [Aprovar]            |
-+--------------------------------------------------+
-```
+  **Ou seja, a mensagem do incorporador ja e visivel para o time interno ao abrir a negociacao no Kanban.** O que falta e a notificacao alertando que houve interacao.
 
 ---
 
 ## Plano de implementacao
 
-### Migration SQL (2 novas policies)
+### 1. Enriquecer payload dos webhooks existentes
 
-**Policy 1** - Incorporador pode ver clientes que estao em negociacoes dos seus empreendimentos:
-```sql
-CREATE POLICY "Incorporadores can view clientes from negociacoes"
-ON public.clientes FOR SELECT TO authenticated
-USING (
-  public.is_incorporador(auth.uid())
-  AND id IN (
-    SELECT n.cliente_id FROM public.negociacoes n
-    WHERE public.user_has_empreendimento_access(auth.uid(), n.empreendimento_id)
-  )
-);
-```
+Nos hooks `useAprovarPropostaIncorporador` e `useNegarPropostaIncorporador`, expandir o payload dos webhooks `proposta_aprovada_incorporador` e `proposta_contra_proposta` para incluir:
 
-**Policy 2** - Incorporador pode ver condicoes de pagamento das negociacoes acessiveis:
-```sql
-CREATE POLICY "Incorporadores can view negociacao_condicoes_pagamento"
-ON public.negociacao_condicoes_pagamento FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.negociacoes n
-    WHERE n.id = negociacao_condicoes_pagamento.negociacao_id
-      AND public.is_incorporador(auth.uid())
-      AND public.user_has_empreendimento_access(auth.uid(), n.empreendimento_id)
-  )
-);
-```
+- Dados completos do cliente (nome, CPF, email, telefone)
+- Dados do incorporador que interagiu (nome, ID)
+- Unidades detalhadas (bloco, numero, valor tabela, valor proposta)
+- Valores financeiros (valor tabela, valor proposta, desconto %)
+- Dados do corretor e empreendimento
+- Motivo (no caso de contra proposta)
+- Link direto para a negociacao no sistema
 
-### Frontend - PortalIncorporadorPropostas.tsx
+### 2. Criar notificacoes internas apos interacao
 
-1. Adicionar hook `useNegociacaoCondicoesPagamento` ou buscar condicoes inline
-2. Expandir o card com secoes:
-   - **Dados do cliente**: nome, CPF, email, telefone
-   - **Unidades**: bloco + numero + valor de cada unidade vinculada
-   - **Valores**: valor tabela, valor proposta, desconto
-   - **Condicoes de pagamento**: tipo parcela, quantidade, valor, forma de pagamento
-3. Usar `formatarMoeda` do `@/lib/formatters` para consistencia
-4. Buscar condicoes de pagamento junto com os dados da negociacao (query adicional ou hook dedicado)
+Apos cada acao do incorporador (aprovar ou contra proposta), inserir registros na tabela `notificacoes` para:
 
-### Arquivos modificados
+- **Gestor do empreendimento** (campo `gestor_id` da negociacao ou busca via `get_gestor_empreendimento`)
+- **Corretor vinculado** (via `corretor_id` da negociacao, buscando `user_id` da tabela `corretores`)
+- **Todos os super_admins** (busca na tabela `user_roles`)
+
+Dados da notificacao:
+- `tipo`: `proposta_aprovada` ou `proposta_contra_proposta`
+- `titulo`: "Proposta PROP-00001 aprovada pelo incorporador" / "Contra proposta recebida - PROP-00001"
+- `mensagem`: Resumo com cliente, empreendimento e valor
+- `referencia_id`: ID da negociacao
+- `referencia_tipo`: `negociacao`
+
+### 3. Atualizar NotificacaoBell para novos tipos
+
+Adicionar icones para os novos tipos de notificacao (`proposta_aprovada`, `proposta_contra_proposta`) no mapa `TIPO_ICONS` do componente `NotificacaoBell.tsx`.
+
+### 4. RLS para escrita de notificacoes pelo incorporador
+
+Verificar se a policy de INSERT na tabela `notificacoes` permite que o incorporador insira registros para outros usuarios. Se nao, criar nova policy ou usar o service role via edge function. A abordagem mais simples: inserir via client-side usando o user autenticado (incorporador), criando policy que permita INSERT quando `is_incorporador(auth.uid())`.
+
+---
+
+## Sobre "onde a mensagem do incorporador sera exibida"
+
+A mensagem de contra proposta **ja aparece** no sistema interno:
+- No **PropostaDialog** (Kanban de negociacoes): alerta laranja destacado no topo do dialog quando a proposta esta em status `contra_proposta`
+- No **PropostaCard** do portal: texto do motivo exibido no card
+
+Com as notificacoes, o gestor e corretor serao **alertados** de que ha uma interacao pendente e poderao navegar diretamente para ver a mensagem.
+
+---
+
+## Arquivos impactados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| Migration SQL | 2 novas policies RLS (clientes + negociacao_condicoes_pagamento) |
-| `PortalIncorporadorPropostas.tsx` | Card expandido com todos os dados da proposta |
+| `src/hooks/useNegociacoes.ts` | Enriquecer payload dos webhooks + criar notificacoes apos aprovar/contra proposta |
+| `src/components/layout/NotificacaoBell.tsx` | Adicionar icones para novos tipos de notificacao |
+| Migration SQL (se necessario) | Policy de INSERT em `notificacoes` para incorporador |
+
