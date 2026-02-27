@@ -1,57 +1,28 @@
 
-# Duas alteracoes na tela de Atividades
+# Temperatura vazia com popover no displayMode
 
-## 1. Temperatura na tabela: exibir apenas o label selecionado (ou "-")
+## Problema
+Quando nao ha temperatura selecionada no `displayMode`, o componente exibe apenas um "-" estatico sem possibilidade de interacao. O usuario nao consegue definir uma temperatura a partir da tabela.
 
-### Problema atual
-Na listagem (tabela), a coluna "Temperatura" usa o `TemperaturaSelector` com 3 botoes (Frio, Morno, Quente) sempre visiveis, ocupando espaco e poluindo a tabela.
+## Solucao
 
-### Solucao
-Substituir o `TemperaturaSelector` na tabela por um display simples:
-- Se a atividade tem temperatura selecionada: exibir apenas o badge correspondente (ex: "Quente" com cor vermelha) como um botao clicavel que abre um pequeno popover/dropdown para alterar
-- Se nao tem temperatura: exibir apenas "-"
+### Arquivo: `src/components/atividades/TemperaturaSelector.tsx`
 
-**Alternativa mais simples**: manter o `TemperaturaSelector` mas adicionar uma prop `displayMode` que, quando ativa, mostra apenas o label selecionado (clicavel para expandir os 3 botoes) ou "-" quando vazio.
+Alterar o bloco `if (!selected)` (linhas 28-30) para, em vez de retornar um `<span>` simples, retornar o mesmo `Popover` usado quando ha valor selecionado, mas com o "-" como trigger.
 
-### Arquivo alterado
-- `src/components/atividades/TemperaturaSelector.tsx` -- adicionar prop `displayOnly` ou criar modo compacto que mostra so o valor selecionado
-- `src/pages/Atividades.tsx` (linha ~847) -- usar o novo modo
+O "-" sera um botao clicavel que abre o popover com as 3 opcoes de temperatura, permitindo ao usuario definir uma temperatura diretamente na tabela.
 
-### Comportamento
-- Sem selecao: renderiza `<span>-</span>`
-- Com selecao: renderiza apenas o badge ativo (ex: "Quente" em vermelho), clicavel para abrir os 3 botoes e permitir troca
+### Mudanca especifica (linhas 28-30)
 
----
-
-## 2. Cliente obrigatorio para atividades de negociacao
-
-### Problema atual
-O campo `cliente_id` no formulario de atividades e opcional (`z.string().optional()`). Para atividades do tipo negociacao (`TIPOS_NEGOCIACAO`: atendimento, negociacao, contra_proposta_atividade), o cliente deveria ser obrigatorio.
-
-### Solucao
-Adicionar validacao condicional no schema Zod (dentro do `superRefine` existente na linha 82) que verifica:
-- Se o tipo pertence a `TIPOS_NEGOCIACAO`, entao `cliente_id` deve estar preenchido
-- Caso contrario, permanece opcional
-
-Alem disso, exibir indicacao visual no label do campo Cliente (asterisco "*") quando o tipo for de negociacao.
-
-### Arquivos alterados
-- `src/components/atividades/AtividadeForm.tsx`:
-  - Adicionar validacao no `superRefine` do schema Zod para exigir `cliente_id` quando tipo esta em `TIPOS_NEGOCIACAO`
-  - Adicionar asterisco no label "Cliente" quando tipo for de negociacao
-  - O botao "+ Novo Cliente" ja existe e continuara disponivel
-
-### Detalhes tecnicos
-
-No `superRefine`:
-```typescript
-if (TIPOS_NEGOCIACAO.includes(values.tipo) && !values.cliente_id) {
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    path: ['cliente_id'],
-    message: 'Cliente é obrigatório para atividades de negociação',
-  });
+Substituir:
+```tsx
+if (!selected) {
+  return <span className="text-muted-foreground text-xs">-</span>;
 }
 ```
 
-Como o schema e definido fora do componente, sera necessario mover a validacao condicional para o `handleNextStep` / `handleSubmit` ou usar `superRefine` que ja tem acesso a todos os campos.
+Por um bloco que envolve o "-" em um `Popover` com as mesmas opcoes de selecao, reutilizando o mesmo `PopoverContent` ja existente abaixo.
+
+### Resultado
+- Sem temperatura: exibe "-" clicavel que abre popover com Frio/Morno/Quente
+- Com temperatura: comportamento atual mantido (badge clicavel com popover)
