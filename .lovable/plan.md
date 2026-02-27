@@ -1,48 +1,79 @@
 
-# Correcao: Negociacoes nao carregam + Propostas nao aparecem no Portal
+# Disponibilidade (Mapa + Lista) e Correção de Propostas no Portal do Incorporador
 
-## Problemas identificados
+## Problema 1: Proposta não aparece em /portal-incorporador/propostas
 
-### Problema 1 - Erro 400 em TODAS as queries de negociacoes
-A query `useNegociacoes` usa o join `gestor:profiles!gestor_id(id, full_name)`, mas a foreign key `negociacoes_gestor_id_fkey` aponta para `auth.users(id)` e nao para `profiles(id)`. O PostgREST nao consegue resolver esse caminho, retornando erro 400 em TODA listagem de negociacoes (kanban, portal, etc).
+A negociação `NEG-00024` está na etapa "Análise de Proposta" (`ed1b1eb4`), porém seu campo `status_proposta` é NULL. O portal filtra por `status_proposta = 'em_analise'`, então a proposta não aparece.
 
-### Problema 2 - Proposta sem status
-A negociacao criada tem `status_proposta = NULL`. O portal do incorporador filtra por `status_proposta = 'em_analise'`, entao mesmo corrigindo o erro 400, a proposta nao apareceria.
+**Causa raiz**: A correção anterior (setar `status_proposta` ao mover no kanban) só funciona para movimentações futuras. Para negociações já posicionadas na etapa antes da correção, o campo permanece NULL.
 
-## Solucao
+**Solução em duas frentes**:
 
-### 1. Migration: Alterar FK do gestor_id para apontar para profiles
-
+1. **Migration SQL**: Atualizar todas as negociações que estão na etapa "Análise de Proposta" mas com `status_proposta` NULL, setando para `em_analise`:
 ```sql
-ALTER TABLE public.negociacoes 
-  DROP CONSTRAINT negociacoes_gestor_id_fkey;
-
-ALTER TABLE public.negociacoes
-  ADD CONSTRAINT negociacoes_gestor_id_fkey 
-  FOREIGN KEY (gestor_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+UPDATE negociacoes
+SET status_proposta = 'em_analise'
+WHERE funil_etapa_id = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35'
+  AND (status_proposta IS NULL)
+  AND is_active = true;
 ```
 
-Isso permite que o PostgREST resolva `profiles!gestor_id` corretamente. Como `profiles.id` eh o mesmo UUID de `auth.users.id`, nao ha quebra de dados.
+2. **Ajuste no portal**: Além de filtrar por `status_proposta = 'em_analise'`, incluir como fallback negociações que estejam na etapa "Análise de Proposta" mesmo sem status definido. Isso torna o portal mais resiliente:
 
-### 2. Corrigir queries de negociacoes (useNegociacoes.ts)
+**Arquivo**: `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`
+- Alterar o filtro `propostasEmAnalise` para incluir negociações na etapa de análise OU com `status_proposta = 'em_analise'`
 
-Existem multiplas queries que usam `gestor:profiles!gestor_id`. Apos a migration, elas passarao a funcionar sem alteracao de codigo. Porem, vou verificar se ha queries redundantes (useNegociacoesKanban, etc) e garantir consistencia.
+---
 
-### 3. Fluxo de status_proposta na criacao
+## Feature 2: Mapa + Lista de Unidades na Disponibilidade
 
-Atualmente, ao criar uma negociacao, o `status_proposta` nao eh definido. Preciso verificar em que momento ele deveria ser setado para `em_analise`. Opcoes:
-- Setar automaticamente ao criar a negociacao quando ela chega na etapa "Analise de Proposta"
-- Ou, como solucao imediata, permitir que o portal mostre TODAS as negociacoes dos empreendimentos do incorporador (nao apenas as com status `em_analise`), e exibir o status de cada uma
+### Arquivo: `src/hooks/useIncorporadorEmpreendimentos.ts`
+- Adicionar campo `tipo` na interface `Empreendimento` e no select da query
 
-A abordagem mais correta: quando a negociacao for movida para a etapa "Analise de Proposta" (`ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35`), setar automaticamente `status_proposta = 'em_analise'`. Isso sera feito no hook `useMoverNegociacao`.
+### Arquivo: `src/pages/portal-incorporador/PortalIncorporadorDisponibilidade.tsx`
+Refatorar para exibir mapa e/ou lista de unidades conforme o tipo do empreendimento:
+
+- Se o empreendimento tem tipo `loteamento` ou `condominio`: exibir Tabs com "Mapa" e "Unidades"
+- Outros tipos (predio, comercial, etc): exibir apenas lista de unidades
+- A lista de unidades usa o hook `useUnidades` existente e exibe tabela readonly com colunas:
+  - Quadra/Bloco
+  - Unidade (numero)
+  - Status (badge colorido)
+  - Valor (formatado como moeda)
+- Filtro por bloco/quadra (select)
+- Badge com contagem de unidades disponíveis
+- Usa `ordenarUnidadesPorBlocoENumero` para ordenação consistente
+
+### Detalhes tecnicos
+
+Imports adicionais na pagina de disponibilidade:
+- `useUnidades` de `@/hooks/useUnidades`
+- `Tabs, TabsContent, TabsList, TabsTrigger` de `@/components/ui/tabs`
+- `Table, TableBody, TableCell, TableHead, TableHeader, TableRow` de `@/components/ui/table`
+- `Badge` de `@/components/ui/badge`
+- `formatarMoeda` de `@/lib/formatters`
+- `ordenarUnidadesPorBlocoENumero` de `@/lib/unidadeUtils`
+
+Estrutura da tabela (readonly, sem checkbox — incorporador apenas visualiza):
+
+```text
+| Quadra/Bloco | Unidade | Status     | Valor        |
+|--------------|---------|------------|--------------|
+| Quadra A     | 001     | Disponível | R$ 500.000   |
+| Quadra A     | 002     | Reservada  | R$ 500.000   |
+```
+
+---
 
 ## Arquivos modificados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| Migration SQL | Alterar FK gestor_id de auth.users para profiles |
-| `src/hooks/useNegociacoes.ts` | No `useMoverNegociacao`, setar `status_proposta = 'em_analise'` quando etapa destino for "Analise de Proposta" |
+| Migration SQL | Corrigir status_proposta das negociacoes existentes na etapa de analise |
+| `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` | Tornar filtro de propostas mais resiliente |
+| `src/hooks/useIncorporadorEmpreendimentos.ts` | Adicionar campo `tipo` |
+| `src/pages/portal-incorporador/PortalIncorporadorDisponibilidade.tsx` | Mapa condicional + lista de unidades |
 
 ## Resultado esperado
-- Todas as queries de negociacoes voltam a funcionar (kanban, listagem, portal)
-- Ao mover negociacao para "Analise de Proposta", ela aparece automaticamente no portal do incorporador
+- Proposta NEG-00024 (e outras no mesmo estado) aparece imediatamente no portal do incorporador
+- Incorporador pode ver o mapa quando o empreendimento suporta, e/ou a lista completa de unidades
