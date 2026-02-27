@@ -5850,6 +5850,13 @@ export type Database = {
       generate_negociacao_proposta_numero: { Args: never; Returns: string }
       generate_signature_token: { Args: never; Returns: string }
       gerar_hash_versao: { Args: { conteudo: string }; Returns: string }
+      get_all_sequence_values: {
+        Args: never
+        Returns: {
+          last_value: number
+          seq_name: string
+        }[]
+      }
       get_gestor_empreendimento: { Args: { emp_id: string }; Returns: string }
       get_module_scope: {
         Args: { _module_name: string; _user_id: string }
