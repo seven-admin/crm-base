@@ -62,7 +62,7 @@ type WebhookFormData = z.infer<typeof webhookFormSchema>;
 function CadastroSettings() {
   const { data: configCpf, isLoading } = useConfiguracao('validar_cpf_clientes');
   const updateConfig = useUpdateConfiguracao();
-  const validarCpf = configCpf?.valor !== 'false';
+  const exigirCpf = configCpf?.valor !== 'false';
 
   const handleToggle = (checked: boolean) => {
     updateConfig.mutate(
@@ -84,13 +84,13 @@ function CadastroSettings() {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <p className="font-medium text-foreground">Validar CPF no cadastro de clientes</p>
+              <p className="font-medium text-foreground">Exigir CPF no cadastro de clientes</p>
               <p className="text-sm text-muted-foreground">
-                Quando ativado, o sistema valida se o CPF informado é válido antes de salvar o cadastro.
+                Quando ativado, o CPF será obrigatório no cadastro. A validação de formato será feita sempre que um CPF for informado.
               </p>
             </div>
             <Switch
-              checked={validarCpf}
+              checked={exigirCpf}
               onCheckedChange={handleToggle}
               disabled={updateConfig.isPending}
             />
