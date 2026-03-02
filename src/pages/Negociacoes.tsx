@@ -71,11 +71,12 @@ const Funil = () => {
   const kanbanFilters = useMemo(() => ({
     empreendimento_id: filters.empreendimento_id,
     corretor_id: filters.corretor_id,
+    gestor_id: filters.gestor_id,
     funil_etapa_id: filters.funil_etapa_id,
     status_proposta: filters.status_proposta as any,
     temperatura: filters.temperatura as any,
     mes: filters.mes,
-  }), [filters.empreendimento_id, filters.corretor_id, filters.funil_etapa_id, filters.status_proposta, filters.temperatura, filters.mes]);
+  }), [filters.empreendimento_id, filters.corretor_id, filters.gestor_id, filters.funil_etapa_id, filters.status_proposta, filters.temperatura, filters.mes]);
 
   const { data: negociacoesKanban = [], isLoading: isLoadingKanban } = useNegociacoesKanban(
     kanbanFilters,
