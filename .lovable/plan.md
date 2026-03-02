@@ -1,63 +1,56 @@
 
-# Correcao do cadastro de metas e graficos
 
-## Problema identificado
+# Correcao do bug de categoria e reversao dos dados
 
-### Erro ao salvar metas (causa raiz)
-O upsert em `useCreateMeta` e `useCopiarMetas` usa `onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per'`, que referencia um **indice unico com expressoes COALESCE**. O PostgREST/Supabase JS **nao suporta** upsert em indices com expressoes -- so funciona com constraints simples. Isso causa erro 400/409 ao tentar salvar qualquer meta.
+## Problema confirmado
 
-Alem disso, existe uma constraint duplicada `metas_comerciais_unique_key` (sem `gestor_id` e sem `tipo`), o que pode gerar conflitos inesperados.
+7 atividades tiveram a categoria alterada de **imobiliaria** para **cliente** automaticamente em 02/03/2026, sem intencao dos usuarios (Tania Moraes, Carla Paglia, Lucas). A causa e o `useEffect` na linha 183-191 de `AtividadeForm.tsx` que sobrescreve a categoria sempre que o tipo pertence a `TIPOS_CATEGORIA_CLIENTE`, inclusive durante edicao.
 
-### Graficos vazios
-Com apenas 1 registro de meta no banco (semanal, para um empreendimento especifico), os hooks de dashboard (`useHistoricoMetas`, `useMetasPorMes`) retornam vazio para metas mensais/gerais, exibindo "Sem dados" nos graficos.
+IDs afetados (confirmados via `atividade_historico`):
+- `d4595310-376c-4325-8710-d098e7bfa2e4`
+- `a4c286d8-a326-4a28-9008-b0f5beb01c42`
+- `aab4c256-82ee-42f3-aa17-21b99abfdaaa`
+- `a5b5bc77-9298-4901-995e-45b6b407fd5c`
+- `7e084075-5316-4d7d-932f-1ea72b50f454`
+- `1d8960b2-c3c0-47c3-a23b-b01693caf1a2`
+- `bc2af93c-33ef-49fb-b0e1-297a8fdae27f`
 
-## Plano de correcao
+## Plano
 
-### Etapa 1 -- Corrigir constraint unica no banco (migration SQL)
-- Remover o indice com expressao `metas_comerciais_unique_comp_emp_cor_ges_per`
-- Remover a constraint legada `metas_comerciais_unique_key` (que nao inclui `gestor_id` nem `tipo`)
-- Criar nova constraint **real** (nao indice) que funcione com PostgREST:
+### 1. Corrigir o bug no formulario
+**Arquivo:** `src/components/atividades/AtividadeForm.tsx` (linhas 183-191)
 
-```sql
--- Remover indice com expressao (incompativel com upsert)
-DROP INDEX IF EXISTS metas_comerciais_unique_comp_emp_cor_ges_per;
+Alterar o `useEffect` para que o auto-set de categoria "cliente" so ocorra na **criacao** (quando nao ha `initialData`):
 
--- Remover constraint legada incompleta
-ALTER TABLE metas_comerciais DROP CONSTRAINT IF EXISTS metas_comerciais_unique_key;
-
--- Adicionar colunas com defaults para NULLs, permitindo constraint simples:
--- Abordagem: usar constraint parcial nao e possivel com upsert.
--- Solucao: mudar a logica do frontend para fazer select + insert/update manual
+```typescript
+useEffect(() => {
+  if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
+    form.setValue('subtipo', undefined);
+  }
+  // Auto-set categoria "cliente" APENAS na criacao, nao na edicao
+  if (!initialData && TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual)) {
+    form.setValue('categoria', 'cliente');
+  }
+}, [tipoAtual, form, initialData]);
 ```
 
-**Problema:** colunas nullable (`empreendimento_id`, `corretor_id`, `gestor_id`) fazem com que `NULL != NULL` em constraints UNIQUE, impedindo deteccao de duplicatas. A unica solucao confiavel e **abandonar o upsert** e fazer select-then-insert/update no codigo.
+### 2. Reverter as 7 atividades no banco (migration SQL)
 
-### Etapa 2 -- Alterar `useCreateMeta` para select + insert/update
-**Arquivo:** `src/hooks/useMetasComerciais.ts`
+```sql
+UPDATE atividades
+SET categoria = 'imobiliaria'
+WHERE id IN (
+  'd4595310-376c-4325-8710-d098e7bfa2e4',
+  'a4c286d8-a326-4a28-9008-b0f5beb01c42',
+  'aab4c256-82ee-42f3-aa17-21b99abfdaaa',
+  'a5b5bc77-9298-4901-995e-45b6b407fd5c',
+  '7e084075-5316-4d7d-932f-1ea72b50f454',
+  '1d8960b2-c3c0-47c3-a23b-b01693caf1a2',
+  'bc2af93c-33ef-49fb-b0e1-297a8fdae27f'
+);
+```
 
-Mudanca na `mutationFn`:
-1. Fazer um `select` filtrando por `competencia`, `periodicidade`, `empreendimento_id` (ou `is null`), `corretor_id` (ou `is null`), `gestor_id` (ou `is null`) e `tipo`
-2. Se encontrar registro: fazer `update` no id encontrado
-3. Se nao encontrar: fazer `insert`
-4. Remover o `upsert` com `onConflict`
+### Resultado esperado
+- Bug corrigido: editar uma atividade existente nao sobrescreve mais a categoria
+- Dados restaurados: as 7 atividades voltam a ter categoria "imobiliaria"
 
-Mesma logica para `useCopiarMetas`.
-
-### Etapa 3 -- Limpar indices/constraints duplicados (migration SQL)
-- Remover `metas_comerciais_unique_comp_emp_cor_ges_per` (indice com expressao)
-- Remover `metas_comerciais_unique_key` (constraint legada sem gestor/tipo)
-- Manter apenas a PK
-
-### Etapa 4 -- Revisar graficos
-Os graficos ja funcionam corretamente em termos de codigo. O problema e ausencia de dados. Com o cadastro corrigido, ao criar metas mensais os graficos (`useHistoricoMetas`, `useMetasVsRealizadoPorEmpreendimento`) passarao a exibir dados automaticamente.
-
-Nao ha alteracoes necessarias nos componentes de graficos.
-
-## Resumo de arquivos impactados
-- `src/hooks/useMetasComerciais.ts`: refatorar `useCreateMeta` e `useCopiarMetas` (upsert -> select+insert/update)
-- Nova migration SQL: remover indices/constraints incompativeis
-
-## Resultado esperado
-- Cadastro de metas funciona sem erro para qualquer combinacao de escopo (geral, empreendimento, gestor)
-- Metas duplicadas sao atualizadas corretamente (comportamento de upsert manual)
-- Graficos exibem dados assim que metas mensais forem cadastradas
