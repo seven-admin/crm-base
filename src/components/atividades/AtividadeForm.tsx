@@ -785,6 +785,24 @@ export function AtividadeForm(props: AtividadeFormProps) {
               }}
             />
 
+            {/* Cliente Direto toggle */}
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Cliente Direto</Label>
+                <p className="text-xs text-muted-foreground">Sem imobiliária/corretor</p>
+              </div>
+              <Switch
+                checked={clienteDireto}
+                onCheckedChange={(checked) => {
+                  setClienteDireto(checked);
+                  if (checked) {
+                    form.setValue('corretor_id', undefined);
+                    form.setValue('imobiliaria_id', undefined);
+                  }
+                }}
+              />
+            </div>
+
             {/* Empreendimento */}
             <FormField
               control={form.control}
@@ -928,24 +946,6 @@ export function AtividadeForm(props: AtividadeFormProps) {
                   )}
                 />
               )}
-            </div>
-
-            {/* Cliente Direto toggle */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Cliente Direto</Label>
-                <p className="text-xs text-muted-foreground">Sem imobiliária/corretor</p>
-              </div>
-              <Switch
-                checked={clienteDireto}
-                onCheckedChange={(checked) => {
-                  setClienteDireto(checked);
-                  if (checked) {
-                    form.setValue('corretor_id', undefined);
-                    form.setValue('imobiliaria_id', undefined);
-                  }
-                }}
-              />
             </div>
 
             {/* Botões Voltar + Próximo/Salvar */}
