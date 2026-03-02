@@ -52,8 +52,8 @@ function applyAtividadesFilters(query: any, filters?: AtividadeFilters) {
   }
   if (filters?.cliente_id) q = q.eq('cliente_id', filters.cliente_id);
   // Filtrar por período: atividades que se sobrepõem ao intervalo solicitado
-  if (filters?.data_inicio) q = q.lte('data_inicio', filters.data_inicio);
-  if (filters?.data_fim) q = q.gte('data_fim', filters.data_fim);
+  if (filters?.data_inicio) q = q.gte('data_fim', filters.data_inicio);
+  if (filters?.data_fim) q = q.lte('data_inicio', filters.data_fim);
   if (filters?.temperatura_cliente) q = q.eq('temperatura_cliente', filters.temperatura_cliente);
   return q;
 }

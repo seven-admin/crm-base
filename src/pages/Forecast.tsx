@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
+import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
@@ -34,6 +35,7 @@ const CATEGORIAS: AtividadeCategoria[] = ['seven', 'incorporadora', 'imobiliaria
 export default function Forecast() {
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
+  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
   const { data: gestores } = useGestoresProduto();
 
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
@@ -58,6 +60,7 @@ export default function Forecast() {
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
               dados={dados?.[cat]}
+              onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup })}
             />
           );
         })
@@ -211,6 +214,16 @@ export default function Forecast() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ForecastBatchStatusDialog
+        open={batchDialog.open}
+        onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
+        categoria={batchDialog.categoria}
+        statusGroup={batchDialog.statusGroup}
+        gestorId={gestorId}
+        dataInicio={dataInicio}
+        dataFim={dataFim}
+      />
     </MainLayout>
   );
 }
