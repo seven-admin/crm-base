@@ -1,47 +1,24 @@
 
-# Renomear "Imobiliária" e adicionar opcao "Cliente Direto" no formulario de atividades
 
-## Contexto
+# Mover "Cliente Direto" e renomear "Imobiliária" na categoria
 
-O formulario de atividades (`AtividadeForm.tsx`) tem 3 etapas no wizard:
-1. Configuracao (tipo, categoria, subtipo)
-2. Detalhes (titulo, cliente, datas, observacoes)
-3. Responsaveis (corretor e imobiliaria)
+## Problema 1: "Imobiliária" ainda aparece nos botoes de categoria (Etapa 1)
 
-O usuario quer:
-- Renomear "Imobiliaria" para "Imobiliarias e Corretores" (solicitacao anterior)
-- Adicionar uma opcao "Cliente Direto" que, quando ativada, pula a etapa 3 e submete direto da etapa 2
+O label "Imobiliária" nos botoes de categoria vem de `ATIVIDADE_CATEGORIA_LABELS` no arquivo de tipos. Precisa ser renomeado para "Imob. e Corretores" (abreviado para caber no grid de 4 colunas).
 
-## Implementacao
+**Arquivo:** `src/types/atividades.types.ts`
+- Alterar `imobiliaria: 'Imobiliária'` para `imobiliaria: 'Imob. e Corretores'`
 
-### Arquivo: `src/components/atividades/AtividadeForm.tsx`
+## Problema 2: "Cliente Direto" deve ficar logo abaixo do seletor de cliente
 
-**1. Renomear label e placeholder do campo imobiliaria (etapa 3)**
-- Label: `Imobiliária (opcional)` → `Imobiliárias e Corretores (opcional)`
-- Placeholder: `Selecione a imobiliária` → `Selecione`
+Atualmente o toggle "Cliente Direto" esta no final da Etapa 2 (linha 933). Precisa ser movido para logo apos o seletor de cliente e o dialog de novo cliente (apos linha 786).
 
-**2. Adicionar estado `clienteDirecto`**
-- Novo estado: `const [clienteDireto, setClienteDireto] = useState(false)`
-- Ao editar atividade existente (`initialData`), inicializar como `true` se `corretor_id` e `imobiliaria_id` forem ambos nulos
+**Arquivo:** `src/components/atividades/AtividadeForm.tsx`
+- Remover o bloco "Cliente Direto" da posicao atual (linhas 933-949)
+- Inserir o mesmo bloco logo apos o `NovoClienteRapidoDialog` (apos linha 786), antes do campo "Empreendimento"
 
-**3. Adicionar toggle "Cliente Direto" no final da etapa 2**
-- Um `Switch` com label "Cliente Direto (sem imobiliaria/corretor)"
-- Quando ativado, limpa `corretor_id` e `imobiliaria_id` do formulario
+## Resumo
 
-**4. Alterar navegacao da etapa 2**
-- Se `clienteDireto` estiver ativo, o botao "Proximo" vira "Salvar" e submete o formulario diretamente (pulando etapa 3)
-- Se `clienteDireto` estiver desativado, navega normalmente para etapa 3
+- `src/types/atividades.types.ts` - renomear label da categoria imobiliaria
+- `src/components/atividades/AtividadeForm.tsx` - mover toggle "Cliente Direto" para baixo do seletor de cliente
 
-**5. Ocultar etapa 3 no indicador de passos**
-- Quando `clienteDireto` estiver ativo, esconder o indicador do passo 3 (circulo "3 - Responsaveis") para refletir que o wizard tem apenas 2 etapas
-
-**6. Limpar campos ao ativar "Cliente Direto"**
-- Ao marcar o switch, executar `form.setValue('corretor_id', undefined)` e `form.setValue('imobiliaria_id', undefined)`
-
-## Resumo de mudancas
-
-- **1 arquivo**: `src/components/atividades/AtividadeForm.tsx`
-  - Renomear label/placeholder do campo imobiliaria
-  - Adicionar estado `clienteDireto` + switch na etapa 2
-  - Condicionar navegacao (pular etapa 3 ou submeter direto)
-  - Esconder indicador da etapa 3 quando cliente direto ativo
