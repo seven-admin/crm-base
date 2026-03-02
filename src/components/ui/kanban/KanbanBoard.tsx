@@ -48,7 +48,7 @@ export function KanbanBoard<T>({
     return (
       <div className="flex gap-4 p-1 pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="w-80 shrink-0 rounded-lg border bg-muted/30 p-3">
+          <div key={column.id} className="w-[340px] shrink-0 rounded-lg border bg-muted/30 p-3">
             <Skeleton className="h-5 w-24 mb-4" />
             <div className="space-y-2">
               <Skeleton className="h-24 w-full" />
