@@ -285,27 +285,65 @@ export function useCreateMeta() {
       meta_propostas?: number;
       tipo?: string;
     }) => {
-      const { data: result, error } = await supabase
+      // Select-then-insert/update para evitar problemas com upsert em colunas nullable
+      const periodicidade = data.periodicidade || 'mensal';
+      const tipo = data.tipo || 'comercial';
+      const empId = data.empreendimento_id || null;
+      const corId = data.corretor_id || null;
+      const gesId = data.gestor_id || null;
+
+      let findQuery = supabase
         .from('metas_comerciais' as any)
-        .upsert({
-          competencia: data.competencia,
-          periodicidade: data.periodicidade || 'mensal',
-          empreendimento_id: data.empreendimento_id || null,
-          corretor_id: data.corretor_id || null,
-          gestor_id: data.gestor_id || null,
-          meta_valor: data.meta_valor,
-          meta_unidades: data.meta_unidades,
-          meta_visitas: data.meta_visitas || 0,
-          meta_atendimentos: data.meta_atendimentos || 0,
-          meta_treinamentos: data.meta_treinamentos || 0,
-          meta_propostas: data.meta_propostas || 0,
-          tipo: data.tipo || 'comercial',
-        }, {
-          onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per',
-        })
-        .select()
-        .single();
-      
+        .select('id')
+        .eq('competencia', data.competencia)
+        .eq('periodicidade', periodicidade);
+
+      if (empId) findQuery = findQuery.eq('empreendimento_id', empId);
+      else findQuery = findQuery.is('empreendimento_id', null);
+      if (corId) findQuery = findQuery.eq('corretor_id', corId);
+      else findQuery = findQuery.is('corretor_id', null);
+      if (gesId) findQuery = findQuery.eq('gestor_id', gesId);
+      else findQuery = findQuery.is('gestor_id', null);
+
+      const { data: existing } = await findQuery.maybeSingle() as any;
+
+      const payload = {
+        competencia: data.competencia,
+        periodicidade,
+        empreendimento_id: empId,
+        corretor_id: corId,
+        gestor_id: gesId,
+        meta_valor: data.meta_valor,
+        meta_unidades: data.meta_unidades,
+        meta_visitas: data.meta_visitas || 0,
+        meta_atendimentos: data.meta_atendimentos || 0,
+        meta_treinamentos: data.meta_treinamentos || 0,
+        meta_propostas: data.meta_propostas || 0,
+        tipo,
+      };
+
+      let result: any;
+      let error: any;
+
+      if (existing?.id) {
+        const resp = await supabase
+          .from('metas_comerciais' as any)
+          .update(payload)
+          .eq('id', existing.id)
+          .select()
+          .single();
+        result = resp.data;
+        error = resp.error;
+      } else {
+        const resp = await supabase
+          .from('metas_comerciais' as any)
+          .insert(payload)
+          .select()
+          .single();
+        result = resp.data;
+        error = resp.error;
+      }
+
       if (error) throw error;
 
       const criador = await getUsuarioLogado();
@@ -503,24 +541,52 @@ export function useCopiarMetas() {
       const typedMetas = metasOrigem as unknown as MetaComercial[];
       
       for (const meta of typedMetas) {
-        const { error } = await supabase
+        const periodicidade = (meta as any).periodicidade || 'mensal';
+        const empId = meta.empreendimento_id || null;
+        const corId = meta.corretor_id || null;
+        const gesId = (meta as any).gestor_id || null;
+
+        let findQuery = supabase
           .from('metas_comerciais' as any)
-          .upsert({
-            competencia: destinoCompetencia,
-            periodicidade: (meta as any).periodicidade || 'mensal',
-            empreendimento_id: meta.empreendimento_id,
-            corretor_id: meta.corretor_id,
-            meta_valor: meta.meta_valor,
-            meta_unidades: meta.meta_unidades,
-            meta_visitas: meta.meta_visitas || 0,
-            meta_atendimentos: meta.meta_atendimentos || 0,
-            meta_treinamentos: meta.meta_treinamentos || 0,
-            meta_propostas: meta.meta_propostas || 0,
-          }, {
-            onConflict: 'metas_comerciais_unique_comp_emp_cor_ges_per',
-          });
-        
-        if (error) throw error;
+          .select('id')
+          .eq('competencia', destinoCompetencia)
+          .eq('periodicidade', periodicidade);
+
+        if (empId) findQuery = findQuery.eq('empreendimento_id', empId);
+        else findQuery = findQuery.is('empreendimento_id', null);
+        if (corId) findQuery = findQuery.eq('corretor_id', corId);
+        else findQuery = findQuery.is('corretor_id', null);
+        if (gesId) findQuery = findQuery.eq('gestor_id', gesId);
+        else findQuery = findQuery.is('gestor_id', null);
+
+        const { data: existing } = await findQuery.maybeSingle() as any;
+
+        const payload = {
+          competencia: destinoCompetencia,
+          periodicidade,
+          empreendimento_id: empId,
+          corretor_id: corId,
+          gestor_id: gesId,
+          meta_valor: meta.meta_valor,
+          meta_unidades: meta.meta_unidades,
+          meta_visitas: meta.meta_visitas || 0,
+          meta_atendimentos: meta.meta_atendimentos || 0,
+          meta_treinamentos: meta.meta_treinamentos || 0,
+          meta_propostas: meta.meta_propostas || 0,
+        };
+
+        if (existing?.id) {
+          const { error } = await supabase
+            .from('metas_comerciais' as any)
+            .update(payload)
+            .eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('metas_comerciais' as any)
+            .insert(payload);
+          if (error) throw error;
+        }
       }
       
       return typedMetas.length;
