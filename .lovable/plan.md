@@ -1,56 +1,74 @@
 
+# Correcao da exibicao de Metas no Dashboard
 
-# Correcao do bug de categoria e reversao dos dados
+## Problema identificado
 
-## Problema confirmado
+As metas criadas nao aparecem no dashboard por **3 razoes distintas**:
 
-7 atividades tiveram a categoria alterada de **imobiliaria** para **cliente** automaticamente em 02/03/2026, sem intencao dos usuarios (Tania Moraes, Carla Paglia, Lucas). A causa e o `useEffect` na linha 183-191 de `AtividadeForm.tsx` que sobrescreve a categoria sempre que o tipo pertence a `TIPOS_CATEGORIA_CLIENTE`, inclusive durante edicao.
+### 1. Filtro de periodicidade incompativel
+O hook `useMetasPorMes` filtra por `periodicidade = 'mensal'` (valor padrao), mas as metas criadas sao **semanais**. O dashboard nunca passa o parametro de periodicidade, entao sempre busca metas mensais.
 
-IDs afetados (confirmados via `atividade_historico`):
-- `d4595310-376c-4325-8710-d098e7bfa2e4`
-- `a4c286d8-a326-4a28-9008-b0f5beb01c42`
-- `aab4c256-82ee-42f3-aa17-21b99abfdaaa`
-- `a5b5bc77-9298-4901-995e-45b6b407fd5c`
-- `7e084075-5316-4d7d-932f-1ea72b50f454`
-- `1d8960b2-c3c0-47c3-a23b-b01693caf1a2`
-- `bc2af93c-33ef-49fb-b0e1-297a8fdae27f`
+### 2. Filtro de competencia incompativel para metas semanais
+Para metas mensais, o hook converte a data para `startOfMonth` (ex: `2026-03-01`). Metas semanais tem competencia no dia da segunda-feira (ex: `2026-03-02`), entao nunca sao encontradas pelo filtro de igualdade.
 
-## Plano
+### 3. Grafico historico ignora metas de atividades
+O hook `useHistoricoMetas` verifica `resultado.some(r => r.meta > 0)` olhando apenas `meta_valor`. Metas do tipo "atividades" tem `meta_valor = 0` (usam `meta_visitas`, `meta_atendimentos` etc.), entao o grafico retorna vazio.
 
-### 1. Corrigir o bug no formulario
-**Arquivo:** `src/components/atividades/AtividadeForm.tsx` (linhas 183-191)
+**Dados atuais no banco:**
+- Meta `b7b19c6e`: semanal, empreendimento `156f9324`, tipo atividades, meta_valor=0, meta_visitas=4, meta_atendimentos=10
+- Meta `014bd07e`: semanal, empreendimento `f2208f56`, tipo comercial, meta_valor=0, meta_unidades=4, meta_atendimentos=20
 
-Alterar o `useEffect` para que o auto-set de categoria "cliente" so ocorra na **criacao** (quando nao ha `initialData`):
+## Plano de correcao
+
+### 1. Refatorar `useMetasPorMes` para suportar ambas periodicidades
+
+Alterar o hook para buscar **todas as metas do mes** (tanto mensais quanto semanais que caem dentro do mes), em vez de filtrar por periodicidade exata.
+
+**Arquivo:** `src/hooks/useMetasComerciais.ts`
+
+Mudanca: em vez de `eq('competencia', competenciaStr)` com `eq('periodicidade', periodicidade)`, usar `gte/lte` para buscar metas com competencia dentro do mes selecionado e agregar os valores.
 
 ```typescript
-useEffect(() => {
-  if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
-    form.setValue('subtipo', undefined);
-  }
-  // Auto-set categoria "cliente" APENAS na criacao, nao na edicao
-  if (!initialData && TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual)) {
-    form.setValue('categoria', 'cliente');
-  }
-}, [tipoAtual, form, initialData]);
+// Buscar todas metas do mes (mensais + semanais)
+const inicio = format(startOfMonth(competencia), 'yyyy-MM-dd');
+const fim = format(endOfMonth(competencia), 'yyyy-MM-dd');
+
+let query = supabase
+  .from('metas_comerciais')
+  .select('*')
+  .gte('competencia', inicio)
+  .lte('competencia', fim);
 ```
 
-### 2. Reverter as 7 atividades no banco (migration SQL)
+Depois agregar os valores de todas as metas encontradas (somando meta_valor, meta_unidades, meta_visitas etc.) para apresentar um consolidado no dashboard.
 
-```sql
-UPDATE atividades
-SET categoria = 'imobiliaria'
-WHERE id IN (
-  'd4595310-376c-4325-8710-d098e7bfa2e4',
-  'a4c286d8-a326-4a28-9008-b0f5beb01c42',
-  'aab4c256-82ee-42f3-aa17-21b99abfdaaa',
-  'a5b5bc77-9298-4901-995e-45b6b407fd5c',
-  '7e084075-5316-4d7d-932f-1ea72b50f454',
-  '1d8960b2-c3c0-47c3-a23b-b01693caf1a2',
-  'bc2af93c-33ef-49fb-b0e1-297a8fdae27f'
-);
+### 2. Corrigir `useHistoricoMetas` para considerar metas de atividades
+
+Alterar a condicao de retorno vazio para verificar **qualquer** campo de meta, nao apenas `meta_valor`:
+
+```typescript
+const temAlgumaMeta = resultado.some(r => r.meta > 0 || r.metaVisitas > 0 || r.metaAtendimentos > 0);
 ```
 
-### Resultado esperado
-- Bug corrigido: editar uma atividade existente nao sobrescreve mais a categoria
-- Dados restaurados: as 7 atividades voltam a ter categoria "imobiliaria"
+Ou, mais simples: retornar os dados sempre que existam metas no periodo, sem filtrar por `meta_valor > 0`.
 
+### 3. Atualizar os KPIs do dashboard para metas de atividades
+
+Atualmente os cards mostram apenas "Meta Valor" e "Meta Unidades". Para metas do tipo "atividades", o dashboard deve tambem exibir informacoes de visitas e atendimentos quando relevante.
+
+Adicionar logica condicional nos cards KPI:
+- Se a meta consolidada tem `meta_valor > 0`: exibir VGV e unidades (como esta hoje)
+- Se a meta consolidada tem `meta_visitas > 0` ou `meta_atendimentos > 0`: exibir tambem esses indicadores
+
+### 4. Ajustar `useMetasVsRealizadoPorEmpreendimento`
+
+Mesmo problema: filtra por `competencia` exata (startOfMonth). Alterar para usar range `gte/lte` do mes, igual ao item 1.
+
+## Resumo das alteracoes
+
+| Arquivo | Mudanca |
+|---------|---------|
+| `src/hooks/useMetasComerciais.ts` | Refatorar `useMetasPorMes` para buscar metas no range do mes e agregar |
+| `src/hooks/useMetasComerciais.ts` | Corrigir `useHistoricoMetas` para considerar metas de atividades |
+| `src/hooks/useMetasComerciais.ts` | Ajustar `useMetasVsRealizadoPorEmpreendimento` para range de datas |
+| `src/pages/MetasComerciais.tsx` | Adicionar exibicao de KPIs de atividades (visitas, atendimentos) quando aplicavel |
