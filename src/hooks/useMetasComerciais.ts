@@ -39,17 +39,18 @@ const ETAPA_PESOS: Record<string, number> = {
   perdido: 0,
 };
 
-export function useMetasPorMes(competencia: Date, empreendimentoId?: string, periodicidade: string = 'mensal') {
+export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
   return useQuery({
-    queryKey: ['metas-comerciais', format(competencia, 'yyyy-MM-dd'), empreendimentoId, periodicidade],
+    queryKey: ['metas-comerciais', format(competencia, 'yyyy-MM'), empreendimentoId],
     queryFn: async () => {
-      const competenciaStr = format(startOfMonth(competencia), 'yyyy-MM-dd');
+      const inicio = format(startOfMonth(competencia), 'yyyy-MM-dd');
+      const fim = format(endOfMonth(competencia), 'yyyy-MM-dd');
       
       let query = supabase
         .from('metas_comerciais' as any)
         .select('*')
-        .eq('competencia', competenciaStr)
-        .eq('periodicidade', periodicidade);
+        .gte('competencia', inicio)
+        .lte('competencia', fim);
       
       if (empreendimentoId) {
         query = query.eq('empreendimento_id', empreendimentoId);
@@ -57,10 +58,25 @@ export function useMetasPorMes(competencia: Date, empreendimentoId?: string, per
         query = query.is('empreendimento_id', null);
       }
       
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await query;
       
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as unknown as MetaComercial | null;
+      if (error) throw error;
+      
+      const metas = (data || []) as unknown as MetaComercial[];
+      if (metas.length === 0) return null;
+      
+      // Agregar todas as metas do mês (mensais + semanais)
+      const consolidado: MetaComercial = {
+        ...metas[0],
+        meta_valor: metas.reduce((sum, m) => sum + (m.meta_valor || 0), 0),
+        meta_unidades: metas.reduce((sum, m) => sum + (m.meta_unidades || 0), 0),
+        meta_visitas: metas.reduce((sum, m) => sum + (m.meta_visitas || 0), 0),
+        meta_atendimentos: metas.reduce((sum, m) => sum + (m.meta_atendimentos || 0), 0),
+        meta_treinamentos: metas.reduce((sum, m) => sum + (m.meta_treinamentos || 0), 0),
+        meta_propostas: metas.reduce((sum, m) => sum + (m.meta_propostas || 0), 0),
+      };
+      
+      return consolidado;
     },
   });
 }
@@ -198,7 +214,7 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
       // Bulk query 1: all metas in the period
       let metaQuery = supabase
         .from('metas_comerciais' as any)
-        .select('competencia, meta_valor')
+        .select('competencia, meta_valor, meta_visitas, meta_atendimentos')
         .gte('competencia', inicioPeríodo)
         .lte('competencia', fimPeríodo);
       
@@ -230,9 +246,13 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
 
       // Build lookup maps
       const metasPorMes = new Map<string, number>();
+      const metasVisitasPorMes = new Map<string, number>();
+      const metasAtendimentosPorMes = new Map<string, number>();
       (todasMetas || []).forEach((m: any) => {
         const key = format(new Date(m.competencia), 'yyyy-MM');
         metasPorMes.set(key, (metasPorMes.get(key) || 0) + (m.meta_valor || 0));
+        metasVisitasPorMes.set(key, (metasVisitasPorMes.get(key) || 0) + (m.meta_visitas || 0));
+        metasAtendimentosPorMes.set(key, (metasAtendimentosPorMes.get(key) || 0) + (m.meta_atendimentos || 0));
       });
 
       const vendasPorMes = new Map<string, number>();
@@ -247,6 +267,8 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
         mesLabel: string;
         meta: number;
         realizado: number;
+        metaVisitas: number;
+        metaAtendimentos: number;
       }> = [];
 
       for (let i = meses - 1; i >= 0; i--) {
@@ -257,11 +279,13 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
           mesLabel: format(data, 'MMM/yy'),
           meta: metasPorMes.get(mesKey) || 0,
           realizado: vendasPorMes.get(mesKey) || 0,
+          metaVisitas: metasVisitasPorMes.get(mesKey) || 0,
+          metaAtendimentos: metasAtendimentosPorMes.get(mesKey) || 0,
         });
       }
       
       // Se nenhum mês tem meta cadastrada, retornar vazio
-      const temAlgumaMeta = resultado.some(r => r.meta > 0);
+      const temAlgumaMeta = resultado.some(r => r.meta > 0 || r.metaVisitas > 0 || r.metaAtendimentos > 0);
       return temAlgumaMeta ? resultado : [];
     },
   });
@@ -456,7 +480,8 @@ export function useMetasVsRealizadoPorEmpreendimento(competencia: Date) {
   return useQuery({
     queryKey: ['metas-vs-realizado-empreendimento', format(competencia, 'yyyy-MM')],
     queryFn: async () => {
-      const competenciaStr = format(startOfMonth(competencia), 'yyyy-MM-dd');
+      const inicioMes = format(startOfMonth(competencia), 'yyyy-MM-dd');
+      const fimMes = format(endOfMonth(competencia), 'yyyy-MM-dd');
       const inicio = startOfMonth(competencia);
       const fim = endOfMonth(competencia);
       
@@ -469,7 +494,8 @@ export function useMetasVsRealizadoPorEmpreendimento(competencia: Date) {
         supabase.from('empreendimentos').select('id, nome').eq('is_active', true),
         supabase.from('metas_comerciais' as any)
           .select('empreendimento_id, meta_valor')
-          .eq('competencia', competenciaStr)
+          .gte('competencia', inicioMes)
+          .lte('competencia', fimMes)
           .not('empreendimento_id', 'is', null),
         (async () => {
           const historicosIds = await getClientesHistoricosIds();

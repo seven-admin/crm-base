@@ -346,10 +346,27 @@ const MetasComerciais = () => {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : meta ? (
                   <>
-                    <div className="text-2xl font-bold">{formatCurrency(meta.meta_valor)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {meta.meta_unidades} unidades
-                    </p>
+                    {meta.meta_valor > 0 && (
+                      <div className="text-2xl font-bold">{formatCurrency(meta.meta_valor)}</div>
+                    )}
+                    {meta.meta_unidades > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {meta.meta_unidades} unidades
+                      </p>
+                    )}
+                    {meta.meta_visitas > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        🏠 {meta.meta_visitas} visitas
+                      </p>
+                    )}
+                    {meta.meta_atendimentos > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        📞 {meta.meta_atendimentos} atendimentos
+                      </p>
+                    )}
+                    {meta.meta_valor === 0 && meta.meta_unidades === 0 && meta.meta_visitas === 0 && meta.meta_atendimentos === 0 && (
+                      <div className="text-sm text-muted-foreground">Sem valores definidos</div>
+                    )}
                   </>
                 ) : (
                   <div className="text-sm text-muted-foreground">Meta não definida</div>
