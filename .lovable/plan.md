@@ -1,58 +1,51 @@
 
-# Correcao de filtros e atividades no Kanban de Negociacoes
+# Filtro de mes no Kanban de Negociacoes
 
-## Problema 1 — Filtros resetam ao abrir/fechar modal
+## O que muda
 
-### Causa raiz
+Adicionar um seletor de mes (formato "Mes/Ano") na toolbar de filtros da pagina de Negociacoes. O filtro vai usar o campo `created_at` da tabela `negociacoes` para exibir apenas as fichas criadas no mes selecionado. O valor padrao sera o mes atual.
 
-Na pagina `/negociacoes` (`src/pages/Negociacoes.tsx`), o estado dos filtros esta armazenado em `useState` local:
+## Alteracao 1 — Adicionar campo `mes` ao tipo de filtros
 
-```text
-const [filters, setFilters] = useState<NegociacoesFilters>({});
-```
+**Arquivo:** `src/types/negociacoes.types.ts`
 
-Quando o usuario clica em "Editar" no card do Kanban (`NegociacaoCard.tsx` linha 161), o sistema navega para `/negociacoes/editar/:id`. Ao voltar, o componente `Funil` remonta do zero e o `useState` inicializa como `{}`, perdendo todos os filtros selecionados.
+- Adicionar `mes?: string` (formato `YYYY-MM`) ao `NegociacaoFilters`
 
-O mesmo ocorre ao clicar "Nova Ficha de Proposta" (navega para `/negociacoes/nova`).
+**Arquivo:** `src/pages/negociacoes/NegociacoesToolbar.tsx`
 
-### Solucao
+- Adicionar `mes` ao `NegociacoesFilters` local tambem
 
-Persistir os filtros nos **query params da URL** usando `useSearchParams` do React Router. Assim, ao navegar e voltar, os filtros sao restaurados automaticamente.
+## Alteracao 2 — Seletor de mes na toolbar
+
+**Arquivo:** `src/pages/negociacoes/NegociacoesToolbar.tsx`
+
+- Adicionar um `Select` com os ultimos 12 meses + opcao "Todos os meses"
+- Gerar as opcoes dinamicamente com `date-fns` (`format`, `subMonths`)
+- Labels no formato "Mar/2026", "Fev/2026", etc.
+- Valores no formato `YYYY-MM`
+- Posicionar como primeiro filtro na linha de selects (antes de Empreendimento)
+
+## Alteracao 3 — Aplicar filtro no hook de dados
+
+**Arquivo:** `src/hooks/useNegociacoes.ts`
+
+- Em `useNegociacoesKanban` e `useNegociacoes`: quando `filters.mes` estiver presente, adicionar filtro de range no `created_at`:
+  - `.gte('created_at', '2026-03-01')` (primeiro dia do mes)
+  - `.lt('created_at', '2026-04-01')` (primeiro dia do mes seguinte)
+
+## Alteracao 4 — Persistir nos search params
 
 **Arquivo:** `src/pages/Negociacoes.tsx`
 
-- Substituir `useState<NegociacoesFilters>({})` por um estado derivado de `useSearchParams`
-- Na funcao `handleFiltersChange`, atualizar os search params da URL (sem navegacao, apenas `setSearchParams`)
-- Ao montar, ler os params da URL e popular o estado inicial dos filtros
-- Manter a view (kanban/lista) tambem nos search params para consistencia
+- Adicionar `'mes'` ao array `FILTER_KEYS`
+- Incluir `mes` no objeto `kanbanFilters` passado ao hook
+- O mes atual sera o valor padrao (definido no `filtersFromParams` quando nao ha param na URL)
 
-**Arquivo:** `src/pages/negociacoes/NegociacoesToolbar.tsx` — sem alteracao necessaria, ja recebe `filters` como prop.
-
----
-
-## Problema 2 — Atividades comerciais devem aparecer na etapa Atendimento do Kanban
-
-### Estado atual
-
-O hook `useCreateAtividade` em `src/hooks/useAtividades.ts` (linha 225-251) ja cria automaticamente uma negociacao na etapa inicial quando o tipo da atividade e `atendimento`, `negociacao` ou `contra_proposta_atividade`. A negociacao fica vinculada ao `funil_etapa_id` da etapa inicial (Atendimento).
-
-### Problema identificado
-
-O codigo atual so cria a negociacao ao **cadastrar** a atividade. Se a atividade for **editada** para mudar o tipo para um dos tipos comerciais, nenhuma negociacao e criada. Alem disso, nao ha validacao de duplicidade — se o usuario cria multiplas atividades para o mesmo cliente/empreendimento, multiplas negociacoes sao geradas.
-
-### Solucao
-
-**Arquivo:** `src/hooks/useAtividades.ts`
-
-- No hook de **update** de atividade (`useUpdateAtividade` ou equivalente), adicionar a mesma logica de auto-criacao de negociacao quando o tipo muda para um dos tipos comerciais
-- Adicionar verificacao de duplicidade: antes de criar, checar se ja existe uma negociacao ativa para o mesmo `cliente_id` + `empreendimento_id` na etapa inicial
-- Se ja existir, nao criar duplicata
-
----
-
-## Resumo de arquivos a alterar
+## Resumo de arquivos
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/pages/Negociacoes.tsx` | Persistir filtros em search params da URL |
-| `src/hooks/useAtividades.ts` | Adicionar auto-criacao de negociacao no update + check de duplicidade |
+| `src/types/negociacoes.types.ts` | Adicionar `mes?: string` ao `NegociacaoFilters` |
+| `src/pages/negociacoes/NegociacoesToolbar.tsx` | Novo Select de mes com ultimos 12 meses |
+| `src/hooks/useNegociacoes.ts` | Filtrar por `created_at` usando range do mes |
+| `src/pages/Negociacoes.tsx` | Adicionar `mes` ao FILTER_KEYS e kanbanFilters |
