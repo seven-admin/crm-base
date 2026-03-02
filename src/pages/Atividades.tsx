@@ -114,7 +114,9 @@ export default function Atividades() {
     return { ...filters, tipos: tiposPermitidos };
   }, [filters, tiposPermitidos]);
 
-  const { data: atividadesData, isLoading } = useAtividades({ filters: effectiveFilters, page, pageSize });
+  const hasResponsavel = !!filters.responsavel_id;
+  const effectivePageSize = hasResponsavel ? 9999 : pageSize;
+  const { data: atividadesData, isLoading } = useAtividades({ filters: effectiveFilters, page, pageSize: effectivePageSize });
   const atividades = atividadesData?.items || [];
   const totalPages = atividadesData?.totalPages || 1;
   const totalItems = atividadesData?.count || 0;
@@ -580,16 +582,18 @@ export default function Atividades() {
                 </SelectContent>
               </Select>
 
-              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Itens" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="20">20 / pág</SelectItem>
-                  <SelectItem value="50">50 / pág</SelectItem>
-                  <SelectItem value="100">100 / pág</SelectItem>
-                </SelectContent>
-              </Select>
+              {!hasResponsavel && (
+                <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Itens" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20 / pág</SelectItem>
+                    <SelectItem value="50">50 / pág</SelectItem>
+                    <SelectItem value="100">100 / pág</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
 
               <TemperaturaSelector
                 value={filters.temperatura_cliente}
@@ -1029,8 +1033,8 @@ export default function Atividades() {
                 )}
             </div>
 
-            {/* Paginação (lista) */}
-            {!isLoading && atividades.length > 0 && (
+            {/* Paginação (lista) - esconde quando gestor selecionado */}
+            {!isLoading && atividades.length > 0 && !hasResponsavel && (
               <PaginationControls
                 page={page}
                 totalPages={totalPages}
