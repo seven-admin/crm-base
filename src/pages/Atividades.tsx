@@ -770,7 +770,7 @@ export default function Atividades() {
                         <TableHead>Título</TableHead>
                         <TableHead>Cliente</TableHead>
                         <TableHead>Temp.</TableHead>
-                        <TableHead className="hidden lg:table-cell">Corretor</TableHead>
+                        
                         <TableHead className="hidden lg:table-cell">Gestor</TableHead>
                         <TableHead>Data/Hora</TableHead>
                         <TableHead>Prazo</TableHead>
@@ -782,13 +782,12 @@ export default function Atividades() {
                     <TableBody>
                       {atividades?.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                             Nenhuma atividade encontrada
                           </TableCell>
                         </TableRow>
                       ) : (
                         atividades?.map((atividade) => {
-                          const TipoIcon = TIPO_ICONS[atividade.tipo];
                           const isVencida = atividade.status === 'pendente' && new Date(atividade.data_fim) < new Date();
                           const atrasada = isAtrasada(atividade);
                           const isSelected = selectedIds.has(atividade.id);
@@ -817,32 +816,46 @@ export default function Atividades() {
                                 />
                               </TableCell>
                               <TableCell>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center gap-1.5">
-                                      <TipoIcon className="h-4 w-4 text-muted-foreground" />
-                                      {atividade.subtipo && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                          {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</TooltipContent>
-                                </Tooltip>
-                              </TableCell>
-                              <TableCell className="font-normal">
                                 <div className="flex items-center gap-1.5">
-                                  {atividade.titulo}
-                                  {isSACreated && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Shield className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                      </TooltipTrigger>
-                                      <TooltipContent>Criada por Super Admin</TooltipContent>
-                                    </Tooltip>
+                                  <span className="text-sm">{ATIVIDADE_TIPO_LABELS[atividade.tipo]}</span>
+                                  {atividade.subtipo && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                      {ATIVIDADE_SUBTIPO_SHORT_LABELS[atividade.subtipo as AtividadeSubtipo]}
+                                    </Badge>
                                   )}
                                 </div>
+                              </TableCell>
+                              <TableCell className="font-normal">
+                                {atividade.observacoes ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center gap-1.5">
+                                        {atividade.titulo}
+                                        {isSACreated && (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Shield className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>Criada por Super Admin</TooltipContent>
+                                          </Tooltip>
+                                        )}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">{atividade.observacoes}</TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    {atividade.titulo}
+                                    {isSACreated && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Shield className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>Criada por Super Admin</TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </div>
+                                )}
                               </TableCell>
                               <TableCell>{atividade.cliente?.nome || '-'}</TableCell>
                               <TableCell onClick={(e) => e.stopPropagation()}>
@@ -853,7 +866,7 @@ export default function Atividades() {
                                   context="atividade"
                                 />
                               </TableCell>
-                              <TableCell className="hidden lg:table-cell">{atividade.corretor?.nome_completo || '-'}</TableCell>
+                              
                               <TableCell className="hidden lg:table-cell">{atividade.gestor?.full_name || '-'}</TableCell>
                               <TableCell>
                                 {atividade.data_inicio === atividade.data_fim 
