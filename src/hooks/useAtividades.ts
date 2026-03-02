@@ -234,26 +234,43 @@ export function useCreateAtividade() {
             .maybeSingle();
 
           if (etapaInicial && data.cliente_id) {
-            // Verificar duplicidade
-            const { data: existente } = await (supabase as any)
-              .from('negociacoes')
-              .select('id')
-              .eq('cliente_id', data.cliente_id)
-              .eq('empreendimento_id', data.empreendimento_id || '')
-              .eq('funil_etapa_id', etapaInicial.id)
-              .maybeSingle();
+            // Resolver empreendimento: direto ou via gestor
+            let empreendimentoIdFinal = data.empreendimento_id;
+            if (!empreendimentoIdFinal && data.gestor_id) {
+              const { data: link } = await supabase
+                .from('user_empreendimentos')
+                .select('empreendimento_id')
+                .eq('user_id', data.gestor_id)
+                .limit(1)
+                .maybeSingle();
+              if (link) empreendimentoIdFinal = link.empreendimento_id;
+            }
 
-            if (!existente) {
-              await (supabase as any).from('negociacoes').insert({
-                cliente_id: data.cliente_id,
-                corretor_id: data.corretor_id,
-                empreendimento_id: data.empreendimento_id,
-                imobiliaria_id: data.imobiliaria_id,
-                funil_etapa_id: etapaInicial.id,
-                atividade_origem_id: data.id,
-                data_primeiro_atendimento: new Date().toISOString(),
-                ordem_kanban: 0,
-              });
+            // Sem empreendimento resolvido, não cria negociação
+            if (!empreendimentoIdFinal) {
+              console.warn('[auto-negociacao] Sem empreendimento para criar negociação');
+            } else {
+              // Verificar duplicidade
+              const { data: existente } = await (supabase as any)
+                .from('negociacoes')
+                .select('id')
+                .eq('cliente_id', data.cliente_id)
+                .eq('empreendimento_id', empreendimentoIdFinal)
+                .eq('funil_etapa_id', etapaInicial.id)
+                .maybeSingle();
+
+              if (!existente) {
+                await (supabase as any).from('negociacoes').insert({
+                  cliente_id: data.cliente_id,
+                  corretor_id: data.corretor_id,
+                  empreendimento_id: empreendimentoIdFinal,
+                  imobiliaria_id: data.imobiliaria_id,
+                  funil_etapa_id: etapaInicial.id,
+                  atividade_origem_id: data.id,
+                  data_primeiro_atendimento: new Date().toISOString(),
+                  ordem_kanban: 0,
+                });
+              }
             }
           }
         } catch (e) {
@@ -369,7 +386,19 @@ export function useUpdateAtividade() {
       if (TIPOS_AUTO_NEGOCIACAO_UPDATE.includes((result as any).tipo)) {
         try {
           const clienteId = (result as any).cliente_id;
-          const empreendimentoId = (result as any).empreendimento_id;
+          let empreendimentoIdFinal = (result as any).empreendimento_id;
+          const gestorId = (result as any).gestor_id;
+
+          // Resolver empreendimento via gestor se não preenchido
+          if (!empreendimentoIdFinal && gestorId) {
+            const { data: link } = await supabase
+              .from('user_empreendimentos')
+              .select('empreendimento_id')
+              .eq('user_id', gestorId)
+              .limit(1)
+              .maybeSingle();
+            if (link) empreendimentoIdFinal = link.empreendimento_id;
+          }
 
           const { data: etapaInicial } = await (supabase as any)
             .from('funil_etapas')
@@ -378,13 +407,13 @@ export function useUpdateAtividade() {
             .eq('is_active', true)
             .maybeSingle();
 
-          if (etapaInicial && clienteId) {
+          if (etapaInicial && clienteId && empreendimentoIdFinal) {
             // Verificar duplicidade
             const { data: existente } = await (supabase as any)
               .from('negociacoes')
               .select('id')
               .eq('cliente_id', clienteId)
-              .eq('empreendimento_id', empreendimentoId || '')
+              .eq('empreendimento_id', empreendimentoIdFinal)
               .eq('funil_etapa_id', etapaInicial.id)
               .maybeSingle();
 
@@ -392,7 +421,7 @@ export function useUpdateAtividade() {
               await (supabase as any).from('negociacoes').insert({
                 cliente_id: clienteId,
                 corretor_id: (result as any).corretor_id,
-                empreendimento_id: empreendimentoId,
+                empreendimento_id: empreendimentoIdFinal,
                 imobiliaria_id: (result as any).imobiliaria_id,
                 funil_etapa_id: etapaInicial.id,
                 atividade_origem_id: id,
@@ -400,6 +429,8 @@ export function useUpdateAtividade() {
                 ordem_kanban: 0,
               });
             }
+          } else if (!empreendimentoIdFinal) {
+            console.warn('[auto-negociacao] Sem empreendimento para criar negociação no update');
           }
         } catch (e) {
           console.warn('[auto-negociacao] Erro ao criar negociação automática no update:', e);
