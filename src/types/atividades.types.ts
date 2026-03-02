@@ -52,7 +52,7 @@ export const ATIVIDADE_TIPO_LABELS: Record<AtividadeTipo, string> = {
 export const ATIVIDADE_CATEGORIA_LABELS: Record<AtividadeCategoria, string> = {
   seven: 'Seven',
   incorporadora: 'Incorporadora',
-  imobiliaria: 'Imobiliária',
+  imobiliaria: 'Imob. e Corretores',
   cliente: 'Cliente',
 };
 
