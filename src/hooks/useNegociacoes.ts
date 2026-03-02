@@ -131,6 +131,13 @@ export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?
         query = query.eq('cliente.temperatura', filters.temperatura);
       }
 
+      if (filters?.mes) {
+        const startDate = `${filters.mes}-01`;
+        const [y, m] = filters.mes.split('-').map(Number);
+        const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+        query = query.gte('created_at', startDate).lt('created_at', nextMonth);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -187,6 +194,13 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
 
       if (filters?.temperatura) {
         query = query.eq('cliente.temperatura', filters.temperatura);
+      }
+
+      if (filters?.mes) {
+        const startDate = `${filters.mes}-01`;
+        const [y, m] = filters.mes.split('-').map(Number);
+        const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+        query = query.gte('created_at', startDate).lt('created_at', nextMonth);
       }
 
       const { data, error } = await query;
