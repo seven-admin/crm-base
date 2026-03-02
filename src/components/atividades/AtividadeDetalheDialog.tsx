@@ -102,7 +102,7 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
   })();
 
   // Super Admin pode alterar status
-  const canAlterStatus = role === 'super_admin';
+  const canAlterStatus = role === 'super_admin' || role === 'gestor_produto';
 
   return (
     <>
@@ -361,7 +361,7 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Shield className="h-4 w-4" />
-                    <span className="text-sm font-medium">Ações de Administrador</span>
+                    <span className="text-sm font-medium">Ações de Gestão</span>
                   </div>
                   <Button 
                     variant="outline" 
