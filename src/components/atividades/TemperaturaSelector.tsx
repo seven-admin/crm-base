@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Info } from 'lucide-react';
+import { Info, ThermometerSnowflake, Thermometer, ThermometerSun, Skull, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 
-const TEMPERATURAS: { value: ClienteTemperatura; label: string; emoji: string; activeClass: string; inactiveClass: string }[] = [
-  { value: 'frio', label: 'Frio', emoji: '❄️', activeClass: 'bg-blue-500 text-white border-blue-500', inactiveClass: 'border-blue-300 text-blue-600 hover:bg-blue-50' },
-  { value: 'morno', label: 'Morno', emoji: '🌤️', activeClass: 'bg-amber-500 text-white border-amber-500', inactiveClass: 'border-amber-300 text-amber-600 hover:bg-amber-50' },
-  { value: 'quente', label: 'Quente', emoji: '🔥', activeClass: 'bg-red-500 text-white border-red-500', inactiveClass: 'border-red-300 text-red-600 hover:bg-red-50' },
-  { value: 'morto', label: 'Morto', emoji: '💀', activeClass: 'bg-gray-700 text-white border-gray-700', inactiveClass: 'border-gray-400 text-gray-600 hover:bg-gray-50' },
+const TEMPERATURAS: { value: ClienteTemperatura; label: string; icon: LucideIcon; activeClass: string; inactiveClass: string }[] = [
+  { value: 'morto', label: 'Morto', icon: Skull, activeClass: 'bg-gray-700 text-white border-gray-700', inactiveClass: 'border-gray-400 text-gray-600 hover:bg-gray-50' },
+  { value: 'frio', label: 'Frio', icon: ThermometerSnowflake, activeClass: 'bg-blue-500 text-white border-blue-500', inactiveClass: 'border-blue-300 text-blue-600 hover:bg-blue-50' },
+  { value: 'morno', label: 'Morno', icon: Thermometer, activeClass: 'bg-amber-500 text-white border-amber-500', inactiveClass: 'border-amber-300 text-amber-600 hover:bg-amber-50' },
+  { value: 'quente', label: 'Quente', icon: ThermometerSun, activeClass: 'bg-red-500 text-white border-red-500', inactiveClass: 'border-red-300 text-red-600 hover:bg-red-50' },
 ];
 
 const CONTEXT_LABELS = {
@@ -69,7 +69,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  <span>{temp.emoji}</span>
+                  <temp.icon className="h-3 w-3" />
                   <span>{temp.label}</span>
                 </button>
               ))}
@@ -92,7 +92,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
               disabled && 'opacity-50 cursor-not-allowed'
             )}
           >
-            <span>{selected.emoji}</span>
+            <selected.icon className="h-3 w-3" />
             <span>{selected.label}</span>
           </button>
         </PopoverTrigger>
@@ -119,7 +119,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  <span>{temp.emoji}</span>
+                  <temp.icon className="h-3 w-3" />
                   <span>{temp.label}</span>
                 </button>
               );
@@ -154,7 +154,10 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
               disabled && 'opacity-50 cursor-not-allowed'
             )}
           >
-            {compact ? temp.label : `${temp.emoji} ${temp.label}`}
+            <span className="inline-flex items-center gap-1">
+              <temp.icon className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
+              {temp.label}
+            </span>
           </button>
         );
       })}
