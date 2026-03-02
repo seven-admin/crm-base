@@ -64,7 +64,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     setOpen(false);
                   }}
                   className={cn(
-                    'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
+                    'flex flex-col items-center justify-center w-12 h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
                     temp.inactiveClass,
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
@@ -87,7 +87,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
             disabled={disabled}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px] cursor-pointer',
+              'flex flex-col items-center justify-center w-12 h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px] cursor-pointer',
               selected.activeClass,
               disabled && 'opacity-50 cursor-not-allowed'
             )}
@@ -114,7 +114,7 @@ export function TemperaturaSelector({ value, onValueChange, compact = false, dis
                     setOpen(false);
                   }}
                   className={cn(
-                    'flex flex-col items-center h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
+                    'flex flex-col items-center justify-center w-12 h-auto py-0.5 px-1.5 leading-tight border rounded-full font-medium transition-colors text-[10px]',
                     isActive ? temp.activeClass : temp.inactiveClass,
                     disabled && 'opacity-50 cursor-not-allowed'
                   )}
