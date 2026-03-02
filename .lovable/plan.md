@@ -1,60 +1,53 @@
 
 
-# Reestruturar Dashboard de Metas + Corrigir Edicao + Exibir Todos os Campos
+# Correcoes: Metas (campo Ligacoes) + Exclusao de Atividade
 
-## 1. Remover Ranking de Corretores do Dashboard
+## Problema 1: Campo "Ligacoes" no modal de metas nao salva no banco
 
-Remover o card "Ranking de Corretores" (linhas 494-537) e fazer o grafico historico ocupar largura total (remover grid `lg:grid-cols-3`, usar largura total).
+O modal de criacao/edicao de metas tipo "atividades" tem um campo "Meta de Ligacoes" (linha 981-988), mas ele esta vinculado ao estado `metaPropostas` / `setMetaPropostas`. Na hora de salvar (handleSaveMeta, linha 221), quando o tipo e "atividades", o valor de `meta_propostas` e forcado para 0. Resultado: o valor digitado em Ligacoes e descartado.
 
-**Arquivo:** `src/pages/MetasComerciais.tsx`
+Alem disso, **nao existe coluna `meta_ligacoes`** na tabela `metas_comerciais` do banco. Os campos existentes sao: `meta_valor`, `meta_unidades`, `meta_propostas`, `meta_visitas`, `meta_atendimentos`, `meta_treinamentos`.
 
-## 2. Criar cards separados por tipo de meta (Comercial e Atividades)
+### Correcao
 
-Substituir o card unico "Meta do Mes" por dois cards:
+1. **Migration SQL**: Adicionar coluna `meta_ligacoes integer NOT NULL DEFAULT 0` na tabela `metas_comerciais`
+2. **Frontend (MetasComerciais.tsx)**:
+   - Criar estado `metaLigacoes` dedicado (separado de `metaPropostas`)
+   - Vincular o campo "Meta de Ligacoes" ao novo estado `metaLigacoes`
+   - No `handleSaveMeta`, enviar `meta_ligacoes` com o valor correto
+   - No `handleEditExistingMeta`, carregar `meta_ligacoes` do registro
+   - No `resetMetaFields`, limpar `metaLigacoes`
+   - Na tabela "Gerenciar Metas", exibir coluna "Ligacoes"
+3. **Hook (useMetasComerciais.ts)**: Incluir `meta_ligacoes` no tipo `MetasPorTipo.atividades` e no card do dashboard
 
-- **Card "Meta Comercial"**: VGV (meta_valor), unidades (meta_unidades), propostas (meta_propostas)
-- **Card "Meta de Atividades"**: visitas (meta_visitas), atendimentos (meta_atendimentos), treinamentos (meta_treinamentos)
+## Problema 2: Erro ao excluir atividade (FK constraint)
 
-Cada card mostra "Sem meta definida" se nao houver valores para aquele tipo.
+O erro no banco e:
+```
+update or delete on table "atividades" violates foreign key constraint 
+"negociacoes_atividade_origem_id_fkey" on table "negociacoes"
+```
 
-## 3. Refatorar `useMetasPorMes` para retornar dados separados por tipo
+A atividade tem uma negociacao vinculada via `atividade_origem_id`. A FK atual tem `ON DELETE NO ACTION`, o que impede a exclusao.
 
-Modificar o hook para retornar:
-- `comercial`: soma apenas das metas tipo "comercial"
-- `atividades`: soma apenas das metas tipo "atividades"  
-- `consolidado`: soma de tudo (para calculo de atingimento geral)
+### Correcao
 
-**Arquivo:** `src/hooks/useMetasComerciais.ts`
+**Migration SQL**: Alterar a FK para `ON DELETE SET NULL`, permitindo excluir a atividade sem excluir a negociacao (apenas desvincula).
 
-## 4. Corrigir dialog de edicao para carregar dados do banco
-
-Atualmente, ao clicar "Editar" na tabela, o tipo de meta NAO e exibido porque o seletor de tipo esta escondido com `{!editingMeta && ...}` (linha 749). 
-
-Correcao: mostrar o tipo de meta tambem ao editar (modo leitura ou editavel), para que os campos corretos aparecam e o usuario veja/altere os valores.
-
-**Arquivo:** `src/pages/MetasComerciais.tsx` - remover a condicao `!editingMeta` do bloco de selecao de tipo (linha 749)
-
-## 5. Exibir todos os campos na tabela de Gerenciar Metas
-
-A tabela ja exibe: Visitas, Atendimentos, Treinamentos, Propostas. O banco de dados NAO possui coluna "ligacoes" (`meta_ligacoes`). Se o usuario deseja rastrear ligacoes, sera necessario criar essa coluna no banco.
-
-Alternativa (sem migration): verificar se o campo que o usuario chama de "ligacoes" ja existe com outro nome. Caso nao, sera adicionada uma nova coluna `meta_ligacoes` ao banco e ao formulario/tabela.
-
-## 6. Ajustar layout dos KPIs do dashboard
-
-Grid passara para 5 cards: Meta Comercial, Meta Atividades, Vendas Realizadas, Atingimento, Forecast Ponderado.
-
-Layout: `grid-cols-1 md:grid-cols-2 lg:grid-cols-5`
+```sql
+ALTER TABLE public.negociacoes 
+  DROP CONSTRAINT negociacoes_atividade_origem_id_fkey,
+  ADD CONSTRAINT negociacoes_atividade_origem_id_fkey 
+    FOREIGN KEY (atividade_origem_id) 
+    REFERENCES public.atividades(id) 
+    ON DELETE SET NULL;
+```
 
 ## Resumo das alteracoes
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/hooks/useMetasComerciais.ts` | Retornar dados separados por tipo (comercial/atividades/consolidado) |
-| `src/pages/MetasComerciais.tsx` | Remover ranking, criar 2 cards de meta, corrigir dialog de edicao, ajustar grid |
-| Migration SQL (se necessario) | Adicionar coluna `meta_ligacoes` caso o usuario confirme |
-
-## Ponto de atencao
-
-O banco nao tem coluna `meta_ligacoes`. Se "ligacoes" for um campo desejado, precisaremos de uma migration para adiciona-lo. Caso o usuario esteja se referindo a um campo existente (como atendimentos ou propostas), nenhuma alteracao no banco sera necessaria.
+| Arquivo / Recurso | Mudanca |
+|---|---|
+| Migration SQL | Adicionar coluna `meta_ligacoes` + alterar FK negociacoes para SET NULL |
+| `src/pages/MetasComerciais.tsx` | Estado `metaLigacoes`, vincular campo, salvar/carregar/exibir corretamente |
+| `src/hooks/useMetasComerciais.ts` | Incluir `meta_ligacoes` no tipo e nos cards de atividades |
 
