@@ -184,11 +184,11 @@ export function AtividadeForm(props: AtividadeFormProps) {
     if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
       form.setValue('subtipo', undefined);
     }
-    // Auto-set categoria "cliente" para tipos do fluxo comercial
-    if (TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual)) {
+    // Auto-set categoria "cliente" APENAS na criação, não na edição
+    if (!initialData && TIPOS_CATEGORIA_CLIENTE.includes(tipoAtual)) {
       form.setValue('categoria', 'cliente');
     }
-  }, [tipoAtual, form]);
+  }, [tipoAtual, form, initialData]);
 
   useEffect(() => {
     if (!initialData && gestorData?.autoSelectedId) {
