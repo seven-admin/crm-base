@@ -633,6 +633,7 @@ const MetasComerciais = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Competência</TableHead>
+                      <TableHead>Tipo</TableHead>
                       <TableHead>Periodicidade</TableHead>
                       <TableHead>Escopo</TableHead>
                       <TableHead className="text-right">Meta Valor</TableHead>
@@ -656,6 +657,11 @@ const MetasComerciais = () => {
                             }
                             return format(compDate, 'MMMM/yyyy', { locale: ptBR });
                           })()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={(metaItem as any).tipo === 'atividades' ? 'info' : 'success'}>
+                            {(metaItem as any).tipo === 'atividades' ? 'Atividades' : 'Comercial'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant={(metaItem as any).periodicidade === 'semanal' ? 'outline' : 'secondary'}>
