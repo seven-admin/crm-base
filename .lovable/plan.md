@@ -1,52 +1,64 @@
 
-Objetivo
-- Remover definitivamente as “vendas históricas” (cliente COMPRADOR HISTÓRICO) de todas as contagens e somatórios de valor exibidos em /metas-comerciais.
 
-Diagnóstico do que está acontecendo hoje
-- A tela de Metas Comerciais consome os hooks de `src/hooks/useMetasComerciais.ts`.
-- Nesse arquivo, os cálculos de valor e vendas vêm de queries em `contratos` sem exclusão de `cliente_id` histórico.
-- Foram encontrados 4 pontos críticos sem filtro:
-  1) `useVendasRealizadasMes` (card “Vendas Realizadas”, atingimento valor/unidades)
-  2) `useRankingCorretoresMes` (ranking por valor e unidades)
-  3) `useHistoricoMetas` (gráfico “Realizado vs Meta - últimos 6 meses”)
-  4) `useMetasVsRealizadoPorEmpreendimento` (gráfico comparativo por empreendimento)
-- Resultado: mesmo com correções em outros dashboards, em Metas Comerciais os contratos históricos continuam entrando no realizado.
+# Corrigir Filtro de Meses em Atividades e Adicionar Modal de Atividades no Forecast
 
-Implementação proposta
-1) Padronizar filtro de histórico dentro de `useMetasComerciais.ts`
-- Importar `getClientesHistoricosIds` de `@/lib/contratoFilters`.
-- Em cada hook que consulta `contratos`, buscar IDs históricos no início da `queryFn`.
-- Aplicar exclusão via SQL quando houver IDs:
-  - `.not('cliente_id', 'in', \`(${historicosIds.join(',')})\`)`
-- Se não houver IDs, manter query normal (evita filtro inválido com lista vazia).
+## Problema 1: Filtro de meses nao funciona na aba Lista
 
-2) Ajustar cada query de contratos usada em métricas de valor
-- `useVendasRealizadasMes`:
-  - Excluir cliente histórico antes de calcular `totalValor` e `totalUnidades`.
-- `useRankingCorretoresMes`:
-  - Excluir cliente histórico antes de agregar `valor` e `unidades` por corretor.
-- `useHistoricoMetas`:
-  - Excluir cliente histórico na bulk query de contratos para que `realizado` mensal não infle.
-- `useMetasVsRealizadoPorEmpreendimento`:
-  - Excluir cliente histórico na query `todasVendas` para corrigir barras de “Realizado”.
+A logica de filtro em `applyAtividadesFilters` (src/hooks/useAtividades.ts, linhas 55-56) esta invertida:
 
-3) Garantir consistência com o padrão já adotado no projeto
-- Reutilizar o helper já existente (`getClientesHistoricosIds`) e o mesmo critério semântico global.
-- Não alterar comportamento de metas cadastradas; apenas remover histórico das vendas consideradas no realizado.
+```text
+// ATUAL (errado):
+if (filters?.data_inicio) q = q.lte('data_inicio', filters.data_inicio);
+if (filters?.data_fim)    q = q.gte('data_fim', filters.data_fim);
+```
 
-4) Validação após implementação
-- Em `/metas-comerciais`, validar para o mesmo mês/empreendimento:
-  - Card “Vendas Realizadas” reduzindo para o valor sem histórico.
-  - Atingimento (%) recalculado corretamente.
-  - Ranking de corretores sem vendas do cliente histórico.
-  - Histórico de 6 meses sem picos artificiais do legado.
-  - “Meta vs Realizado por Empreendimento” sem realizado inflado.
-- Conferir também com filtro “Todos os empreendimentos” e com empreendimento específico.
+Quando o usuario seleciona "Fevereiro 2026", o filtro define:
+- `data_inicio = '2026-02-01'`
+- `data_fim = '2026-02-28'`
 
-Riscos e cuidados
-- O filtro `in (...)` precisa ser aplicado apenas quando houver IDs (lista vazia quebraria a condição).
-- Todas as queries de contratos no arquivo devem manter o mesmo critério para evitar divergência entre cards e gráficos.
-- Manter `queryKey` atual (sem breaking change), pois a invalidação já ocorre nos pontos corretos.
+A query resultante busca atividades cuja `data_inicio <= 2026-02-01` E `data_fim >= 2026-02-28`. Ou seja, so retorna atividades que **cobrem o mes inteiro** -- quase nenhuma.
 
-Arquivos impactados
-- `src/hooks/useMetasComerciais.ts` (único arquivo necessário para esta correção específica em Metas Comerciais).
+A logica correta de sobreposicao de intervalo e: uma atividade que vai de A ate B se sobrepoe ao filtro [inicio, fim] quando `A <= fim AND B >= inicio`.
+
+### Correcao
+
+Trocar os campos:
+
+```text
+if (filters?.data_inicio) q = q.gte('data_fim', filters.data_inicio);
+if (filters?.data_fim)    q = q.lte('data_inicio', filters.data_fim);
+```
+
+Isso garante: "atividade termina apos o inicio do filtro" E "atividade comeca antes do fim do filtro" = sobreposicao correta.
+
+**Arquivo:** `src/hooks/useAtividades.ts` (linhas 55-56)
+
+---
+
+## Problema 2: Clicar nos badges do Forecast para ver atividades
+
+Os cards de categoria no Forecast (`CategoriaCard`) ja suportam `onBadgeClick`, mas a pagina `/forecast` (Forecast.tsx) nao conecta esse callback. Apenas o Diario de Bordo usa.
+
+### Solucao
+
+1. Adicionar estado para controlar o dialog no `Forecast.tsx`
+2. Passar `onBadgeClick` ao `CategoriaCard` para abrir o `ForecastBatchStatusDialog` existente (que ja lista atividades por categoria/status)
+3. Fazer o mesmo para a renderizacao de cards tanto na aba "negociacoes" quanto "atividades"
+
+O `ForecastBatchStatusDialog` ja existe e mostra a lista de atividades filtradas por categoria e status (abertas, fechadas, atrasadas, futuras), com opcao de alterar status em lote. Basta conecta-lo.
+
+**Arquivo:** `src/pages/Forecast.tsx`
+
+Mudancas:
+- Importar `ForecastBatchStatusDialog` e `useState`
+- Adicionar estado `batchDialog` com `{ open, categoria, statusGroup }`
+- Passar `onBadgeClick` ao `renderCategoriaCards` que dispara a abertura do dialog
+- Renderizar o `ForecastBatchStatusDialog` no final do componente
+
+---
+
+## Resumo de arquivos
+
+1. `src/hooks/useAtividades.ts` -- inverter logica de filtro de datas (2 linhas)
+2. `src/pages/Forecast.tsx` -- conectar `onBadgeClick` nos cards e renderizar o dialog de listagem
+
