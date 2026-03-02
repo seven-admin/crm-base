@@ -1,51 +1,58 @@
 
-# Filtro de mes no Kanban de Negociacoes
+# Corrigir auto-criacao de negociacao para atividades sem empreendimento
 
-## O que muda
+## Problema
 
-Adicionar um seletor de mes (formato "Mes/Ano") na toolbar de filtros da pagina de Negociacoes. O filtro vai usar o campo `created_at` da tabela `negociacoes` para exibir apenas as fichas criadas no mes selecionado. O valor padrao sera o mes atual.
+Atividades comerciais (atendimento, negociacao, contra_proposta) criadas por gestores de produto frequentemente nao tem `empreendimento_id` preenchido diretamente. Porem, o gestor tem um empreendimento vinculado via tabela `user_empreendimentos`. Exemplo real:
 
-## Alteracao 1 — Adicionar campo `mes` ao tipo de filtros
+- Gestor `f5beb78c` tem vinculo com "RESERVA DO LAGO" (`13fc62b0`)
+- Atividades criadas por ele nao tem `empreendimento_id`
+- A tabela `negociacoes` exige `empreendimento_id` (NOT NULL)
+- O insert falha silenciosamente e a negociacao nunca aparece no Kanban
 
-**Arquivo:** `src/types/negociacoes.types.ts`
+## Solucao
 
-- Adicionar `mes?: string` (formato `YYYY-MM`) ao `NegociacaoFilters`
+**Arquivo:** `src/hooks/useAtividades.ts`
 
-**Arquivo:** `src/pages/negociacoes/NegociacoesToolbar.tsx`
+Nos dois blocos de auto-criacao de negociacao (create na linha ~225 e update na linha ~367):
 
-- Adicionar `mes` ao `NegociacoesFilters` local tambem
+1. Quando `empreendimento_id` for `null`, buscar o empreendimento do gestor via `user_empreendimentos`:
+   - Usar o `gestor_id` da atividade
+   - Query: `user_empreendimentos` filtrado pelo `user_id = gestor_id`, pegando o primeiro empreendimento ativo
 
-## Alteracao 2 — Seletor de mes na toolbar
+2. Se encontrar empreendimento, usar esse valor para criar a negociacao
 
-**Arquivo:** `src/pages/negociacoes/NegociacoesToolbar.tsx`
+3. Se nao encontrar nem no gestor, nao criar negociacao (sem empreendimento nao faz sentido no Kanban)
 
-- Adicionar um `Select` com os ultimos 12 meses + opcao "Todos os meses"
-- Gerar as opcoes dinamicamente com `date-fns` (`format`, `subMonths`)
-- Labels no formato "Mar/2026", "Fev/2026", etc.
-- Valores no formato `YYYY-MM`
-- Posicionar como primeiro filtro na linha de selects (antes de Empreendimento)
+4. Corrigir a query de deduplicacao que usa `.eq('empreendimento_id', '')` — deve usar o empreendimento resolvido
 
-## Alteracao 3 — Aplicar filtro no hook de dados
+### Logica a ser adicionada (antes do insert)
 
-**Arquivo:** `src/hooks/useNegociacoes.ts`
+```text
+let empreendimentoIdFinal = empreendimentoId;
 
-- Em `useNegociacoesKanban` e `useNegociacoes`: quando `filters.mes` estiver presente, adicionar filtro de range no `created_at`:
-  - `.gte('created_at', '2026-03-01')` (primeiro dia do mes)
-  - `.lt('created_at', '2026-04-01')` (primeiro dia do mes seguinte)
+if (!empreendimentoIdFinal && gestorId) {
+  // Buscar empreendimento vinculado ao gestor
+  const { data: link } = await supabase
+    .from('user_empreendimentos')
+    .select('empreendimento_id')
+    .eq('user_id', gestorId)
+    .limit(1)
+    .maybeSingle();
+  
+  if (link) empreendimentoIdFinal = link.empreendimento_id;
+}
 
-## Alteracao 4 — Persistir nos search params
+if (!empreendimentoIdFinal) return; // sem empreendimento, nao cria
+```
 
-**Arquivo:** `src/pages/Negociacoes.tsx`
+### Pontos de alteracao
 
-- Adicionar `'mes'` ao array `FILTER_KEYS`
-- Incluir `mes` no objeto `kanbanFilters` passado ao hook
-- O mes atual sera o valor padrao (definido no `filtersFromParams` quando nao ha param na URL)
+| Bloco | Linhas aprox. | Descricao |
+|-------|--------------|-----------|
+| useCreateAtividade | 225-262 | Adicionar fallback para buscar empreendimento do gestor |
+| useUpdateAtividade | 367-407 | Mesma logica de fallback |
 
-## Resumo de arquivos
+## Resultado esperado
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/types/negociacoes.types.ts` | Adicionar `mes?: string` ao `NegociacaoFilters` |
-| `src/pages/negociacoes/NegociacoesToolbar.tsx` | Novo Select de mes com ultimos 12 meses |
-| `src/hooks/useNegociacoes.ts` | Filtrar por `created_at` usando range do mes |
-| `src/pages/Negociacoes.tsx` | Adicionar `mes` ao FILTER_KEYS e kanbanFilters |
+Todas as atividades comerciais com gestor vinculado a um empreendimento vao gerar automaticamente uma negociacao no Kanban na etapa "Atendimento", mesmo quando o campo `empreendimento_id` da atividade estiver vazio.
