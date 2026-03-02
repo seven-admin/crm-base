@@ -129,6 +129,9 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const [atribuirParaGestores, setAtribuirParaGestores] = useState(false);
+  const [clienteDireto, setClienteDireto] = useState(
+    initialData ? (!initialData.corretor_id && !initialData.imobiliaria_id) : false
+  );
   const [todosGestores, setTodosGestores] = useState(false);
   const [gestoresSelecionados, setGestoresSelecionados] = useState<string[]>([]);
 
@@ -337,18 +340,22 @@ export function AtividadeForm(props: AtividadeFormProps) {
               Detalhes
             </span>
           </div>
-          <div className="h-px flex-1 bg-border" />
-          <div className="flex items-center gap-2 flex-1">
-            <div className={cn(
-              'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
-              step === 3 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            )}>
-              3
-            </div>
-            <span className={cn('text-sm', step === 3 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
-              Responsáveis
-            </span>
-          </div>
+           {!clienteDireto && (
+            <>
+              <div className="h-px flex-1 bg-border" />
+              <div className="flex items-center gap-2 flex-1">
+                <div className={cn(
+                  'flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold transition-colors',
+                  step === 3 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                )}>
+                  3
+                </div>
+                <span className={cn('text-sm', step === 3 ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+                  Responsáveis
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* ========== STEP 1 - Configuração ========== */}
@@ -923,16 +930,40 @@ export function AtividadeForm(props: AtividadeFormProps) {
               )}
             </div>
 
-            {/* Botões Voltar + Próximo */}
+            {/* Cliente Direto toggle */}
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Cliente Direto</Label>
+                <p className="text-xs text-muted-foreground">Sem imobiliária/corretor</p>
+              </div>
+              <Switch
+                checked={clienteDireto}
+                onCheckedChange={(checked) => {
+                  setClienteDireto(checked);
+                  if (checked) {
+                    form.setValue('corretor_id', undefined);
+                    form.setValue('imobiliaria_id', undefined);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Botões Voltar + Próximo/Salvar */}
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Voltar
               </Button>
-              <Button type="button" className="flex-1" onClick={() => setStep(3)}>
-                Próximo
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
+              {clienteDireto ? (
+                <Button type="submit" className="flex-1" disabled={isLoading}>
+                  {isLoading ? 'Salvando...' : initialData ? 'Atualizar Atividade' : 'Criar Atividade'}
+                </Button>
+              ) : (
+                <Button type="button" className="flex-1" onClick={() => setStep(3)}>
+                  Próximo
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -972,11 +1003,11 @@ export function AtividadeForm(props: AtividadeFormProps) {
               name="imobiliaria_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Imobiliária (opcional)</FormLabel>
+                  <FormLabel>Imobiliárias e Corretores (opcional)</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione a imobiliária" />
+                        <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
