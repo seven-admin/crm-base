@@ -19,7 +19,7 @@ export function KanbanColumn<T>({
       className={cn(
         // Mobile: ocupa quase toda a largura e encaixa (snap) coluna por coluna.
         // Desktop: mantém o tamanho compacto.
-        "flex flex-col w-[calc(100vw-2rem)] sm:w-72 shrink-0 rounded-lg border bg-muted/30 snap-start",
+        "flex flex-col w-[calc(100vw-2rem)] sm:w-80 shrink-0 rounded-lg border bg-muted/30 snap-start",
         className
       )}
       style={{ backgroundColor: column.bgColor }}
