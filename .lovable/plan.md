@@ -1,33 +1,28 @@
 
+# Adicionar temperatura "Morto" nas atividades
 
-# Permitir Gestores de Produto reabrir atividades
+## O que muda
 
-## Problema
+Adicionar a opcao "Morto" (💀) como uma quarta temperatura, representando clientes/negociacoes sem perspectiva. A cor sera cinza escuro para diferenciar visualmente.
 
-Atualmente, apenas usuarios com role `super_admin` podem acessar o botao "Alterar Status da Atividade" no dialog de detalhes. Gestores de produto (`gestor_produto`) precisam tambem ter essa permissao.
+## Arquivos a alterar
 
-## Solucao
+### 1. `src/types/clientes.types.ts`
+- Adicionar `'morto'` ao type `ClienteTemperatura`
+- Adicionar label em `CLIENTE_TEMPERATURA_LABELS`: `morto: 'Morto'`
+- Adicionar cor em `CLIENTE_TEMPERATURA_COLORS`: `morto: 'bg-gray-100 text-gray-800 border-gray-200'`
 
-Alterar a condicao `canAlterStatus` no arquivo `AtividadeDetalheDialog.tsx` para incluir o role `gestor_produto`.
+### 2. `src/components/atividades/TemperaturaSelector.tsx`
+- Adicionar item no array `TEMPERATURAS`: `{ value: 'morto', label: 'Morto', emoji: '💀', activeClass: 'bg-gray-700 text-white border-gray-700', inactiveClass: 'border-gray-400 text-gray-600 hover:bg-gray-50' }`
 
-**Arquivo:** `src/components/atividades/AtividadeDetalheDialog.tsx`
+### 3. `src/components/forecast/FunilTemperatura.tsx`
+- Adicionar cor no `CORES_TEMPERATURA`: `morto: 'hsl(var(--chart-4))'`
 
-- Linha 105: Mudar de:
-  ```typescript
-  const canAlterStatus = role === 'super_admin';
-  ```
-  Para:
-  ```typescript
-  const canAlterStatus = role === 'super_admin' || role === 'gestor_produto';
-  ```
+### 4. `src/components/clientes/ClienteForm.tsx`
+- Adicionar cor no `colorMap` local: `morto: 'border-gray-400 bg-gray-50 text-gray-700'`
 
-- Atualizar o label da secao de "Acoes de Administrador" para "Acoes de Gestao" (mais adequado ao novo publico)
+## Detalhes tecnicos
 
-Isso eh suficiente pois o `AlterarStatusAtividadeDialog` ja oferece todas as opcoes de status (pendente, concluida, cancelada) exceto o atual, e o hook `useAlterarStatusAtividade` nao tem restricao de role no frontend. A alteracao fica registrada no historico automaticamente via trigger no banco.
-
-## Resumo
-
-- **1 arquivo**: `src/components/atividades/AtividadeDetalheDialog.tsx`
-  - Incluir `gestor_produto` na condicao `canAlterStatus`
-  - Ajustar label da secao
-
+- O campo `temperatura_cliente` no banco de dados eh do tipo `TEXT` (sem constraint de enum), entao nao precisa de migracao SQL
+- O type `ClienteTemperatura` eh a unica fonte de verdade e propaga automaticamente para todos os componentes que usam `Record<ClienteTemperatura, ...>`
+- O TypeScript vai apontar erros em qualquer `Record` incompleto, garantindo que nenhum arquivo fique de fora
