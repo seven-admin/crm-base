@@ -39,10 +39,24 @@ const ETAPA_PESOS: Record<string, number> = {
   perdido: 0,
 };
 
+export interface MetasPorTipo {
+  comercial: {
+    meta_valor: number;
+    meta_unidades: number;
+    meta_propostas: number;
+  };
+  atividades: {
+    meta_visitas: number;
+    meta_atendimentos: number;
+    meta_treinamentos: number;
+  };
+  consolidado: MetaComercial;
+}
+
 export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
   return useQuery({
     queryKey: ['metas-comerciais', format(competencia, 'yyyy-MM'), empreendimentoId],
-    queryFn: async () => {
+    queryFn: async (): Promise<MetasPorTipo | null> => {
       const inicio = format(startOfMonth(competencia), 'yyyy-MM-dd');
       const fim = format(endOfMonth(competencia), 'yyyy-MM-dd');
       
@@ -55,16 +69,30 @@ export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
       if (empreendimentoId) {
         query = query.eq('empreendimento_id', empreendimentoId);
       }
-      // Sem filtro = consolida todas as metas do mês
       
       const { data, error } = await query;
       
       if (error) throw error;
       
-      const metas = (data || []) as unknown as MetaComercial[];
+      const metas = (data || []) as unknown as (MetaComercial & { tipo?: string })[];
       if (metas.length === 0) return null;
       
-      // Agregar todas as metas do mês (mensais + semanais)
+      const comerciais = metas.filter(m => (m as any).tipo !== 'atividades');
+      const atividades = metas.filter(m => (m as any).tipo === 'atividades');
+
+      const comercial = {
+        meta_valor: comerciais.reduce((sum, m) => sum + (m.meta_valor || 0), 0),
+        meta_unidades: comerciais.reduce((sum, m) => sum + (m.meta_unidades || 0), 0),
+        meta_propostas: comerciais.reduce((sum, m) => sum + (m.meta_propostas || 0), 0),
+      };
+
+      const atividadesAgg = {
+        meta_visitas: atividades.reduce((sum, m) => sum + (m.meta_visitas || 0), 0),
+        meta_atendimentos: atividades.reduce((sum, m) => sum + (m.meta_atendimentos || 0), 0),
+        meta_treinamentos: atividades.reduce((sum, m) => sum + (m.meta_treinamentos || 0), 0),
+      };
+
+      // Consolidado (soma de tudo)
       const consolidado: MetaComercial = {
         ...metas[0],
         meta_valor: metas.reduce((sum, m) => sum + (m.meta_valor || 0), 0),
@@ -75,7 +103,7 @@ export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
         meta_propostas: metas.reduce((sum, m) => sum + (m.meta_propostas || 0), 0),
       };
       
-      return consolidado;
+      return { comercial, atividades: atividadesAgg, consolidado };
     },
   });
 }

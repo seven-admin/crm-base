@@ -10,14 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Target, TrendingUp, DollarSign, Users, Edit2, ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle, Copy, Building, CalendarIcon } from 'lucide-react';
+import { Loader2, Target, TrendingUp, DollarSign, Edit2, ChevronLeft, ChevronRight, Plus, Trash2, AlertTriangle, Copy, Building, CalendarIcon } from 'lucide-react';
 import { format, startOfMonth, addMonths, subMonths, getYear, startOfWeek, addWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   useMetasPorMes, 
   useVendasRealizadasMes, 
   useForecastFechamento, 
-  useRankingCorretoresMes,
   useHistoricoMetas,
   useCreateMeta,
   useTodasMetas,
@@ -90,7 +89,7 @@ const MetasComerciais = () => {
   const { data: meta, isLoading: loadingMeta } = useMetasPorMes(competencia, empreendimentoId);
   const { data: vendas, isLoading: loadingVendas } = useVendasRealizadasMes(competencia, empreendimentoId);
   const { data: forecast, isLoading: loadingForecast } = useForecastFechamento(competencia, empreendimentoId);
-  const { data: ranking, isLoading: loadingRanking } = useRankingCorretoresMes(competencia, empreendimentoId);
+  
   const { data: historico, isLoading: loadingHistorico } = useHistoricoMetas(6, empreendimentoId);
   const { data: todasMetas, isLoading: loadingTodasMetas } = useTodasMetas(anoFiltro);
   const { data: comparativoEmpreendimentos, isLoading: loadingComparativo } = useMetasVsRealizadoPorEmpreendimento(competencia);
@@ -104,12 +103,13 @@ const MetasComerciais = () => {
 
   const isLoading = loadingMeta || loadingVendas || loadingForecast;
 
-  // Calcular atingimento
-  const atingimentoValor = meta?.meta_valor && meta.meta_valor > 0 
-    ? ((vendas?.totalValor || 0) / meta.meta_valor) * 100 
+  // Calcular atingimento usando consolidado
+  const consolidado = meta?.consolidado;
+  const atingimentoValor = consolidado?.meta_valor && consolidado.meta_valor > 0 
+    ? ((vendas?.totalValor || 0) / consolidado.meta_valor) * 100 
     : 0;
-  const atingimentoUnidades = meta?.meta_unidades && meta.meta_unidades > 0 
-    ? ((vendas?.totalUnidades || 0) / meta.meta_unidades) * 100 
+  const atingimentoUnidades = consolidado?.meta_unidades && consolidado.meta_unidades > 0 
+    ? ((vendas?.totalUnidades || 0) / consolidado.meta_unidades) * 100 
     : 0;
 
   const formatCurrency = (value: number) => {
@@ -140,12 +140,12 @@ const MetasComerciais = () => {
 
   const handleOpenEditMeta = () => {
     setEditingMeta(null);
-    setMetaValor(meta?.meta_valor || 0);
-    setMetaUnidades(meta?.meta_unidades?.toString() || '');
-    setMetaVisitas((meta as any)?.meta_visitas?.toString() || '');
-    setMetaAtendimentos((meta as any)?.meta_atendimentos?.toString() || '');
-    setMetaTreinamentos((meta as any)?.meta_treinamentos?.toString() || '');
-    setMetaPropostas((meta as any)?.meta_propostas?.toString() || '');
+    setMetaValor(meta?.comercial?.meta_valor || 0);
+    setMetaUnidades(meta?.comercial?.meta_unidades?.toString() || '');
+    setMetaVisitas(meta?.atividades?.meta_visitas?.toString() || '');
+    setMetaAtendimentos(meta?.atividades?.meta_atendimentos?.toString() || '');
+    setMetaTreinamentos(meta?.atividades?.meta_treinamentos?.toString() || '');
+    setMetaPropostas(meta?.comercial?.meta_propostas?.toString() || '');
     setMetaMes(format(competencia, 'MM'));
     setMetaAno(format(competencia, 'yyyy'));
     setMetaEscopo(empreendimentoId ? 'empreendimento' : 'geral');
@@ -321,55 +321,80 @@ const MetasComerciais = () => {
           </div>
 
           {/* Alerta de Atingimento Baixo */}
-          {!isLoading && meta && atingimentoValor < 70 && isMesAtual && (
+          {!isLoading && consolidado && atingimentoValor < 70 && isMesAtual && (
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Atenção: Meta em Risco</AlertTitle>
               <AlertDescription>
                 O atingimento atual está em <strong>{atingimentoValor.toFixed(1)}%</strong> da meta.
-                Faltam <strong>{formatCurrency((meta.meta_valor || 0) - (vendas?.totalValor || 0))}</strong> para 
-                atingir 100% e <strong>{Math.ceil((meta.meta_unidades || 0) - (vendas?.totalUnidades || 0))}</strong> unidades.
+                Faltam <strong>{formatCurrency((consolidado.meta_valor || 0) - (vendas?.totalValor || 0))}</strong> para 
+                atingir 100% e <strong>{Math.ceil((consolidado.meta_unidades || 0) - (vendas?.totalUnidades || 0))}</strong> unidades.
               </AlertDescription>
             </Alert>
           )}
 
           {/* Cards KPI */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Meta do Mês */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {/* Meta Comercial */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Meta do Mês</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Meta Comercial</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                ) : meta?.comercial && (meta.comercial.meta_valor > 0 || meta.comercial.meta_unidades > 0 || meta.comercial.meta_propostas > 0) ? (
+                  <>
+                    {meta.comercial.meta_valor > 0 && (
+                      <div className="text-2xl font-bold">{formatCurrency(meta.comercial.meta_valor)}</div>
+                    )}
+                    {meta.comercial.meta_unidades > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        🏢 {meta.comercial.meta_unidades} unidades
+                      </p>
+                    )}
+                    {meta.comercial.meta_propostas > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        📋 {meta.comercial.meta_propostas} propostas
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Sem meta definida</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Meta de Atividades */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Meta Atividades</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                ) : meta ? (
+                ) : meta?.atividades && (meta.atividades.meta_visitas > 0 || meta.atividades.meta_atendimentos > 0 || meta.atividades.meta_treinamentos > 0) ? (
                   <>
-                    {meta.meta_valor > 0 && (
-                      <div className="text-2xl font-bold">{formatCurrency(meta.meta_valor)}</div>
-                    )}
-                    {meta.meta_unidades > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {meta.meta_unidades} unidades
+                    {meta.atividades.meta_visitas > 0 && (
+                      <p className="text-sm font-medium">
+                        🏠 {meta.atividades.meta_visitas} visitas
                       </p>
                     )}
-                    {meta.meta_visitas > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        🏠 {meta.meta_visitas} visitas
+                    {meta.atividades.meta_atendimentos > 0 && (
+                      <p className="text-sm font-medium mt-1">
+                        📞 {meta.atividades.meta_atendimentos} atendimentos
                       </p>
                     )}
-                    {meta.meta_atendimentos > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        📞 {meta.meta_atendimentos} atendimentos
+                    {meta.atividades.meta_treinamentos > 0 && (
+                      <p className="text-sm font-medium mt-1">
+                        📚 {meta.atividades.meta_treinamentos} treinamentos
                       </p>
-                    )}
-                    {meta.meta_valor === 0 && meta.meta_unidades === 0 && meta.meta_visitas === 0 && meta.meta_atendimentos === 0 && (
-                      <div className="text-sm text-muted-foreground">Sem valores definidos</div>
                     )}
                   </>
                 ) : (
-                  <div className="text-sm text-muted-foreground">Meta não definida</div>
+                  <div className="text-sm text-muted-foreground">Sem meta definida</div>
                 )}
               </CardContent>
             </Card>
@@ -444,10 +469,8 @@ const MetasComerciais = () => {
             </Card>
           </div>
 
-          {/* Gráfico e Ranking */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Gráfico Histórico */}
-            <Card className="lg:col-span-2">
+          {/* Gráfico Histórico */}
+          <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-lg">Realizado vs Meta - Últimos 6 meses</CardTitle>
               </CardHeader>
@@ -490,52 +513,6 @@ const MetasComerciais = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* Ranking Corretores */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Ranking de Corretores
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingRanking ? (
-                  <div className="flex items-center justify-center h-[300px]">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : ranking && ranking.length > 0 ? (
-                  <div className="space-y-3">
-                    {ranking.map((corretor, index) => (
-                      <div key={corretor.id} className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-yellow-950' :
-                          index === 1 ? 'bg-gray-300 text-gray-700' :
-                          index === 2 ? 'bg-amber-600 text-amber-100' :
-                          'bg-muted text-muted-foreground'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{corretor.nome}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {corretor.unidades} unidade{corretor.unidades !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                        <div className="text-sm font-semibold text-right">
-                          {formatCurrency(corretor.valor)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
-                    Nenhuma venda no período
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Gráfico Comparativo por Empreendimento */}
           {comparativoEmpreendimentos && comparativoEmpreendimentos.length > 0 && (
@@ -746,7 +723,7 @@ const MetasComerciais = () => {
           
           <div className="space-y-4 py-4">
             {/* Tipo de Meta */}
-            {!editingMeta && (
+            {(
               <div className="space-y-2">
                 <Label>Tipo de Meta</Label>
                 <div className="grid grid-cols-2 gap-2">
