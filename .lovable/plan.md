@@ -1,24 +1,20 @@
 
+# Corrigir alinhamento do "Total" nos CategoriaCards
 
-# Mover "Cliente Direto" e renomear "Imobiliária" na categoria
+## Problema
 
-## Problema 1: "Imobiliária" ainda aparece nos botoes de categoria (Etapa 1)
+Os cards de categoria no Forecast tem alturas diferentes dependendo da quantidade de tipos de atividade listados. O footer "Total" fica colado ao conteudo, causando desalinhamento visual entre os cards (como visivel na imagem).
 
-O label "Imobiliária" nos botoes de categoria vem de `ATIVIDADE_CATEGORIA_LABELS` no arquivo de tipos. Precisa ser renomeado para "Imob. e Corretores" (abreviado para caber no grid de 4 colunas).
+## Solucao
 
-**Arquivo:** `src/types/atividades.types.ts`
-- Alterar `imobiliaria: 'Imobiliária'` para `imobiliaria: 'Imob. e Corretores'`
+Fazer o card ocupar toda a altura disponivel e empurrar o footer "Total" para o fundo, usando flexbox com `flex-1` na area de conteudo.
 
-## Problema 2: "Cliente Direto" deve ficar logo abaixo do seletor de cliente
+**Arquivo:** `src/components/forecast/CategoriaCard.tsx`
 
-Atualmente o toggle "Cliente Direto" esta no final da Etapa 2 (linha 933). Precisa ser movido para logo apos o seletor de cliente e o dialog de novo cliente (apos linha 786).
+Mudancas:
+1. Adicionar `h-full` ao `Card` para ocupar toda a altura do grid
+2. Mudar `CardContent` de `space-y-3` para layout flex vertical (`flex flex-col`) com `h-full`
+3. Envolver a lista de tipos em uma `div` com `flex-1` para que ela ocupe o espaco restante e empurre badges + total para baixo
+4. Manter badges e footer total no final do card, sem `flex-1`
 
-**Arquivo:** `src/components/atividades/AtividadeForm.tsx`
-- Remover o bloco "Cliente Direto" da posicao atual (linhas 933-949)
-- Inserir o mesmo bloco logo apos o `NovoClienteRapidoDialog` (apos linha 786), antes do campo "Empreendimento"
-
-## Resumo
-
-- `src/types/atividades.types.ts` - renomear label da categoria imobiliaria
-- `src/components/atividades/AtividadeForm.tsx` - mover toggle "Cliente Direto" para baixo do seletor de cliente
-
+Resultado: independente de quantos tipos existam, o "Total" ficara sempre alinhado na parte inferior de todos os cards.
