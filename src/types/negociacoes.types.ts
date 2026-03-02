@@ -327,6 +327,7 @@ export interface RecusarPropostaData {
 export interface NegociacaoFilters {
   empreendimento_id?: string;
   corretor_id?: string;
+  gestor_id?: string;
   funil_etapa_id?: string;
   status_proposta?: StatusProposta;
   com_proposta?: boolean;

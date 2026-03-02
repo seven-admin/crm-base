@@ -115,6 +115,10 @@ export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?
         query = query.eq('corretor_id', filters.corretor_id);
       }
 
+      if (filters?.gestor_id) {
+        query = query.eq('gestor_id', filters.gestor_id);
+      }
+
       if (filters?.funil_etapa_id) {
         query = query.eq('funil_etapa_id', filters.funil_etapa_id);
       }
@@ -135,7 +139,9 @@ export function useNegociacoes(filters?: NegociacaoFilters, options?: { enabled?
         const startDate = `${filters.mes}-01`;
         const [y, m] = filters.mes.split('-').map(Number);
         const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
-        query = query.gte('created_at', startDate).lt('created_at', nextMonth);
+        query = query.or(
+          `and(data_primeiro_atendimento.gte.${startDate},data_primeiro_atendimento.lt.${nextMonth}),and(data_primeiro_atendimento.is.null,created_at.gte.${startDate},created_at.lt.${nextMonth})`
+        );
       }
 
       const { data, error } = await query;
@@ -200,7 +206,13 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
         const startDate = `${filters.mes}-01`;
         const [y, m] = filters.mes.split('-').map(Number);
         const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
-        query = query.gte('created_at', startDate).lt('created_at', nextMonth);
+        query = query.or(
+          `and(data_primeiro_atendimento.gte.${startDate},data_primeiro_atendimento.lt.${nextMonth}),and(data_primeiro_atendimento.is.null,created_at.gte.${startDate},created_at.lt.${nextMonth})`
+        );
+      }
+
+      if (filters?.gestor_id) {
+        query = query.eq('gestor_id', filters.gestor_id);
       }
 
       const { data, error } = await query;
@@ -1607,6 +1619,7 @@ export interface NegociacoesPaginatedFilters {
   status_proposta?: string;
   funil_etapa_id?: string;
   temperatura?: string;
+  mes?: string;
   page?: number;
   pageSize?: number;
 }
@@ -1630,6 +1643,14 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
       if (filters.funil_etapa_id) query = query.eq('funil_etapa_id', filters.funil_etapa_id);
       if (filters.search) query = query.ilike('cliente.nome', `%${filters.search}%`);
       if (filters.temperatura) query = query.eq('cliente.temperatura', filters.temperatura);
+      if (filters.mes) {
+        const startDate = `${filters.mes}-01`;
+        const [y, m] = filters.mes.split('-').map(Number);
+        const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+        query = query.or(
+          `and(data_primeiro_atendimento.gte.${startDate},data_primeiro_atendimento.lt.${nextMonth}),and(data_primeiro_atendimento.is.null,created_at.gte.${startDate},created_at.lt.${nextMonth})`
+        );
+      }
 
       const { count, error } = await query;
       if (error) throw error;
@@ -1665,6 +1686,14 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
       if (filters.funil_etapa_id) query = query.eq('funil_etapa_id', filters.funil_etapa_id);
       if (filters.search) query = query.ilike('cliente.nome', `%${filters.search}%`);
       if (filters.temperatura) query = query.eq('cliente.temperatura', filters.temperatura);
+      if (filters.mes) {
+        const startDate = `${filters.mes}-01`;
+        const [y, m] = filters.mes.split('-').map(Number);
+        const nextMonth = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+        query = query.or(
+          `and(data_primeiro_atendimento.gte.${startDate},data_primeiro_atendimento.lt.${nextMonth}),and(data_primeiro_atendimento.is.null,created_at.gte.${startDate},created_at.lt.${nextMonth})`
+        );
+      }
 
       const { data, error } = await query;
       if (error) throw error;
