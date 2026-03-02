@@ -68,6 +68,7 @@ const MetasComerciais = () => {
   const [metaAtendimentos, setMetaAtendimentos] = useState('');
   const [metaTreinamentos, setMetaTreinamentos] = useState('');
   const [metaPropostas, setMetaPropostas] = useState('');
+  const [metaLigacoes, setMetaLigacoes] = useState('');
   const [metaMes, setMetaMes] = useState(format(new Date(), 'MM'));
   const [metaAno, setMetaAno] = useState(currentYear.toString());
   const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'gestor'>('geral');
@@ -134,6 +135,7 @@ const MetasComerciais = () => {
     setMetaAtendimentos('');
     setMetaTreinamentos('');
     setMetaPropostas('');
+    setMetaLigacoes('');
     setMetaPeriodicidade('mensal');
     setMetaSemanaDate(undefined);
   };
@@ -146,6 +148,7 @@ const MetasComerciais = () => {
     setMetaAtendimentos(meta?.atividades?.meta_atendimentos?.toString() || '');
     setMetaTreinamentos(meta?.atividades?.meta_treinamentos?.toString() || '');
     setMetaPropostas(meta?.comercial?.meta_propostas?.toString() || '');
+    setMetaLigacoes(meta?.atividades?.meta_ligacoes?.toString() || '');
     setMetaMes(format(competencia, 'MM'));
     setMetaAno(format(competencia, 'yyyy'));
     setMetaEscopo(empreendimentoId ? 'empreendimento' : 'geral');
@@ -177,6 +180,7 @@ const MetasComerciais = () => {
     setMetaAtendimentos((metaItem as any).meta_atendimentos?.toString() || '');
     setMetaTreinamentos((metaItem as any).meta_treinamentos?.toString() || '');
     setMetaPropostas((metaItem as any).meta_propostas?.toString() || '');
+    setMetaLigacoes((metaItem as any).meta_ligacoes?.toString() || '');
     const periodicidade = (metaItem as any).periodicidade || 'mensal';
     setMetaPeriodicidade(periodicidade);
     const competenciaDate = new Date(metaItem.competencia + 'T00:00:00');
@@ -219,6 +223,7 @@ const MetasComerciais = () => {
         meta_atendimentos: parseInt(metaAtendimentos) || 0,
         meta_treinamentos: parseInt(metaTreinamentos) || 0,
         meta_propostas: metaTipo === 'comercial' ? (parseInt(metaPropostas) || 0) : 0,
+        meta_ligacoes: metaTipo === 'atividades' ? (parseInt(metaLigacoes) || 0) : 0,
         tipo: metaTipo,
       });
       toast.success('Meta salva com sucesso!');
@@ -619,6 +624,7 @@ const MetasComerciais = () => {
                       <TableHead className="text-right">Atend.</TableHead>
                       <TableHead className="text-right">Trein.</TableHead>
                       <TableHead className="text-right">Propostas</TableHead>
+                      <TableHead className="text-right">Ligações</TableHead>
                       {isAdmin() && <TableHead className="w-[100px]">Ações</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -671,6 +677,9 @@ const MetasComerciais = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           {(metaItem as any).meta_propostas || 0}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {(metaItem as any).meta_ligacoes || 0}
                         </TableCell>
                         {isAdmin() && (
                           <TableCell>
@@ -982,8 +991,8 @@ const MetasComerciais = () => {
                   <Input
                     id="metaLigacoes"
                     type="number"
-                    value={metaPropostas}
-                    onChange={(e) => setMetaPropostas(e.target.value)}
+                    value={metaLigacoes}
+                    onChange={(e) => setMetaLigacoes(e.target.value)}
                     placeholder="Ex: 100"
                   />
                 </div>
