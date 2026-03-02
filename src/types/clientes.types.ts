@@ -30,18 +30,20 @@ export const CLIENTE_FASE_ICON_COLORS: Record<ClienteFase, string> = {
 };
 
 // Temperatura (nível de interesse)
-export type ClienteTemperatura = 'frio' | 'morno' | 'quente';
+export type ClienteTemperatura = 'frio' | 'morno' | 'quente' | 'morto';
 
 export const CLIENTE_TEMPERATURA_LABELS: Record<ClienteTemperatura, string> = {
   frio: 'Frio',
   morno: 'Morno',
-  quente: 'Quente'
+  quente: 'Quente',
+  morto: 'Morto'
 };
 
 export const CLIENTE_TEMPERATURA_COLORS: Record<ClienteTemperatura, string> = {
   frio: 'bg-blue-100 text-blue-800 border-blue-200',
   morno: 'bg-orange-100 text-orange-800 border-orange-200',
-  quente: 'bg-red-100 text-red-800 border-red-200'
+  quente: 'bg-red-100 text-red-800 border-red-200',
+  morto: 'bg-gray-100 text-gray-800 border-gray-200'
 };
 
 // Motivos de perda pré-definidos

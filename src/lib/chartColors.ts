@@ -39,6 +39,7 @@ export const CORES_TEMPERATURA = {
   frio: '#3B82F6',
   morno: '#F59E0B',
   quente: '#EF4444',
+  morto: '#6B7280',
 } as const;
 
 // Cores de ranking (1º, 2º, 3º...)

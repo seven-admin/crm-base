@@ -783,6 +783,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                           frio: 'border-blue-400 bg-blue-50 text-blue-700',
                           morno: 'border-orange-400 bg-orange-50 text-orange-700',
                           quente: 'border-red-400 bg-red-50 text-red-700',
+                          morto: 'border-gray-400 bg-gray-50 text-gray-700',
                         };
                         return (
                           <button

@@ -74,7 +74,7 @@ const formSchema = z
     hora_inicio: z.string().optional(),
     hora_fim: z.string().optional(),
     observacoes: z.string().optional(),
-    temperatura_cliente: z.enum(['frio', 'morno', 'quente']).optional(),
+    temperatura_cliente: z.enum(['frio', 'morno', 'quente', 'morto']).optional(),
     requer_followup: z.boolean().default(false),
     data_followup: z.date().optional(),
     deadline_date: z.date().optional(),
