@@ -1,93 +1,60 @@
 
-# Correcao completa do modulo de Metas Comerciais
 
-## Problemas identificados
+# Reestruturar Dashboard de Metas + Corrigir Edicao + Exibir Todos os Campos
 
-### Problema 1: Dashboard mostra "Meta nao definida" mesmo com metas criadas
-O hook `useMetasPorMes` filtra `empreendimento_id=is.null` quando o filtro esta em "Todos os empreendimentos". Porem, todas as 3 metas existentes tem `empreendimento_id` preenchido (VITHORIA DO SOL e LIVTY). Resultado: retorna array vazio `[]`.
+## 1. Remover Ranking de Corretores do Dashboard
 
-O usuario quer que "Todos os empreendimentos" **consolide** todas as metas (de todos os empreendimentos + gerais).
+Remover o card "Ranking de Corretores" (linhas 494-537) e fazer o grafico historico ocupar largura total (remover grid `lg:grid-cols-3`, usar largura total).
 
-### Problema 2: Grafico historico vazio pelo mesmo motivo
-O hook `useHistoricoMetas` tambem filtra `.is('empreendimento_id', null)` quando nao ha filtro de empreendimento, perdendo as metas vinculadas a empreendimentos.
+**Arquivo:** `src/pages/MetasComerciais.tsx`
 
-### Problema 3: Tabela "Gerenciar Metas" nao mostra coluna Tipo
-A tabela retorna os dados corretamente (3 registros), mas nao exibe a coluna "Tipo" (comercial / atividades), dificultando a visualizacao.
+## 2. Criar cards separados por tipo de meta (Comercial e Atividades)
 
-### Problema 4: Unique index removido
-A migration `20260302153108` removeu o unique index e nao recriou com a coluna `tipo`. Isso permite registros duplicados.
+Substituir o card unico "Meta do Mes" por dois cards:
 
-## Plano de correcao
+- **Card "Meta Comercial"**: VGV (meta_valor), unidades (meta_unidades), propostas (meta_propostas)
+- **Card "Meta de Atividades"**: visitas (meta_visitas), atendimentos (meta_atendimentos), treinamentos (meta_treinamentos)
 
-### 1. Refatorar `useMetasPorMes` para consolidar tudo quando sem filtro de empreendimento
+Cada card mostra "Sem meta definida" se nao houver valores para aquele tipo.
 
-**Arquivo:** `src/hooks/useMetasComerciais.ts` (linhas 42-81)
+## 3. Refatorar `useMetasPorMes` para retornar dados separados por tipo
 
-Remover o filtro `.is('empreendimento_id', null)` quando `empreendimentoId` nao e passado. Assim, todas as metas do mes serao somadas (de todos os empreendimentos + gerais).
+Modificar o hook para retornar:
+- `comercial`: soma apenas das metas tipo "comercial"
+- `atividades`: soma apenas das metas tipo "atividades"  
+- `consolidado`: soma de tudo (para calculo de atingimento geral)
 
-```typescript
-// ANTES:
-if (empreendimentoId) {
-  query = query.eq('empreendimento_id', empreendimentoId);
-} else {
-  query = query.is('empreendimento_id', null); // <-- REMOVE ISSO
-}
+**Arquivo:** `src/hooks/useMetasComerciais.ts`
 
-// DEPOIS:
-if (empreendimentoId) {
-  query = query.eq('empreendimento_id', empreendimentoId);
-}
-// Sem filtro = consolida todas as metas do mes
-```
+## 4. Corrigir dialog de edicao para carregar dados do banco
 
-### 2. Refatorar `useHistoricoMetas` da mesma forma
+Atualmente, ao clicar "Editar" na tabela, o tipo de meta NAO e exibido porque o seletor de tipo esta escondido com `{!editingMeta && ...}` (linha 749). 
 
-**Arquivo:** `src/hooks/useMetasComerciais.ts` (linhas 221-225)
+Correcao: mostrar o tipo de meta tambem ao editar (modo leitura ou editavel), para que os campos corretos aparecam e o usuario veja/altere os valores.
 
-Remover o filtro `.is('empreendimento_id', null)` quando nao ha filtro de empreendimento, para que o grafico historico tambem consolide.
+**Arquivo:** `src/pages/MetasComerciais.tsx` - remover a condicao `!editingMeta` do bloco de selecao de tipo (linha 749)
 
-```typescript
-// ANTES:
-if (empreendimentoId) {
-  metaQuery = metaQuery.eq('empreendimento_id', empreendimentoId);
-} else {
-  metaQuery = metaQuery.is('empreendimento_id', null); // REMOVE
-}
+## 5. Exibir todos os campos na tabela de Gerenciar Metas
 
-// DEPOIS:
-if (empreendimentoId) {
-  metaQuery = metaQuery.eq('empreendimento_id', empreendimentoId);
-}
-```
+A tabela ja exibe: Visitas, Atendimentos, Treinamentos, Propostas. O banco de dados NAO possui coluna "ligacoes" (`meta_ligacoes`). Se o usuario deseja rastrear ligacoes, sera necessario criar essa coluna no banco.
 
-### 3. Adicionar coluna "Tipo" na tabela de Gerenciar Metas
+Alternativa (sem migration): verificar se o campo que o usuario chama de "ligacoes" ja existe com outro nome. Caso nao, sera adicionada uma nova coluna `meta_ligacoes` ao banco e ao formulario/tabela.
 
-**Arquivo:** `src/pages/MetasComerciais.tsx` (linhas 633-714)
+## 6. Ajustar layout dos KPIs do dashboard
 
-Adicionar uma coluna "Tipo" no TableHeader e TableBody da tabela de "Gerenciar Metas" mostrando uma badge com "Comercial" ou "Atividades".
+Grid passara para 5 cards: Meta Comercial, Meta Atividades, Vendas Realizadas, Atingimento, Forecast Ponderado.
 
-### 4. Recriar unique index incluindo coluna `tipo`
-
-**Migration SQL:**
-
-```sql
-CREATE UNIQUE INDEX IF NOT EXISTS metas_comerciais_unique_comp_emp_cor_ges_per_tipo
-ON public.metas_comerciais (
-  competencia,
-  COALESCE(empreendimento_id, '00000000-0000-0000-0000-000000000000'),
-  COALESCE(corretor_id, '00000000-0000-0000-0000-000000000000'),
-  COALESCE(gestor_id, '00000000-0000-0000-0000-000000000000'),
-  periodicidade,
-  tipo
-);
-```
-
-Isso permite ter uma meta "comercial" e uma "atividades" para o mesmo mes/escopo, sem duplicatas.
+Layout: `grid-cols-1 md:grid-cols-2 lg:grid-cols-5`
 
 ## Resumo das alteracoes
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/hooks/useMetasComerciais.ts` | Remover filtro `is('empreendimento_id', null)` em `useMetasPorMes` e `useHistoricoMetas` quando sem filtro |
-| `src/pages/MetasComerciais.tsx` | Adicionar coluna "Tipo" na tabela de Gerenciar Metas |
-| Migration SQL | Recriar unique index incluindo coluna `tipo` |
+| `src/hooks/useMetasComerciais.ts` | Retornar dados separados por tipo (comercial/atividades/consolidado) |
+| `src/pages/MetasComerciais.tsx` | Remover ranking, criar 2 cards de meta, corrigir dialog de edicao, ajustar grid |
+| Migration SQL (se necessario) | Adicionar coluna `meta_ligacoes` caso o usuario confirme |
+
+## Ponto de atencao
+
+O banco nao tem coluna `meta_ligacoes`. Se "ligacoes" for um campo desejado, precisaremos de uma migration para adiciona-lo. Caso o usuario esteja se referindo a um campo existente (como atendimentos ou propostas), nenhuma alteracao no banco sera necessaria.
+
