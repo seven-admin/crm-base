@@ -24,10 +24,10 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
     : [];
 
   return (
-    <Card className="transition-all hover:shadow-md">
-      <CardContent className="p-4 space-y-3">
+    <Card className="transition-all hover:shadow-md h-full">
+      <CardContent className="p-4 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-3">
           <div className={cn('p-1.5 rounded-lg shrink-0', bgColor)}>
             <Icon className={cn('h-4 w-4', iconColor)} />
           </div>
@@ -35,20 +35,22 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
         </div>
 
         {/* Lista de tipos */}
-        {tipos.length > 0 ? (
-          <div className="space-y-1">
-            {tipos.map(([tipo, qtd]) => (
-              <div key={tipo} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground truncate">
-                  {ATIVIDADE_TIPO_LABELS[tipo as AtividadeTipo] || tipo}
-                </span>
-                <span className="font-medium text-foreground tabular-nums ml-2">{qtd}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground italic">Nenhuma atividade</p>
-        )}
+        <div className="flex-1">
+          {tipos.length > 0 ? (
+            <div className="space-y-1">
+              {tipos.map(([tipo, qtd]) => (
+                <div key={tipo} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground truncate">
+                    {ATIVIDADE_TIPO_LABELS[tipo as AtividadeTipo] || tipo}
+                  </span>
+                  <span className="font-medium text-foreground tabular-nums ml-2">{qtd}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Nenhuma atividade</p>
+          )}
+        </div>
 
         {/* Status badges */}
         {total > 0 && (
