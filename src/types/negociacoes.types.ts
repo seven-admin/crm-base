@@ -331,4 +331,5 @@ export interface NegociacaoFilters {
   status_proposta?: StatusProposta;
   com_proposta?: boolean;
   temperatura?: ClienteTemperatura;
+  mes?: string;
 }

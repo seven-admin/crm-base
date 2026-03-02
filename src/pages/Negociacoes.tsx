@@ -28,7 +28,7 @@ import {
 
 const FILTER_KEYS: (keyof NegociacoesFilters)[] = [
   'search', 'empreendimento_id', 'corretor_id', 'gestor_id',
-  'status_proposta', 'funil_etapa_id', 'temperatura',
+  'status_proposta', 'funil_etapa_id', 'temperatura', 'mes',
 ];
 
 function filtersFromParams(params: URLSearchParams): NegociacoesFilters {
@@ -74,7 +74,8 @@ const Funil = () => {
     funil_etapa_id: filters.funil_etapa_id,
     status_proposta: filters.status_proposta as any,
     temperatura: filters.temperatura as any,
-  }), [filters.empreendimento_id, filters.corretor_id, filters.funil_etapa_id, filters.status_proposta, filters.temperatura]);
+    mes: filters.mes,
+  }), [filters.empreendimento_id, filters.corretor_id, filters.funil_etapa_id, filters.status_proposta, filters.temperatura, filters.mes]);
 
   const { data: negociacoesKanban = [], isLoading: isLoadingKanban } = useNegociacoesKanban(
     kanbanFilters,

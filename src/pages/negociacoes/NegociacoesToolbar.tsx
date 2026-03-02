@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -13,6 +14,8 @@ import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
 import { STATUS_PROPOSTA_LABELS, StatusProposta } from '@/types/negociacoes.types';
 import type { ClienteTemperatura } from '@/types/clientes.types';
+import { format, subMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const TEMPERATURA_OPTIONS: { value: ClienteTemperatura; label: string }[] = [
   { value: 'frio', label: '❄️ Frio' },
@@ -28,6 +31,7 @@ export interface NegociacoesFilters {
   status_proposta?: string;
   funil_etapa_id?: string;
   temperatura?: ClienteTemperatura;
+  mes?: string;
 }
 
 interface NegociacoesToolbarProps {
@@ -40,6 +44,17 @@ export function NegociacoesToolbar({ filters, onFiltersChange }: NegociacoesTool
   const { corretores = [] } = useCorretores();
   const { data: gestores = [] } = useGestoresProduto();
   const { data: etapas = [] } = useEtapasPadraoAtivas();
+
+  const mesesOptions = useMemo(() => {
+    const hoje = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = subMonths(hoje, i);
+      return {
+        value: format(d, 'yyyy-MM'),
+        label: format(d, 'MMM/yyyy', { locale: ptBR }).replace(/^./, c => c.toUpperCase()),
+      };
+    });
+  }, []);
 
   const updateFilter = (key: keyof NegociacoesFilters, value: string | undefined) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -64,6 +79,21 @@ export function NegociacoesToolbar({ filters, onFiltersChange }: NegociacoesTool
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <Select
+          value={filters.mes || 'all'}
+          onValueChange={(v) => updateFilter('mes', v === 'all' ? undefined : v)}
+        >
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Mês" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Meses</SelectItem>
+            {mesesOptions.map((m) => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select
           value={filters.empreendimento_id || 'all'}
           onValueChange={(v) => updateFilter('empreendimento_id', v === 'all' ? undefined : v)}
