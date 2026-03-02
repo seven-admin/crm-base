@@ -1,28 +1,49 @@
 
-# Adicionar temperatura "Morto" nas atividades
+
+# Temperatura: visual corporativo com icones Lucide e reordenada
 
 ## O que muda
 
-Adicionar a opcao "Morto" (💀) como uma quarta temperatura, representando clientes/negociacoes sem perspectiva. A cor sera cinza escuro para diferenciar visualmente.
+Substituir os emojis por icones Lucide React (estilo termometro, como na imagem de referencia) para um visual mais clean e corporativo. Reordenar para Morto aparecer primeiro (a esquerda).
 
-## Arquivos a alterar
+## Alteracao 1 — Icones Lucide no lugar de emojis
 
-### 1. `src/types/clientes.types.ts`
-- Adicionar `'morto'` ao type `ClienteTemperatura`
-- Adicionar label em `CLIENTE_TEMPERATURA_LABELS`: `morto: 'Morto'`
-- Adicionar cor em `CLIENTE_TEMPERATURA_COLORS`: `morto: 'bg-gray-100 text-gray-800 border-gray-200'`
+**Arquivo:** `src/components/atividades/TemperaturaSelector.tsx`
 
-### 2. `src/components/atividades/TemperaturaSelector.tsx`
-- Adicionar item no array `TEMPERATURAS`: `{ value: 'morto', label: 'Morto', emoji: '💀', activeClass: 'bg-gray-700 text-white border-gray-700', inactiveClass: 'border-gray-400 text-gray-600 hover:bg-gray-50' }`
+- Importar icones do `lucide-react`: `ThermometerSnowflake`, `Thermometer`, `ThermometerSun`, `Skull`
+- Trocar o campo `emoji: string` por `icon: React.ComponentType` no array `TEMPERATURAS`
+- Mapeamento:
+  - Morto: `Skull` (caveira clean)
+  - Frio: `ThermometerSnowflake` (termometro com floco)
+  - Morno: `Thermometer` (termometro neutro)
+  - Quente: `ThermometerSun` (termometro com sol)
+- Renderizar o icone como componente (`<temp.icon className="h-3 w-3" />`) no lugar do emoji texto
+- Array reordenado: Morto, Frio, Morno, Quente
 
-### 3. `src/components/forecast/FunilTemperatura.tsx`
-- Adicionar cor no `CORES_TEMPERATURA`: `morto: 'hsl(var(--chart-4))'`
+Array final:
+```text
+[
+  { value: 'morto',  label: 'Morto',  icon: Skull,                 activeClass: '...', inactiveClass: '...' },
+  { value: 'frio',   label: 'Frio',   icon: ThermometerSnowflake,  activeClass: '...', inactiveClass: '...' },
+  { value: 'morno',  label: 'Morno',  icon: Thermometer,           activeClass: '...', inactiveClass: '...' },
+  { value: 'quente', label: 'Quente', icon: ThermometerSun,        activeClass: '...', inactiveClass: '...' },
+]
+```
 
-### 4. `src/components/clientes/ClienteForm.tsx`
-- Adicionar cor no `colorMap` local: `morto: 'border-gray-400 bg-gray-50 text-gray-700'`
+## Alteracao 2 — Sempre mostrar temperatura no formulario de atividades
 
-## Detalhes tecnicos
+**Arquivo:** `src/components/atividades/AtividadeForm.tsx`
 
-- O campo `temperatura_cliente` no banco de dados eh do tipo `TEXT` (sem constraint de enum), entao nao precisa de migracao SQL
-- O type `ClienteTemperatura` eh a unica fonte de verdade e propaga automaticamente para todos os componentes que usam `Record<ClienteTemperatura, ...>`
-- O TypeScript vai apontar erros em qualquer `Record` incompleto, garantindo que nenhum arquivo fique de fora
+- Remover a condicao `{clienteId && (` que esconde o campo de temperatura (~linha 838)
+- Temperatura fica sempre visivel, independente de ter cliente selecionado
+- Substituir os botoes inline por `TemperaturaSelector` (consistencia visual + inclui "Morto")
+- Remover o `useEffect` que limpa temperatura quando nao tem cliente (~linha 180-183)
+- Ajustar label de "Temperatura do Cliente" para "Temperatura"
+
+## Resumo de arquivos
+
+| Arquivo | Mudanca |
+|---------|---------|
+| `TemperaturaSelector.tsx` | Emojis viram icones Lucide (termometro/caveira), reordenar (Morto primeiro) |
+| `AtividadeForm.tsx` | Sempre mostrar temperatura + usar TemperaturaSelector |
+
