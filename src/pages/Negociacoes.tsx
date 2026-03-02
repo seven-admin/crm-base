@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,12 +26,39 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+const FILTER_KEYS: (keyof NegociacoesFilters)[] = [
+  'search', 'empreendimento_id', 'corretor_id', 'gestor_id',
+  'status_proposta', 'funil_etapa_id', 'temperatura',
+];
+
+function filtersFromParams(params: URLSearchParams): NegociacoesFilters {
+  const f: NegociacoesFilters = {};
+  for (const key of FILTER_KEYS) {
+    const v = params.get(key);
+    if (v) (f as any)[key] = v;
+  }
+  return f;
+}
+
+function filtersToParams(filters: NegociacoesFilters, view: string, page: number): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const key of FILTER_KEYS) {
+    const v = (filters as any)[key];
+    if (v) params.set(key, v);
+  }
+  if (view !== 'kanban') params.set('view', view);
+  if (page > 1) params.set('page', String(page));
+  return params;
+}
+
 const Funil = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
-  const [view, setView] = useState<'kanban' | 'lista'>('kanban');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<NegociacoesFilters>({});
+
+  const view = (searchParams.get('view') as 'kanban' | 'lista') || 'kanban';
+  const page = Number(searchParams.get('page') || '1');
+  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams.toString()]);
   
   // Dialog states
   const [moverNeg, setMoverNeg] = useState<Negociacao | null>(null);
@@ -85,9 +112,12 @@ const Funil = () => {
     return acc;
   }, [metricsSource]);
 
+  const updateSearchParams = useCallback((newFilters: NegociacoesFilters, newView?: string, newPage?: number) => {
+    setSearchParams(filtersToParams(newFilters, newView || view, newPage || 1), { replace: true });
+  }, [view, setSearchParams]);
+
   const handleFiltersChange = (newFilters: NegociacoesFilters) => {
-    setFilters(newFilters);
-    setPage(1);
+    updateSearchParams(newFilters, view, 1);
   };
 
   const handleExcluir = async () => {
@@ -134,7 +164,7 @@ const Funil = () => {
 
       {/* Tabs + Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <Tabs value={view} onValueChange={(v) => setView(v as 'kanban' | 'lista')} className="w-auto">
+        <Tabs value={view} onValueChange={(v) => updateSearchParams(filters, v, 1)} className="w-auto">
           <TabsList>
             <TabsTrigger value="kanban" className="gap-1.5">
               <LayoutGrid className="h-4 w-4" />
@@ -174,7 +204,7 @@ const Funil = () => {
           page={page}
           totalPages={totalPages}
           totalItems={total}
-          onPageChange={setPage}
+          onPageChange={(p) => updateSearchParams(filters, view, p)}
           onMover={(neg) => setMoverNeg(neg)}
           onHistorico={(neg) => setHistoricoNeg(neg)}
           onExcluir={(neg) => setExcluirNeg(neg)}
