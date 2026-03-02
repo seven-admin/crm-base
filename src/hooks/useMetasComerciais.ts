@@ -49,6 +49,7 @@ export interface MetasPorTipo {
     meta_visitas: number;
     meta_atendimentos: number;
     meta_treinamentos: number;
+    meta_ligacoes: number;
   };
   consolidado: MetaComercial;
 }
@@ -90,6 +91,7 @@ export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
         meta_visitas: atividades.reduce((sum, m) => sum + (m.meta_visitas || 0), 0),
         meta_atendimentos: atividades.reduce((sum, m) => sum + (m.meta_atendimentos || 0), 0),
         meta_treinamentos: atividades.reduce((sum, m) => sum + (m.meta_treinamentos || 0), 0),
+        meta_ligacoes: atividades.reduce((sum, m) => sum + ((m as any).meta_ligacoes || 0), 0),
       };
 
       // Consolidado (soma de tudo)
@@ -333,6 +335,7 @@ export function useCreateMeta() {
       meta_atendimentos?: number;
       meta_treinamentos?: number;
       meta_propostas?: number;
+      meta_ligacoes?: number;
       tipo?: string;
     }) => {
       // Select-then-insert/update para evitar problemas com upsert em colunas nullable
@@ -369,6 +372,7 @@ export function useCreateMeta() {
         meta_atendimentos: data.meta_atendimentos || 0,
         meta_treinamentos: data.meta_treinamentos || 0,
         meta_propostas: data.meta_propostas || 0,
+        meta_ligacoes: data.meta_ligacoes || 0,
         tipo,
       };
 
@@ -406,6 +410,7 @@ export function useCreateMeta() {
         meta_atendimentos: data.meta_atendimentos || 0,
         meta_treinamentos: data.meta_treinamentos || 0,
         meta_propostas: data.meta_propostas || 0,
+        meta_ligacoes: data.meta_ligacoes || 0,
         criado_por: criador ? { id: criador.id, nome: criador.nome, telefone: criador.telefone } : null,
       });
 
@@ -625,6 +630,7 @@ export function useCopiarMetas() {
           meta_atendimentos: meta.meta_atendimentos || 0,
           meta_treinamentos: meta.meta_treinamentos || 0,
           meta_propostas: meta.meta_propostas || 0,
+          meta_ligacoes: (meta as any).meta_ligacoes || 0,
         };
 
         if (existing?.id) {

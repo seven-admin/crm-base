@@ -3271,6 +3271,7 @@ export type Database = {
           gestor_id: string | null
           id: string
           meta_atendimentos: number
+          meta_ligacoes: number
           meta_propostas: number
           meta_treinamentos: number
           meta_unidades: number
@@ -3288,6 +3289,7 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           meta_atendimentos?: number
+          meta_ligacoes?: number
           meta_propostas?: number
           meta_treinamentos?: number
           meta_unidades?: number
@@ -3305,6 +3307,7 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           meta_atendimentos?: number
+          meta_ligacoes?: number
           meta_propostas?: number
           meta_treinamentos?: number
           meta_unidades?: number
