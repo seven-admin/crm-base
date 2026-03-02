@@ -54,9 +54,8 @@ export function useMetasPorMes(competencia: Date, empreendimentoId?: string) {
       
       if (empreendimentoId) {
         query = query.eq('empreendimento_id', empreendimentoId);
-      } else {
-        query = query.is('empreendimento_id', null);
       }
+      // Sem filtro = consolida todas as metas do mês
       
       const { data, error } = await query;
       
@@ -220,9 +219,8 @@ export function useHistoricoMetas(meses: number = 6, empreendimentoId?: string) 
       
       if (empreendimentoId) {
         metaQuery = metaQuery.eq('empreendimento_id', empreendimentoId);
-      } else {
-        metaQuery = metaQuery.is('empreendimento_id', null);
       }
+      // Sem filtro = consolida todas as metas do mês
 
       // Bulk query 2: all signed contracts in the period (excl. histórico)
       const historicosIds = await getClientesHistoricosIds();
