@@ -222,7 +222,7 @@ export function useCreateAtividade() {
         }
       }
 
-      // Auto-criar negociação na etapa Atendimento para atividades comerciais
+      // Auto-criar negociação na etapa Atendimento para atividades comerciais (com dedup)
       const TIPOS_AUTO_NEGOCIACAO = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
       if (TIPOS_AUTO_NEGOCIACAO.includes(data.tipo)) {
         try {
@@ -233,17 +233,28 @@ export function useCreateAtividade() {
             .eq('is_active', true)
             .maybeSingle();
 
-          if (etapaInicial) {
-            await (supabase as any).from('negociacoes').insert({
-              cliente_id: data.cliente_id,
-              corretor_id: data.corretor_id,
-              empreendimento_id: data.empreendimento_id,
-              imobiliaria_id: data.imobiliaria_id,
-              funil_etapa_id: etapaInicial.id,
-              atividade_origem_id: data.id,
-              data_primeiro_atendimento: new Date().toISOString(),
-              ordem_kanban: 0,
-            });
+          if (etapaInicial && data.cliente_id) {
+            // Verificar duplicidade
+            const { data: existente } = await (supabase as any)
+              .from('negociacoes')
+              .select('id')
+              .eq('cliente_id', data.cliente_id)
+              .eq('empreendimento_id', data.empreendimento_id || '')
+              .eq('funil_etapa_id', etapaInicial.id)
+              .maybeSingle();
+
+            if (!existente) {
+              await (supabase as any).from('negociacoes').insert({
+                cliente_id: data.cliente_id,
+                corretor_id: data.corretor_id,
+                empreendimento_id: data.empreendimento_id,
+                imobiliaria_id: data.imobiliaria_id,
+                funil_etapa_id: etapaInicial.id,
+                atividade_origem_id: data.id,
+                data_primeiro_atendimento: new Date().toISOString(),
+                ordem_kanban: 0,
+              });
+            }
           }
         } catch (e) {
           console.warn('[auto-negociacao] Erro ao criar negociação automática:', e);
@@ -353,11 +364,55 @@ export function useUpdateAtividade() {
         console.warn('[webhook] Erro ao disparar webhook de alteração:', e);
       }
 
+      // Auto-criar negociação ao editar atividade para tipo comercial (com dedup)
+      const TIPOS_AUTO_NEGOCIACAO_UPDATE = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
+      if (TIPOS_AUTO_NEGOCIACAO_UPDATE.includes((result as any).tipo)) {
+        try {
+          const clienteId = (result as any).cliente_id;
+          const empreendimentoId = (result as any).empreendimento_id;
+
+          const { data: etapaInicial } = await (supabase as any)
+            .from('funil_etapas')
+            .select('id')
+            .eq('is_inicial', true)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (etapaInicial && clienteId) {
+            // Verificar duplicidade
+            const { data: existente } = await (supabase as any)
+              .from('negociacoes')
+              .select('id')
+              .eq('cliente_id', clienteId)
+              .eq('empreendimento_id', empreendimentoId || '')
+              .eq('funil_etapa_id', etapaInicial.id)
+              .maybeSingle();
+
+            if (!existente) {
+              await (supabase as any).from('negociacoes').insert({
+                cliente_id: clienteId,
+                corretor_id: (result as any).corretor_id,
+                empreendimento_id: empreendimentoId,
+                imobiliaria_id: (result as any).imobiliaria_id,
+                funil_etapa_id: etapaInicial.id,
+                atividade_origem_id: id,
+                data_primeiro_atendimento: new Date().toISOString(),
+                ordem_kanban: 0,
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('[auto-negociacao] Erro ao criar negociação automática no update:', e);
+        }
+      }
+
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atividades'] });
       queryClient.invalidateQueries({ queryKey: ['atividade'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['negociacoes-kanban'] });
       invalidateDashboards(queryClient);
       toast.success('Atividade atualizada!');
     },
