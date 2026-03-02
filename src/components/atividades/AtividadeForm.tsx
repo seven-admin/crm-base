@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus } from 'lucide-react';
 import { NovoClienteRapidoDialog } from './NovoClienteRapidoDialog';
+import { TemperaturaSelector } from './TemperaturaSelector';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -177,11 +178,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const clienteId = form.watch('cliente_id');
   const tipoAtual = form.watch('tipo');
 
-  useEffect(() => {
-    if (!clienteId) {
-      form.setValue('temperatura_cliente', undefined);
-    }
-  }, [clienteId, form]);
+  // useEffect for clearing temperatura removed - always visible now
 
   useEffect(() => {
     if (!TIPOS_COM_SUBTIPO.includes(tipoAtual)) {
@@ -834,40 +831,24 @@ export function AtividadeForm(props: AtividadeFormProps) {
               )}
             />
 
-            {/* Temperatura do Cliente */}
-            {clienteId && (
+            {/* Temperatura */}
               <FormField
                 control={form.control}
                 name="temperatura_cliente"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Temperatura do Cliente</FormLabel>
-                    <div className="grid grid-cols-3 gap-2">
-                      {([
-                        { value: 'frio' as const, label: 'Frio', colors: 'border-blue-400 bg-blue-50 text-blue-700' },
-                        { value: 'morno' as const, label: 'Morno', colors: 'border-orange-400 bg-orange-50 text-orange-700' },
-                        { value: 'quente' as const, label: 'Quente', colors: 'border-red-400 bg-red-50 text-red-700' },
-                      ]).map((temp) => (
-                        <button
-                          key={temp.value}
-                          type="button"
-                          onClick={() => field.onChange(field.value === temp.value ? undefined : temp.value)}
-                          className={cn(
-                            'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors text-sm font-medium',
-                            field.value === temp.value
-                              ? temp.colors
-                              : 'border-input hover:bg-accent'
-                          )}
-                        >
-                          {temp.label}
-                        </button>
-                      ))}
-                    </div>
+                    <FormLabel>Temperatura</FormLabel>
+                    <FormControl>
+                      <TemperaturaSelector
+                        value={field.value as ClienteTemperatura | undefined}
+                        onValueChange={field.onChange}
+                        context="atividade"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
 
             {/* Observações */}
             <FormField
