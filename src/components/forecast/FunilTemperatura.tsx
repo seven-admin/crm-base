@@ -9,6 +9,7 @@ const CORES_TEMPERATURA: Record<ClienteTemperatura, string> = {
   frio: 'hsl(var(--chart-1))',
   morno: 'hsl(var(--chart-3))',
   quente: 'hsl(var(--destructive))',
+  morto: 'hsl(var(--chart-4))',
 };
 
 interface FunilTemperaturaProps {

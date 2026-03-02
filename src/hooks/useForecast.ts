@@ -54,7 +54,7 @@ export function useFunilTemperatura(
       if (atividadesError) throw atividadesError;
       
       if (!atividades || atividades.length === 0) {
-        return (['frio', 'morno', 'quente'] as ClienteTemperatura[]).map((temp) => ({
+        return (['frio', 'morno', 'quente', 'morto'] as ClienteTemperatura[]).map((temp) => ({
           temperatura: temp,
           quantidade: 0,
           percentual: 0,
@@ -73,13 +73,13 @@ export function useFunilTemperatura(
         }
       });
 
-      const contagem: Record<ClienteTemperatura, number> = { frio: 0, morno: 0, quente: 0 };
+      const contagem: Record<ClienteTemperatura, number> = { frio: 0, morno: 0, quente: 0, morto: 0 };
       clienteTemperaturaMap.forEach(({ temperatura }) => {
         if (temperatura in contagem) contagem[temperatura]++;
       });
 
       const total = Object.values(contagem).reduce((a, b) => a + b, 0);
-      return (['frio', 'morno', 'quente'] as ClienteTemperatura[]).map((temp) => ({
+      return (['frio', 'morno', 'quente', 'morto'] as ClienteTemperatura[]).map((temp) => ({
         temperatura: temp,
         quantidade: contagem[temp],
         percentual: total > 0 ? Math.round((contagem[temp] / total) * 100) : 0,

@@ -9,6 +9,7 @@ const TEMPERATURAS: { value: ClienteTemperatura; label: string; emoji: string; a
   { value: 'frio', label: 'Frio', emoji: '❄️', activeClass: 'bg-blue-500 text-white border-blue-500', inactiveClass: 'border-blue-300 text-blue-600 hover:bg-blue-50' },
   { value: 'morno', label: 'Morno', emoji: '🌤️', activeClass: 'bg-amber-500 text-white border-amber-500', inactiveClass: 'border-amber-300 text-amber-600 hover:bg-amber-50' },
   { value: 'quente', label: 'Quente', emoji: '🔥', activeClass: 'bg-red-500 text-white border-red-500', inactiveClass: 'border-red-300 text-red-600 hover:bg-red-50' },
+  { value: 'morto', label: 'Morto', emoji: '💀', activeClass: 'bg-gray-700 text-white border-gray-700', inactiveClass: 'border-gray-400 text-gray-600 hover:bg-gray-50' },
 ];
 
 const CONTEXT_LABELS = {

@@ -31,7 +31,7 @@ import { type ClienteTemperatura } from '@/types/clientes.types';
 
 // Resultado agora é opcional - aprovação direta
 const formSchema = z.object({
-  temperatura_cliente: z.enum(['frio', 'morno', 'quente']).optional(),
+  temperatura_cliente: z.enum(['frio', 'morno', 'quente', 'morto']).optional(),
   requer_followup: z.boolean().default(false),
   data_followup: z.date().optional(),
 });
