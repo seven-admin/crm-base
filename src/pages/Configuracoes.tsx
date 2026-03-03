@@ -611,9 +611,10 @@ const Configuracoes = () => {
                   <FormItem>
                     <FormLabel>Evento *</FormLabel>
                     <Select onValueChange={(val) => {
+                      if (val !== field.value) {
+                        webhookForm.setValue('variaveis_selecionadas', []);
+                      }
                       field.onChange(val);
-                      // Reset variaveis when event changes
-                      webhookForm.setValue('variaveis_selecionadas', []);
                     }} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
