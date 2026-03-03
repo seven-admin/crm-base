@@ -5803,6 +5803,36 @@ export type Database = {
           },
         ]
       }
+      webhook_variaveis_disponiveis: {
+        Row: {
+          categoria: string | null
+          chave: string
+          created_at: string | null
+          evento: string
+          id: string
+          label: string
+          tipo: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          chave: string
+          created_at?: string | null
+          evento: string
+          id?: string
+          label: string
+          tipo?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          chave?: string
+          created_at?: string | null
+          evento?: string
+          id?: string
+          label?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
       webhooks: {
         Row: {
           created_at: string | null
@@ -5814,6 +5844,7 @@ export type Database = {
           ultimo_status: number | null
           updated_at: string | null
           url: string
+          variaveis_selecionadas: string[] | null
         }
         Insert: {
           created_at?: string | null
@@ -5825,6 +5856,7 @@ export type Database = {
           ultimo_status?: number | null
           updated_at?: string | null
           url: string
+          variaveis_selecionadas?: string[] | null
         }
         Update: {
           created_at?: string | null
@@ -5836,6 +5868,7 @@ export type Database = {
           ultimo_status?: number | null
           updated_at?: string | null
           url?: string
+          variaveis_selecionadas?: string[] | null
         }
         Relationships: []
       }
