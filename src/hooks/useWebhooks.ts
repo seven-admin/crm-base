@@ -10,6 +10,7 @@ export interface Webhook {
   is_active: boolean;
   ultimo_disparo: string | null;
   ultimo_status: number | null;
+  variaveis_selecionadas: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +20,7 @@ export interface WebhookFormData {
   url: string;
   descricao?: string;
   is_active?: boolean;
+  variaveis_selecionadas?: string[] | null;
 }
 
 export const WEBHOOK_EVENTS = [
@@ -45,11 +47,14 @@ export const WEBHOOK_EVENTS = [
   { value: 'comentario_proposta', label: 'Comentário em Proposta (Negociação)' },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
 export function useWebhooks() {
   return useQuery({
     queryKey: ['webhooks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('webhooks')
         .select('*')
         .order('created_at', { ascending: false });
@@ -65,13 +70,14 @@ export function useCreateWebhook() {
 
   return useMutation({
     mutationFn: async (data: WebhookFormData) => {
-      const { data: webhook, error } = await supabase
+      const { data: webhook, error } = await db
         .from('webhooks')
         .insert({
           evento: data.evento,
           url: data.url,
           descricao: data.descricao || null,
           is_active: data.is_active ?? true,
+          variaveis_selecionadas: data.variaveis_selecionadas || null,
         })
         .select()
         .single();
@@ -95,7 +101,7 @@ export function useUpdateWebhook() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<WebhookFormData> }) => {
-      const { data: webhook, error } = await supabase
+      const { data: webhook, error } = await db
         .from('webhooks')
         .update(data)
         .eq('id', id)
@@ -156,9 +162,6 @@ export interface WebhookLog {
   erro: string | null;
   created_at: string;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
 
 export interface WebhookLogsResult {
   logs: WebhookLog[];
@@ -258,5 +261,36 @@ export function useTestarWebhook() {
       console.error('Error testing webhook:', error);
       toast.error('Erro ao testar webhook');
     },
+  });
+}
+
+// ====================================================
+// Variáveis Disponíveis por Evento
+// ====================================================
+
+export interface WebhookVariavel {
+  id: string;
+  evento: string;
+  chave: string;
+  label: string;
+  categoria: string;
+  tipo: string;
+}
+
+export function useWebhookVariaveis(evento?: string) {
+  return useQuery({
+    queryKey: ['webhook-variaveis', evento],
+    queryFn: async () => {
+      if (!evento) return [];
+      const { data, error } = await db
+        .from('webhook_variaveis_disponiveis')
+        .select('*')
+        .eq('evento', evento)
+        .order('categoria', { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []) as WebhookVariavel[];
+    },
+    enabled: !!evento,
   });
 }
