@@ -16,6 +16,18 @@ interface WebhookRecord {
   url: string
   descricao: string | null
   ativo: boolean
+  variaveis_selecionadas: string[] | null
+}
+
+function filtrarDados(dados: Record<string, unknown>, variaveis: string[] | null): Record<string, unknown> {
+  if (!variaveis || variaveis.length === 0) return dados
+  const filtrado: Record<string, unknown> = {}
+  for (const chave of variaveis) {
+    if (chave in dados) {
+      filtrado[chave] = dados[chave]
+    }
+  }
+  return filtrado
 }
 
 Deno.serve(async (req) => {
@@ -26,7 +38,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const payload: WebhookPayload = await req.json()
@@ -41,7 +52,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Buscar webhooks ativos para este evento
     const { data: webhooks, error: webhooksError } = await supabase
       .from('webhooks')
       .select('*')
@@ -59,11 +69,7 @@ Deno.serve(async (req) => {
     if (!webhooks || webhooks.length === 0) {
       console.log(`[webhook-dispatcher] Nenhum webhook ativo encontrado para o evento: ${evento}`)
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Nenhum webhook configurado para este evento',
-          disparos: 0 
-        }),
+        JSON.stringify({ success: true, message: 'Nenhum webhook configurado para este evento', disparos: 0 }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -72,113 +78,65 @@ Deno.serve(async (req) => {
 
     const resultados: Array<{ webhook_id: string; url: string; sucesso: boolean; status?: number; tempo_ms?: number; erro?: string }> = []
 
-    const outboundPayload = {
-      evento,
-      timestamp: new Date().toISOString(),
-      dados
-    }
-
-    // Disparar para cada webhook
     for (const webhook of webhooks as WebhookRecord[]) {
+      // Filtrar dados conforme variáveis selecionadas
+      const dadosFiltrados = filtrarDados(dados, webhook.variaveis_selecionadas)
+
+      const outboundPayload = {
+        evento,
+        timestamp: new Date().toISOString(),
+        dados: dadosFiltrados,
+      }
+
       console.log(`[webhook-dispatcher] Disparando para: ${webhook.url}`)
-      
       const startTime = Date.now()
-      let statusCode: number | null = null
-      let responseBody: string | null = null
-      let sucesso = false
-      let erro: string | null = null
 
       try {
         const response = await fetch(webhook.url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(outboundPayload),
         })
 
         const tempoMs = Date.now() - startTime
-        sucesso = response.ok
-        statusCode = response.status
+        const sucesso = response.ok
+        const statusCode = response.status
 
-        // Capturar response body (truncado)
+        let responseBody: string | null = null
         try {
           const text = await response.text()
           responseBody = text.substring(0, 1000)
-        } catch {
-          responseBody = null
-        }
+        } catch { responseBody = null }
 
         console.log(`[webhook-dispatcher] Resposta de ${webhook.url}: ${statusCode} em ${tempoMs}ms`)
 
-        // Atualizar último disparo no webhook
-        await supabase
-          .from('webhooks')
-          .update({
-            ultimo_disparo: new Date().toISOString(),
-            ultimo_status: sucesso ? 'sucesso' : `erro_${statusCode}`
-          })
-          .eq('id', webhook.id)
+        await supabase.from('webhooks').update({
+          ultimo_disparo: new Date().toISOString(),
+          ultimo_status: sucesso ? 'sucesso' : `erro_${statusCode}`,
+        }).eq('id', webhook.id)
 
-        // Registrar log
-        await supabase
-          .from('webhook_logs')
-          .insert({
-            webhook_id: webhook.id,
-            evento,
-            url: webhook.url,
-            payload: outboundPayload,
-            status_code: statusCode,
-            response_body: responseBody,
-            tempo_ms: tempoMs,
-            sucesso,
-            erro: null,
-          })
-
-        resultados.push({
-          webhook_id: webhook.id,
-          url: webhook.url,
-          sucesso,
-          status: statusCode,
-          tempo_ms: tempoMs
+        await supabase.from('webhook_logs').insert({
+          webhook_id: webhook.id, evento, url: webhook.url, payload: outboundPayload,
+          status_code: statusCode, response_body: responseBody, tempo_ms: tempoMs, sucesso, erro: null,
         })
+
+        resultados.push({ webhook_id: webhook.id, url: webhook.url, sucesso, status: statusCode, tempo_ms: tempoMs })
       } catch (fetchError) {
         const tempoMs = Date.now() - startTime
-        erro = fetchError instanceof Error ? fetchError.message : 'Erro desconhecido'
-        
+        const erro = fetchError instanceof Error ? fetchError.message : 'Erro desconhecido'
         console.error(`[webhook-dispatcher] Erro ao disparar para ${webhook.url}:`, fetchError)
-        
-        // Atualizar com erro
-        await supabase
-          .from('webhooks')
-          .update({
-            ultimo_disparo: new Date().toISOString(),
-            ultimo_status: 'erro_conexao'
-          })
-          .eq('id', webhook.id)
 
-        // Registrar log de erro
-        await supabase
-          .from('webhook_logs')
-          .insert({
-            webhook_id: webhook.id,
-            evento,
-            url: webhook.url,
-            payload: outboundPayload,
-            status_code: null,
-            response_body: null,
-            tempo_ms: tempoMs,
-            sucesso: false,
-            erro,
-          })
+        await supabase.from('webhooks').update({
+          ultimo_disparo: new Date().toISOString(),
+          ultimo_status: 'erro_conexao',
+        }).eq('id', webhook.id)
 
-        resultados.push({
-          webhook_id: webhook.id,
-          url: webhook.url,
-          sucesso: false,
-          tempo_ms: tempoMs,
-          erro
+        await supabase.from('webhook_logs').insert({
+          webhook_id: webhook.id, evento, url: webhook.url, payload: { evento, timestamp: new Date().toISOString(), dados: dadosFiltrados },
+          status_code: null, response_body: null, tempo_ms: tempoMs, sucesso: false, erro,
         })
+
+        resultados.push({ webhook_id: webhook.id, url: webhook.url, sucesso: false, tempo_ms: tempoMs, erro })
       }
     }
 
@@ -188,17 +146,9 @@ Deno.serve(async (req) => {
     console.log(`[webhook-dispatcher] Resultado: ${sucessos} sucesso(s), ${falhas} falha(s)`)
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        evento,
-        disparos: resultados.length,
-        sucessos,
-        falhas,
-        resultados
-      }),
+      JSON.stringify({ success: true, evento, disparos: resultados.length, sucessos, falhas, resultados }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-
   } catch (error) {
     console.error('[webhook-dispatcher] Erro geral:', error)
     return new Response(

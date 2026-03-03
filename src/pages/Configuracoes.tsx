@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfiguracoesSistema, useUpdateConfiguracoes, useConfiguracao, useUpdateConfiguracao } from '@/hooks/useConfiguracoesSistema';
 import { useSidebarColors, DEFAULT_SIDEBAR_COLORS, LABEL_TO_CHAVE } from '@/hooks/useSidebarColors';
-import { useWebhooks, useCreateWebhook, useUpdateWebhook, useDeleteWebhook, useTestarWebhook, WEBHOOK_EVENTS, type Webhook as WebhookType } from '@/hooks/useWebhooks';
+import { useWebhooks, useCreateWebhook, useUpdateWebhook, useDeleteWebhook, useTestarWebhook, useWebhookVariaveis, WEBHOOK_EVENTS, type Webhook as WebhookType } from '@/hooks/useWebhooks';
+import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, MoreHorizontal, Webhook, Shield, FileText, Play, Pencil, Settings2, Hash } from 'lucide-react';
@@ -55,6 +56,7 @@ const webhookFormSchema = z.object({
   evento: z.string().min(1, 'Selecione um evento'),
   url: z.string().url('URL inválida').min(1, 'URL é obrigatória'),
   descricao: z.string().optional(),
+  variaveis_selecionadas: z.array(z.string()).optional(),
 });
 
 type WebhookFormData = z.infer<typeof webhookFormSchema>;
@@ -136,8 +138,12 @@ const Configuracoes = () => {
       evento: '',
       url: '',
       descricao: '',
+      variaveis_selecionadas: [],
     },
   });
+
+  const watchedEvento = webhookForm.watch('evento');
+  const { data: variaveisDisponiveis } = useWebhookVariaveis(watchedEvento);
 
   useEffect(() => {
     if (configs) {
@@ -181,21 +187,16 @@ const Configuracoes = () => {
 
 
   const onSubmitWebhook = async (data: WebhookFormData) => {
+    const payload = {
+      evento: data.evento,
+      url: data.url,
+      descricao: data.descricao,
+      variaveis_selecionadas: data.variaveis_selecionadas && data.variaveis_selecionadas.length > 0 ? data.variaveis_selecionadas : null,
+    };
     if (editingWebhook) {
-      await updateWebhook.mutateAsync({
-        id: editingWebhook.id,
-        data: {
-          evento: data.evento,
-          url: data.url,
-          descricao: data.descricao,
-        },
-      });
+      await updateWebhook.mutateAsync({ id: editingWebhook.id, data: payload });
     } else {
-      await createWebhook.mutateAsync({
-        evento: data.evento,
-        url: data.url,
-        descricao: data.descricao,
-      });
+      await createWebhook.mutateAsync(payload);
     }
     handleCloseWebhookForm();
   };
@@ -206,6 +207,7 @@ const Configuracoes = () => {
       evento: webhook.evento,
       url: webhook.url,
       descricao: webhook.descricao || '',
+      variaveis_selecionadas: webhook.variaveis_selecionadas || [],
     });
     setShowWebhookForm(true);
   };
@@ -213,7 +215,7 @@ const Configuracoes = () => {
   const handleCloseWebhookForm = () => {
     setShowWebhookForm(false);
     setEditingWebhook(null);
-    webhookForm.reset({ evento: '', url: '', descricao: '' });
+    webhookForm.reset({ evento: '', url: '', descricao: '', variaveis_selecionadas: [] });
   };
 
   const handleToggleWebhook = async (id: string, isActive: boolean) => {
@@ -596,7 +598,7 @@ const Configuracoes = () => {
 
       {/* Webhook Form Dialog */}
       <Dialog open={showWebhookForm} onOpenChange={(open) => { if (!open) handleCloseWebhookForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingWebhook ? 'Editar Webhook' : 'Adicionar Webhook'}</DialogTitle>
           </DialogHeader>
@@ -608,7 +610,11 @@ const Configuracoes = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Evento *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(val) => {
+                      field.onChange(val);
+                      // Reset variaveis when event changes
+                      webhookForm.setValue('variaveis_selecionadas', []);
+                    }} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o evento" />
@@ -660,6 +666,75 @@ const Configuracoes = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Seleção de Variáveis */}
+              {watchedEvento && variaveisDisponiveis && variaveisDisponiveis.length > 0 && (
+                <FormField
+                  control={webhookForm.control}
+                  name="variaveis_selecionadas"
+                  render={({ field }) => {
+                    const selected = field.value || [];
+                    // Group by categoria
+                    const grouped = variaveisDisponiveis.reduce((acc, v) => {
+                      const cat = v.categoria || 'geral';
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(v);
+                      return acc;
+                    }, {} as Record<string, typeof variaveisDisponiveis>);
+
+                    const allKeys = variaveisDisponiveis.map(v => v.chave);
+                    const allSelected = allKeys.length > 0 && allKeys.every(k => selected.includes(k));
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Variáveis do Payload</FormLabel>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Selecione quais dados serão enviados. Se nenhum for marcado, todos serão enviados.
+                        </p>
+                        <div className="border rounded-lg p-3 space-y-3 max-h-48 overflow-y-auto">
+                          {/* Select all */}
+                          <div className="flex items-center gap-2 pb-2 border-b">
+                            <Checkbox
+                              checked={allSelected}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? allKeys : []);
+                              }}
+                            />
+                            <span className="text-sm font-medium">Selecionar todas</span>
+                          </div>
+                          {Object.entries(grouped).map(([categoria, vars]) => (
+                            <div key={categoria}>
+                              <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{categoria}</p>
+                              <div className="space-y-1.5 ml-1">
+                                {vars.map((v) => (
+                                  <label key={v.chave} className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      checked={selected.includes(v.chave)}
+                                      onCheckedChange={(checked) => {
+                                        const next = checked
+                                          ? [...selected, v.chave]
+                                          : selected.filter(k => k !== v.chave);
+                                        field.onChange(next);
+                                      }}
+                                    />
+                                    <span className="text-sm">{v.label}</span>
+                                    <code className="text-[10px] text-muted-foreground bg-muted px-1 rounded">{v.chave}</code>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {selected.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {selected.length} variável(is) selecionada(s)
+                          </p>
+                        )}
+                      </FormItem>
+                    );
+                  }}
+                />
+              )}
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={handleCloseWebhookForm}>
