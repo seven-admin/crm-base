@@ -240,6 +240,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       hora_inicio: values.hora_inicio || undefined,
       hora_fim: values.hora_fim || undefined,
       observacoes: values.observacoes || undefined,
+      qtd_participantes: values.tipo === 'treinamento' ? values.qtd_participantes : undefined,
       temperatura_cliente: values.temperatura_cliente as ClienteTemperatura | undefined,
       requer_followup: values.requer_followup,
       data_followup: values.data_followup?.toISOString(),
