@@ -92,8 +92,8 @@ const menuGroupsDef = [
     icon: Target,
     items: [
       { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
-      { icon: TrendingUp, label: 'Forecast', path: '/forecast', moduleName: 'forecast' },
-      { icon: Handshake, label: 'Negociações', path: '/negociacoes', moduleName: 'negociacoes' },
+      { icon: TrendingUp, label: 'Resumo', path: '/forecast', moduleName: 'forecast' },
+      { icon: Handshake, label: 'Forecast', path: '/negociacoes', moduleName: 'negociacoes' },
       { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
       { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
       { icon: GitBranch, label: 'Configurações Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config', adminOnly: true },

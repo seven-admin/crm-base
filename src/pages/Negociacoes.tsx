@@ -130,8 +130,8 @@ const Funil = () => {
 
   return (
     <MainLayout
-      title="Negociações"
-      subtitle="Gerencie suas negociações e propostas comerciais"
+      title="Forecast"
+      subtitle="Gerencie seu forecast e propostas comerciais"
     >
       {/* Metrics Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
