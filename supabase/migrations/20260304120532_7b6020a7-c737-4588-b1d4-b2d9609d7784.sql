@@ -1,0 +1,1 @@
+UPDATE clientes SET nome = 'PE' || substring(nome from 9) WHERE nome LIKE 'PENDENTE -%';
