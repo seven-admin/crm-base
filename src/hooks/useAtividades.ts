@@ -233,7 +233,23 @@ export function useCreateAtividade() {
             .eq('is_active', true)
             .maybeSingle();
 
-          if (etapaInicial && data.cliente_id) {
+          // Se não tem cliente, criar placeholder automaticamente
+          let clienteIdFinal = data.cliente_id;
+          if (etapaInicial && !clienteIdFinal) {
+            const placeholderNome = `PENDENTE - ${data.titulo || 'SEM TÍTULO'}`;
+            const { data: novoCliente } = await supabase
+              .from('clientes')
+              .insert({ nome: placeholderNome, temperatura: 'frio', fase: 'prospecto', gestor_id: data.gestor_id || null, empreendimento_id: data.empreendimento_id || null })
+              .select('id')
+              .single();
+            if (novoCliente) {
+              clienteIdFinal = novoCliente.id;
+              // Vincular cliente na atividade
+              await supabase.from('atividades').update({ cliente_id: clienteIdFinal }).eq('id', data.id);
+            }
+          }
+
+          if (etapaInicial && clienteIdFinal) {
             // Resolver empreendimento: direto ou via gestor
             let empreendimentoIdFinal = data.empreendimento_id;
             if (!empreendimentoIdFinal && data.gestor_id) {
@@ -254,14 +270,14 @@ export function useCreateAtividade() {
               const { data: existente } = await (supabase as any)
                 .from('negociacoes')
                 .select('id')
-                .eq('cliente_id', data.cliente_id)
+                .eq('cliente_id', clienteIdFinal)
                 .eq('empreendimento_id', empreendimentoIdFinal)
                 .eq('funil_etapa_id', etapaInicial.id)
                 .maybeSingle();
 
               if (!existente) {
                 await (supabase as any).from('negociacoes').insert({
-                  cliente_id: data.cliente_id,
+                  cliente_id: clienteIdFinal,
                   corretor_id: data.corretor_id,
                   empreendimento_id: empreendimentoIdFinal,
                   imobiliaria_id: data.imobiliaria_id,
@@ -386,7 +402,7 @@ export function useUpdateAtividade() {
       const TIPOS_AUTO_NEGOCIACAO_UPDATE = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
       if (TIPOS_AUTO_NEGOCIACAO_UPDATE.includes((result as any).tipo)) {
         try {
-          const clienteId = (result as any).cliente_id;
+          let clienteId = (result as any).cliente_id;
           let empreendimentoIdFinal = (result as any).empreendimento_id;
           const gestorId = (result as any).gestor_id;
 
@@ -407,6 +423,20 @@ export function useUpdateAtividade() {
             .eq('is_inicial', true)
             .eq('is_active', true)
             .maybeSingle();
+
+          // Se não tem cliente, criar placeholder automaticamente
+          if (etapaInicial && !clienteId) {
+            const placeholderNome = `PENDENTE - ${(result as any).titulo || 'SEM TÍTULO'}`;
+            const { data: novoCliente } = await supabase
+              .from('clientes')
+              .insert({ nome: placeholderNome, temperatura: 'frio', fase: 'prospecto', gestor_id: gestorId || null, empreendimento_id: empreendimentoIdFinal || null })
+              .select('id')
+              .single();
+            if (novoCliente) {
+              clienteId = novoCliente.id;
+              await supabase.from('atividades').update({ cliente_id: clienteId }).eq('id', id);
+            }
+          }
 
           if (etapaInicial && clienteId && empreendimentoIdFinal) {
             // Verificar duplicidade
