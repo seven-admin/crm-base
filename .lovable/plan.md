@@ -1,39 +1,24 @@
 
 
-# Plano: 3 Alterações
+# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
 
-## 1. Mover "Pessoas Treinadas" para dentro do CategoriaCard
+## Problema
+As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
 
-**Situação atual**: Card standalone separado na grade, antes dos CategoriaCards.
+## Solução
+Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
 
-**Proposta**: Remover o card standalone. Modificar o `CategoriaCard` para aceitar uma prop opcional `pessoasTreinadas` (número). Quando presente e > 0, renderizar uma linha extra com ícone `GraduationCap` e texto "X pessoas treinadas" na lista de tipos, antes do footer.
-
-**Arquivos**:
-- `src/hooks/usePessoasTreinadas.ts` — expandir para retornar dados **por categoria** (`Record<string, { totalPessoas, totalTreinamentos }>`)
-- `src/components/forecast/CategoriaCard.tsx` — nova prop `pessoasTreinadas?: number`, renderizar linha extra com `GraduationCap`
-- `src/pages/Forecast.tsx` — remover o card standalone, passar `pessoasTreinadas` para cada `CategoriaCard` com base na categoria
-
-## 2. Corrigir exclusão de lançamento recorrente (FK constraint)
-
-**Problema**: A FK `recorrencia_pai_id` usa `NO ACTION`, impedindo exclusão de lançamentos pai.
-
-**Solução**: Migração SQL alterando a constraint para `ON DELETE SET NULL`.
-
+### SQL (via insert tool)
 ```sql
-ALTER TABLE lancamentos_financeiros 
-  DROP CONSTRAINT lancamentos_financeiros_recorrencia_pai_id_fkey,
-  ADD CONSTRAINT lancamentos_financeiros_recorrencia_pai_id_fkey 
-    FOREIGN KEY (recorrencia_pai_id) REFERENCES lancamentos_financeiros(id) ON DELETE SET NULL;
+UPDATE negociacoes n
+SET data_primeiro_atendimento = a.data_inicio
+FROM atividades a
+WHERE a.cliente_id = n.cliente_id
+  AND a.gestor_id = n.gestor_id
+  AND n.data_primeiro_atendimento::date = '2026-03-04'
+  AND a.tipo = 'atendimento'
+  AND a.data_inicio LIKE '2026-02%';
 ```
 
-## 3. Atividades: salvar direto ao selecionar cliente (sem avançar etapas)
-
-**Situação atual**: No step 2 do wizard, após selecionar o cliente, o usuário precisa clicar "Próximo" (step 3) ou marcar "Cliente Direto" para salvar.
-
-**Proposta**: Quando o modo é "Atendimento" e o usuário seleciona um cliente no step 2, automaticamente submeter o formulário (com `clienteDireto = true` implícito), fechando o modal. Os campos opcionais (título, datas, etc.) terão seus defaults aplicados automaticamente.
-
-**Arquivo**: `src/components/atividades/AtividadeForm.tsx`
-- No `onValueChange` do Select de cliente (step 2), após setar o valor, chamar `form.handleSubmit(onSubmit)()` automaticamente
-- Aplicar defaults: `data_inicio` = hoje, `titulo` = nome do tipo selecionado
-- Isso se aplica apenas quando `modo === 'atendimento'` e não há `initialData` (modo criação)
+Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
 

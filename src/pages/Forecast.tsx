@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList, GraduationCap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ export default function Forecast() {
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
   const { data: treinamento, isLoading: loadingTreinamento } = usePessoasTreinadas(gestorId, dataInicio, dataFim);
 
-  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean) => (
+  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, showTreinamento = false) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {loading ? (
         [...Array(4)].map((_, i) => <Skeleton key={i} className="h-40" />)
@@ -63,6 +63,7 @@ export default function Forecast() {
               bgColor={cfg.bgColor}
               dados={dados?.[cat]}
               onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup })}
+              pessoasTreinadas={showTreinamento ? treinamento?.[cat]?.totalPessoas : undefined}
             />
           );
         })
@@ -212,29 +213,7 @@ export default function Forecast() {
           </TabsContent>
 
           <TabsContent value="atividades" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {loadingTreinamento ? (
-                <Skeleton className="h-28" />
-              ) : (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-chart-5/10">
-                        <GraduationCap className="h-5 w-5 text-chart-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Pessoas Treinadas</p>
-                        <p className="text-lg font-bold text-foreground truncate">{treinamento?.totalPessoas || 0}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {treinamento?.totalTreinamentos || 0} treinamento{(treinamento?.totalTreinamentos || 0) !== 1 ? 's' : ''} realizado{(treinamento?.totalTreinamentos || 0) !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            {renderCategoriaCards(resumoAtividades, loadingAtividades)}
+            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, true)}
           </TabsContent>
         </Tabs>
       </div>
