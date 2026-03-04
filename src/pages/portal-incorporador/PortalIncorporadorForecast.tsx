@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
@@ -21,7 +21,7 @@ import { useAtividade } from '@/hooks/useAtividades';
 import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   BarChart3,
@@ -33,15 +33,18 @@ import {
   UserCheck,
   Headphones,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Hook inline para negociações do incorporador
-function useNegociacoesIncorporador(empreendimentoIds: string[]) {
+function useNegociacoesIncorporador(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
-    queryKey: ['incorporador-negociacoes', empreendimentoIds],
+    queryKey: ['incorporador-negociacoes', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
     queryFn: async () => {
       if (!empreendimentoIds.length) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from('negociacoes' as any)
         .select(`
           id, codigo, status_aprovacao, valor_total, created_at,
@@ -52,6 +55,9 @@ function useNegociacoesIncorporador(empreendimentoIds: string[]) {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(50);
+      if (dataInicio) query = query.gte('created_at', format(dataInicio, 'yyyy-MM-dd'));
+      if (dataFim) query = query.lte('created_at', format(dataFim, 'yyyy-MM-dd'));
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as any[];
     },
@@ -60,12 +66,12 @@ function useNegociacoesIncorporador(empreendimentoIds: string[]) {
 }
 
 // Hook inline para lista de atendimentos
-function useAtendimentosLista(empreendimentoIds: string[]) {
+function useAtendimentosLista(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
-    queryKey: ['incorporador-atendimentos-lista', empreendimentoIds],
+    queryKey: ['incorporador-atendimentos-lista', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
     queryFn: async () => {
       if (!empreendimentoIds.length) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from('atividades' as any)
         .select(`
           id, titulo, tipo, status, data_inicio, data_fim,
@@ -78,6 +84,9 @@ function useAtendimentosLista(empreendimentoIds: string[]) {
         .neq('status', 'cancelada')
         .order('data_inicio', { ascending: false })
         .limit(30);
+      if (dataInicio) query = query.gte('data_inicio', format(dataInicio, 'yyyy-MM-dd'));
+      if (dataFim) query = query.lte('data_inicio', format(dataFim, 'yyyy-MM-dd'));
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as any[];
     },
@@ -101,14 +110,18 @@ export default function PortalIncorporadorForecast() {
   const [tab, setTab] = useState<'dashboard' | 'atividades' | 'calendario'>('dashboard');
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [detalheAtividadeId, setDetalheAtividadeId] = useState<string | null>(null);
+  const [competencia, setCompetencia] = useState(new Date());
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+
+  const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
+  const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);
 
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
-    undefined, undefined, undefined, empsFilter
+    undefined, dataInicio, dataFim, empsFilter
   );
-  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds);
-  const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds);
+  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds, dataInicio, dataFim);
+  const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds, dataInicio, dataFim);
   const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
 
   const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
@@ -160,6 +173,29 @@ export default function PortalIncorporadorForecast() {
 
   return (
     <div className="space-y-6">
+      {/* Seletor de mês */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCompetencia(prev => subMonths(prev, 1))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium min-w-[140px] text-center capitalize">
+            {format(competencia, 'MMMM yyyy', { locale: ptBR })}
+          </span>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCompetencia(prev => addMonths(prev, 1))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setCompetencia(subMonths(new Date(), 1))}>
+            Mês anterior
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCompetencia(new Date())}>
+            Este mês
+          </Button>
+        </div>
+      </div>
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'dashboard' | 'atividades' | 'calendario')}>
         <TabsList>
           <TabsTrigger value="dashboard" className="gap-2">
@@ -399,13 +435,13 @@ export default function PortalIncorporadorForecast() {
 
           {/* Funil de Temperatura + Visitas */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <FunilTemperatura empreendimentoIds={empreendimentoIds} />
-            <VisitasPorEmpreendimento empreendimentoIds={empreendimentoIds} />
+            <FunilTemperatura empreendimentoIds={empreendimentoIds} dataInicio={dataInicio} dataFim={dataFim} />
+            <VisitasPorEmpreendimento empreendimentoIds={empreendimentoIds} dataInicio={dataInicio} dataFim={dataFim} />
           </div>
 
           {/* Atividades por Tipo + Próximas Atividades */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <AtividadesPorTipo empreendimentoIds={empreendimentoIds} />
+            <AtividadesPorTipo empreendimentoIds={empreendimentoIds} dataInicio={dataInicio} dataFim={dataFim} />
             <ProximasAtividades
               empreendimentoIds={empreendimentoIds}
               onAtividadeClick={handleProximaAtividadeClick}
@@ -413,7 +449,7 @@ export default function PortalIncorporadorForecast() {
           </div>
 
           {/* Resumo de Atendimentos e Retornos */}
-          <AtendimentosResumo empreendimentoIds={empreendimentoIds} />
+          <AtendimentosResumo empreendimentoIds={empreendimentoIds} dataInicio={dataInicio} dataFim={dataFim} />
         </TabsContent>
 
         {/* ── CALENDÁRIO: Calendário + lista de atividades do dia ── */}
