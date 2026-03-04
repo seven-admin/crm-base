@@ -1,24 +1,22 @@
 
 
-# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
+# Corrigir filtro de Ressarcimentos
 
 ## Problema
-As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
+O relatório de Ressarcimentos exibe **todos** os lançamentos que possuem `beneficiario_id`, independente da categoria. O registro "PG CONTRATO - THIAGO GONÇALVES" tem `categoria_fluxo = 'PAGAMENTO PJ - SEVEN'` e aparece incorretamente.
 
 ## Solução
-Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
+No `RelatorioRessarcimentos.tsx`, adicionar filtro por `categoria_fluxo` na linha 46:
 
-### SQL (via insert tool)
-```sql
-UPDATE negociacoes n
-SET data_primeiro_atendimento = a.data_inicio
-FROM atividades a
-WHERE a.cliente_id = n.cliente_id
-  AND a.gestor_id = n.gestor_id
-  AND n.data_primeiro_atendimento::date = '2026-03-04'
-  AND a.tipo = 'atendimento'
-  AND a.data_inicio LIKE '2026-02%';
+```typescript
+const comBeneficiario = lancamentos.filter(
+  (l: any) => l.beneficiario_id != null 
+    && l.categoria_fluxo?.toUpperCase() === 'RESSARCIMENTO'
+);
 ```
 
-Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
+Isso garante que apenas lançamentos com `categoria_fluxo = 'RESSARCIMENTO'` apareçam no relatório.
+
+## Arquivo afetado
+- `src/components/financeiro/RelatorioRessarcimentos.tsx` — ajustar filtro no `useMemo`
 
