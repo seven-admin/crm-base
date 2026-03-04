@@ -20,7 +20,7 @@ import { useResumoAtividades } from '@/hooks/useForecast';
 import { useAtividade } from '@/hooks/useAtividades';
 import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, type AtividadeCategoria } from '@/types/atividades.types';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -118,7 +118,7 @@ export default function PortalIncorporadorForecast() {
 
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
-    undefined, dataInicio, dataFim, empsFilter
+    undefined, dataInicio, dataFim, empsFilter, TIPOS_FORECAST
   );
   const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds, dataInicio, dataFim);
   const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds, dataInicio, dataFim);
@@ -214,6 +214,23 @@ export default function PortalIncorporadorForecast() {
 
         {/* ── DASHBOARD: Negociações + Gráficos ── */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">
+
+          {/* 4 Cards de Categoria (Pipeline Comercial) */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {(['seven', 'incorporadora', 'imobiliaria', 'cliente'] as AtividadeCategoria[]).map((cat) => {
+              const cfg = CATEGORIA_CONFIG[cat];
+              return (
+                <CategoriaCard
+                  key={cat}
+                  nome={ATIVIDADE_CATEGORIA_LABELS[cat]}
+                  icon={cfg.icon}
+                  iconColor={cfg.iconColor}
+                  bgColor={cfg.bgColor}
+                  dados={resumoCategorias?.[cat]}
+                />
+              );
+            })}
+          </div>
 
           {/* Card Previsões e Negócios */}
           <Card>
