@@ -1,31 +1,19 @@
 
 
-# Renomeações: Placeholder, Sidebar e Títulos de Página
+# Fix: Renomear clientes placeholder existentes de "PENDENTE" para "PE"
 
-## Alterações
+## Problema
+Os 9 clientes placeholder criados pela migração anterior ainda têm nome com prefixo `PENDENTE -`. A alteração no código só afeta novos placeholders.
 
-### 1. Placeholder "PENDENTE" → "PE"
-**Arquivo:** `src/hooks/useAtividades.ts`
-- Linha 239: `PENDENTE - ${data.titulo}` → `PE - ${data.titulo}`
-- Linha 429: `PENDENTE - ${(result as any).titulo}` → `PE - ${(result as any).titulo}`
+## Solução
+Criar uma migração SQL para atualizar todos os clientes existentes cujo nome começa com `PENDENTE -`, substituindo por `PE -`.
 
-### 2. Sidebar: Renomear itens do grupo Comercial
-**Arquivo:** `src/components/layout/Sidebar.tsx`
-- Linha 95: `label: 'Forecast'` → `label: 'Resumo'`
-- Linha 96: `label: 'Negociações'` → `label: 'Forecast'`
+### Migração SQL
+```sql
+UPDATE clientes
+SET nome = 'PE' || substring(nome from 9)
+WHERE nome LIKE 'PENDENTE -%';
+```
 
-### 3. Títulos das páginas
-**Arquivo:** `src/pages/Forecast.tsx`
-- Linha 149: `<h1>Forecast</h1>` → `<h1>Resumo</h1>`
-- Linha 150: subtítulo permanece ou ajusta para "Resumo de vendas e indicadores comerciais"
-
-**Arquivo:** `src/pages/Negociacoes.tsx`
-- Linha 133: `title="Negociações"` → `title="Forecast"`
-- Linha 134: subtítulo ajustado para "Gerencie seu forecast e propostas comerciais"
-
-### 4. Portal Incorporador (route titles)
-**Arquivo:** `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
-- Linha 17: `title: 'Forecast'` → `title: 'Resumo'` (se aplicável ao portal)
-
-Todas as alterações são puramente de label/texto, sem impacto em lógica ou rotas.
+Isso renomeia os 9 registros existentes de `PENDENTE - [titulo]` para `PE - [titulo]`. Alteração puramente de dados, sem impacto em lógica.
 
