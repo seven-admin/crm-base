@@ -1,19 +1,43 @@
 
 
-# Adicionar Cards de Categoria no Dashboard do Forecast (Portal Incorporador)
+# Fix: Negociações não criadas para atividades sem cliente (Gestor Michel)
 
-## Problema
-A aba **Dashboard** em `/portal-incorporador/forecast` exibe apenas o card "Previsões e Negócios" (negociações). Os cards de categoria (Seven, Incorporadora, Imobiliária, Cliente) com resumo de atividades do tipo forecast (atendimento, negociação, contra_proposta_atividade) só aparecem na aba "Atividades".
+## Diagnóstico
 
-## Solução
+O gestor **Michel** possui 9 atividades do tipo `atendimento` em fevereiro, **todas sem `cliente_id`**. A lógica de auto-criação de negociação (`useCreateAtividade`, linha 236) exige `cliente_id` para criar a negociação:
 
-**Arquivo:** `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`
+```
+if (etapaInicial && data.cliente_id) { ... }
+```
 
-1. **Importar `TIPOS_FORECAST`** (ou `TIPOS_NEGOCIACAO`) de `@/types/atividades.types` para filtrar apenas atividades do pipeline comercial.
+Como `cliente_id` é `NULL` nas 9 atividades, nenhuma negociação foi criada, e o Kanban fica vazio para Michel em fevereiro.
 
-2. **Adicionar filtro de tipos** na chamada existente de `useResumoAtividadesPorCategoria` (linha 120-122), passando `TIPOS_FORECAST` como último parâmetro — assim como o Forecast principal faz.
+Além disso, a coluna `cliente_id` na tabela `negociacoes` é `NOT NULL`, então não é possível inserir sem um cliente.
 
-3. **Inserir os 4 CategoriaCards na aba Dashboard** (antes do card "Previsões e Negócios", linha ~217), reutilizando o mesmo bloco de grid que já existe na aba "Atividades" (linhas 371-386).
+## Solução: Placeholder Client
 
-O resultado: a aba Dashboard mostrará primeiro os 4 cards de categoria com breakdown por tipo de atividade (atendimento, fechamento, assinatura, negociação) e logo abaixo o card de negociações com gráficos e lista.
+Conforme escolhido, criar um cliente placeholder automaticamente quando a atividade comercial não tiver cliente vinculado.
+
+### 1. Alterar lógica de auto-criação de negociação
+
+**Arquivo:** `src/hooks/useAtividades.ts`
+
+Na função `useCreateAtividade` (e `useUpdateAtividade`), antes do check de `cliente_id`:
+- Se `cliente_id` for null e o tipo for comercial, criar um cliente placeholder com nome `"PENDENTE - [titulo da atividade]"` e temperatura `frio`
+- Usar o `cliente_id` criado para prosseguir com a criação da negociação
+- Vincular o `cliente_id` de volta na atividade (update)
+
+### 2. Corrigir as 9 atividades existentes (retroativo)
+
+Usar o insert tool do Supabase para:
+- Criar 9 clientes placeholder (um por atividade, com nome derivado do título)
+- Vincular cada cliente à atividade (`update atividades set cliente_id = ...`)
+- Criar as 9 negociações na etapa inicial (Atendimento) com `gestor_id = Michel`, `empreendimento_id = VITHORIA DO SOL`
+
+### 3. Resultado esperado
+
+Após a correção:
+- Michel terá 9 negociações na etapa "Atendimento" do Kanban em `/negociacoes`
+- Futuras atividades comerciais sem cliente terão placeholder criado automaticamente
+- O placeholder pode ser editado depois com os dados reais do cliente
 
