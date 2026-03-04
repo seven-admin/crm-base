@@ -45,6 +45,7 @@ export default function Forecast() {
   const { data: resumoNegociacoes, isLoading: loadingNegociacoes } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_NEGOCIACAO);
   const { data: resumoAtividades, isLoading: loadingAtividades } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_DIARIO);
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
+  const { data: treinamento, isLoading: loadingTreinamento } = usePessoasTreinadas(gestorId, dataInicio, dataFim);
 
   const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
