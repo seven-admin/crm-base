@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, UsersRound } from 'lucide-react';
 import type { Atividade, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS, TIPOS_COM_CRONOMETRO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
@@ -256,6 +256,15 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
               </div>
             )}
 
+            {/* Quantidade de Participantes (treinamento) */}
+            {atividade.tipo === 'treinamento' && atividade.qtd_participantes && (
+              <div className="flex items-center gap-2 p-3 bg-accent/30 rounded-lg border border-border">
+                <UsersRound className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">
+                  <strong>{atividade.qtd_participantes}</strong> participante{atividade.qtd_participantes > 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
 
             {/* Resultado (se concluída) */}
             {atividade.status === 'concluida' && atividade.resultado && (

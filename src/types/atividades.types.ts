@@ -132,6 +132,7 @@ export interface Atividade {
   cronometro_inicio?: string | null;
   cronometro_fim?: string | null;
   duracao_minutos?: number | null;
+  qtd_participantes?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -155,6 +156,7 @@ export interface AtividadeFormData {
   requer_followup?: boolean;
   data_followup?: string;
   deadline_date?: string;
+  qtd_participantes?: number;
 }
 
 export interface ConcluirAtividadeData {

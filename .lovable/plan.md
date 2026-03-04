@@ -1,37 +1,24 @@
 
 
-# Adicionar campo "Quantidade de Participantes" para Treinamentos
+# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
 
-## Resumo
-Adicionar coluna `qtd_participantes` na tabela `atividades` e exibi-la no formulário (apenas quando tipo = treinamento) e no detalhe. Migrar os dados já existentes extraindo os números das observações.
+## Problema
+As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
 
-## Alterações
+## Solução
+Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
 
-### 1. Migração SQL (schema + dados)
-- Adicionar coluna `qtd_participantes INTEGER NULL` na tabela `atividades`
-- UPDATE retroativo: extrair números das observações que contenham padrão "PARA X CORRETORES" (18 registros identificados)
-
+### SQL (via insert tool)
 ```sql
-ALTER TABLE atividades ADD COLUMN qtd_participantes integer;
-
-UPDATE atividades
-SET qtd_participantes = (regexp_match(observacoes, 'PARA\s+(\d+)\s+CORRETOR'))[1]::integer
-WHERE tipo = 'treinamento'
-  AND observacoes ~ 'PARA\s+\d+\s+CORRETOR';
+UPDATE negociacoes n
+SET data_primeiro_atendimento = a.data_inicio
+FROM atividades a
+WHERE a.cliente_id = n.cliente_id
+  AND a.gestor_id = n.gestor_id
+  AND n.data_primeiro_atendimento::date = '2026-03-04'
+  AND a.tipo = 'atendimento'
+  AND a.data_inicio LIKE '2026-02%';
 ```
 
-### 2. Formulário (`AtividadeForm.tsx`)
-- Adicionar campo numérico "Qtd. Participantes" visível apenas quando `tipo === 'treinamento'`
-- Campo opcional, input type number, mínimo 1
-
-### 3. Detalhe (`AtividadeDetalheDialog.tsx`)
-- Exibir "Participantes: X" quando `tipo === 'treinamento'` e valor preenchido
-
-### 4. Tipos TypeScript (`atividades.types.ts`)
-- Adicionar `qtd_participantes?: number | null` em `Atividade` e `AtividadeFormData`
-
-### 5. Hook (`useAtividades.ts`)
-- Incluir `qtd_participantes` nos payloads de create/update
-
-Impacto: 4 arquivos + 1 migração. Sem quebra de funcionalidades existentes.
+Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
 
