@@ -1,23 +1,32 @@
 
 
-# Filtro de Mês no Portal Incorporador Forecast
+# Converter Visitas do Michel (Fev/2026) em Atendimento — Lista Revisada
 
-## Problema
+Removidos os itens 1, 2, 4, 5, 9, 10, 16 e 17 conforme solicitado. Restam **9 atividades** para conversão:
 
-A página `/portal-incorporador/forecast` não possui filtro de mês. Todos os hooks de dados (`useResumoAtividadesPorCategoria`, `useNegociacoesIncorporador`, `useAtendimentosLista`) e sub-componentes (`FunilTemperatura`, `VisitasPorEmpreendimento`, `AtividadesPorTipo`, `ProximasAtividades`, `AtendimentosResumo`) são chamados sem parâmetros de data, mostrando dados default (mês atual) ou sem filtro algum.
+| # | Título | Data | Subtipo | Categoria |
+|---|--------|------|---------|-----------|
+| 3 | VISITA - CORRETOR LUCAS - CLIENTE MARCOS | 05/02 | 1º | imobiliaria |
+| 6 | VISITA CORRETORA JOSIANE - CLIENTE ELTON E JANAINA | 10/02 | 1º | imobiliaria |
+| 7 | RETORNO - CLIENTE GLECE - CORRETORA FRANTIESCA | 11/02 | Ret. | cliente |
+| 8 | VISITA CORRETOR DIEGO - CLIENTE CAROLINE | 12/02 | 1º | imobiliaria |
+| 11 | RETORNO CLIENTE ELTON - COM GESTOR LUCAS | 18/02 | Ret. | imobiliaria |
+| 12 | VISITA - CORRETOR DÉVERSON - COM CLIENTE GABRIEL | 19/02 | 1º | imobiliaria |
+| 13 | VISITA CORRETOR ALEX | 21/02 | 1º | imobiliaria |
+| 14 | VISITA DO CORRETOR RODRIGO COM CLIENTE LOURDES | 21/02 | 1º | imobiliaria |
+| 15 | VISITA - CORRETOR CLEITON - COM CLIENTE GISELE | 23/02 | 1º | imobiliaria |
 
-## Solução
+## Plano
 
-Adicionar state `competencia` + seletor de mês (mesmo padrão da página `Forecast.tsx`: ChevronLeft/Right + botões "Este mês" / "Mês anterior") e propagar `dataInicio`/`dataFim` para todos os hooks e componentes.
+Executar um UPDATE filtrando pelos **IDs específicos** dessas 9 atividades (em vez de filtrar por data genérica, para não afetar as 8 removidas da lista).
 
-## Alterações em `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`
+Será necessário buscar os IDs exatos via query e então executar:
 
-1. **Imports**: Adicionar `startOfMonth`, `endOfMonth`, `addMonths`, `subMonths` do date-fns, `ChevronLeft`, `ChevronRight` do lucide, e `Button` do shadcn.
-2. **State**: `const [competencia, setCompetencia] = useState(new Date())` + memos `dataInicio`/`dataFim`.
-3. **Seletor de mês**: Renderizar acima das Tabs, com o mesmo layout da Forecast (setas + label do mês + botões rápidos).
-4. **Propagar datas**:
-   - `useResumoAtividadesPorCategoria(undefined, dataInicio, dataFim, empsFilter)`
-   - `useNegociacoesIncorporador` — adicionar params `dataInicio`/`dataFim` ao hook inline, filtrar por `.gte('created_at', inicioStr).lte('created_at', fimStr)`
-   - `useAtendimentosLista` — idem, filtrar por `data_inicio`
-   - Sub-componentes: passar `dataInicio={dataInicio} dataFim={dataFim}` para `FunilTemperatura`, `VisitasPorEmpreendimento`, `AtividadesPorTipo`, `ProximasAtividades`, `AtendimentosResumo`
+```sql
+UPDATE atividades
+SET tipo = 'atendimento', updated_at = now()
+WHERE id IN ( /* os 9 IDs específicos */ );
+```
+
+Os subtipos (`primeiro_atendimento` / `retorno`) e categorias serão preservados.
 
