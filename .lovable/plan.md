@@ -1,43 +1,31 @@
 
 
-# Fix: Negociações não criadas para atividades sem cliente (Gestor Michel)
+# Renomeações: Placeholder, Sidebar e Títulos de Página
 
-## Diagnóstico
+## Alterações
 
-O gestor **Michel** possui 9 atividades do tipo `atendimento` em fevereiro, **todas sem `cliente_id`**. A lógica de auto-criação de negociação (`useCreateAtividade`, linha 236) exige `cliente_id` para criar a negociação:
-
-```
-if (etapaInicial && data.cliente_id) { ... }
-```
-
-Como `cliente_id` é `NULL` nas 9 atividades, nenhuma negociação foi criada, e o Kanban fica vazio para Michel em fevereiro.
-
-Além disso, a coluna `cliente_id` na tabela `negociacoes` é `NOT NULL`, então não é possível inserir sem um cliente.
-
-## Solução: Placeholder Client
-
-Conforme escolhido, criar um cliente placeholder automaticamente quando a atividade comercial não tiver cliente vinculado.
-
-### 1. Alterar lógica de auto-criação de negociação
-
+### 1. Placeholder "PENDENTE" → "PE"
 **Arquivo:** `src/hooks/useAtividades.ts`
+- Linha 239: `PENDENTE - ${data.titulo}` → `PE - ${data.titulo}`
+- Linha 429: `PENDENTE - ${(result as any).titulo}` → `PE - ${(result as any).titulo}`
 
-Na função `useCreateAtividade` (e `useUpdateAtividade`), antes do check de `cliente_id`:
-- Se `cliente_id` for null e o tipo for comercial, criar um cliente placeholder com nome `"PENDENTE - [titulo da atividade]"` e temperatura `frio`
-- Usar o `cliente_id` criado para prosseguir com a criação da negociação
-- Vincular o `cliente_id` de volta na atividade (update)
+### 2. Sidebar: Renomear itens do grupo Comercial
+**Arquivo:** `src/components/layout/Sidebar.tsx`
+- Linha 95: `label: 'Forecast'` → `label: 'Resumo'`
+- Linha 96: `label: 'Negociações'` → `label: 'Forecast'`
 
-### 2. Corrigir as 9 atividades existentes (retroativo)
+### 3. Títulos das páginas
+**Arquivo:** `src/pages/Forecast.tsx`
+- Linha 149: `<h1>Forecast</h1>` → `<h1>Resumo</h1>`
+- Linha 150: subtítulo permanece ou ajusta para "Resumo de vendas e indicadores comerciais"
 
-Usar o insert tool do Supabase para:
-- Criar 9 clientes placeholder (um por atividade, com nome derivado do título)
-- Vincular cada cliente à atividade (`update atividades set cliente_id = ...`)
-- Criar as 9 negociações na etapa inicial (Atendimento) com `gestor_id = Michel`, `empreendimento_id = VITHORIA DO SOL`
+**Arquivo:** `src/pages/Negociacoes.tsx`
+- Linha 133: `title="Negociações"` → `title="Forecast"`
+- Linha 134: subtítulo ajustado para "Gerencie seu forecast e propostas comerciais"
 
-### 3. Resultado esperado
+### 4. Portal Incorporador (route titles)
+**Arquivo:** `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
+- Linha 17: `title: 'Forecast'` → `title: 'Resumo'` (se aplicável ao portal)
 
-Após a correção:
-- Michel terá 9 negociações na etapa "Atendimento" do Kanban em `/negociacoes`
-- Futuras atividades comerciais sem cliente terão placeholder criado automaticamente
-- O placeholder pode ser editado depois com os dados reais do cliente
+Todas as alterações são puramente de label/texto, sem impacto em lógica ou rotas.
 
