@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList, GraduationCap } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
