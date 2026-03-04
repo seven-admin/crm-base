@@ -1,19 +1,24 @@
 
 
-# Fix: Renomear clientes placeholder existentes de "PENDENTE" para "PE"
+# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
 
 ## Problema
-Os 9 clientes placeholder criados pela migração anterior ainda têm nome com prefixo `PENDENTE -`. A alteração no código só afeta novos placeholders.
+As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
 
 ## Solução
-Criar uma migração SQL para atualizar todos os clientes existentes cujo nome começa com `PENDENTE -`, substituindo por `PE -`.
+Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
 
-### Migração SQL
+### SQL (via insert tool)
 ```sql
-UPDATE clientes
-SET nome = 'PE' || substring(nome from 9)
-WHERE nome LIKE 'PENDENTE -%';
+UPDATE negociacoes n
+SET data_primeiro_atendimento = a.data_inicio
+FROM atividades a
+WHERE a.cliente_id = n.cliente_id
+  AND a.gestor_id = n.gestor_id
+  AND n.data_primeiro_atendimento::date = '2026-03-04'
+  AND a.tipo = 'atendimento'
+  AND a.data_inicio LIKE '2026-02%';
 ```
 
-Isso renomeia os 9 registros existentes de `PENDENTE - [titulo]` para `PE - [titulo]`. Alteração puramente de dados, sem impacto em lógica.
+Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
 
