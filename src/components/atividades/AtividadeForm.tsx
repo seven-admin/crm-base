@@ -162,6 +162,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       hora_inicio: initialData?.hora_inicio?.substring(0, 5) || '',
       hora_fim: initialData?.hora_fim?.substring(0, 5) || '',
       observacoes: initialData?.observacoes || '',
+      qtd_participantes: initialData?.qtd_participantes || undefined,
       temperatura_cliente: initialData?.temperatura_cliente || undefined,
       requer_followup: initialData?.requer_followup || false,
       data_followup: initialData?.data_followup ? new Date(initialData.data_followup) : undefined,
