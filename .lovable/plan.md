@@ -1,24 +1,23 @@
 
 
-# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
+# Adicionar Card "Pessoas Treinadas" no Resumo
 
-## Problema
-As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
+## Objetivo
+Criar um card KPI na página de Resumo (Forecast) que exiba o total de pessoas treinadas no período, somando `qtd_participantes` das atividades de tipo `treinamento`.
 
-## Solução
-Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
+## Alterações
 
-### SQL (via insert tool)
-```sql
-UPDATE negociacoes n
-SET data_primeiro_atendimento = a.data_inicio
-FROM atividades a
-WHERE a.cliente_id = n.cliente_id
-  AND a.gestor_id = n.gestor_id
-  AND n.data_primeiro_atendimento::date = '2026-03-04'
-  AND a.tipo = 'atendimento'
-  AND a.data_inicio LIKE '2026-02%';
-```
+### 1. Novo hook `usePessoasTreinadas` (em `useForecast.ts`)
+- Query na tabela `atividades` filtrando `tipo = 'treinamento'` e `status != 'cancelada'` no período
+- Somar `qtd_participantes` de todos os registros
+- Retornar: `{ totalPessoas, totalTreinamentos }`
 
-Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
+### 2. Card na página `Forecast.tsx`
+- Adicionar um card acima ou junto aos cards de categoria na aba **Atividades**
+- Ícone: `GraduationCap` (já usado no projeto para treinamento)
+- Exibir o total de pessoas treinadas como valor principal e total de treinamentos como subtexto
+- Seguir o mesmo estilo dos KPIs financeiros já existentes (ícone + label + valor)
+
+### Posicionamento
+O card será renderizado na aba "Atividades", antes dos cards de categoria, como um KPI de destaque.
 
