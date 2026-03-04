@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import { GraduationCap, LucideIcon } from 'lucide-react';
 import { ATIVIDADE_TIPO_LABELS, type AtividadeTipo } from '@/types/atividades.types';
 import type { CategoriaResumo } from '@/hooks/useResumoAtividadesPorCategoria';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +12,10 @@ interface CategoriaCardProps {
   iconColor?: string;
   bgColor?: string;
   onBadgeClick?: (statusGroup: string) => void;
+  pessoasTreinadas?: number;
 }
 
-export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-primary', bgColor = 'bg-primary/10', onBadgeClick }: CategoriaCardProps) {
+export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-primary', bgColor = 'bg-primary/10', onBadgeClick, pessoasTreinadas }: CategoriaCardProps) {
   const total = dados?.total || 0;
 
   const tipos = dados
@@ -36,7 +37,7 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
 
         {/* Lista de tipos */}
         <div className="flex-1">
-          {tipos.length > 0 ? (
+          {tipos.length > 0 || (pessoasTreinadas && pessoasTreinadas > 0) ? (
             <div className="space-y-1">
               {tipos.map(([tipo, qtd]) => (
                 <div key={tipo} className="flex items-center justify-between text-sm">
@@ -46,6 +47,15 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
                   <span className="font-medium text-foreground tabular-nums ml-2">{qtd}</span>
                 </div>
               ))}
+              {pessoasTreinadas != null && pessoasTreinadas > 0 && (
+                <div className="flex items-center justify-between text-sm pt-1 border-t border-dashed">
+                  <span className="text-muted-foreground truncate flex items-center gap-1">
+                    <GraduationCap className="h-3.5 w-3.5 text-chart-5" />
+                    Pessoas treinadas
+                  </span>
+                  <span className="font-medium text-foreground tabular-nums ml-2">{pessoasTreinadas}</span>
+                </div>
+              )}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground italic">Nenhuma atividade</p>
