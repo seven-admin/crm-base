@@ -14,8 +14,8 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
     subtitle: 'KPIs e métricas consolidadas' 
   },
   '/portal-incorporador/forecast': { 
-    title: 'Forecast', 
-    subtitle: 'Previsões e atividades comerciais' 
+    title: 'Resumo', 
+    subtitle: 'Resumo de vendas e indicadores comerciais' 
   },
   '/portal-incorporador/marketing': { 
     title: 'Produção de Marketing', 

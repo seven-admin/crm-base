@@ -146,8 +146,8 @@ export default function Forecast() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Forecast</h1>
-            <p className="text-muted-foreground">Previsão de vendas e indicadores comerciais</p>
+            <h1 className="text-3xl font-bold text-foreground">Resumo</h1>
+            <p className="text-muted-foreground">Resumo de vendas e indicadores comerciais</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center flex-wrap">
             <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">

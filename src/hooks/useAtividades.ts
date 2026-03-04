@@ -236,7 +236,7 @@ export function useCreateAtividade() {
           // Se não tem cliente, criar placeholder automaticamente
           let clienteIdFinal = data.cliente_id;
           if (etapaInicial && !clienteIdFinal) {
-            const placeholderNome = `PENDENTE - ${data.titulo || 'SEM TÍTULO'}`;
+            const placeholderNome = `PE - ${data.titulo || 'SEM TÍTULO'}`;
             const { data: novoCliente } = await supabase
               .from('clientes')
               .insert({ nome: placeholderNome, temperatura: 'frio', fase: 'prospecto', gestor_id: data.gestor_id || null, empreendimento_id: data.empreendimento_id || null })
@@ -426,7 +426,7 @@ export function useUpdateAtividade() {
 
           // Se não tem cliente, criar placeholder automaticamente
           if (etapaInicial && !clienteId) {
-            const placeholderNome = `PENDENTE - ${(result as any).titulo || 'SEM TÍTULO'}`;
+            const placeholderNome = `PE - ${(result as any).titulo || 'SEM TÍTULO'}`;
             const { data: novoCliente } = await supabase
               .from('clientes')
               .insert({ nome: placeholderNome, temperatura: 'frio', fase: 'prospecto', gestor_id: gestorId || null, empreendimento_id: empreendimentoIdFinal || null })
