@@ -44,7 +44,8 @@ export function RelatorioRessarcimentos({ startDate, endDate }: RelatorioRessarc
   // Filter only lancamentos with beneficiario
   const resumoPorFuncionario = useMemo(() => {
     const comBeneficiario = lancamentos.filter(
-      (l: any) => l.beneficiario_id != null
+      (l: any) => l.beneficiario_id != null 
+        && l.categoria_fluxo?.toUpperCase() === 'RESSARCIMENTO'
     );
 
     const grouped = new Map<string, LancamentoFinanceiro[]>();
