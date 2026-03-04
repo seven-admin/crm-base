@@ -9,6 +9,7 @@ import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
 import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
+import { usePessoasTreinadas } from '@/hooks/usePessoasTreinadas';
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useGestoresProduto } from '@/hooks/useGestores';
