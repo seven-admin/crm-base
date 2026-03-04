@@ -744,22 +744,6 @@ export function AtividadeForm(props: AtividadeFormProps) {
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // Auto-submit when mode is 'negociacao' (atendimento) and creating new
-                        if (modo === 'negociacao' && !initialData && value) {
-                          // Set titulo default if empty
-                          const currentTitulo = form.getValues('titulo');
-                          if (!currentTitulo) {
-                            const tipoLabel = ATIVIDADE_TIPO_LABELS[form.getValues('tipo')];
-                            form.setValue('titulo', tipoLabel);
-                          }
-                          setClienteDireto(true);
-                          form.setValue('corretor_id', undefined);
-                          form.setValue('imobiliaria_id', undefined);
-                          // Submit after a tick to let state update
-                          setTimeout(() => {
-                            form.handleSubmit(handleFormSubmit)();
-                          }, 0);
-                        }
                       }}
                       value={field.value}
                       disabled={!!lockCliente}

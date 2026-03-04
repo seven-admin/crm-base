@@ -40,22 +40,24 @@ export function CategoriaCard({ nome, icon: Icon, dados, iconColor = 'text-prima
           {tipos.length > 0 || (pessoasTreinadas && pessoasTreinadas > 0) ? (
             <div className="space-y-1">
               {tipos.map(([tipo, qtd]) => (
-                <div key={tipo} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground truncate">
-                    {ATIVIDADE_TIPO_LABELS[tipo as AtividadeTipo] || tipo}
-                  </span>
-                  <span className="font-medium text-foreground tabular-nums ml-2">{qtd}</span>
-                </div>
+                <React.Fragment key={tipo}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground truncate">
+                      {ATIVIDADE_TIPO_LABELS[tipo as AtividadeTipo] || tipo}
+                    </span>
+                    <span className="font-medium text-foreground tabular-nums ml-2">{qtd}</span>
+                  </div>
+                  {tipo === 'treinamento' && pessoasTreinadas != null && pessoasTreinadas > 0 && (
+                    <div className="flex items-center justify-between text-sm pl-3 text-muted-foreground">
+                      <span className="truncate flex items-center gap-1">
+                        <GraduationCap className="h-3.5 w-3.5 text-chart-5" />
+                        Pessoas treinadas
+                      </span>
+                      <span className="font-medium text-foreground tabular-nums ml-2">{pessoasTreinadas}</span>
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
-              {pessoasTreinadas != null && pessoasTreinadas > 0 && (
-                <div className="flex items-center justify-between text-sm pt-1 border-t border-dashed">
-                  <span className="text-muted-foreground truncate flex items-center gap-1">
-                    <GraduationCap className="h-3.5 w-3.5 text-chart-5" />
-                    Pessoas treinadas
-                  </span>
-                  <span className="font-medium text-foreground tabular-nums ml-2">{pessoasTreinadas}</span>
-                </div>
-              )}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground italic">Nenhuma atividade</p>
