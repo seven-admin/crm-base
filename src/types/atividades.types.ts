@@ -156,6 +156,7 @@ export interface AtividadeFormData {
   requer_followup?: boolean;
   data_followup?: string;
   deadline_date?: string;
+  qtd_participantes?: number;
 }
 
 export interface ConcluirAtividadeData {

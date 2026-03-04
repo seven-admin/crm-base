@@ -166,6 +166,7 @@ export type Database = {
           imobiliaria_id: string | null
           motivo_cancelamento: string | null
           observacoes: string | null
+          qtd_participantes: number | null
           requer_followup: boolean | null
           resultado: string | null
           status: string
@@ -197,6 +198,7 @@ export type Database = {
           imobiliaria_id?: string | null
           motivo_cancelamento?: string | null
           observacoes?: string | null
+          qtd_participantes?: number | null
           requer_followup?: boolean | null
           resultado?: string | null
           status?: string
@@ -228,6 +230,7 @@ export type Database = {
           imobiliaria_id?: string | null
           motivo_cancelamento?: string | null
           observacoes?: string | null
+          qtd_participantes?: number | null
           requer_followup?: boolean | null
           resultado?: string | null
           status?: string

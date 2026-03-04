@@ -873,6 +873,30 @@ export function AtividadeForm(props: AtividadeFormProps) {
               )}
             />
 
+            {/* Quantidade de Participantes - apenas treinamento */}
+            {tipoAtual === 'treinamento' && (
+              <FormField
+                control={form.control}
+                name="qtd_participantes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qtd. Participantes</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Ex: 10"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* Follow-up */}
             <div className="space-y-3">
               <FormField
