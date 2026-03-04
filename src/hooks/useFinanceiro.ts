@@ -523,6 +523,37 @@ export function useDeleteLancamento() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+
+      // Fetch the record to check recurrence info
+      const { data: lancamento, error: fetchError } = await supabase
+        .from('lancamentos_financeiros')
+        .select('id, recorrencia_pai_id, is_recorrente, data_vencimento')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (lancamento?.is_recorrente) {
+        if (!lancamento.recorrencia_pai_id) {
+          // This IS the parent — delete all future children first
+          await supabase
+            .from('lancamentos_financeiros')
+            .delete()
+            .eq('recorrencia_pai_id', id)
+            .gte('data_vencimento', today);
+        } else {
+          // This is a child — delete future siblings (same parent, >= this date)
+          await supabase
+            .from('lancamentos_financeiros')
+            .delete()
+            .eq('recorrencia_pai_id', lancamento.recorrencia_pai_id)
+            .gte('data_vencimento', lancamento.data_vencimento)
+            .neq('id', id); // exclude self, deleted below
+        }
+      }
+
+      // Delete the record itself
       const { error } = await supabase
         .from('lancamentos_financeiros')
         .delete()

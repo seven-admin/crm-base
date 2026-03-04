@@ -1,25 +1,24 @@
 
 
-# Plano: 3 Correções
+# Fix: Corrigir data_primeiro_atendimento das 9 negociações do Michel para Fevereiro
 
-## 1. Pessoas treinadas — posicionar logo abaixo do item "Treinamento"
+## Problema
+As 9 negociações criadas pela migração retroativa usaram `NOW()` como `data_primeiro_atendimento`, resultando em data de março (2026-03-04). O filtro de mês no Kanban usa `data_primeiro_atendimento` como prioridade, então as negociações não aparecem ao filtrar por Fev/2026.
 
-**Problema**: A linha "Pessoas treinadas" aparece no final da lista, após todos os tipos. Deveria aparecer imediatamente abaixo do item "Treinamento".
+## Solução
+Usar o insert tool (UPDATE) para corrigir `data_primeiro_atendimento` de cada negociação, copiando a `data_inicio` da atividade correspondente (que é de fevereiro). Também corrigir `created_at` se necessário.
 
-**Solução** (`CategoriaCard.tsx`): Em vez de renderizar `pessoasTreinadas` após o loop de tipos, renderizar inline dentro do loop — logo após o item cujo `tipo === 'treinamento'`. Usar um `flatMap` ou renderizar condicionalmente após cada item.
+### SQL (via insert tool)
+```sql
+UPDATE negociacoes n
+SET data_primeiro_atendimento = a.data_inicio
+FROM atividades a
+WHERE a.cliente_id = n.cliente_id
+  AND a.gestor_id = n.gestor_id
+  AND n.data_primeiro_atendimento::date = '2026-03-04'
+  AND a.tipo = 'atendimento'
+  AND a.data_inicio LIKE '2026-02%';
+```
 
-## 2. Exclusão de lançamento recorrente — excluir filhos futuros
-
-**Problema**: Ao excluir um lançamento recorrente "pai", apenas ele é excluído. Os filhos futuros permanecem.
-
-**Solução** (`useFinanceiro.ts` → `useDeleteLancamento`):
-- Antes de excluir o lançamento, verificar se ele é pai de recorrências (tem filhos com `recorrencia_pai_id = id`)
-- Se sim, excluir primeiro todos os filhos com `data_vencimento >= hoje` (futuros), depois excluir o pai
-- Também verificar se o próprio lançamento tem `recorrencia_pai_id` (é filho) — nesse caso, excluir ele e todos os irmãos futuros com mesmo `recorrencia_pai_id` e `data_vencimento >= data_vencimento` do lançamento selecionado
-
-## 3. Reverter auto-submit ao selecionar cliente
-
-**Problema**: O código adicionado na última iteração faz `form.handleSubmit()` automaticamente ao selecionar cliente no modo `negociacao`, o que o usuário não quer.
-
-**Solução** (`AtividadeForm.tsx` linhas 747-762): Remover o bloco de auto-submit. Manter apenas `field.onChange(value)` no `onValueChange` do Select de cliente.
+Isso atualiza as 9 negociações para usar a data original da atividade de fevereiro, fazendo-as aparecer corretamente no filtro de mês.
 
