@@ -1,19 +1,19 @@
 
 
-# Fix: Atividades e Negociações no Portal Incorporador Forecast
+# Adicionar Cards de Categoria no Dashboard do Forecast (Portal Incorporador)
 
-## Problemas Identificados
-
-1. **Erro 400 na query de negociações**: O hook `useNegociacoesIncorporador` seleciona `valor_total` na tabela `negociacoes`, mas essa coluna não existe. As colunas de valor disponíveis são: `valor_negociacao`, `valor_proposta`, `valor_tabela`, `valor_total_fechamento`, `valor_entrada`. O erro 400 impede qualquer dado de negociação de carregar no Dashboard.
-
-2. **Referência a `neg.valor_total` no template** (linha 348): O render do valor monetário usa `neg.valor_total` que nunca existirá.
+## Problema
+A aba **Dashboard** em `/portal-incorporador/forecast` exibe apenas o card "Previsões e Negócios" (negociações). Os cards de categoria (Seven, Incorporadora, Imobiliária, Cliente) com resumo de atividades do tipo forecast (atendimento, negociação, contra_proposta_atividade) só aparecem na aba "Atividades".
 
 ## Solução
 
 **Arquivo:** `src/pages/portal-incorporador/PortalIncorporadorForecast.tsx`
 
-1. **Linha 50**: Trocar `valor_total` por `valor_negociacao` no select da query de negociações.
-2. **Linha 348**: Trocar `neg.valor_total` por `neg.valor_negociacao` no template de exibição.
+1. **Importar `TIPOS_FORECAST`** (ou `TIPOS_NEGOCIACAO`) de `@/types/atividades.types` para filtrar apenas atividades do pipeline comercial.
 
-Apenas essas duas alterações resolvem o erro 400 e fazem as negociações e seus KPIs carregarem corretamente no Dashboard.
+2. **Adicionar filtro de tipos** na chamada existente de `useResumoAtividadesPorCategoria` (linha 120-122), passando `TIPOS_FORECAST` como último parâmetro — assim como o Forecast principal faz.
+
+3. **Inserir os 4 CategoriaCards na aba Dashboard** (antes do card "Previsões e Negócios", linha ~217), reutilizando o mesmo bloco de grid que já existe na aba "Atividades" (linhas 371-386).
+
+O resultado: a aba Dashboard mostrará primeiro os 4 cards de categoria com breakdown por tipo de atividade (atendimento, fechamento, assinatura, negociação) e logo abaixo o card de negociações com gráficos e lista.
 
