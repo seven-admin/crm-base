@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap, LucideIcon } from 'lucide-react';
 import { ATIVIDADE_TIPO_LABELS, type AtividadeTipo } from '@/types/atividades.types';
