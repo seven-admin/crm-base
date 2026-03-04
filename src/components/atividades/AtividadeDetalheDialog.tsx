@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, UsersRound } from 'lucide-react';
 import type { Atividade, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS, TIPOS_COM_CRONOMETRO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
