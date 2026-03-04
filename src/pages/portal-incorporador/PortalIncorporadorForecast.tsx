@@ -47,7 +47,7 @@ function useNegociacoesIncorporador(empreendimentoIds: string[], dataInicio?: Da
       let query = supabase
         .from('negociacoes' as any)
         .select(`
-          id, codigo, status_aprovacao, valor_total, created_at,
+          id, codigo, status_aprovacao, valor_negociacao, created_at,
           cliente:clientes(nome),
           empreendimento:empreendimentos(nome)
         `)
@@ -345,8 +345,8 @@ export default function PortalIncorporadorForecast() {
                             </div>
                             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                               {neg.empreendimento && <span>🏢 {neg.empreendimento.nome}</span>}
-                              {neg.valor_total && (
-                                <span>💰 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(neg.valor_total)}</span>
+                              {neg.valor_negociacao && (
+                                <span>💰 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(neg.valor_negociacao)}</span>
                               )}
                               <span>📅 {format(parseISO(neg.created_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
                             </div>
