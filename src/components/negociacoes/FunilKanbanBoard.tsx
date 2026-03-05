@@ -84,6 +84,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propostaOpen, setPropostaOpen] = useState(false);
   const [propostaMode, setPropostaMode] = useState<'gerar' | 'enviar' | 'aceitar' | 'recusar' | 'view'>('view');
+  const [detalheOpen, setDetalheOpen] = useState(false);
   
   // Estado otimista para manter a posição visual durante a mutation
   const [optimisticNegociacoes, setOptimisticNegociacoes] = useState<Negociacao[] | null>(null);
