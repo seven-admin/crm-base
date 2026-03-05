@@ -76,6 +76,7 @@ const formSchema = z
     hora_fim: z.string().optional(),
     observacoes: z.string().optional(),
     qtd_participantes: z.coerce.number().int().min(1).optional(),
+    qtd_corretores: z.coerce.number().int().min(1).optional(),
     temperatura_cliente: z.enum(['frio', 'morno', 'quente', 'morto']).optional(),
     requer_followup: z.boolean().default(false),
     data_followup: z.date().optional(),
