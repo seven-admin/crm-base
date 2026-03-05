@@ -181,6 +181,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const requerFollowup = form.watch('requer_followup');
   const clienteId = form.watch('cliente_id');
   const tipoAtual = form.watch('tipo');
+  const categoriaAtual = form.watch('categoria');
 
   // useEffect for clearing temperatura removed - always visible now
 
