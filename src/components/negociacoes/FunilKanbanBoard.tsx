@@ -124,6 +124,11 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     setMoverDialogOpen(true);
   };
 
+  const handleOpenDetalhe = (negociacao: Negociacao) => {
+    setSelectedNegociacao(negociacao);
+    setDetalheOpen(true);
+  };
+
   const handleEditar = (negociacao: Negociacao) => {
     setSelectedNegociacao(negociacao);
     setEditDialogOpen(true);
