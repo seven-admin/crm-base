@@ -276,8 +276,8 @@ export function useAtividadesPorTipoPorSemana(
       let query = supabase
         .from('atividades' as any)
         .select('tipo, data_inicio, data_fim')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .neq('status', 'cancelada');
 
       if (gestorId) {
