@@ -530,8 +530,8 @@ export function useResumoAtendimentos(
         .select('categoria, status')
         .eq('tipo', 'atendimento')
         .neq('status', 'cancelada')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
 
       if (gestorId) {
         query = query.eq('gestor_id', gestorId);

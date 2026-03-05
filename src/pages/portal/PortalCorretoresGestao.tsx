@@ -30,12 +30,12 @@ const SENHA_PADRAO = 'Seven@1234';
 
 function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => void; isPending: boolean }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '' });
+  const [form, setForm] = useState({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '', cidade: '', uf: '' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ ...form, password: form.password || undefined });
-    setForm({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '' });
+    onSubmit({ ...form, password: form.password || undefined, cidade: form.cidade || undefined, uf: form.uf || undefined });
+    setForm({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '', cidade: '', uf: '' });
     setOpen(false);
   };
 
@@ -70,6 +70,16 @@ function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => voi
             <div className="space-y-2">
               <Label>Telefone</Label>
               <Input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Cidade</Label>
+              <Input value={form.cidade} onChange={e => setForm(f => ({ ...f, cidade: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>UF</Label>
+              <Input maxLength={2} value={form.uf} onChange={e => setForm(f => ({ ...f, uf: e.target.value.toUpperCase() }))} placeholder="Ex: SP" />
             </div>
           </div>
           <div className="space-y-2">

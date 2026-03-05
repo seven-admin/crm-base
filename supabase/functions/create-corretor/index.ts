@@ -82,7 +82,9 @@ Deno.serve(async (req) => {
       creci, 
       telefone,
       whatsapp,
-      imobiliaria_id 
+      imobiliaria_id,
+      cidade,
+      uf
     } = await req.json();
 
     // Determine imobiliaria_id
@@ -224,6 +226,8 @@ Deno.serve(async (req) => {
         email: email.toLowerCase(),
         user_id: userId,
         imobiliaria_id: finalImobiliariaId,
+        cidade: cidade ? cidade.toUpperCase() : null,
+        uf: uf ? uf.toUpperCase() : null,
         is_active: true
       });
 
@@ -246,6 +250,28 @@ Deno.serve(async (req) => {
       await supabaseAdmin
         .from('user_empreendimentos')
         .insert(userEmpLinks);
+    }
+
+    // 6. Disparar webhook
+    try {
+      await supabaseAdmin.functions.invoke('webhook-dispatcher', {
+        body: {
+          evento: 'corretor_cadastrado',
+          dados: {
+            user_id: userId,
+            nome_completo: nome_completo.toUpperCase(),
+            email: email.toLowerCase(),
+            cpf: cpfLimpo,
+            creci: creci ? creci.trim().toUpperCase() : null,
+            telefone: telefone?.replace(/\D/g, '') || null,
+            cidade: cidade ? cidade.toUpperCase() : null,
+            uf: uf ? uf.toUpperCase() : null,
+            imobiliaria_id: finalImobiliariaId,
+          },
+        },
+      });
+    } catch (whErr) {
+      console.warn('Webhook corretor_cadastrado falhou:', whErr);
     }
 
     return new Response(

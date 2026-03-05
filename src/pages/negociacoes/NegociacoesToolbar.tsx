@@ -18,6 +18,7 @@ import { format, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const TEMPERATURA_OPTIONS: { value: ClienteTemperatura; label: string }[] = [
+  { value: 'morto', label: '💀 Morto' },
   { value: 'frio', label: '❄️ Frio' },
   { value: 'morno', label: '🌤️ Morno' },
   { value: 'quente', label: '🔥 Quente' },
