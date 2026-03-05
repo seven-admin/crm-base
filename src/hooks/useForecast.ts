@@ -414,8 +414,8 @@ export function useCalendarioAtividades(
       let query = supabase
         .from('atividades' as any)
         .select('data_inicio, data_fim')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .neq('status', 'cancelada');
 
       if (gestorId) {
