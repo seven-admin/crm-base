@@ -175,8 +175,8 @@ export function useResumoAtividades(
       let query = supabase
         .from('atividades' as any)
         .select('status, data_inicio, data_fim, requer_followup, data_followup')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
       
       if (gestorId) query = query.eq('gestor_id', gestorId);
       
