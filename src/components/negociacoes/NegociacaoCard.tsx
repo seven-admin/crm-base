@@ -101,6 +101,7 @@ export const NegociacaoCard = memo(function NegociacaoCard({
           ? "opacity-95 scale-[1.02] shadow-xl rotate-[1deg] ring-2 ring-primary/40"
           : "hover:shadow-sm transition-shadow"
       )}
+      onClick={() => onClick?.(negociacao)}
     >
       {/* Linha 1: Cliente + Código + Status + Menu */}
       <div className="p-2 pb-1">
