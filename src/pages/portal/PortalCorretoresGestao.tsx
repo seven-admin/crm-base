@@ -30,7 +30,7 @@ const SENHA_PADRAO = 'Seven@1234';
 
 function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => void; isPending: boolean }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '' });
+  const [form, setForm] = useState({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '', cidade: '', uf: '' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
