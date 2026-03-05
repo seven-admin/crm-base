@@ -252,6 +252,28 @@ Deno.serve(async (req) => {
         .insert(userEmpLinks);
     }
 
+    // 6. Disparar webhook
+    try {
+      await supabaseAdmin.functions.invoke('webhook-dispatcher', {
+        body: {
+          evento: 'corretor_cadastrado',
+          dados: {
+            user_id: userId,
+            nome_completo: nome_completo.toUpperCase(),
+            email: email.toLowerCase(),
+            cpf: cpfLimpo,
+            creci: creci ? creci.trim().toUpperCase() : null,
+            telefone: telefone?.replace(/\D/g, '') || null,
+            cidade: cidade ? cidade.toUpperCase() : null,
+            uf: uf ? uf.toUpperCase() : null,
+            imobiliaria_id: finalImobiliariaId,
+          },
+        },
+      });
+    } catch (whErr) {
+      console.warn('Webhook corretor_cadastrado falhou:', whErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

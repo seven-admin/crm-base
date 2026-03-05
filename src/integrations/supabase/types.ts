@@ -2129,6 +2129,7 @@ export type Database = {
           imobiliaria_id: string
           is_active: boolean
           nome_completo: string
+          send_campanha: string | null
           telefone: string | null
           uf: string | null
           updated_at: string
@@ -2145,6 +2146,7 @@ export type Database = {
           imobiliaria_id: string
           is_active?: boolean
           nome_completo: string
+          send_campanha?: string | null
           telefone?: string | null
           uf?: string | null
           updated_at?: string
@@ -2161,6 +2163,7 @@ export type Database = {
           imobiliaria_id?: string
           is_active?: boolean
           nome_completo?: string
+          send_campanha?: string | null
           telefone?: string | null
           uf?: string | null
           updated_at?: string

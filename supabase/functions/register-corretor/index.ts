@@ -200,6 +200,27 @@ Deno.serve(async (req) => {
       // Não vamos falhar por causa disso, o usuário foi criado
     }
 
+    // Disparar webhook
+    try {
+      await supabaseAdmin.functions.invoke('webhook-dispatcher', {
+        body: {
+          evento: 'corretor_cadastrado',
+          dados: {
+            user_id: userId,
+            nome_completo: nome_completo.toUpperCase(),
+            email: email.toLowerCase(),
+            cpf: cpfLimpo,
+            creci: creci.trim().toUpperCase(),
+            telefone: telefone?.replace(/\D/g, '') || null,
+            cidade: cidade.toUpperCase(),
+            uf: uf.toUpperCase(),
+          },
+        },
+      });
+    } catch (whErr) {
+      console.warn('Webhook corretor_cadastrado falhou:', whErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

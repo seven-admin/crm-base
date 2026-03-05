@@ -38,7 +38,7 @@ export function useGestorCorretores() {
   });
 
   const createCorretor = useMutation({
-    mutationFn: async (dados: { nome: string; email: string; cpf: string; creci?: string; telefone?: string; password?: string }) => {
+    mutationFn: async (dados: { nome: string; email: string; cpf: string; creci?: string; telefone?: string; password?: string; cidade?: string; uf?: string }) => {
       const { nome, password, ...rest } = dados;
       const { data, error } = await supabase.functions.invoke('create-corretor', {
         body: {
@@ -58,11 +58,22 @@ export function useGestorCorretores() {
         throw new Error(msg);
       }
 
-      return data;
+      return { ...data, ...dados };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success('Corretor cadastrado com sucesso! Senha de acesso: Seven@1234', { duration: 10000 });
       queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+      dispararWebhook('corretor_cadastrado', {
+        user_id: data?.user_id,
+        nome_completo: data?.nome,
+        email: data?.email,
+        cpf: data?.cpf,
+        creci: data?.creci,
+        telefone: data?.telefone,
+        cidade: data?.cidade,
+        uf: data?.uf,
+        imobiliaria_id: imobiliariaId,
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Erro ao cadastrar corretor');

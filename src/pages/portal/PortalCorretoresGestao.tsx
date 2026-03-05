@@ -72,6 +72,16 @@ function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => voi
               <Input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Cidade</Label>
+              <Input value={form.cidade} onChange={e => setForm(f => ({ ...f, cidade: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>UF</Label>
+              <Input maxLength={2} value={form.uf} onChange={e => setForm(f => ({ ...f, uf: e.target.value.toUpperCase() }))} placeholder="Ex: SP" />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>Senha de acesso</Label>
             <Input

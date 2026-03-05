@@ -1,0 +1,1 @@
+ALTER TABLE public.corretores ADD COLUMN IF NOT EXISTS send_campanha varchar(2) DEFAULT NULL;
