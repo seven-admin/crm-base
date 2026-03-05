@@ -35,8 +35,8 @@ export function useFunilTemperatura(
       let atividadesQuery = supabase
         .from('atividades' as any)
         .select('cliente_id, temperatura_cliente, data_inicio')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .not('cliente_id', 'is', null)
         .not('temperatura_cliente', 'is', null)
         .neq('status', 'cancelada');
