@@ -54,7 +54,8 @@ export const NegociacaoCard = memo(function NegociacaoCard({
   onRecusarProposta,
   onSolicitarReserva,
   onReenviarParaAnalise,
-  onEditarProposta
+  onEditarProposta,
+  onClick
 }: NegociacaoCardProps) {
   const navigate = useNavigate();
   const validacao = useValidacaoFichaProposta(negociacao);
