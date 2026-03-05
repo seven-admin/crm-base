@@ -35,8 +35,8 @@ export function useFunilTemperatura(
       let atividadesQuery = supabase
         .from('atividades' as any)
         .select('cliente_id, temperatura_cliente, data_inicio')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .not('cliente_id', 'is', null)
         .not('temperatura_cliente', 'is', null)
         .neq('status', 'cancelada');
@@ -112,8 +112,8 @@ export function useVisitasPorEmpreendimento(
         .eq('tipo', 'visita')
         .not('empreendimento_id', 'is', null)
         .neq('status', 'cancelada')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
 
       if (gestorId) {
         query = query.eq('gestor_id', gestorId);
@@ -175,8 +175,8 @@ export function useResumoAtividades(
       let query = supabase
         .from('atividades' as any)
         .select('status, data_inicio, data_fim, requer_followup, data_followup')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
       
       if (gestorId) query = query.eq('gestor_id', gestorId);
       
@@ -276,8 +276,8 @@ export function useAtividadesPorTipoPorSemana(
       let query = supabase
         .from('atividades' as any)
         .select('tipo, data_inicio, data_fim')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .neq('status', 'cancelada');
 
       if (gestorId) {
@@ -356,8 +356,8 @@ export function useAtividadesPorCorretor(
         .select('corretor_id, status, corretor:corretores(id, nome_completo)')
         .not('corretor_id', 'is', null)
         .neq('status', 'cancelada')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
 
       if (gestorId) {
         query = query.eq('gestor_id', gestorId);
@@ -414,8 +414,8 @@ export function useCalendarioAtividades(
       let query = supabase
         .from('atividades' as any)
         .select('data_inicio, data_fim')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .neq('status', 'cancelada');
 
       if (gestorId) {

@@ -37,8 +37,8 @@ export function useResumoAtividadesPorCategoria(
       let query = supabase
         .from('atividades' as any)
         .select('categoria, tipo, status, data_inicio, data_fim, deadline_date')
+        .gte('data_inicio', inicioStr)
         .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr)
         .neq('status', 'cancelada');
 
       if (gestorId) query = query.eq('gestor_id', gestorId);

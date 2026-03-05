@@ -226,8 +226,8 @@ export default function DiarioBordo() {
 function AtividadesMetricsAndBoard({ competencia }: { competencia: Date }) {
   const [temperaturaFilter, setTemperaturaFilter] = useState<ClienteTemperatura | undefined>(undefined);
 
-  const dataInicioFilter = format(endOfMonth(competencia), 'yyyy-MM-dd');
-  const dataFimFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
+  const dataInicioFilter = format(startOfMonth(competencia), 'yyyy-MM-dd');
+  const dataFimFilter = format(endOfMonth(competencia), 'yyyy-MM-dd');
 
   return (
     <>
