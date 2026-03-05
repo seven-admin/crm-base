@@ -24,27 +24,29 @@ export interface WebhookFormData {
 }
 
 export const WEBHOOK_EVENTS = [
+  // ── Eventos ativos (disparados no código) ──
   { value: 'atividade_comentada', label: 'Atividade Comentada (Marketing / Forecast)' },
   { value: 'atividade_criada_por_superadmin', label: 'Atividade Criada por Super Admin' },
-  { value: 'ticket_aguardando_analise', label: 'Atividade de Produção - Aguardando Análise' },
-  { value: 'ticket_ajuste', label: 'Atividade de Produção - Ajuste' },
-  { value: 'ticket_aprovacao_cliente', label: 'Atividade de Produção - Aprovação Cliente' },
-  { value: 'ticket_concluido', label: 'Atividade de Produção - Concluído' },
-  { value: 'ticket_em_producao', label: 'Atividade de Produção - Em Produção' },
-  { value: 'ticket_revisao', label: 'Atividade de Produção - Revisão' },
-  { value: 'assinatura_enviada', label: 'Assinatura Enviada (Webhook n8n)' },
-  { value: 'briefing_triado', label: 'Briefing Triado' },
-  { value: 'contrato_assinado', label: 'Contrato Assinado' },
-  { value: 'contrato_gerado', label: 'Contrato Gerado' },
-  { value: 'corretor_aprovado', label: 'Corretor Aprovado (Ativação)' },
-  { value: 'imobiliaria_cadastrada', label: 'Imobiliária Cadastrada' },
-  { value: 'lead_convertido', label: 'Lead Convertido' },
-  { value: 'meta_comercial_criada', label: 'Meta Comercial Criada' },
-  { value: 'negociacao_criada', label: 'Negociação Criada' },
-  { value: 'negociacao_fechada', label: 'Negociação Fechada (Sucesso)' },
-  { value: 'negociacao_perdida', label: 'Negociação Perdida' },
-  { value: 'reserva_criada', label: 'Reserva Criada' },
   { value: 'comentario_proposta', label: 'Comentário em Proposta (Negociação)' },
+  { value: 'corretor_aprovado', label: 'Corretor Aprovado (Ativação)' },
+  { value: 'corretor_cadastrado', label: 'Corretor Cadastrado (Novo Cadastro)' },
+  { value: 'imobiliaria_cadastrada', label: 'Imobiliária Cadastrada' },
+  { value: 'imobiliaria_atualizada', label: 'Imobiliária Atualizada' },
+  { value: 'meta_comercial_criada', label: 'Meta Comercial Criada' },
+  { value: 'negociacao_movida', label: 'Negociação Movida (Transição de Etapa)' },
+  { value: 'proposta_em_analise', label: 'Proposta Enviada para Análise' },
+  { value: 'proposta_aprovada_incorporador', label: 'Proposta Aprovada pelo Incorporador' },
+  { value: 'proposta_contra_proposta', label: 'Contra-Proposta do Incorporador' },
+  { value: 'assinatura_enviada', label: 'Assinatura Enviada (Webhook n8n)' },
+  // ── Eventos planejados (ainda não disparados) ──
+  { value: 'briefing_triado', label: 'Briefing Triado (planejado)' },
+  { value: 'contrato_assinado', label: 'Contrato Assinado (planejado)' },
+  { value: 'contrato_gerado', label: 'Contrato Gerado (planejado)' },
+  { value: 'lead_convertido', label: 'Lead Convertido (planejado)' },
+  { value: 'negociacao_criada', label: 'Negociação Criada (planejado)' },
+  { value: 'negociacao_fechada', label: 'Negociação Fechada (planejado)' },
+  { value: 'negociacao_perdida', label: 'Negociação Perdida (planejado)' },
+  { value: 'reserva_criada', label: 'Reserva Criada (planejado)' },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
