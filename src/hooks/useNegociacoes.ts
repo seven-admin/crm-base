@@ -163,16 +163,24 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
         .select(`
           id,
           codigo,
+          created_at,
           valor_negociacao,
           valor_proposta,
+          valor_entrada,
           numero_proposta,
           status_proposta,
           funil_etapa_id,
           gestor_id,
+          corretor_id,
+          imobiliaria_id,
           ordem_kanban,
-          cliente:clientes(id, nome, temperatura),
+          data_previsao_fechamento,
+          observacoes,
+          cliente:clientes(id, nome, temperatura, email, telefone, cpf),
           empreendimento:empreendimentos(id, nome),
           gestor:profiles!gestor_id(id, full_name),
+          corretor:corretores(id, nome_completo),
+          imobiliaria:imobiliarias(id, nome),
           unidades:negociacao_unidades(id)
         `)
         .eq('is_active', true)

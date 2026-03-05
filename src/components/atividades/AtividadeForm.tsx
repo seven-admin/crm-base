@@ -76,6 +76,7 @@ const formSchema = z
     hora_fim: z.string().optional(),
     observacoes: z.string().optional(),
     qtd_participantes: z.coerce.number().int().min(1).optional(),
+    qtd_corretores: z.coerce.number().int().min(1).optional(),
     temperatura_cliente: z.enum(['frio', 'morno', 'quente', 'morto']).optional(),
     requer_followup: z.boolean().default(false),
     data_followup: z.date().optional(),
@@ -163,6 +164,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       hora_fim: initialData?.hora_fim?.substring(0, 5) || '',
       observacoes: initialData?.observacoes || '',
       qtd_participantes: initialData?.qtd_participantes || undefined,
+      qtd_corretores: initialData?.qtd_corretores || undefined,
       temperatura_cliente: initialData?.temperatura_cliente || undefined,
       requer_followup: initialData?.requer_followup || false,
       data_followup: initialData?.data_followup ? new Date(initialData.data_followup) : undefined,
@@ -179,6 +181,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
   const requerFollowup = form.watch('requer_followup');
   const clienteId = form.watch('cliente_id');
   const tipoAtual = form.watch('tipo');
+  const categoriaAtual = form.watch('categoria');
 
   // useEffect for clearing temperatura removed - always visible now
 
@@ -241,6 +244,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       hora_fim: values.hora_fim || undefined,
       observacoes: values.observacoes || undefined,
       qtd_participantes: values.tipo === 'treinamento' ? values.qtd_participantes : undefined,
+      qtd_corretores: (values.tipo === 'ligacao' && values.categoria === 'imobiliaria') ? values.qtd_corretores : undefined,
       temperatura_cliente: values.temperatura_cliente as ClienteTemperatura | undefined,
       requer_followup: values.requer_followup,
       data_followup: values.data_followup?.toISOString(),
@@ -888,6 +892,30 @@ export function AtividadeForm(props: AtividadeFormProps) {
                         type="number"
                         min={1}
                         placeholder="Ex: 10"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Quantidade de Corretores - apenas ligação para imobiliária */}
+            {tipoAtual === 'ligacao' && categoriaAtual === 'imobiliaria' && (
+              <FormField
+                control={form.control}
+                name="qtd_corretores"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qtd. Corretores informados</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Ex: 5"
                         {...field}
                         value={field.value ?? ''}
                         onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
