@@ -34,8 +34,8 @@ function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => voi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ ...form, password: form.password || undefined });
-    setForm({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '' });
+    onSubmit({ ...form, password: form.password || undefined, cidade: form.cidade || undefined, uf: form.uf || undefined });
+    setForm({ nome: '', email: '', cpf: '', creci: '', telefone: '', password: '', cidade: '', uf: '' });
     setOpen(false);
   };
 
