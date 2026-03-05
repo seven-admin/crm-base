@@ -7,6 +7,7 @@ import { MoverNegociacaoDialog, ContratoSolicitadoData } from './MoverNegociacao
 import { NegociacaoForm } from './NegociacaoForm';
 import { NegociacaoHistoricoTimeline } from './NegociacaoHistoricoTimeline';
 import { NegociacaoCard } from './NegociacaoCard';
+import { NegociacaoDetalheDialog } from './NegociacaoDetalheDialog';
 import { PropostaDialog } from './PropostaDialog';
 import { useNegociacoes, useMoverNegociacao, useDeleteNegociacao, useConverterPropostaEmContrato, useSolicitarReserva, useEnviarParaAnalise, useEnviarProposta, useReenviarParaAnalise } from '@/hooks/useNegociacoes';
 import { useCreateContrato } from '@/hooks/useContratos';
