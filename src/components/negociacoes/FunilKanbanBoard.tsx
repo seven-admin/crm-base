@@ -363,8 +363,19 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
             onSolicitarReserva={handleSolicitarReserva}
             onReenviarParaAnalise={handleReenviarParaAnalise}
             onEditarProposta={handleEditarProposta}
+            onClick={handleOpenDetalhe}
           />
         )}
+      />
+
+      <NegociacaoDetalheDialog
+        open={detalheOpen}
+        onOpenChange={setDetalheOpen}
+        negociacao={selectedNegociacao}
+        onEditar={(neg) => navigate(`/negociacoes/editar/${neg.id}`)}
+        onMover={handleMover}
+        onHistorico={handleHistorico}
+        onVerProposta={handleEditarProposta}
       />
 
       <MoverNegociacaoDialog

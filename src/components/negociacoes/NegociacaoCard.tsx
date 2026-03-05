@@ -151,7 +151,7 @@ export const NegociacaoCard = memo(function NegociacaoCard({
           
           {/* Menu dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0">
                 <MoreVertical className="h-3 w-3" />
               </Button>
