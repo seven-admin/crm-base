@@ -266,6 +266,16 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
               </div>
             )}
 
+            {/* Quantidade de Corretores (ligação imobiliária) */}
+            {atividade.tipo === 'ligacao' && (atividade as any).qtd_corretores && (
+              <div className="flex items-center gap-2 p-3 bg-accent/30 rounded-lg border border-border">
+                <UsersRound className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">
+                  <strong>{(atividade as any).qtd_corretores}</strong> corretor{(atividade as any).qtd_corretores > 1 ? 'es' : ''} informado{(atividade as any).qtd_corretores > 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+
             {/* Resultado (se concluída) */}
             {atividade.status === 'concluida' && atividade.resultado && (
               <div className="space-y-2">

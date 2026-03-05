@@ -902,6 +902,30 @@ export function AtividadeForm(props: AtividadeFormProps) {
               />
             )}
 
+            {/* Quantidade de Corretores - apenas ligação para imobiliária */}
+            {tipoAtual === 'ligacao' && categoriaAtual === 'imobiliaria' && (
+              <FormField
+                control={form.control}
+                name="qtd_corretores"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qtd. Corretores informados</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Ex: 5"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* Follow-up */}
             <div className="space-y-3">
               <FormField
