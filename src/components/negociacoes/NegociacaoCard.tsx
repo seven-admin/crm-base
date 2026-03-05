@@ -36,6 +36,7 @@ interface NegociacaoCardProps {
   onSolicitarReserva?: (negociacao: Negociacao) => void;
   onReenviarParaAnalise?: (negociacao: Negociacao) => void;
   onEditarProposta?: (negociacao: Negociacao) => void;
+  onClick?: (negociacao: Negociacao) => void;
 }
 
 export const NegociacaoCard = memo(function NegociacaoCard({ 
