@@ -226,6 +226,8 @@ Deno.serve(async (req) => {
         email: email.toLowerCase(),
         user_id: userId,
         imobiliaria_id: finalImobiliariaId,
+        cidade: cidade ? cidade.toUpperCase() : null,
+        uf: uf ? uf.toUpperCase() : null,
         is_active: true
       });
 
