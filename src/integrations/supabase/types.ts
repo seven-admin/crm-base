@@ -166,6 +166,7 @@ export type Database = {
           imobiliaria_id: string | null
           motivo_cancelamento: string | null
           observacoes: string | null
+          qtd_corretores: number | null
           qtd_participantes: number | null
           requer_followup: boolean | null
           resultado: string | null
@@ -198,6 +199,7 @@ export type Database = {
           imobiliaria_id?: string | null
           motivo_cancelamento?: string | null
           observacoes?: string | null
+          qtd_corretores?: number | null
           qtd_participantes?: number | null
           requer_followup?: boolean | null
           resultado?: string | null
@@ -230,6 +232,7 @@ export type Database = {
           imobiliaria_id?: string | null
           motivo_cancelamento?: string | null
           observacoes?: string | null
+          qtd_corretores?: number | null
           qtd_participantes?: number | null
           requer_followup?: boolean | null
           resultado?: string | null
@@ -2121,6 +2124,7 @@ export type Database = {
       corretores: {
         Row: {
           cidade: string | null
+          cod_sorteio: string | null
           cpf: string | null
           created_at: string
           creci: string | null
@@ -2138,6 +2142,7 @@ export type Database = {
         }
         Insert: {
           cidade?: string | null
+          cod_sorteio?: string | null
           cpf?: string | null
           created_at?: string
           creci?: string | null
@@ -2155,6 +2160,7 @@ export type Database = {
         }
         Update: {
           cidade?: string | null
+          cod_sorteio?: string | null
           cpf?: string | null
           created_at?: string
           creci?: string | null
@@ -5899,6 +5905,7 @@ export type Database = {
         Args: { _action: string; _module_name: string; _user_id: string }
         Returns: boolean
       }
+      generate_cod_sorteio: { Args: never; Returns: string }
       generate_negociacao_proposta_numero: { Args: never; Returns: string }
       generate_signature_token: { Args: never; Returns: string }
       gerar_hash_versao: { Args: { conteudo: string }; Returns: string }
