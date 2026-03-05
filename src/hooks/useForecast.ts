@@ -112,8 +112,8 @@ export function useVisitasPorEmpreendimento(
         .eq('tipo', 'visita')
         .not('empreendimento_id', 'is', null)
         .neq('status', 'cancelada')
-        .lte('data_inicio', fimStr)
-        .gte('data_fim', inicioStr);
+        .gte('data_inicio', inicioStr)
+        .lte('data_inicio', fimStr);
 
       if (gestorId) {
         query = query.eq('gestor_id', gestorId);
