@@ -36,6 +36,7 @@ interface NegociacaoCardProps {
   onSolicitarReserva?: (negociacao: Negociacao) => void;
   onReenviarParaAnalise?: (negociacao: Negociacao) => void;
   onEditarProposta?: (negociacao: Negociacao) => void;
+  onClick?: (negociacao: Negociacao) => void;
 }
 
 export const NegociacaoCard = memo(function NegociacaoCard({ 
@@ -53,7 +54,8 @@ export const NegociacaoCard = memo(function NegociacaoCard({
   onRecusarProposta,
   onSolicitarReserva,
   onReenviarParaAnalise,
-  onEditarProposta
+  onEditarProposta,
+  onClick
 }: NegociacaoCardProps) {
   const navigate = useNavigate();
   const validacao = useValidacaoFichaProposta(negociacao);
@@ -99,6 +101,7 @@ export const NegociacaoCard = memo(function NegociacaoCard({
           ? "opacity-95 scale-[1.02] shadow-xl rotate-[1deg] ring-2 ring-primary/40"
           : "hover:shadow-sm transition-shadow"
       )}
+      onClick={() => onClick?.(negociacao)}
     >
       {/* Linha 1: Cliente + Código + Status + Menu */}
       <div className="p-2 pb-1">
@@ -148,7 +151,7 @@ export const NegociacaoCard = memo(function NegociacaoCard({
           
           {/* Menu dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0">
                 <MoreVertical className="h-3 w-3" />
               </Button>

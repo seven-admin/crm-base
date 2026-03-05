@@ -7,6 +7,7 @@ import { MoverNegociacaoDialog, ContratoSolicitadoData } from './MoverNegociacao
 import { NegociacaoForm } from './NegociacaoForm';
 import { NegociacaoHistoricoTimeline } from './NegociacaoHistoricoTimeline';
 import { NegociacaoCard } from './NegociacaoCard';
+import { NegociacaoDetalheDialog } from './NegociacaoDetalheDialog';
 import { PropostaDialog } from './PropostaDialog';
 import { useNegociacoes, useMoverNegociacao, useDeleteNegociacao, useConverterPropostaEmContrato, useSolicitarReserva, useEnviarParaAnalise, useEnviarProposta, useReenviarParaAnalise } from '@/hooks/useNegociacoes';
 import { useCreateContrato } from '@/hooks/useContratos';
@@ -83,6 +84,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propostaOpen, setPropostaOpen] = useState(false);
   const [propostaMode, setPropostaMode] = useState<'gerar' | 'enviar' | 'aceitar' | 'recusar' | 'view'>('view');
+  const [detalheOpen, setDetalheOpen] = useState(false);
   
   // Estado otimista para manter a posição visual durante a mutation
   const [optimisticNegociacoes, setOptimisticNegociacoes] = useState<Negociacao[] | null>(null);
@@ -120,6 +122,11 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     setSelectedNegociacao(negociacao);
     setTargetEtapa(undefined);
     setMoverDialogOpen(true);
+  };
+
+  const handleOpenDetalhe = (negociacao: Negociacao) => {
+    setSelectedNegociacao(negociacao);
+    setDetalheOpen(true);
   };
 
   const handleEditar = (negociacao: Negociacao) => {
@@ -356,8 +363,19 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
             onSolicitarReserva={handleSolicitarReserva}
             onReenviarParaAnalise={handleReenviarParaAnalise}
             onEditarProposta={handleEditarProposta}
+            onClick={handleOpenDetalhe}
           />
         )}
+      />
+
+      <NegociacaoDetalheDialog
+        open={detalheOpen}
+        onOpenChange={setDetalheOpen}
+        negociacao={selectedNegociacao}
+        onEditar={(neg) => navigate(`/negociacoes/editar/${neg.id}`)}
+        onMover={handleMover}
+        onHistorico={handleHistorico}
+        onVerProposta={handleEditarProposta}
       />
 
       <MoverNegociacaoDialog
