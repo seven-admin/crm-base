@@ -82,7 +82,9 @@ Deno.serve(async (req) => {
       creci, 
       telefone,
       whatsapp,
-      imobiliaria_id 
+      imobiliaria_id,
+      cidade,
+      uf
     } = await req.json();
 
     // Determine imobiliaria_id
