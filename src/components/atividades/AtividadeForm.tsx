@@ -244,7 +244,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       hora_fim: values.hora_fim || undefined,
       observacoes: values.observacoes || undefined,
       qtd_participantes: values.tipo === 'treinamento' ? values.qtd_participantes : undefined,
-      qtd_corretores: (values.tipo === 'ligacao' && values.categoria === 'imobiliaria') ? (values as any).qtd_corretores : undefined,
+      qtd_corretores: (values.tipo === 'ligacao' && values.categoria === 'imobiliaria') ? values.qtd_corretores : undefined,
       temperatura_cliente: values.temperatura_cliente as ClienteTemperatura | undefined,
       requer_followup: values.requer_followup,
       data_followup: values.data_followup?.toISOString(),
