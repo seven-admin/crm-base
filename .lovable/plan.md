@@ -1,22 +1,17 @@
 
+# Plano Completo — Implementado ✅
 
-# Corrigir filtro de Ressarcimentos
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-O relatório de Ressarcimentos exibe **todos** os lançamentos que possuem `beneficiario_id`, independente da categoria. O registro "PG CONTRATO - THIAGO GONÇALVES" tem `categoria_fluxo = 'PAGAMENTO PJ - SEVEN'` e aparece incorretamente.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Solução
-No `RelatorioRessarcimentos.tsx`, adicionar filtro por `categoria_fluxo` na linha 46:
-
-```typescript
-const comBeneficiario = lancamentos.filter(
-  (l: any) => l.beneficiario_id != null 
-    && l.categoria_fluxo?.toUpperCase() === 'RESSARCIMENTO'
-);
-```
-
-Isso garante que apenas lançamentos com `categoria_fluxo = 'RESSARCIMENTO'` apareçam no relatório.
-
-## Arquivo afetado
-- `src/components/financeiro/RelatorioRessarcimentos.tsx` — ajustar filtro no `useMemo`
-
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
