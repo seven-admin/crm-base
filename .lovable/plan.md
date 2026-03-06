@@ -1,30 +1,17 @@
 
+# Plano Completo — Implementado ✅
 
-# Plano: Simplificar validação de dados do cliente para contrato
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-A validação em `ValidarDadosLeadDialog.tsx` exige campos desnecessários como **Nome da Mãe**, **Nome do Pai** e **Nacionalidade**, que raramente são obrigatórios em contratos imobiliários e que nem sequer existem no formulário de cadastro.
-
-## Solução
-
-Remover 3 campos da lista `CAMPOS_OBRIGATORIOS_CONTRATO` em `ValidarDadosLeadDialog.tsx`:
-
-- ~~`nacionalidade`~~
-- ~~`nome_mae`~~
-- ~~`nome_pai`~~
-
-Os campos essenciais que permanecem (13 no total):
-
-| Categoria | Campos |
-|---|---|
-| Pessoais | Nome, CPF, Estado Civil, Profissão, Data de Nascimento |
-| Endereço | Logradouro, Número, Bairro, Cidade, UF, CEP |
-| Contato | Telefone, Email |
-
-## Arquivo afetado
-
-| Arquivo | Alteração |
-|---|---|
-| `src/components/negociacoes/ValidarDadosLeadDialog.tsx` | Remover 3 linhas do array `CAMPOS_OBRIGATORIOS_CONTRATO` |
-
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados

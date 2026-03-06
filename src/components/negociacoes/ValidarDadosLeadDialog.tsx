@@ -14,11 +14,8 @@ interface ValidarDadosLeadDialogProps {
 const CAMPOS_OBRIGATORIOS_CONTRATO = [
   { campo: 'nome', label: 'Nome' },
   { campo: 'cpf', label: 'CPF' },
-  { campo: 'nacionalidade', label: 'Nacionalidade' },
   { campo: 'estado_civil', label: 'Estado Civil' },
   { campo: 'profissao', label: 'Profissão' },
-  { campo: 'nome_mae', label: 'Nome da Mãe' },
-  { campo: 'nome_pai', label: 'Nome do Pai' },
   { campo: 'data_nascimento', label: 'Data de Nascimento' },
   { campo: 'endereco_logradouro', label: 'Logradouro' },
   { campo: 'endereco_numero', label: 'Número' },
