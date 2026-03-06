@@ -34,6 +34,8 @@ export const WEBHOOK_EVENTS = [
   { value: 'imobiliaria_atualizada', label: 'Imobiliária Atualizada' },
   { value: 'meta_comercial_criada', label: 'Meta Comercial Criada' },
   { value: 'negociacao_movida', label: 'Negociação Movida (Transição de Etapa)' },
+  { value: 'negociacao_fechada', label: 'Negociação Fechada (Sucesso)' },
+  { value: 'negociacao_perdida', label: 'Negociação Perdida' },
   { value: 'proposta_em_analise', label: 'Proposta Enviada para Análise' },
   { value: 'proposta_aprovada_incorporador', label: 'Proposta Aprovada pelo Incorporador' },
   { value: 'proposta_contra_proposta', label: 'Contra-Proposta do Incorporador' },
@@ -44,8 +46,6 @@ export const WEBHOOK_EVENTS = [
   { value: 'contrato_gerado', label: 'Contrato Gerado (planejado)' },
   { value: 'lead_convertido', label: 'Lead Convertido (planejado)' },
   { value: 'negociacao_criada', label: 'Negociação Criada (planejado)' },
-  { value: 'negociacao_fechada', label: 'Negociação Fechada (planejado)' },
-  { value: 'negociacao_perdida', label: 'Negociação Perdida (planejado)' },
   { value: 'reserva_criada', label: 'Reserva Criada (planejado)' },
 ];
 
