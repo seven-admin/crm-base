@@ -85,6 +85,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success('Item criado com sucesso');
     },
     onError: (error) => {
@@ -111,6 +112,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
     },
     onError: (error) => {
       toast.error('Erro ao atualizar item: ' + error.message);
@@ -128,6 +130,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success('Item removido com sucesso');
     },
     onError: (error) => {
@@ -165,6 +168,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success('Item duplicado com sucesso');
     },
     onError: (error) => {
@@ -192,6 +196,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success(`${data.length} itens importados com sucesso`);
     },
     onError: (error) => {
@@ -212,6 +217,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
     }
   });
 
@@ -227,6 +233,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success(`${count} item(ns) removido(s) com sucesso`);
     },
     onError: (error) => {
