@@ -73,11 +73,13 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
         map.get(key)!.items.push(item);
       });
     } else {
-      // Group by empreendimento
+      // Group by empreendimento — assign colors from shared palette
+      const allEmpIds = [...new Set(filteredItens.map(i => i.empreendimento?.id).filter(Boolean))] as string[];
       filteredItens.forEach(item => {
         const key = item.empreendimento?.id || 'sem-empreendimento';
         const label = item.empreendimento?.nome || 'Sem empreendimento';
-        if (!map.has(key)) map.set(key, { label, items: [] });
+        const color = key !== 'sem-empreendimento' ? getEmpreendimentoColor(key, allEmpIds) : '#94a3b8';
+        if (!map.has(key)) map.set(key, { label, color, items: [] });
         map.get(key)!.items.push(item);
       });
     }
