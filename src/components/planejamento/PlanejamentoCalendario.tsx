@@ -32,6 +32,7 @@ import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useGoogleCalendarEmbeds } from '@/hooks/useGoogleCalendarEmbeds';
 import { useGoogleCalendarEvents, type GoogleCalendarEvent } from '@/hooks/useGoogleCalendarEvents';
+import { EMPREENDIMENTO_COLORS, withAlpha } from '@/utils/empreendimentoColors';
 
 import { CalendarioDiaDetalhe } from './CalendarioDiaDetalhe';
 import { CalendarioCriarTarefaPopover } from './CalendarioCriarTarefaPopover';
@@ -42,8 +43,6 @@ interface Props {
   filters: PlanejamentoGlobalFilters;
   onFiltersChange: (filters: PlanejamentoGlobalFilters) => void;
 }
-
-import { EMPREENDIMENTO_COLORS, hexToRgba } from '@/utils/empreendimentoColors';
 
 // Multi-day bar segment type
 interface MultiDaySegment {
@@ -151,7 +150,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
       const fim = parseISO(item.data_fim!);
       const clampStart = dateMax([inicio, monthStart]);
       const clampEnd = dateMin([fim, monthEnd]);
-      const empColor = empColors.get(item.empreendimento?.id || '')?.color || '#6b7280';
+      const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
 
       // Split into week segments
       let current = clampStart;
@@ -333,6 +332,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
   const BAR_TOP_OFFSET = 24; // space for day number
+  const MAX_MULTI_DAY_VISIBLE = 2;
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
@@ -396,7 +396,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               </div>
 
               {/* Calendar grid with multi-day bar overlay */}
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: startingDayOfWeek }).map((_, index) => (
                     <div key={`empty-${index}`} className="h-24" />
@@ -414,13 +414,15 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                     const dayIndex = day.getDate() - 1 + startingDayOfWeek;
                     const weekRow = Math.floor(dayIndex / 7);
                     const col = dayIndex % 7;
-                    const multiDayCount = multiDaySegments.filter(
-                      s => s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
+                    const visibleMultiDayCount = multiDaySegments.filter(
+                      s => s.slotIndex < MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
                     ).length;
-                    
-                    const maxSingleVisible = Math.max(0, 2 - multiDayCount);
+                    const hiddenMultiDayCount = multiDaySegments.filter(
+                      s => s.slotIndex >= MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
+                    ).length;
+
+                    const maxSingleVisible = Math.max(0, 2 - visibleMultiDayCount);
                     const totalSingleAndGoogle = daySingleItems.length + dayGoogleEvents.length;
-                    const hiddenCount = Math.max(0, totalSingleAndGoogle - maxSingleVisible) + (maxSingleVisible === 0 ? 0 : 0);
 
                     const cell = (
                       <button
@@ -446,19 +448,19 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <Plus className="h-3 w-3 text-primary" />
                           </button>
                         </div>
-                        {/* Reserve space for multi-day bars */}
-                        {multiDayCount > 0 && (
-                          <div style={{ height: multiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
+                        {/* Reserve space for visible multi-day bars */}
+                        {visibleMultiDayCount > 0 && (
+                          <div style={{ height: visibleMultiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
                         )}
                         <div className="mt-1 space-y-0.5 overflow-hidden">
                           {daySingleItems.slice(0, maxSingleVisible).map((item) => {
                             const empColor = empColors.get(item.empreendimento?.id || '');
-                            const color = empColor?.color || '#6b7280';
+                            const color = empColor?.color || 'hsl(var(--muted-foreground))';
                             return (
                               <div
                                 key={item.id}
                                 className="text-xs truncate px-1 py-0.5 rounded"
-                                style={{ backgroundColor: hexToRgba(color, 0.2), color }}
+                                style={{ backgroundColor: withAlpha(color, 0.2), color }}
                               >
                                 {item.item}
                               </div>
@@ -473,9 +475,9 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                               {evt.summary}
                             </div>
                           ))}
-                          {(totalSingleAndGoogle + multiDayCount) > 2 && totalSingleAndGoogle > maxSingleVisible && (
+                          {(totalSingleAndGoogle + visibleMultiDayCount + hiddenMultiDayCount) > 2 && (
                             <div className="text-xs text-muted-foreground px-1">
-                              +{totalSingleAndGoogle - maxSingleVisible} mais
+                              +{Math.max(0, totalSingleAndGoogle - maxSingleVisible) + hiddenMultiDayCount} mais
                             </div>
                           )}
                         </div>
@@ -525,7 +527,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                 {/* Multi-day bars overlay */}
                 <TooltipProvider delayDuration={200}>
                   <div className="absolute inset-0 pointer-events-none" style={{ margin: '0 0' }}>
-                    {multiDaySegments.map((seg, idx) => {
+                    {multiDaySegments.filter(seg => seg.slotIndex < MAX_MULTI_DAY_VISIBLE).map((seg, idx) => {
                       // Calculate position based on grid
                       // Each cell is 1/7 of width, gap is 4px (gap-1)
                       const gapPx = 4;
@@ -546,7 +548,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                                 width: `calc(${widthPercent}% - ${gapPx}px)`,
                                 top: `${topPx}px`,
                                 height: `${BAR_HEIGHT}px`,
-                                backgroundColor: hexToRgba(seg.color, 0.25),
+                                backgroundColor: withAlpha(seg.color, 0.25),
                                 borderLeft: seg.isFirst ? `3px solid ${seg.color}` : undefined,
                                 borderRight: seg.isLast ? `3px solid ${seg.color}` : undefined,
                                 borderRadius: `${seg.isFirst ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isFirst ? 4 : 0}px`,

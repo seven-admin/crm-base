@@ -1,9 +1,18 @@
 /**
  * Shared color palette for empreendimentos across Lista and Calendário views.
+ * Colors are defined in HSL format for design-system compatibility.
  */
 export const EMPREENDIMENTO_COLORS = [
-  '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899',
-  '#06b6d4', '#f97316', '#84cc16', '#14b8a6', '#6366f1',
+  'hsl(213 88% 58%)',
+  'hsl(145 63% 42%)',
+  'hsl(36 92% 52%)',
+  'hsl(262 83% 64%)',
+  'hsl(332 82% 60%)',
+  'hsl(191 90% 44%)',
+  'hsl(22 93% 54%)',
+  'hsl(83 79% 45%)',
+  'hsl(172 73% 40%)',
+  'hsl(239 84% 67%)',
 ];
 
 /**
@@ -16,11 +25,19 @@ export function getEmpreendimentoColor(id: string, allIds: string[]): string {
 }
 
 /**
- * Converts a hex color to rgba string.
+ * Adds alpha transparency to hsl(...) or hex colors.
  */
-export function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+export function withAlpha(color: string, alpha: number): string {
+  if (color.startsWith('hsl(') && color.endsWith(')')) {
+    return color.replace(/^hsl\((.*)\)$/u, `hsl($1 / ${alpha})`);
+  }
+
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  return color;
 }
