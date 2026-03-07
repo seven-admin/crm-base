@@ -234,7 +234,7 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
           <TableBody>
             {grouped.size === 0 && (
               <TableRow>
-                <TableCell colSpan={localEmpreendimentoId ? 9 : 10} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={localEmpreendimentoId ? 8 : 9} className="text-center py-12 text-muted-foreground">
                   Nenhuma tarefa encontrada
                 </TableCell>
               </TableRow>
