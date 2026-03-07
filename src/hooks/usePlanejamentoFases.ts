@@ -18,6 +18,9 @@ export function usePlanejamentoFases(empreendimentoId?: string) {
       if (empreendimentoId) {
         // Buscar fases base (NULL) + fases do empreendimento
         query = query.or(`empreendimento_id.is.null,empreendimento_id.eq.${empreendimentoId}`);
+      } else {
+        // Sem empreendimento selecionado: apenas fases globais
+        query = query.is('empreendimento_id', null);
       }
 
       const { data, error } = await query;
