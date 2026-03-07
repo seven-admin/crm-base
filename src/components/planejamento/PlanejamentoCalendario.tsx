@@ -527,7 +527,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                 {/* Multi-day bars overlay */}
                 <TooltipProvider delayDuration={200}>
                   <div className="absolute inset-0 pointer-events-none" style={{ margin: '0 0' }}>
-                    {multiDaySegments.map((seg, idx) => {
+                    {multiDaySegments.filter(seg => seg.slotIndex < MAX_MULTI_DAY_VISIBLE).map((seg, idx) => {
                       // Calculate position based on grid
                       // Each cell is 1/7 of width, gap is 4px (gap-1)
                       const gapPx = 4;
@@ -548,7 +548,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                                 width: `calc(${widthPercent}% - ${gapPx}px)`,
                                 top: `${topPx}px`,
                                 height: `${BAR_HEIGHT}px`,
-                                backgroundColor: hexToRgba(seg.color, 0.25),
+                                backgroundColor: withAlpha(seg.color, 0.25),
                                 borderLeft: seg.isFirst ? `3px solid ${seg.color}` : undefined,
                                 borderRight: seg.isLast ? `3px solid ${seg.color}` : undefined,
                                 borderRadius: `${seg.isFirst ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isFirst ? 4 : 0}px`,
