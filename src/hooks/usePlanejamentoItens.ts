@@ -168,6 +168,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success('Item duplicado com sucesso');
     },
     onError: (error) => {
