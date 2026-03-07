@@ -32,6 +32,7 @@ import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useGoogleCalendarEmbeds } from '@/hooks/useGoogleCalendarEmbeds';
 import { useGoogleCalendarEvents, type GoogleCalendarEvent } from '@/hooks/useGoogleCalendarEvents';
+import { EMPREENDIMENTO_COLORS, withAlpha } from '@/utils/empreendimentoColors';
 
 import { CalendarioDiaDetalhe } from './CalendarioDiaDetalhe';
 import { CalendarioCriarTarefaPopover } from './CalendarioCriarTarefaPopover';
