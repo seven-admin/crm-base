@@ -106,11 +106,14 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     days.forEach(day => {
       const key = format(day, 'yyyy-MM-dd');
       const dayItems = itens.filter(item => {
-        if (!item.data_inicio || !item.data_fim) return false;
+        if (!item.data_inicio && !item.data_fim) return false;
         try {
-          const inicio = parseISO(item.data_inicio);
-          const fim = parseISO(item.data_fim);
-          return isWithinInterval(day, { start: inicio, end: fim });
+          const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
+          const fim = item.data_fim ? parseISO(item.data_fim) : null;
+          if (inicio && fim) return isWithinInterval(day, { start: inicio, end: fim });
+          if (inicio && !fim) return isSameDay(day, inicio);
+          if (!inicio && fim) return isSameDay(day, fim);
+          return false;
         } catch { return false; }
       });
       if (dayItems.length > 0) map.set(key, dayItems);

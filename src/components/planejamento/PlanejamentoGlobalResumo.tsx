@@ -139,25 +139,6 @@ export function PlanejamentoGlobalResumo({ filters, limiteSobrecarga = 5 }: Prop
         </Card>
       </div>
 
-      {/* Alertas de Conflitos */}
-      {(conflitosAltos.length > 0 || conflitosMedios.length > 0) && (
-        <div className="space-y-2">
-          {conflitosAltos.map((conflito, idx) => (
-            <Alert key={idx} variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Alerta Crítico</AlertTitle>
-              <AlertDescription>{conflito.descricao}</AlertDescription>
-            </Alert>
-          ))}
-          {conflitosMedios.slice(0, 3).map((conflito, idx) => (
-            <Alert key={idx}>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Atenção</AlertTitle>
-              <AlertDescription>{conflito.descricao}</AlertDescription>
-            </Alert>
-          ))}
-        </div>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Gráfico de barras empilhadas */}

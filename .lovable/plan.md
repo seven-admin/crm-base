@@ -1,19 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Plano: 3 ajustes no Planejamento
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## 1. Remover alertas do Resumo
-Remover a seção de alertas (linhas 142-160) do `PlanejamentoGlobalResumo.tsx` -- os cards de "Alerta Crítico" e "Atenção" que poluem a tela.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-**Arquivo:** `src/components/planejamento/PlanejamentoGlobalResumo.tsx`
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-## 2. Calendário não exibe todas as tarefas (modo "Todos")
-O Supabase tem limite padrão de 1000 linhas por query. Quando não há filtro de empreendimento, a query pode ser truncada silenciosamente. Solução: adicionar `.limit(5000)` na query do `usePlanejamentoGlobal.ts` e remover o filtro que exige `data_inicio` E `data_fim` simultaneamente (tarefas com apenas uma data também devem aparecer no calendário).
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-**Arquivo:** `src/hooks/usePlanejamentoGlobal.ts`, `src/components/planejamento/PlanejamentoCalendario.tsx`
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-## 3. Painel lateral: agrupar tarefas por empreendimento
-No `CalendarioDiaDetalhe.tsx`, em vez de listar todas as tarefas flat, agrupar por `item.empreendimento.nome` com headers visuais (nome do empreendimento + cor) separando os grupos.
-
-**Arquivo:** `src/components/planejamento/CalendarioDiaDetalhe.tsx`
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
