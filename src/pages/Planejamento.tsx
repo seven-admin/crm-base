@@ -104,6 +104,10 @@ export default function Planejamento() {
             {empreendimentoId ? (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
+                  <TabsTrigger value="calendario" className="gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Calendário
+                  </TabsTrigger>
                   <TabsTrigger value="planilha" className="gap-2">
                     <ClipboardList className="h-4 w-4" />
                     Planilha
@@ -111,10 +115,6 @@ export default function Planejamento() {
                   <TabsTrigger value="timeline" className="gap-2">
                     <CalendarDays className="h-4 w-4" />
                     Timeline
-                  </TabsTrigger>
-                  <TabsTrigger value="calendario" className="gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Calendário
                   </TabsTrigger>
                   <TabsTrigger value="dashboard" className="gap-2">
                     <BarChart3 className="h-4 w-4" />
