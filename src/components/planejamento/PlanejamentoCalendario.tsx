@@ -150,7 +150,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
       const fim = parseISO(item.data_fim!);
       const clampStart = dateMax([inicio, monthStart]);
       const clampEnd = dateMin([fim, monthEnd]);
-      const empColor = empColors.get(item.empreendimento?.id || '')?.color || '#6b7280';
+      const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
 
       // Split into week segments
       let current = clampStart;
