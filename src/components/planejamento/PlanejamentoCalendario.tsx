@@ -97,36 +97,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const days = useMemo(() => eachDayOfInterval({ start: monthStart, end: monthEnd }), [currentMonth]);
   const startingDayOfWeek = monthStart.getDay();
 
-  // Compute all items per day (single + multi-day), inline
-  const itemsPorDia = useMemo(() => {
-    const map = new Map<string, DayDisplayItem[]>();
-    if (!itens) return map;
-
-    itens.forEach(item => {
-      if (!item.data_inicio && !item.data_fim) return;
-      try {
-        const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
-        const fim = item.data_fim ? parseISO(item.data_fim) : null;
-        const isMultiDay = !!(inicio && fim && differenceInCalendarDays(fim, inicio) > 0);
-        const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
-
-        const rangeStart = inicio ? dateMax([inicio, monthStart]) : (fim && fim >= monthStart && fim <= monthEnd ? fim : null);
-        const rangeEnd = fim ? dateMin([fim, monthEnd]) : (inicio && inicio >= monthStart && inicio <= monthEnd ? inicio : null);
-
-        if (!rangeStart || !rangeEnd || rangeStart > rangeEnd) return;
-
-        const coveredDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
-        coveredDays.forEach(day => {
-          const key = format(day, 'yyyy-MM-dd');
-          if (!map.has(key)) map.set(key, []);
-          map.get(key)!.push({ item, isMultiDay, color: empColor });
-        });
-      } catch { /* ignore */ }
-    });
-
-    return map;
-  }, [itens, empColors, currentMonth]);
-
   // Google events per day
   const googleEventsPorDia = useMemo(() => {
     const map = new Map<string, GoogleCalendarEvent[]>();
@@ -232,8 +202,99 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     [duplicateItem]
   );
 
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const MAX_ITEMS_VISIBLE = 3;
+  const weekDayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const MAX_MULTIDAY_SLOTS = 2;
+  const SLOT_HEIGHT = 20;
+  const DAY_HEADER_HEIGHT = 24;
+
+  // Group days into weeks
+  const weeks = useMemo(() => {
+    const result: (Date | null)[][] = [];
+    const firstWeek: (Date | null)[] = Array.from({ length: startingDayOfWeek }, () => null);
+    let currentWeek = firstWeek;
+    days.forEach((day) => {
+      if (currentWeek.length === 7) {
+        result.push(currentWeek);
+        currentWeek = [];
+      }
+      currentWeek.push(day);
+    });
+    while (currentWeek.length < 7) currentWeek.push(null);
+    result.push(currentWeek);
+    return result;
+  }, [days, startingDayOfWeek]);
+
+  // Multi-day bar slots per week
+  const weekMultiDaySlots = useMemo(() => {
+    if (!itens) return new Map<number, { item: PlanejamentoItemWithRelations; color: string; colStart: number; colSpan: number; slot: number }[]>();
+    const map = new Map<number, { item: PlanejamentoItemWithRelations; color: string; colStart: number; colSpan: number; slot: number }[]>();
+
+    weeks.forEach((week, weekIdx) => {
+      const bars: { item: PlanejamentoItemWithRelations; color: string; colStart: number; colSpan: number; slot: number }[] = [];
+      const weekDates = week.map(d => d ? format(d, 'yyyy-MM-dd') : null);
+      const firstDay = week.find(d => d !== null);
+      const lastDay = [...week].reverse().find(d => d !== null);
+      if (!firstDay || !lastDay) { map.set(weekIdx, bars); return; }
+
+      itens.forEach(item => {
+        if (!item.data_inicio || !item.data_fim) return;
+        try {
+          const inicio = parseISO(item.data_inicio);
+          const fim = parseISO(item.data_fim);
+          if (differenceInCalendarDays(fim, inicio) < 1) return;
+          if (fim < firstDay || inicio > lastDay) return;
+
+          const clampedStart = dateMax([inicio, firstDay]);
+          const clampedEnd = dateMin([fim, lastDay]);
+          const startKey = format(clampedStart, 'yyyy-MM-dd');
+          const endKey = format(clampedEnd, 'yyyy-MM-dd');
+          const colStart = weekDates.indexOf(startKey);
+          const colEnd = weekDates.indexOf(endKey);
+          if (colStart === -1 || colEnd === -1) return;
+
+          const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
+          bars.push({ item, color: empColor, colStart, colSpan: colEnd - colStart + 1, slot: 0 });
+        } catch { /* ignore */ }
+      });
+
+      bars.sort((a, b) => a.colStart - b.colStart || b.colSpan - a.colSpan);
+      const slotEnds: number[] = [];
+      bars.forEach(bar => {
+        let assigned = -1;
+        for (let s = 0; s < slotEnds.length; s++) {
+          if (slotEnds[s] <= bar.colStart) { assigned = s; break; }
+        }
+        if (assigned === -1) { assigned = slotEnds.length; slotEnds.push(0); }
+        bar.slot = assigned;
+        slotEnds[assigned] = bar.colStart + bar.colSpan;
+      });
+
+      map.set(weekIdx, bars);
+    });
+    return map;
+  }, [weeks, itens, empColors]);
+
+  // Single-day items per day
+  const singleDayItemsPorDia = useMemo(() => {
+    const map = new Map<string, DayDisplayItem[]>();
+    if (!itens) return map;
+    itens.forEach(item => {
+      if (!item.data_inicio && !item.data_fim) return;
+      try {
+        const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
+        const fim = item.data_fim ? parseISO(item.data_fim) : null;
+        const isMultiDay = !!(inicio && fim && differenceInCalendarDays(fim, inicio) > 0);
+        if (isMultiDay) return;
+        const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
+        const day = inicio || fim;
+        if (!day || day < monthStart || day > monthEnd) return;
+        const key = format(day, 'yyyy-MM-dd');
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push({ item, isMultiDay: false, color: empColor });
+      } catch { /* ignore */ }
+    });
+    return map;
+  }, [itens, empColors, currentMonth]);
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
@@ -242,7 +303,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         {/* Calendário */}
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
@@ -286,165 +347,164 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               </div>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="px-0 pb-0">
               {/* Week days header */}
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {weekDays.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+              <div className="grid grid-cols-7 border-b">
+                {weekDayLabels.map((day) => (
+                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2 border-r last:border-r-0">
                     {day}
                   </div>
                 ))}
               </div>
 
-              {/* Calendar grid — inline items, no overlay */}
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                  <div key={`empty-${index}`} className="h-32" />
-                ))}
+              {/* Calendar weeks */}
+              {weeks.map((week, weekIdx) => {
+                const bars = weekMultiDaySlots.get(weekIdx) || [];
+                const visibleBars = bars.filter(b => b.slot < MAX_MULTIDAY_SLOTS);
+                const hiddenBars = bars.filter(b => b.slot >= MAX_MULTIDAY_SLOTS);
+                const numVisibleSlots = visibleBars.length > 0 ? Math.max(...visibleBars.map(b => b.slot)) + 1 : 0;
+                const barsZoneHeight = numVisibleSlots * SLOT_HEIGHT;
 
-                {days.map((day) => {
-                  const key = format(day, 'yyyy-MM-dd');
-                  const dayItems = itemsPorDia.get(key) || [];
-                  const dayGoogleEvents = googleEventsPorDia.get(key) || [];
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isTodayDate = isToday(day);
-                  const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
-
-                  const allDisplayItems: Array<DayDisplayItem | { type: 'google'; evt: GoogleCalendarEvent }> = [
-                    ...dayItems,
-                    ...dayGoogleEvents.map(evt => ({ type: 'google' as const, evt })),
-                  ];
-                  const totalCount = allDisplayItems.length;
-                  const visibleItems = allDisplayItems.slice(0, MAX_ITEMS_VISIBLE);
-                  const hiddenCount = totalCount - visibleItems.length;
-
-                  const cell = (
-                    <div
-                      key={key}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedDate(day)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedDate(day); } }}
-                      className={cn(
-                        'h-32 w-full rounded-lg border transition-colors relative group cursor-pointer flex flex-col',
-                        'hover:bg-accent hover:border-primary/50',
-                        isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
-                      )}
-                    >
-                      {/* Fixed header row — day number centered */}
-                      <div className="flex items-center justify-center relative h-7 shrink-0">
-                        <span className={cn(
-                          'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
-                          isTodayDate && 'bg-primary text-primary-foreground'
-                        )}>
-                          {format(day, 'd')}
-                        </span>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); handleAddClick(day); } }}
-                          className="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity cursor-pointer"
-                        >
-                          <Plus className="h-3 w-3 text-primary" />
-                        </span>
+                return (
+                  <div key={weekIdx} className="relative">
+                    {/* Multi-day bars (absolute) */}
+                    {visibleBars.map((bar) => (
+                      <div
+                        key={`bar-${bar.item.id}-${weekIdx}`}
+                        className="absolute z-10 text-[10px] font-medium text-white truncate px-1.5 flex items-center rounded-sm"
+                        style={{
+                          top: DAY_HEADER_HEIGHT + bar.slot * SLOT_HEIGHT + 1,
+                          left: `calc(${(bar.colStart / 7) * 100}% + 2px)`,
+                          width: `calc(${(bar.colSpan / 7) * 100}% - 4px)`,
+                          height: SLOT_HEIGHT - 2,
+                          backgroundColor: bar.color,
+                        }}
+                      >
+                        {bar.item.item}
                       </div>
+                    ))}
 
-                      {/* Events zone — inline chips */}
-                      <div className="flex-1 overflow-hidden px-1 pb-1 space-y-0.5">
-                        {visibleItems.map((displayItem, idx) => {
-                          if ('type' in displayItem && displayItem.type === 'google') {
-                            return (
-                              <div
-                                key={`gc-${idx}`}
-                                className="text-xs truncate px-1.5 py-0.5 rounded flex items-center gap-1 bg-muted text-muted-foreground"
-                              >
-                                <CalendarDays className="h-2.5 w-2.5 shrink-0" />
-                                {displayItem.evt.summary}
-                              </div>
-                            );
-                          }
-                          const di = displayItem as DayDisplayItem;
-                          if (di.isMultiDay) {
-                            return (
-                              <div
-                                key={di.item.id}
-                                className="text-xs truncate px-1.5 py-0.5 rounded"
-                                style={{
-                                  backgroundColor: withAlpha(di.color, 0.15),
-                                  borderLeft: `3px solid ${di.color}`,
-                                  color: di.color,
-                                }}
-                              >
-                                {di.item.item}
-                              </div>
-                            );
-                          }
-                          return (
-                            <div
-                              key={di.item.id}
-                              className="text-xs truncate px-1 py-0.5 flex items-center gap-1"
-                            >
+                    {/* Day cells grid */}
+                    <div className="grid grid-cols-7">
+                      {week.map((day, dayIdx) => {
+                        if (!day) {
+                          return <div key={`empty-${weekIdx}-${dayIdx}`} className="min-h-[100px] border-r border-b bg-muted/20" style={{ paddingTop: DAY_HEADER_HEIGHT + barsZoneHeight }} />;
+                        }
+
+                        const key = format(day, 'yyyy-MM-dd');
+                        const daySingleItems = singleDayItemsPorDia.get(key) || [];
+                        const dayGoogleEvents = googleEventsPorDia.get(key) || [];
+                        const isSelected = isSameDay(day, selectedDate);
+                        const isTodayDate = isToday(day);
+                        const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
+
+                        const hiddenForDay = hiddenBars.filter(b => dayIdx >= b.colStart && dayIdx < b.colStart + b.colSpan);
+
+                        const cell = (
+                          <div
+                            key={key}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedDate(day)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedDate(day); } }}
+                            className={cn(
+                              'min-h-[100px] border-r border-b transition-colors relative group cursor-pointer flex flex-col',
+                              'hover:bg-accent/50',
+                              isSelected && 'bg-accent',
+                              dayIdx === 6 && 'border-r-0'
+                            )}
+                          >
+                            {/* Day number header */}
+                            <div className="flex items-center justify-between px-1.5 shrink-0" style={{ height: DAY_HEADER_HEIGHT }}>
+                              <span className={cn(
+                                'text-xs font-medium h-5 w-5 flex items-center justify-center rounded-full',
+                                isTodayDate && 'bg-primary text-primary-foreground'
+                              )}>
+                                {format(day, 'd')}
+                              </span>
                               <span
-                                className="h-1.5 w-1.5 rounded-full shrink-0"
-                                style={{ backgroundColor: di.color }}
-                              />
-                              <span className="text-foreground truncate">{di.item.item}</span>
+                                role="button"
+                                tabIndex={0}
+                                onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); handleAddClick(day); } }}
+                                className="h-5 w-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity cursor-pointer"
+                              >
+                                <Plus className="h-3 w-3 text-primary" />
+                              </span>
                             </div>
-                          );
-                        })}
-                        {hiddenCount > 0 && (
-                          <div className="text-xs text-muted-foreground px-1">
-                            +{hiddenCount} mais
+
+                            {/* Reserved space for multi-day bars */}
+                            {barsZoneHeight > 0 && <div style={{ height: barsZoneHeight }} className="shrink-0" />}
+
+                            {/* Single-day events + Google events */}
+                            <div className="flex-1 overflow-hidden px-1 pb-1 space-y-0.5">
+                              {daySingleItems.slice(0, 3).map((di) => (
+                                <div key={di.item.id} className="text-[10px] truncate px-0.5 flex items-center gap-1">
+                                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: di.color }} />
+                                  <span className="text-foreground truncate">{di.item.item}</span>
+                                </div>
+                              ))}
+                              {dayGoogleEvents.slice(0, 2).map((evt, idx) => (
+                                <div key={`gc-${idx}`} className="text-[10px] truncate px-0.5 flex items-center gap-1 text-muted-foreground">
+                                  <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+                                  {evt.summary}
+                                </div>
+                              ))}
+                              {(hiddenForDay.length > 0 || daySingleItems.length > 3 || dayGoogleEvents.length > 2) && (
+                                <div className="text-[10px] text-muted-foreground px-0.5">
+                                  +{hiddenForDay.length + Math.max(0, daySingleItems.length - 3) + Math.max(0, dayGoogleEvents.length - 2)} mais
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        );
+
+                        if (isCreateOpen) {
+                          return (
+                            <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
+                              <PopoverTrigger asChild>
+                                <div>{cell}</div>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-4" align="start" side="bottom">
+                                {!localEmpreendimentoId && (
+                                  <div className="mb-3">
+                                    <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
+                                    <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
+                                      <SelectTrigger className="text-xs h-8 mt-1">
+                                        <SelectValue placeholder="Selecione..." />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {empreendimentos?.map((emp) => (
+                                          <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                )}
+                                <CalendarioCriarTarefaPopover
+                                  date={day}
+                                  fases={fases || []}
+                                  statusList={statusList || []}
+                                  responsaveis={responsaveis}
+                                  onSubmit={handleCreateSubmit}
+                                  onCancel={() => setCreatePopoverDate(null)}
+                                  isSubmitting={createItem.isPending}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          );
+                        }
+
+                        return cell;
+                      })}
                     </div>
-                  );
-
-                  if (isCreateOpen) {
-                    return (
-                      <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
-                        <PopoverTrigger asChild>
-                          <div>{cell}</div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4" align="start" side="bottom">
-                          {!localEmpreendimentoId && (
-                            <div className="mb-3">
-                              <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
-                              <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
-                                <SelectTrigger className="text-xs h-8 mt-1">
-                                  <SelectValue placeholder="Selecione..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {empreendimentos?.map((emp) => (
-                                    <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                          <CalendarioCriarTarefaPopover
-                            date={day}
-                            fases={fases || []}
-                            statusList={statusList || []}
-                            responsaveis={responsaveis}
-                            onSubmit={handleCreateSubmit}
-                            onCancel={() => setCreatePopoverDate(null)}
-                            isSubmitting={createItem.isPending}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    );
-                  }
-
-                  return cell;
-                })}
-              </div>
+                  </div>
+                );
+              })}
 
               {/* Legend */}
               {(empColors.size > 0 || (embeds && embeds.length > 0)) && (
-                <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+                <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-t text-xs">
                   {empColors.size > 0 && (
                     <>
                       <span className="text-muted-foreground font-medium">Empreendimentos:</span>
