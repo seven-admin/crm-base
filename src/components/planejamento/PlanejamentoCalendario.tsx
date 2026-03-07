@@ -414,13 +414,15 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                     const dayIndex = day.getDate() - 1 + startingDayOfWeek;
                     const weekRow = Math.floor(dayIndex / 7);
                     const col = dayIndex % 7;
-                    const multiDayCount = multiDaySegments.filter(
-                      s => s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
+                    const visibleMultiDayCount = multiDaySegments.filter(
+                      s => s.slotIndex < MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
                     ).length;
-                    
-                    const maxSingleVisible = Math.max(0, 2 - multiDayCount);
+                    const hiddenMultiDayCount = multiDaySegments.filter(
+                      s => s.slotIndex >= MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
+                    ).length;
+
+                    const maxSingleVisible = Math.max(0, 2 - visibleMultiDayCount);
                     const totalSingleAndGoogle = daySingleItems.length + dayGoogleEvents.length;
-                    const hiddenCount = Math.max(0, totalSingleAndGoogle - maxSingleVisible) + (maxSingleVisible === 0 ? 0 : 0);
 
                     const cell = (
                       <button
