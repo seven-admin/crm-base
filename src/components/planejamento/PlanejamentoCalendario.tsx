@@ -55,7 +55,8 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const { itens, isLoading } = usePlanejamentoGlobal(localFilters);
 
   const { data: empreendimentos } = useEmpreendimentosSelect();
-  const { fases } = usePlanejamentoFases(localEmpreendimentoId);
+  const effectiveEmpreendimentoId = localEmpreendimentoId || createEmpreendimentoId || undefined;
+  const { fases } = usePlanejamentoFases(effectiveEmpreendimentoId);
   const { statusList } = usePlanejamentoStatus();
   const { data: funcionarios } = useFuncionariosSeven();
   const { createItem, updateItem, deleteItem, duplicateItem } = usePlanejamentoItens();
