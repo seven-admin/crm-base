@@ -396,7 +396,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               </div>
 
               {/* Calendar grid with multi-day bar overlay */}
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: startingDayOfWeek }).map((_, index) => (
                     <div key={`empty-${index}`} className="h-24" />
