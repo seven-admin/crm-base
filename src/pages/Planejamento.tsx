@@ -16,7 +16,7 @@ import { ImportarPlanejamentoDialog } from '@/components/planejamento/ImportarPl
 
 export default function Planejamento() {
   const [empreendimentoId, setEmpreendimentoId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('planilha');
+  const [activeTab, setActiveTab] = useState('calendario');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'empreendimento' | 'global'>('empreendimento');
   const { data: empreendimentos } = useEmpreendimentosSelect();
