@@ -306,7 +306,7 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                       {/* Add task row */}
                       <TableRow className="hover:bg-muted/20">
                         <TableCell className="py-1"></TableCell>
-                        <TableCell className="py-1" colSpan={localEmpreendimentoId ? 7 : 8}>
+                        <TableCell className="py-1" colSpan={localEmpreendimentoId ? 6 : 7}>
                           {newItemGroupId === groupId ? (
                             <Input
                               value={newItemValue}
