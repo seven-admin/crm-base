@@ -328,11 +328,12 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   // Calculate total weeks for grid height
   const totalCells = startingDayOfWeek + days.length;
   const totalWeeks = Math.ceil(totalCells / 7);
-  const CELL_HEIGHT = 96; // h-24 = 6rem = 96px
+  const CELL_HEIGHT = 112; // h-28 = 7rem = 112px
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
-  const BAR_TOP_OFFSET = 24; // space for day number
+  const BAR_TOP_OFFSET = 28; // space for day number
   const MAX_MULTI_DAY_VISIBLE = 2;
+  const MULTI_DAY_ZONE_HEIGHT = MAX_MULTI_DAY_VISIBLE * (BAR_HEIGHT + BAR_GAP); // always reserved
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
