@@ -430,7 +430,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                         key={key}
                         onClick={() => setSelectedDate(day)}
                         className={cn(
-                          'h-24 w-full p-1 text-left rounded-lg border transition-colors relative group',
+                          'h-28 w-full p-1 text-left rounded-lg border transition-colors relative group',
                           'hover:bg-accent hover:border-primary/50',
                           isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
                         )}
