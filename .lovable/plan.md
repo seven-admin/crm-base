@@ -1,36 +1,28 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Fases por Empreendimento no Editor de Configurações
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Situação atual
+O `PlanejamentoFasesEditor` não recebe nem permite selecionar um empreendimento. Todas as fases são criadas como globais (`empreendimento_id = null`). O hook `usePlanejamentoFases` já suporta filtro por `empreendimentoId`, e a tabela `planejamento_fases` já tem a coluna `empreendimento_id`.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Plano
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Adicionar seletor de empreendimento ao `PlanejamentoFasesEditor`
+- Adicionar um `Select` no topo do card com as opções: **"Global (todos)"** + lista de empreendimentos (via `useEmpreendimentosSelect`)
+- Quando "Global" selecionado: mostra fases com `empreendimento_id = null`
+- Quando um empreendimento selecionado: mostra fases globais + fases daquele empreendimento (comportamento atual do hook)
+- Ao criar nova fase: se um empreendimento está selecionado, salvar com `empreendimento_id`; se "Global", salvar com `null`
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Indicação visual de escopo
+- Fases globais: badge "Global" discreto ao lado do nome
+- Fases de empreendimento: badge com nome do empreendimento
+- Quando visualizando um empreendimento específico, as fases globais ficam com visual mais sutil (são herdadas, não editáveis nesse contexto) e as do empreendimento ficam editáveis normalmente
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 3. Regra de edição/exclusão
+- Fases globais só podem ser editadas/excluídas quando o filtro está em "Global"
+- Fases de empreendimento só podem ser editadas no contexto do empreendimento correspondente
+
+### Arquivos afetados
+- `src/components/planejamento/PlanejamentoFasesEditor.tsx` — adicionar select de empreendimento, passar `empreendimentoId` ao hook, badges de escopo, lógica de permissão de edição
+- `src/hooks/usePlanejamentoFases.ts` — ajustar query para filtrar apenas globais quando `empreendimentoId` não informado
+
