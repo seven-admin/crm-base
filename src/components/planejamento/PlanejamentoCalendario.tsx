@@ -66,7 +66,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const { statusList } = usePlanejamentoStatus();
   const { data: funcionarios } = useFuncionariosSeven();
   const { createItem, updateItem, deleteItem, duplicateItem } = usePlanejamentoItens();
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const { embeds } = useGoogleCalendarEmbeds();
 
   const gcMonth = currentMonth.getMonth() + 1;
   const gcYear = currentMonth.getFullYear();
