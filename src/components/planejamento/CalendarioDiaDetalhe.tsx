@@ -35,26 +35,7 @@ import type {
   PlanejamentoStatus,
 } from '@/types/planejamento.types';
 import { ConverterTarefaDialog } from './ConverterTarefaDialog';
-
-interface Props {
-  selectedDate: Date;
-  items: PlanejamentoItemWithRelations[];
-  fases: PlanejamentoFase[];
-  statusList: PlanejamentoStatus[];
-  responsaveis: { id: string; full_name: string }[];
-  readOnly?: boolean;
-  onUpdate: (id: string, updates: Record<string, unknown>) => void;
-  onDelete: (id: string) => void;
-  onDuplicate: (id: string) => void;
-  onAddClick: () => void;
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+import { getEmpreendimentoColor } from '@/utils/empreendimentoColors';
 
 function EditableItemCard({
   item,
