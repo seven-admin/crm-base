@@ -85,6 +85,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success('Item criado com sucesso');
     },
     onError: (error) => {
