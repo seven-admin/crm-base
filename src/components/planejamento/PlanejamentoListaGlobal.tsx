@@ -248,7 +248,11 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                     className="bg-muted/30 hover:bg-muted/40 cursor-pointer"
                     onClick={() => toggleGroup(groupId)}
                   >
-                    <TableCell className="py-2" onClick={e => e.stopPropagation()}>
+                    <TableCell
+                      className="py-2 relative"
+                      onClick={e => e.stopPropagation()}
+                      style={{ borderLeft: `4px solid ${group.color || 'transparent'}` }}
+                    >
                       <Checkbox
                         checked={group.items.length > 0 && group.items.every(i => selectedIds.has(i.id))}
                         onCheckedChange={() => {
@@ -261,10 +265,10 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                         }}
                       />
                     </TableCell>
-                    <TableCell colSpan={localEmpreendimentoId ? 7 : 8} className="py-2">
+                    <TableCell colSpan={localEmpreendimentoId ? 6 : 7} className="py-2">
                       <div className="flex items-center gap-2 font-medium">
                         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        {group.color && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color }} />}
+                        {group.color && <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: group.color }} />}
                         <span>{group.label}</span>
                         <Badge variant="secondary" className="ml-2">{group.items.length}</Badge>
                       </div>
