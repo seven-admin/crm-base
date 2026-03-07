@@ -336,6 +336,36 @@ export function CalendarioDiaDetalhe({
   onAddClick,
 }: Props) {
   const [converterItem, setConverterItem] = useState<PlanejamentoItemWithRelations | null>(null);
+  const [collapsedEmpreendimentos, setCollapsedEmpreendimentos] = useState<Set<string>>(new Set());
+
+  const groupedItems = useMemo(() => {
+    const grouped = new Map<string, { nome: string; cor: string; items: PlanejamentoItemWithRelations[] }>();
+    const empIds = [...new Set(items.map((item) => item.empreendimento?.id).filter(Boolean))] as string[];
+
+    items.forEach((item) => {
+      const empId = item.empreendimento?.id || 'sem-empreendimento';
+      const empNome = item.empreendimento?.nome || 'Sem empreendimento';
+      const cor = empId !== 'sem-empreendimento'
+        ? getEmpreendimentoColor(empId, empIds)
+        : 'hsl(var(--muted-foreground))';
+
+      if (!grouped.has(empId)) {
+        grouped.set(empId, { nome: empNome, cor, items: [] });
+      }
+      grouped.get(empId)!.items.push(item);
+    });
+
+    return Array.from(grouped.entries());
+  }, [items]);
+
+  const toggleEmpreendimento = (empId: string) => {
+    setCollapsedEmpreendimentos((prev) => {
+      const next = new Set(prev);
+      if (next.has(empId)) next.delete(empId);
+      else next.add(empId);
+      return next;
+    });
+  };
 
   return (
     <>
