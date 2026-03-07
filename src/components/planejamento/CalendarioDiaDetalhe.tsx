@@ -10,6 +10,7 @@ import {
   Copy,
   Trash2,
   Plus,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type {
@@ -30,6 +32,7 @@ import type {
   PlanejamentoFase,
   PlanejamentoStatus,
 } from '@/types/planejamento.types';
+import { ConverterTarefaDialog } from './ConverterTarefaDialog';
 
 interface Props {
   selectedDate: Date;
@@ -60,6 +63,7 @@ function EditableItemCard({
   onUpdate,
   onDelete,
   onDuplicate,
+  onConvert,
 }: {
   item: PlanejamentoItemWithRelations;
   fases: PlanejamentoFase[];
@@ -69,6 +73,7 @@ function EditableItemCard({
   onUpdate: (id: string, updates: Record<string, unknown>) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onConvert: (item: PlanejamentoItemWithRelations) => void;
 }) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -167,6 +172,11 @@ function EditableItemCard({
                 <Copy className="h-3.5 w-3.5 mr-2" />
                 Duplicar
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onConvert(item)}>
+                <Zap className="h-3.5 w-3.5 mr-2" />
+                Converter em Atividade
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(item.id)}
                 className="text-destructive focus:text-destructive"
@@ -342,87 +352,102 @@ export function CalendarioDiaDetalhe({
   onDuplicate,
   onAddClick,
 }: Props) {
+  const [converterItem, setConverterItem] = useState<PlanejamentoItemWithRelations | null>(null);
+
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            {format(selectedDate, "d 'de' MMMM", { locale: ptBR })}
-          </CardTitle>
-          {!readOnly && (
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onAddClick}>
-              <Plus className="h-3.5 w-3.5" />
-              Adicionar
-            </Button>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {items.length} tarefa{items.length !== 1 ? 's' : ''} ativa{items.length !== 1 ? 's' : ''}
-        </p>
-      </CardHeader>
-      <CardContent className="pt-0 flex-1 overflow-hidden">
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground text-sm">Nenhuma tarefa neste dia</p>
+    <>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              {format(selectedDate, "d 'de' MMMM", { locale: ptBR })}
+            </CardTitle>
             {!readOnly && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-2 text-xs gap-1"
-                onClick={onAddClick}
-              >
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onAddClick}>
                 <Plus className="h-3.5 w-3.5" />
-                Criar tarefa
+                Adicionar
               </Button>
             )}
           </div>
-        ) : (
-          <div className="max-h-[500px] overflow-y-auto pr-2">
-            <div className="space-y-4">
-              {(() => {
-                const grouped = new Map<string, { nome: string; items: PlanejamentoItemWithRelations[] }>();
-                items.forEach((item) => {
-                  const empId = item.empreendimento?.id || 'sem-empreendimento';
-                  const empNome = item.empreendimento?.nome || 'Sem empreendimento';
-                  if (!grouped.has(empId)) {
-                    grouped.set(empId, { nome: empNome, items: [] });
-                  }
-                  grouped.get(empId)!.items.push(item);
-                });
-                return Array.from(grouped.entries()).map(([empId, group]) => (
-                  <div key={empId}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {group.nome}
-                      </span>
-                      <Badge variant="secondary" className="text-xs h-5">
-                        {group.items.length}
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      {group.items.map((item) => (
-                        <EditableItemCard
-                          key={item.id}
-                          item={item}
-                          fases={fases}
-                          statusList={statusList}
-                          responsaveis={responsaveis}
-                          readOnly={readOnly}
-                          onUpdate={onUpdate}
-                          onDelete={onDelete}
-                          onDuplicate={onDuplicate}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ));
-              })()}
+          <p className="text-sm text-muted-foreground">
+            {items.length} tarefa{items.length !== 1 ? 's' : ''} ativa{items.length !== 1 ? 's' : ''}
+          </p>
+        </CardHeader>
+        <CardContent className="pt-0 flex-1 overflow-hidden">
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground text-sm">Nenhuma tarefa neste dia</p>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 text-xs gap-1"
+                  onClick={onAddClick}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Criar tarefa
+                </Button>
+              )}
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          ) : (
+            <div className="max-h-[500px] overflow-y-auto pr-2">
+              <div className="space-y-4">
+                {(() => {
+                  const grouped = new Map<string, { nome: string; items: PlanejamentoItemWithRelations[] }>();
+                  items.forEach((item) => {
+                    const empId = item.empreendimento?.id || 'sem-empreendimento';
+                    const empNome = item.empreendimento?.nome || 'Sem empreendimento';
+                    if (!grouped.has(empId)) {
+                      grouped.set(empId, { nome: empNome, items: [] });
+                    }
+                    grouped.get(empId)!.items.push(item);
+                  });
+                  return Array.from(grouped.entries()).map(([empId, group]) => (
+                    <div key={empId}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {group.nome}
+                        </span>
+                        <Badge variant="secondary" className="text-xs h-5">
+                          {group.items.length}
+                        </Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {group.items.map((item) => (
+                          <EditableItemCard
+                            key={item.id}
+                            item={item}
+                            fases={fases}
+                            statusList={statusList}
+                            responsaveis={responsaveis}
+                            readOnly={readOnly}
+                            onUpdate={onUpdate}
+                            onDelete={onDelete}
+                            onDuplicate={onDuplicate}
+                            onConvert={setConverterItem}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Converter dialog */}
+      {converterItem && (
+        <ConverterTarefaDialog
+          open={!!converterItem}
+          onOpenChange={(open) => { if (!open) setConverterItem(null); }}
+          item={converterItem}
+          empreendimentoId={converterItem.empreendimento_id}
+        />
+      )}
+    </>
   );
 }
