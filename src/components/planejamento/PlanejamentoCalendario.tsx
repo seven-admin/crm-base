@@ -400,7 +400,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               <div className="relative overflow-hidden">
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                    <div key={`empty-${index}`} className="h-24" />
+                    <div key={`empty-${index}`} className="h-28" />
                   ))}
 
                   {days.map((day) => {
