@@ -332,6 +332,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
   const BAR_TOP_OFFSET = 24; // space for day number
+  const MAX_MULTI_DAY_VISIBLE = 2;
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
