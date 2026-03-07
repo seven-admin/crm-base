@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,7 +36,7 @@ export function ConfigurarGoogleCalendarDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Google Calendar</DialogTitle>
           <DialogDescription>
-            Adicione URLs de embed do Google Calendar para exibição no planejamento.
+            Adicione calendários do Google para exibir os eventos junto com o planejamento.
             O calendário precisa estar compartilhado publicamente.
           </DialogDescription>
         </DialogHeader>
@@ -72,11 +72,11 @@ export function ConfigurarGoogleCalendarDialog({ open, onOpenChange }: Props) {
               />
             </div>
             <div>
-              <Label className="text-xs">URL do Embed</Label>
+              <Label className="text-xs">Email ou URL do calendário</Label>
               <Input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://calendar.google.com/calendar/embed?src=..."
+                placeholder="gilson@empresa.com ou URL embed/iCal"
                 className="h-8 text-sm"
               />
             </div>
@@ -92,9 +92,10 @@ export function ConfigurarGoogleCalendarDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="text-xs text-muted-foreground flex items-start gap-1.5 bg-muted/50 p-2 rounded">
-            <ExternalLink className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              Para obter a URL: Google Calendar → Configurações → Calendário → Integrar calendário → URL incorporável
+              Informe o email do calendário (ex: usuario@gmail.com) ou a URL embed/iCal.
+              O calendário precisa estar público: Configurações → Permissões de acesso → Disponibilizar para o público.
             </span>
           </div>
         </div>
@@ -102,4 +103,3 @@ export function ConfigurarGoogleCalendarDialog({ open, onOpenChange }: Props) {
     </Dialog>
   );
 }
-

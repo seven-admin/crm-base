@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.reset-sequence]
 verify_jwt = false
+
+[functions.fetch-google-calendar]
+verify_jwt = false

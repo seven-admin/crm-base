@@ -19,13 +19,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from '@/components/ui/drawer';
 
 import { usePlanejamentoGlobal, type PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
 import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
@@ -34,10 +27,10 @@ import { usePlanejamentoStatus } from '@/hooks/usePlanejamentoStatus';
 import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useGoogleCalendarEmbeds } from '@/hooks/useGoogleCalendarEmbeds';
+import { useGoogleCalendarEvents, type GoogleCalendarEvent } from '@/hooks/useGoogleCalendarEvents';
 
 import { CalendarioDiaDetalhe } from './CalendarioDiaDetalhe';
 import { CalendarioCriarTarefaPopover } from './CalendarioCriarTarefaPopover';
-import { GoogleCalendarEmbed } from './GoogleCalendarEmbed';
 import { ConfigurarGoogleCalendarDialog } from './ConfigurarGoogleCalendarDialog';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 
@@ -74,8 +67,12 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [createPopoverDate, setCreatePopoverDate] = useState<Date | null>(null);
   const [createEmpreendimentoId, setCreateEmpreendimentoId] = useState('');
-  const [googleCalendarOpen, setGoogleCalendarOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+
+  // Fetch Google Calendar events for current month
+  const gcMonth = currentMonth.getMonth() + 1;
+  const gcYear = currentMonth.getFullYear();
+  const { data: googleEvents } = useGoogleCalendarEvents(gcMonth, gcYear);
 
   const responsaveis = useMemo(
     () => (funcionarios || []).map((f) => ({ id: f.id, full_name: f.full_name })),
@@ -121,10 +118,34 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     return map;
   }, [itens, currentMonth]);
 
+  // Group Google events by day
+  const googleEventsPorDia = useMemo(() => {
+    const map = new Map<string, GoogleCalendarEvent[]>();
+    if (!googleEvents) return map;
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    days.forEach(day => {
+      const key = format(day, 'yyyy-MM-dd');
+      const dayEvents = googleEvents.filter(evt => {
+        const start = evt.dtstart;
+        const end = evt.dtend || evt.dtstart;
+        return key >= start && key <= end;
+      });
+      if (dayEvents.length > 0) map.set(key, dayEvents);
+    });
+    return map;
+  }, [googleEvents, currentMonth]);
+
   const itensDoDia = useMemo(() => {
     const key = format(selectedDate, 'yyyy-MM-dd');
     return itensPorDia.get(key) || [];
   }, [selectedDate, itensPorDia]);
+
+  const googleEventsDoDia = useMemo(() => {
+    const key = format(selectedDate, 'yyyy-MM-dd');
+    return googleEventsPorDia.get(key) || [];
+  }, [selectedDate, googleEventsPorDia]);
 
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
@@ -220,12 +241,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                     </SelectContent>
                   </Select>
 
-                  {embeds && embeds.length > 0 && (
-                    <Button variant="outline" size="sm" onClick={() => setGoogleCalendarOpen(true)}>
-                      <CalendarDays className="h-4 w-4 mr-1" />
-                      Google
-                    </Button>
-                  )}
                   <Button variant="ghost" size="icon" onClick={() => setConfigDialogOpen(true)} title="Configurar Google Calendar">
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -260,9 +275,12 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                 {days.map((day) => {
                   const key = format(day, 'yyyy-MM-dd');
                   const dayItems = itensPorDia.get(key) || [];
+                  const dayGoogleEvents = googleEventsPorDia.get(key) || [];
                   const isSelected = isSameDay(day, selectedDate);
                   const isTodayDate = isToday(day);
                   const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
+                  const totalItems = dayItems.length + dayGoogleEvents.length;
+                  const maxVisible = 2;
 
                   const cell = (
                     <button
@@ -289,7 +307,8 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                         </button>
                       </div>
                       <div className="mt-1 space-y-0.5 overflow-hidden">
-                        {dayItems.slice(0, 2).map((item) => {
+                        {/* Internal items first */}
+                        {dayItems.slice(0, maxVisible).map((item) => {
                           const empColor = empColors.get(item.empreendimento?.id || '');
                           const color = empColor?.color || '#6b7280';
                           return (
@@ -302,9 +321,19 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             </div>
                           );
                         })}
-                        {dayItems.length > 2 && (
+                        {/* Google events */}
+                        {dayItems.length < maxVisible && dayGoogleEvents.slice(0, maxVisible - dayItems.length).map((evt, idx) => (
+                          <div
+                            key={`gc-${idx}`}
+                            className="text-xs truncate px-1 py-0.5 rounded bg-muted text-muted-foreground flex items-center gap-1"
+                          >
+                            <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+                            {evt.summary}
+                          </div>
+                        ))}
+                        {totalItems > maxVisible && (
                           <div className="text-xs text-muted-foreground px-1">
-                            +{dayItems.length - 2} mais
+                            +{totalItems - maxVisible} mais
                           </div>
                         )}
                       </div>
@@ -318,7 +347,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                           <div>{cell}</div>
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-4" align="start" side="bottom">
-                          {/* Empreendimento selector for global view */}
                           {!localEmpreendimentoId && (
                             <div className="mb-3">
                               <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
@@ -353,23 +381,33 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               </div>
 
               {/* Legend */}
-              {empColors.size > 0 && (
+              {(empColors.size > 0 || (embeds && embeds.length > 0)) && (
                 <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
-                  <span className="text-muted-foreground font-medium">Empreendimentos:</span>
-                  {Array.from(empColors.entries()).map(([id, { color, nome }]) => (
-                    <div key={id} className="flex items-center gap-1.5">
-                      <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
-                      <span className="text-muted-foreground">{nome}</span>
+                  {empColors.size > 0 && (
+                    <>
+                      <span className="text-muted-foreground font-medium">Empreendimentos:</span>
+                      {Array.from(empColors.entries()).map(([id, { color, nome }]) => (
+                        <div key={id} className="flex items-center gap-1.5">
+                          <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
+                          <span className="text-muted-foreground">{nome}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {embeds && embeds.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Google Calendar</span>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Side panel with CRUD */}
-        <div className="lg:col-span-1">
+        {/* Side panel */}
+        <div className="lg:col-span-1 space-y-4">
           <CalendarioDiaDetalhe
             selectedDate={selectedDate}
             items={itensDoDia}
@@ -382,23 +420,33 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
             onDuplicate={handleDuplicate}
             onAddClick={() => handleAddClick(selectedDate)}
           />
+
+          {/* Google Calendar events for selected day */}
+          {googleEventsDoDia.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  Google Calendar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {googleEventsDoDia.map((evt, idx) => (
+                    <div key={idx} className="p-2 rounded-lg border bg-muted/30 text-sm">
+                      <p className="font-medium">{evt.summary}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {evt.calendarName}
+                        {evt.allDay && ' · Dia inteiro'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
-
-      {/* Google Calendar Drawer */}
-      <Drawer open={googleCalendarOpen} onOpenChange={setGoogleCalendarOpen}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader>
-            <DrawerTitle>Google Calendar</DrawerTitle>
-            <DrawerDescription>Visualização somente leitura dos calendários configurados</DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4 overflow-auto">
-            {embeds?.map((embed) => (
-              <GoogleCalendarEmbed key={embed.id} embedUrl={embed.embed_url} nome={embed.nome} />
-            ))}
-          </div>
-        </DrawerContent>
-      </Drawer>
 
       <ConfigurarGoogleCalendarDialog open={configDialogOpen} onOpenChange={setConfigDialogOpen} />
     </>
