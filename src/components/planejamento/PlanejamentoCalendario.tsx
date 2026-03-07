@@ -329,9 +329,11 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const totalCells = startingDayOfWeek + days.length;
   const totalWeeks = Math.ceil(totalCells / 7);
   const CELL_HEIGHT = 112; // h-28 = 7rem = 112px
+  const CELL_PADDING_TOP = 4; // p-1 = 0.25rem = 4px
+  const DAY_HEADER_HEIGHT = 24; // h-6 = 1.5rem = 24px
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
-  const BAR_TOP_OFFSET = 28; // space for day number
+  const BAR_TOP_OFFSET = CELL_PADDING_TOP + DAY_HEADER_HEIGHT + 4; // 4px margin below header
   const MAX_MULTI_DAY_VISIBLE = 2;
   const MULTI_DAY_ZONE_HEIGHT = MAX_MULTI_DAY_VISIBLE * (BAR_HEIGHT + BAR_GAP); // always reserved
 
