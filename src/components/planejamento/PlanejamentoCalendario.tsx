@@ -99,117 +99,36 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const days = useMemo(() => eachDayOfInterval({ start: monthStart, end: monthEnd }), [currentMonth]);
   const startingDayOfWeek = monthStart.getDay();
 
-  // Separate single-day vs multi-day items
-  const { singleDayItems, multiDayItems } = useMemo(() => {
-    const single = new Map<string, PlanejamentoItemWithRelations[]>();
-    const multi: PlanejamentoItemWithRelations[] = [];
-    if (!itens) return { singleDayItems: single, multiDayItems: multi };
+  // Compute all items per day (single + multi-day), inline
+  const itemsPorDia = useMemo(() => {
+    const map = new Map<string, DayDisplayItem[]>();
+    if (!itens) return map;
 
     itens.forEach(item => {
       if (!item.data_inicio && !item.data_fim) return;
       try {
         const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
         const fim = item.data_fim ? parseISO(item.data_fim) : null;
-        
-        // Check if it spans multiple days
-        if (inicio && fim && differenceInCalendarDays(fim, inicio) > 0) {
-          // Check overlap with current month
-          if (inicio <= monthEnd && fim >= monthStart) {
-            multi.push(item);
-          }
-        } else {
-          // Single day item
-          const day = inicio || fim;
-          if (day && day >= monthStart && day <= monthEnd) {
-            const key = format(day, 'yyyy-MM-dd');
-            if (!single.has(key)) single.set(key, []);
-            single.get(key)!.push(item);
-          }
-        }
+        const isMultiDay = !!(inicio && fim && differenceInCalendarDays(fim, inicio) > 0);
+        const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
+
+        // Determine the range of days this item covers within the visible month
+        const rangeStart = inicio ? dateMax([inicio, monthStart]) : (fim && fim >= monthStart && fim <= monthEnd ? fim : null);
+        const rangeEnd = fim ? dateMin([fim, monthEnd]) : (inicio && inicio >= monthStart && inicio <= monthEnd ? inicio : null);
+
+        if (!rangeStart || !rangeEnd || rangeStart > rangeEnd) return;
+
+        const coveredDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
+        coveredDays.forEach(day => {
+          const key = format(day, 'yyyy-MM-dd');
+          if (!map.has(key)) map.set(key, []);
+          map.get(key)!.push({ item, isMultiDay, color: empColor });
+        });
       } catch { /* ignore */ }
     });
 
-    return { singleDayItems: single, multiDayItems: multi };
-  }, [itens, currentMonth]);
-
-  // Compute multi-day bar segments
-  const multiDaySegments = useMemo(() => {
-    const segments: MultiDaySegment[] = [];
-    
-    // We need to compute slot assignments to avoid overlapping bars
-    // First, collect all items per row with their column ranges
-    const rowItems = new Map<number, { item: PlanejamentoItemWithRelations; startCol: number; endCol: number; color: string }[]>();
-
-    multiDayItems.forEach(item => {
-      const inicio = parseISO(item.data_inicio!);
-      const fim = parseISO(item.data_fim!);
-      const clampStart = dateMax([inicio, monthStart]);
-      const clampEnd = dateMin([fim, monthEnd]);
-      const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
-
-      // Split into week segments
-      let current = clampStart;
-      while (current <= clampEnd) {
-        const dayOfMonth = current.getDate();
-        const dayIndex = dayOfMonth - 1 + startingDayOfWeek;
-        const weekRow = Math.floor(dayIndex / 7);
-        const startCol = dayIndex % 7;
-
-        // Find end of this week segment
-        const daysLeftInWeek = 6 - startCol;
-        const daysLeftInRange = differenceInCalendarDays(clampEnd, current);
-        const segmentDays = Math.min(daysLeftInWeek, daysLeftInRange);
-        const endCol = startCol + segmentDays;
-
-        const isFirst = isSameDay(current, clampStart) && clampStart >= inicio;
-        const isLast = differenceInCalendarDays(clampEnd, current) <= daysLeftInWeek && clampEnd <= fim;
-
-        if (!rowItems.has(weekRow)) rowItems.set(weekRow, []);
-        rowItems.get(weekRow)!.push({ item, startCol, endCol, color: empColor });
-
-        // Move to next week
-        const nextDay = new Date(current);
-        nextDay.setDate(nextDay.getDate() + segmentDays + 1);
-        current = nextDay;
-      }
-    });
-
-    // Now assign slot indices per row to avoid overlaps
-    rowItems.forEach((items, weekRow) => {
-      // Sort by startCol then by span length (wider first)
-      items.sort((a, b) => a.startCol - b.startCol || (b.endCol - b.startCol) - (a.endCol - a.startCol));
-      
-      const slots: { endCol: number }[] = [];
-      items.forEach(({ item, startCol, endCol, color }) => {
-        // Find first available slot
-        let slotIndex = 0;
-        for (let i = 0; i < slots.length; i++) {
-          if (slots[i].endCol < startCol) {
-            slotIndex = i;
-            break;
-          }
-          slotIndex = i + 1;
-        }
-        if (slotIndex >= slots.length) {
-          slots.push({ endCol });
-        } else {
-          slots[slotIndex] = { endCol };
-        }
-
-        const inicio = parseISO(item.data_inicio!);
-        const fim = parseISO(item.data_fim!);
-        const clampStart = dateMax([inicio, monthStart]);
-        const clampEnd = dateMin([fim, monthEnd]);
-        
-        const isFirst = startCol === ((clampStart.getDate() - 1 + startingDayOfWeek) % 7) && clampStart >= inicio;
-        const isLast = endCol === ((clampEnd.getDate() - 1 + startingDayOfWeek) % 7);
-
-        segments.push({ item, weekRow, startCol, endCol, isFirst, isLast, color, slotIndex });
-      });
-    });
-
-    return segments;
-  }, [multiDayItems, empColors, monthStart, monthEnd, startingDayOfWeek]);
+    return map;
+  }, [itens, empColors, currentMonth]);
 
   // Google events per day
   const googleEventsPorDia = useMemo(() => {
