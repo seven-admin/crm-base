@@ -380,20 +380,45 @@ export function CalendarioDiaDetalhe({
           </div>
         ) : (
           <div className="max-h-[500px] overflow-y-auto pr-2">
-            <div className="space-y-3">
-              {items.map((item) => (
-                <EditableItemCard
-                  key={item.id}
-                  item={item}
-                  fases={fases}
-                  statusList={statusList}
-                  responsaveis={responsaveis}
-                  readOnly={readOnly}
-                  onUpdate={onUpdate}
-                  onDelete={onDelete}
-                  onDuplicate={onDuplicate}
-                />
-              ))}
+            <div className="space-y-4">
+              {(() => {
+                const grouped = new Map<string, { nome: string; items: PlanejamentoItemWithRelations[] }>();
+                items.forEach((item) => {
+                  const empId = item.empreendimento?.id || 'sem-empreendimento';
+                  const empNome = item.empreendimento?.nome || 'Sem empreendimento';
+                  if (!grouped.has(empId)) {
+                    grouped.set(empId, { nome: empNome, items: [] });
+                  }
+                  grouped.get(empId)!.items.push(item);
+                });
+                return Array.from(grouped.entries()).map(([empId, group]) => (
+                  <div key={empId}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {group.nome}
+                      </span>
+                      <Badge variant="secondary" className="text-xs h-5">
+                        {group.items.length}
+                      </Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {group.items.map((item) => (
+                        <EditableItemCard
+                          key={item.id}
+                          item={item}
+                          fases={fases}
+                          statusList={statusList}
+                          responsaveis={responsaveis}
+                          readOnly={readOnly}
+                          onUpdate={onUpdate}
+                          onDelete={onDelete}
+                          onDuplicate={onDuplicate}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         )}

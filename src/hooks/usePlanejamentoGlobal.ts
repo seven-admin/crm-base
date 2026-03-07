@@ -69,7 +69,8 @@ export function usePlanejamentoGlobal(filters?: PlanejamentoGlobalFilters, limit
           empreendimento:empreendimentos(id, nome)
         `)
         .eq('is_active', true)
-        .order('ordem');
+        .order('ordem')
+        .limit(5000);
 
       if (filters?.fase_id) {
         query = query.eq('fase_id', filters.fase_id);
