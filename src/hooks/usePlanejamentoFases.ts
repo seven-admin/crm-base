@@ -28,7 +28,7 @@ export function usePlanejamentoFases(empreendimentoId?: string) {
   });
 
   const createFase = useMutation({
-    mutationFn: async (fase: { nome: string; cor?: string; ordem?: number }) => {
+    mutationFn: async (fase: { nome: string; cor?: string; ordem?: number; empreendimento_id?: string | null }) => {
       const { data, error } = await supabase
         .from('planejamento_fases')
         .insert([fase])

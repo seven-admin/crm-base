@@ -6,6 +6,7 @@ export interface PlanejamentoFase {
   cor: string;
   ordem: number;
   is_active: boolean;
+  empreendimento_id?: string | null;
   created_at: string;
   updated_at: string;
 }
