@@ -44,8 +44,6 @@ interface Props {
   onFiltersChange: (filters: PlanejamentoGlobalFilters) => void;
 }
 
-import { EMPREENDIMENTO_COLORS, hexToRgba } from '@/utils/empreendimentoColors';
-
 // Multi-day bar segment type
 interface MultiDaySegment {
   item: PlanejamentoItemWithRelations;
