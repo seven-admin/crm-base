@@ -51,21 +51,22 @@ interface DayDisplayItem {
 
 export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const [localEmpreendimentoId, setLocalEmpreendimentoId] = useState<string | undefined>(undefined);
-  const localFilters = { ...filters, empreendimento_id: localEmpreendimentoId };
-  const { itens, isLoading } = usePlanejamentoGlobal(localFilters);
-
-  const { data: empreendimentos } = useEmpreendimentosSelect();
-  const { fases } = usePlanejamentoFases(localEmpreendimentoId);
-  const { statusList } = usePlanejamentoStatus();
-  const { data: funcionarios } = useFuncionariosSeven();
-  const { createItem, updateItem, deleteItem, duplicateItem } = usePlanejamentoItens();
-  const { embeds } = useGoogleCalendarEmbeds();
-
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [createPopoverDate, setCreatePopoverDate] = useState<Date | null>(null);
   const [createEmpreendimentoId, setCreateEmpreendimentoId] = useState('');
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+
+  const localFilters = { ...filters, empreendimento_id: localEmpreendimentoId };
+  const { itens, isLoading } = usePlanejamentoGlobal(localFilters);
+
+  const { data: empreendimentos } = useEmpreendimentosSelect();
+  const effectiveEmpreendimentoId = localEmpreendimentoId || createEmpreendimentoId || undefined;
+  const { fases } = usePlanejamentoFases(effectiveEmpreendimentoId);
+  const { statusList } = usePlanejamentoStatus();
+  const { data: funcionarios } = useFuncionariosSeven();
+  const { createItem, updateItem, deleteItem, duplicateItem } = usePlanejamentoItens();
+  const { embeds } = useGoogleCalendarEmbeds();
 
   const gcMonth = currentMonth.getMonth() + 1;
   const gcYear = currentMonth.getFullYear();
