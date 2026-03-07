@@ -448,19 +448,19 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <Plus className="h-3 w-3 text-primary" />
                           </button>
                         </div>
-                        {/* Reserve space for multi-day bars */}
-                        {multiDayCount > 0 && (
-                          <div style={{ height: multiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
+                        {/* Reserve space for visible multi-day bars */}
+                        {visibleMultiDayCount > 0 && (
+                          <div style={{ height: visibleMultiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
                         )}
                         <div className="mt-1 space-y-0.5 overflow-hidden">
                           {daySingleItems.slice(0, maxSingleVisible).map((item) => {
                             const empColor = empColors.get(item.empreendimento?.id || '');
-                            const color = empColor?.color || '#6b7280';
+                            const color = empColor?.color || 'hsl(var(--muted-foreground))';
                             return (
                               <div
                                 key={item.id}
                                 className="text-xs truncate px-1 py-0.5 rounded"
-                                style={{ backgroundColor: hexToRgba(color, 0.2), color }}
+                                style={{ backgroundColor: withAlpha(color, 0.2), color }}
                               >
                                 {item.item}
                               </div>
@@ -475,9 +475,9 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                               {evt.summary}
                             </div>
                           ))}
-                          {(totalSingleAndGoogle + multiDayCount) > 2 && totalSingleAndGoogle > maxSingleVisible && (
+                          {(totalSingleAndGoogle + visibleMultiDayCount + hiddenMultiDayCount) > 2 && (
                             <div className="text-xs text-muted-foreground px-1">
-                              +{totalSingleAndGoogle - maxSingleVisible} mais
+                              +{Math.max(0, totalSingleAndGoogle - maxSingleVisible) + hiddenMultiDayCount} mais
                             </div>
                           )}
                         </div>
