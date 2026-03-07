@@ -449,10 +449,8 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <Plus className="h-3 w-3 text-primary" />
                           </button>
                         </div>
-                        {/* Reserve space for visible multi-day bars */}
-                        {visibleMultiDayCount > 0 && (
-                          <div style={{ height: visibleMultiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
-                        )}
+                        {/* Always reserve fixed space for multi-day bar zone */}
+                        <div style={{ height: MULTI_DAY_ZONE_HEIGHT }} />
                         <div className="mt-1 space-y-0.5 overflow-hidden">
                           {daySingleItems.slice(0, maxSingleVisible).map((item) => {
                             const empColor = empColors.get(item.empreendimento?.id || '');
