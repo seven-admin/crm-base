@@ -112,6 +112,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
     },
     onError: (error) => {
       toast.error('Erro ao atualizar item: ' + error.message);
