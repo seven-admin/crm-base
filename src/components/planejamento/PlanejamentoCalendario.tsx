@@ -44,16 +44,11 @@ interface Props {
   onFiltersChange: (filters: PlanejamentoGlobalFilters) => void;
 }
 
-// Multi-day bar segment type
-interface MultiDaySegment {
+// Item with display metadata for a given day
+interface DayDisplayItem {
   item: PlanejamentoItemWithRelations;
-  weekRow: number;
-  startCol: number;
-  endCol: number;
-  isFirst: boolean;
-  isLast: boolean;
+  isMultiDay: boolean;
   color: string;
-  slotIndex: number;
 }
 
 export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
