@@ -196,6 +196,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success(`${data.length} itens importados com sucesso`);
     },
     onError: (error) => {
