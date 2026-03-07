@@ -3,14 +3,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-function emailToIcalUrl(input: string): string {
+function extractUrlFromText(input: string): string {
+  // Try to find a URL in the text
+  const urlMatch = input.match(/https?:\/\/[^\s"'<>]+/);
+  if (urlMatch) return urlMatch[0];
+  // If no URL found, check if it looks like an email
+  const emailMatch = input.match(/[\w.+-]+@[\w.-]+\.\w+/);
+  if (emailMatch) return emailMatch[0];
+  return input.trim();
+}
+
+function emailToIcalUrl(rawInput: string): string {
+  const input = extractUrlFromText(rawInput);
   // If already a full iCal URL, return as-is
   if (input.includes('.ics')) return input;
   // If it's an embed URL, extract the src parameter
-  if (input.includes('/embed')) {
-    const url = new URL(input);
-    const src = url.searchParams.get('src');
-    if (src) return `https://calendar.google.com/calendar/ical/${encodeURIComponent(src)}/public/basic.ics`;
+  if (input.includes('/embed') || input.includes('calendar.google.com')) {
+    try {
+      const url = new URL(input);
+      const src = url.searchParams.get('src');
+      if (src) return `https://calendar.google.com/calendar/ical/${encodeURIComponent(src)}/public/basic.ics`;
+    } catch {
+      // URL parsing failed, continue
+    }
   }
   // Assume it's an email
   return `https://calendar.google.com/calendar/ical/${encodeURIComponent(input)}/public/basic.ics`;
