@@ -232,6 +232,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['planejamento-itens'] });
+      queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
       toast.success(`${count} item(ns) removido(s) com sucesso`);
     },
     onError: (error) => {
