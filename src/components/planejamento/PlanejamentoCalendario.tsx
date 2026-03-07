@@ -22,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { usePlanejamentoGlobal, type PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
 import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
@@ -44,7 +43,6 @@ interface Props {
   onFiltersChange: (filters: PlanejamentoGlobalFilters) => void;
 }
 
-// Item with display metadata for a given day
 interface DayDisplayItem {
   item: PlanejamentoItemWithRelations;
   isMultiDay: boolean;
@@ -112,7 +110,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
         const isMultiDay = !!(inicio && fim && differenceInCalendarDays(fim, inicio) > 0);
         const empColor = empColors.get(item.empreendimento?.id || '')?.color || 'hsl(var(--muted-foreground))';
 
-        // Determine the range of days this item covers within the visible month
         const rangeStart = inicio ? dateMax([inicio, monthStart]) : (fim && fim >= monthStart && fim <= monthEnd ? fim : null);
         const rangeEnd = fim ? dateMin([fim, monthEnd]) : (inicio && inicio >= monthStart && inicio <= monthEnd ? inicio : null);
 
@@ -147,7 +144,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
 
   const itensDoDia = useMemo(() => {
     if (!itens) return [];
-    const key = format(selectedDate, 'yyyy-MM-dd');
     return itens.filter(item => {
       if (!item.data_inicio && !item.data_fim) return false;
       try {
@@ -166,7 +162,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     return googleEventsPorDia.get(key) || [];
   }, [selectedDate, googleEventsPorDia]);
 
-  // Task count indicator
   const totalTarefas = itens?.length || 0;
   const tarefasNoMes = useMemo(() => {
     if (!itens) return 0;
@@ -238,7 +233,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   );
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
   const MAX_ITEMS_VISIBLE = 3;
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
@@ -302,196 +296,150 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                 ))}
               </div>
 
-              {/* Calendar grid with multi-day bar overlay */}
-              <div className="relative overflow-hidden">
-                <div className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                    <div key={`empty-${index}`} className="h-28" />
-                  ))}
+              {/* Calendar grid — inline items, no overlay */}
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+                  <div key={`empty-${index}`} className="h-32" />
+                ))}
 
-                  {days.map((day) => {
-                    const key = format(day, 'yyyy-MM-dd');
-                    const daySingleItems = singleDayItems.get(key) || [];
-                    const dayGoogleEvents = googleEventsPorDia.get(key) || [];
-                    const isSelected = isSameDay(day, selectedDate);
-                    const isTodayDate = isToday(day);
-                    const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
+                {days.map((day) => {
+                  const key = format(day, 'yyyy-MM-dd');
+                  const dayItems = itemsPorDia.get(key) || [];
+                  const dayGoogleEvents = googleEventsPorDia.get(key) || [];
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isTodayDate = isToday(day);
+                  const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
 
-                    // Count multi-day items that cover this day to reserve space
-                    const dayIndex = day.getDate() - 1 + startingDayOfWeek;
-                    const weekRow = Math.floor(dayIndex / 7);
-                    const col = dayIndex % 7;
-                    const visibleMultiDayCount = multiDaySegments.filter(
-                      s => s.slotIndex < MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
-                    ).length;
-                    const hiddenMultiDayCount = multiDaySegments.filter(
-                      s => s.slotIndex >= MAX_MULTI_DAY_VISIBLE && s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
-                    ).length;
+                  const allDisplayItems: Array<DayDisplayItem | { type: 'google'; evt: GoogleCalendarEvent }> = [
+                    ...dayItems,
+                    ...dayGoogleEvents.map(evt => ({ type: 'google' as const, evt })),
+                  ];
+                  const totalCount = allDisplayItems.length;
+                  const visibleItems = allDisplayItems.slice(0, MAX_ITEMS_VISIBLE);
+                  const hiddenCount = totalCount - visibleItems.length;
 
-                    const maxSingleVisible = Math.max(0, 2 - visibleMultiDayCount);
-                    const totalSingleAndGoogle = daySingleItems.length + dayGoogleEvents.length;
+                  const cell = (
+                    <div
+                      key={key}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedDate(day)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedDate(day); } }}
+                      className={cn(
+                        'h-32 w-full rounded-lg border transition-colors relative group cursor-pointer flex flex-col',
+                        'hover:bg-accent hover:border-primary/50',
+                        isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
+                      )}
+                    >
+                      {/* Fixed header row — day number centered */}
+                      <div className="flex items-center justify-center relative h-7 shrink-0">
+                        <span className={cn(
+                          'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
+                          isTodayDate && 'bg-primary text-primary-foreground'
+                        )}>
+                          {format(day, 'd')}
+                        </span>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); handleAddClick(day); } }}
+                          className="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity cursor-pointer"
+                        >
+                          <Plus className="h-3 w-3 text-primary" />
+                        </span>
+                      </div>
 
-                    const cell = (
-                      <button
-                        key={key}
-                        onClick={() => setSelectedDate(day)}
-                        className={cn(
-                          'h-28 w-full p-1 text-left rounded-lg border transition-colors relative group',
-                          'hover:bg-accent hover:border-primary/50',
-                          isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
-                        )}
-                      >
-                      <div className="flex items-center justify-between relative z-20">
-                          <span className={cn(
-                            'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
-                            isTodayDate && 'bg-primary text-primary-foreground'
-                          )}>
-                            {format(day, 'd')}
-                          </span>
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); handleAddClick(day); } }}
-                            className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity cursor-pointer"
-                          >
-                            <Plus className="h-3 w-3 text-primary" />
-                          </span>
-                        </div>
-                        {/* Always reserve fixed space for multi-day bar zone */}
-                        <div style={{ height: MULTI_DAY_ZONE_HEIGHT }} />
-                        <div className="mt-1 space-y-0.5 overflow-hidden">
-                          {daySingleItems.slice(0, maxSingleVisible).map((item) => {
-                            const empColor = empColors.get(item.empreendimento?.id || '');
-                            const color = empColor?.color || 'hsl(var(--muted-foreground))';
+                      {/* Events zone — inline chips */}
+                      <div className="flex-1 overflow-hidden px-1 pb-1 space-y-0.5">
+                        {visibleItems.map((displayItem, idx) => {
+                          if ('type' in displayItem && displayItem.type === 'google') {
                             return (
                               <div
-                                key={item.id}
-                                className="text-xs truncate px-1 py-0.5 rounded"
-                                style={{ backgroundColor: withAlpha(color, 0.2), color }}
+                                key={`gc-${idx}`}
+                                className="text-xs truncate px-1.5 py-0.5 rounded flex items-center gap-1 bg-muted text-muted-foreground"
                               >
-                                {item.item}
+                                <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+                                {displayItem.evt.summary}
                               </div>
                             );
-                          })}
-                          {daySingleItems.length < maxSingleVisible && dayGoogleEvents.slice(0, maxSingleVisible - daySingleItems.length).map((evt, idx) => (
+                          }
+                          const di = displayItem as DayDisplayItem;
+                          if (di.isMultiDay) {
+                            return (
+                              <div
+                                key={di.item.id}
+                                className="text-xs truncate px-1.5 py-0.5 rounded"
+                                style={{
+                                  backgroundColor: withAlpha(di.color, 0.15),
+                                  borderLeft: `3px solid ${di.color}`,
+                                  color: di.color,
+                                }}
+                              >
+                                {di.item.item}
+                              </div>
+                            );
+                          }
+                          return (
                             <div
-                              key={`gc-${idx}`}
-                              className="text-xs truncate px-1 py-0.5 rounded bg-muted text-muted-foreground flex items-center gap-1"
+                              key={di.item.id}
+                              className="text-xs truncate px-1 py-0.5 flex items-center gap-1"
                             >
-                              <CalendarDays className="h-2.5 w-2.5 shrink-0" />
-                              {evt.summary}
+                              <span
+                                className="h-1.5 w-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: di.color }}
+                              />
+                              <span className="text-foreground truncate">{di.item.item}</span>
                             </div>
-                          ))}
-                          {(totalSingleAndGoogle + visibleMultiDayCount + hiddenMultiDayCount) > 2 && (
-                            <div className="text-xs text-muted-foreground px-1">
-                              +{Math.max(0, totalSingleAndGoogle - maxSingleVisible) + hiddenMultiDayCount} mais
+                          );
+                        })}
+                        {hiddenCount > 0 && (
+                          <div className="text-xs text-muted-foreground px-1">
+                            +{hiddenCount} mais
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+
+                  if (isCreateOpen) {
+                    return (
+                      <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
+                        <PopoverTrigger asChild>
+                          <div>{cell}</div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-4" align="start" side="bottom">
+                          {!localEmpreendimentoId && (
+                            <div className="mb-3">
+                              <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
+                              <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
+                                <SelectTrigger className="text-xs h-8 mt-1">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {empreendimentos?.map((emp) => (
+                                    <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           )}
-                        </div>
-                      </button>
+                          <CalendarioCriarTarefaPopover
+                            date={day}
+                            fases={fases || []}
+                            statusList={statusList || []}
+                            responsaveis={responsaveis}
+                            onSubmit={handleCreateSubmit}
+                            onCancel={() => setCreatePopoverDate(null)}
+                            isSubmitting={createItem.isPending}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     );
+                  }
 
-                    if (isCreateOpen) {
-                      return (
-                        <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
-                          <PopoverTrigger asChild>
-                            <div>{cell}</div>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80 p-4" align="start" side="bottom">
-                            {!localEmpreendimentoId && (
-                              <div className="mb-3">
-                                <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
-                                <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
-                                  <SelectTrigger className="text-xs h-8 mt-1">
-                                    <SelectValue placeholder="Selecione..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {empreendimentos?.map((emp) => (
-                                      <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
-                            <CalendarioCriarTarefaPopover
-                              date={day}
-                              fases={fases || []}
-                              statusList={statusList || []}
-                              responsaveis={responsaveis}
-                              onSubmit={handleCreateSubmit}
-                              onCancel={() => setCreatePopoverDate(null)}
-                              isSubmitting={createItem.isPending}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      );
-                    }
-
-                    return cell;
-                  })}
-                </div>
-
-                {/* Multi-day bars overlay */}
-                <TooltipProvider delayDuration={200}>
-                  <div className="absolute inset-0 pointer-events-none" style={{ margin: '0 0' }}>
-                    {multiDaySegments.filter(seg => seg.slotIndex < MAX_MULTI_DAY_VISIBLE).map((seg, idx) => {
-                      // Calculate position based on grid
-                      // Each cell is 1/7 of width, gap is 4px (gap-1)
-                      const gapPx = 4;
-                      const leftPercent = (seg.startCol / 7) * 100;
-                      const widthPercent = ((seg.endCol - seg.startCol + 1) / 7) * 100;
-                      const topPx = seg.weekRow * (CELL_HEIGHT + gapPx) + BAR_TOP_OFFSET + seg.slotIndex * (BAR_HEIGHT + BAR_GAP);
-
-                      // Account for empty cells at the start
-                      // The empty cells are included in the grid, so startCol already accounts for them on row 0
-
-                      return (
-                        <Tooltip key={idx}>
-                          <TooltipTrigger asChild>
-                            <div
-                              className="absolute pointer-events-auto cursor-pointer transition-opacity hover:opacity-90"
-                              style={{
-                                left: `calc(${leftPercent}% + ${gapPx / 2}px)`,
-                                width: `calc(${widthPercent}% - ${gapPx}px)`,
-                                top: `${topPx}px`,
-                                height: `${BAR_HEIGHT}px`,
-                                backgroundColor: withAlpha(seg.color, 0.25),
-                                borderLeft: seg.isFirst ? `3px solid ${seg.color}` : undefined,
-                                borderRight: seg.isLast ? `3px solid ${seg.color}` : undefined,
-                                borderRadius: `${seg.isFirst ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isFirst ? 4 : 0}px`,
-                              }}
-                              onClick={() => {
-                                const inicio = seg.item.data_inicio ? parseISO(seg.item.data_inicio) : new Date();
-                                setSelectedDate(inicio);
-                              }}
-                            >
-                              {seg.isFirst && (
-                                <span
-                                  className="text-xs font-medium truncate px-1.5 leading-[18px] block"
-                                  style={{ color: seg.color }}
-                                >
-                                  {seg.item.item}
-                                </span>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-medium">{seg.item.item}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {seg.item.data_inicio && format(parseISO(seg.item.data_inicio), 'dd/MM')}
-                              {' → '}
-                              {seg.item.data_fim && format(parseISO(seg.item.data_fim), 'dd/MM')}
-                            </p>
-                            {seg.item.empreendimento && (
-                              <p className="text-xs text-muted-foreground">{seg.item.empreendimento.nome}</p>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </TooltipProvider>
+                  return cell;
+                })}
               </div>
 
               {/* Legend */}
