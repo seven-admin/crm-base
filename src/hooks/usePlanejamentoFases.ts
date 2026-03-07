@@ -3,17 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { PlanejamentoFase } from '@/types/planejamento.types';
 
-export function usePlanejamentoFases() {
+export function usePlanejamentoFases(empreendimentoId?: string) {
   const queryClient = useQueryClient();
 
   const { data: fases, isLoading } = useQuery({
-    queryKey: ['planejamento-fases'],
+    queryKey: ['planejamento-fases', empreendimentoId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('planejamento_fases')
         .select('*')
         .eq('is_active', true)
         .order('ordem');
+
+      if (empreendimentoId) {
+        // Buscar fases base (NULL) + fases do empreendimento
+        query = query.or(`empreendimento_id.is.null,empreendimento_id.eq.${empreendimentoId}`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as PlanejamentoFase[];
