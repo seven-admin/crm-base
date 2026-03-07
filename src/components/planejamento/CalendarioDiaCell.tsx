@@ -38,7 +38,7 @@ export function CalendarioDiaCell({
         isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
       )}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between relative z-20">
         <span
           className={cn(
             'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
@@ -50,10 +50,13 @@ export function CalendarioDiaCell({
 
         {!readOnly && (
           <span
+            role="button"
+            tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
               onAddClick(day);
             }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onAddClick(day); } }}
             className="h-5 w-5 flex items-center justify-center rounded-full bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-primary/20"
           >
             <Plus className="h-3 w-3" />

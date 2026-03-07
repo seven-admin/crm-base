@@ -329,9 +329,11 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const totalCells = startingDayOfWeek + days.length;
   const totalWeeks = Math.ceil(totalCells / 7);
   const CELL_HEIGHT = 112; // h-28 = 7rem = 112px
+  const CELL_PADDING_TOP = 4; // p-1 = 0.25rem = 4px
+  const DAY_HEADER_HEIGHT = 24; // h-6 = 1.5rem = 24px
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
-  const BAR_TOP_OFFSET = 28; // space for day number
+  const BAR_TOP_OFFSET = CELL_PADDING_TOP + DAY_HEADER_HEIGHT + 4; // 4px margin below header
   const MAX_MULTI_DAY_VISIBLE = 2;
   const MULTI_DAY_ZONE_HEIGHT = MAX_MULTI_DAY_VISIBLE * (BAR_HEIGHT + BAR_GAP); // always reserved
 
@@ -435,19 +437,22 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                           isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
                         )}
                       >
-                        <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between relative z-20">
                           <span className={cn(
                             'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
                             isTodayDate && 'bg-primary text-primary-foreground'
                           )}>
                             {format(day, 'd')}
                           </span>
-                          <button
+                          <span
+                            role="button"
+                            tabIndex={0}
                             onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
-                            className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity"
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); handleAddClick(day); } }}
+                            className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity cursor-pointer"
                           >
                             <Plus className="h-3 w-3 text-primary" />
-                          </button>
+                          </span>
                         </div>
                         {/* Always reserve fixed space for multi-day bar zone */}
                         <div style={{ height: MULTI_DAY_ZONE_HEIGHT }} />
