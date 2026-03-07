@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, BarChart3, Users, Calendar, Clock } from 'lucide-react';
+import { BarChart3, Users, Calendar, Clock, List } from 'lucide-react';
 import { PlanejamentoGlobalResumo } from '@/components/planejamento/PlanejamentoGlobalResumo';
 import { PlanejamentoGlobalTimeline } from '@/components/planejamento/PlanejamentoGlobalTimeline';
 import { PlanejamentoGlobalEquipe } from '@/components/planejamento/PlanejamentoGlobalEquipe';
 import { PlanejamentoCalendario } from '@/components/planejamento/PlanejamentoCalendario';
+import { PlanejamentoListaGlobal } from '@/components/planejamento/PlanejamentoListaGlobal';
 import type { PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
 import { useConfiguracao } from '@/hooks/useConfiguracoesSistema';
 
@@ -28,6 +29,10 @@ export default function Planejamento() {
               <Calendar className="h-4 w-4" />
               Calendário
             </TabsTrigger>
+            <TabsTrigger value="lista" className="gap-2">
+              <List className="h-4 w-4" />
+              Lista
+            </TabsTrigger>
             <TabsTrigger value="resumo" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Resumo
@@ -44,6 +49,10 @@ export default function Planejamento() {
 
           <TabsContent value="calendario" className="mt-4">
             <PlanejamentoCalendario filters={filters} onFiltersChange={setFilters} />
+          </TabsContent>
+
+          <TabsContent value="lista" className="mt-4">
+            <PlanejamentoListaGlobal filters={filters} onFiltersChange={setFilters} />
           </TabsContent>
 
           <TabsContent value="resumo" className="mt-4">

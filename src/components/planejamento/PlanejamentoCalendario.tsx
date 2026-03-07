@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info } from 'lucide-react';
 import {
   format,
   startOfMonth,
@@ -11,6 +11,9 @@ import {
   subMonths,
   parseISO,
   isWithinInterval,
+  differenceInCalendarDays,
+  max as dateMax,
+  min as dateMin,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -19,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { usePlanejamentoGlobal, type PlanejamentoGlobalFilters } from '@/hooks/usePlanejamentoGlobal';
 import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
@@ -51,6 +55,18 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Multi-day bar segment type
+interface MultiDaySegment {
+  item: PlanejamentoItemWithRelations;
+  weekRow: number;
+  startCol: number;
+  endCol: number;
+  isFirst: boolean;
+  isLast: boolean;
+  color: string;
+  slotIndex: number;
+}
+
 export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const [localEmpreendimentoId, setLocalEmpreendimentoId] = useState<string | undefined>(undefined);
   const localFilters = { ...filters, empreendimento_id: localEmpreendimentoId };
@@ -69,7 +85,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   const [createEmpreendimentoId, setCreateEmpreendimentoId] = useState('');
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
-  // Fetch Google Calendar events for current month
   const gcMonth = currentMonth.getMonth() + 1;
   const gcYear = currentMonth.getFullYear();
   const { data: googleEvents } = useGoogleCalendarEvents(gcMonth, gcYear);
@@ -79,7 +94,6 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     [funcionarios]
   );
 
-  // Map empreendimentos to colors
   const empColors = useMemo(() => {
     const map = new Map<string, { color: string; nome: string }>();
     if (!itens) return map;
@@ -96,68 +110,175 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
     return map;
   }, [itens]);
 
-  // Group tasks by day
-  const itensPorDia = useMemo(() => {
-    const map = new Map<string, PlanejamentoItemWithRelations[]>();
-    if (!itens) return map;
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
-    days.forEach(day => {
-      const key = format(day, 'yyyy-MM-dd');
-      const dayItems = itens.filter(item => {
-        if (!item.data_inicio && !item.data_fim) return false;
-        try {
-          const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
-          const fim = item.data_fim ? parseISO(item.data_fim) : null;
-          if (inicio && fim) return isWithinInterval(day, { start: inicio, end: fim });
-          if (inicio && !fim) return isSameDay(day, inicio);
-          if (!inicio && fim) return isSameDay(day, fim);
-          return false;
-        } catch { return false; }
-      });
-      if (dayItems.length > 0) map.set(key, dayItems);
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const days = useMemo(() => eachDayOfInterval({ start: monthStart, end: monthEnd }), [currentMonth]);
+  const startingDayOfWeek = monthStart.getDay();
+
+  // Separate single-day vs multi-day items
+  const { singleDayItems, multiDayItems } = useMemo(() => {
+    const single = new Map<string, PlanejamentoItemWithRelations[]>();
+    const multi: PlanejamentoItemWithRelations[] = [];
+    if (!itens) return { singleDayItems: single, multiDayItems: multi };
+
+    itens.forEach(item => {
+      if (!item.data_inicio && !item.data_fim) return;
+      try {
+        const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
+        const fim = item.data_fim ? parseISO(item.data_fim) : null;
+        
+        // Check if it spans multiple days
+        if (inicio && fim && differenceInCalendarDays(fim, inicio) > 0) {
+          // Check overlap with current month
+          if (inicio <= monthEnd && fim >= monthStart) {
+            multi.push(item);
+          }
+        } else {
+          // Single day item
+          const day = inicio || fim;
+          if (day && day >= monthStart && day <= monthEnd) {
+            const key = format(day, 'yyyy-MM-dd');
+            if (!single.has(key)) single.set(key, []);
+            single.get(key)!.push(item);
+          }
+        }
+      } catch { /* ignore */ }
     });
-    return map;
+
+    return { singleDayItems: single, multiDayItems: multi };
   }, [itens, currentMonth]);
 
-  // Group Google events by day
+  // Compute multi-day bar segments
+  const multiDaySegments = useMemo(() => {
+    const segments: MultiDaySegment[] = [];
+    
+    // We need to compute slot assignments to avoid overlapping bars
+    // First, collect all items per row with their column ranges
+    const rowItems = new Map<number, { item: PlanejamentoItemWithRelations; startCol: number; endCol: number; color: string }[]>();
+
+    multiDayItems.forEach(item => {
+      const inicio = parseISO(item.data_inicio!);
+      const fim = parseISO(item.data_fim!);
+      const clampStart = dateMax([inicio, monthStart]);
+      const clampEnd = dateMin([fim, monthEnd]);
+      const empColor = empColors.get(item.empreendimento?.id || '')?.color || '#6b7280';
+
+      // Split into week segments
+      let current = clampStart;
+      while (current <= clampEnd) {
+        const dayOfMonth = current.getDate();
+        const dayIndex = dayOfMonth - 1 + startingDayOfWeek;
+        const weekRow = Math.floor(dayIndex / 7);
+        const startCol = dayIndex % 7;
+
+        // Find end of this week segment
+        const daysLeftInWeek = 6 - startCol;
+        const daysLeftInRange = differenceInCalendarDays(clampEnd, current);
+        const segmentDays = Math.min(daysLeftInWeek, daysLeftInRange);
+        const endCol = startCol + segmentDays;
+
+        const isFirst = isSameDay(current, clampStart) && clampStart >= inicio;
+        const isLast = differenceInCalendarDays(clampEnd, current) <= daysLeftInWeek && clampEnd <= fim;
+
+        if (!rowItems.has(weekRow)) rowItems.set(weekRow, []);
+        rowItems.get(weekRow)!.push({ item, startCol, endCol, color: empColor });
+
+        // Move to next week
+        const nextDay = new Date(current);
+        nextDay.setDate(nextDay.getDate() + segmentDays + 1);
+        current = nextDay;
+      }
+    });
+
+    // Now assign slot indices per row to avoid overlaps
+    rowItems.forEach((items, weekRow) => {
+      // Sort by startCol then by span length (wider first)
+      items.sort((a, b) => a.startCol - b.startCol || (b.endCol - b.startCol) - (a.endCol - a.startCol));
+      
+      const slots: { endCol: number }[] = [];
+      items.forEach(({ item, startCol, endCol, color }) => {
+        // Find first available slot
+        let slotIndex = 0;
+        for (let i = 0; i < slots.length; i++) {
+          if (slots[i].endCol < startCol) {
+            slotIndex = i;
+            break;
+          }
+          slotIndex = i + 1;
+        }
+        if (slotIndex >= slots.length) {
+          slots.push({ endCol });
+        } else {
+          slots[slotIndex] = { endCol };
+        }
+
+        const inicio = parseISO(item.data_inicio!);
+        const fim = parseISO(item.data_fim!);
+        const clampStart = dateMax([inicio, monthStart]);
+        const clampEnd = dateMin([fim, monthEnd]);
+        
+        const isFirst = startCol === ((clampStart.getDate() - 1 + startingDayOfWeek) % 7) && clampStart >= inicio;
+        const isLast = endCol === ((clampEnd.getDate() - 1 + startingDayOfWeek) % 7);
+
+        segments.push({ item, weekRow, startCol, endCol, isFirst, isLast, color, slotIndex });
+      });
+    });
+
+    return segments;
+  }, [multiDayItems, empColors, monthStart, monthEnd, startingDayOfWeek]);
+
+  // Google events per day
   const googleEventsPorDia = useMemo(() => {
     const map = new Map<string, GoogleCalendarEvent[]>();
     if (!googleEvents) return map;
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     days.forEach(day => {
       const key = format(day, 'yyyy-MM-dd');
       const dayEvents = googleEvents.filter(evt => {
-        const start = evt.dtstart;
         const end = evt.dtend || evt.dtstart;
-        return key >= start && key <= end;
+        return key >= evt.dtstart && key <= end;
       });
       if (dayEvents.length > 0) map.set(key, dayEvents);
     });
     return map;
-  }, [googleEvents, currentMonth]);
+  }, [googleEvents, days]);
 
   const itensDoDia = useMemo(() => {
+    if (!itens) return [];
     const key = format(selectedDate, 'yyyy-MM-dd');
-    return itensPorDia.get(key) || [];
-  }, [selectedDate, itensPorDia]);
+    return itens.filter(item => {
+      if (!item.data_inicio && !item.data_fim) return false;
+      try {
+        const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
+        const fim = item.data_fim ? parseISO(item.data_fim) : null;
+        if (inicio && fim) return isWithinInterval(selectedDate, { start: inicio, end: fim });
+        if (inicio && !fim) return isSameDay(selectedDate, inicio);
+        if (!inicio && fim) return isSameDay(selectedDate, fim);
+        return false;
+      } catch { return false; }
+    });
+  }, [selectedDate, itens]);
 
   const googleEventsDoDia = useMemo(() => {
     const key = format(selectedDate, 'yyyy-MM-dd');
     return googleEventsPorDia.get(key) || [];
   }, [selectedDate, googleEventsPorDia]);
 
-  const days = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start, end });
-  }, [currentMonth]);
-
-  const firstDayOfMonth = startOfMonth(currentMonth);
-  const startingDayOfWeek = firstDayOfMonth.getDay();
+  // Task count indicator
+  const totalTarefas = itens?.length || 0;
+  const tarefasNoMes = useMemo(() => {
+    if (!itens) return 0;
+    return itens.filter(item => {
+      if (!item.data_inicio && !item.data_fim) return false;
+      try {
+        const inicio = item.data_inicio ? parseISO(item.data_inicio) : null;
+        const fim = item.data_fim ? parseISO(item.data_fim) : null;
+        if (inicio && fim) return inicio <= monthEnd && fim >= monthStart;
+        if (inicio) return inicio >= monthStart && inicio <= monthEnd;
+        if (fim) return fim >= monthStart && fim <= monthEnd;
+        return false;
+      } catch { return false; }
+    }).length;
+  }, [itens, currentMonth]);
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -215,6 +336,14 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+  // Calculate total weeks for grid height
+  const totalCells = startingDayOfWeek + days.length;
+  const totalWeeks = Math.ceil(totalCells / 7);
+  const CELL_HEIGHT = 96; // h-24 = 6rem = 96px
+  const BAR_HEIGHT = 18;
+  const BAR_GAP = 2;
+  const BAR_TOP_OFFSET = 24; // space for day number
+
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
   return (
@@ -225,9 +354,16 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <CardTitle className="text-lg font-semibold capitalize">
-                  {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-lg font-semibold capitalize">
+                    {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+                  </CardTitle>
+                  {totalTarefas > 0 && (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {tarefasNoMes} de {totalTarefas} tarefa{totalTarefas !== 1 ? 's' : ''} neste mês
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select
                     value={localEmpreendimentoId || 'all'}
@@ -269,118 +405,193 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                 ))}
               </div>
 
-              {/* Calendar grid */}
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                  <div key={`empty-${index}`} className="h-24" />
-                ))}
+              {/* Calendar grid with multi-day bar overlay */}
+              <div className="relative">
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+                    <div key={`empty-${index}`} className="h-24" />
+                  ))}
 
-                {days.map((day) => {
-                  const key = format(day, 'yyyy-MM-dd');
-                  const dayItems = itensPorDia.get(key) || [];
-                  const dayGoogleEvents = googleEventsPorDia.get(key) || [];
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isTodayDate = isToday(day);
-                  const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
-                  const totalItems = dayItems.length + dayGoogleEvents.length;
-                  const maxVisible = 2;
+                  {days.map((day) => {
+                    const key = format(day, 'yyyy-MM-dd');
+                    const daySingleItems = singleDayItems.get(key) || [];
+                    const dayGoogleEvents = googleEventsPorDia.get(key) || [];
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isTodayDate = isToday(day);
+                    const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
 
-                  const cell = (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedDate(day)}
-                      className={cn(
-                        'h-24 w-full p-1 text-left rounded-lg border transition-colors relative group',
-                        'hover:bg-accent hover:border-primary/50',
-                        isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
-                          isTodayDate && 'bg-primary text-primary-foreground'
-                        )}>
-                          {format(day, 'd')}
-                        </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
-                          className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity"
-                        >
-                          <Plus className="h-3 w-3 text-primary" />
-                        </button>
-                      </div>
-                      <div className="mt-1 space-y-0.5 overflow-hidden">
-                        {/* Internal items first */}
-                        {dayItems.slice(0, maxVisible).map((item) => {
-                          const empColor = empColors.get(item.empreendimento?.id || '');
-                          const color = empColor?.color || '#6b7280';
-                          return (
-                            <div
-                              key={item.id}
-                              className="text-xs truncate px-1 py-0.5 rounded"
-                              style={{ backgroundColor: hexToRgba(color, 0.2), color }}
-                            >
-                              {item.item}
-                            </div>
-                          );
-                        })}
-                        {/* Google events */}
-                        {dayItems.length < maxVisible && dayGoogleEvents.slice(0, maxVisible - dayItems.length).map((evt, idx) => (
-                          <div
-                            key={`gc-${idx}`}
-                            className="text-xs truncate px-1 py-0.5 rounded bg-muted text-muted-foreground flex items-center gap-1"
-                          >
-                            <CalendarDays className="h-2.5 w-2.5 shrink-0" />
-                            {evt.summary}
-                          </div>
-                        ))}
-                        {totalItems > maxVisible && (
-                          <div className="text-xs text-muted-foreground px-1">
-                            +{totalItems - maxVisible} mais
-                          </div>
+                    // Count multi-day items that cover this day to reserve space
+                    const dayIndex = day.getDate() - 1 + startingDayOfWeek;
+                    const weekRow = Math.floor(dayIndex / 7);
+                    const col = dayIndex % 7;
+                    const multiDayCount = multiDaySegments.filter(
+                      s => s.weekRow === weekRow && col >= s.startCol && col <= s.endCol
+                    ).length;
+                    
+                    const maxSingleVisible = Math.max(0, 2 - multiDayCount);
+                    const totalSingleAndGoogle = daySingleItems.length + dayGoogleEvents.length;
+                    const hiddenCount = Math.max(0, totalSingleAndGoogle - maxSingleVisible) + (maxSingleVisible === 0 ? 0 : 0);
+
+                    const cell = (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedDate(day)}
+                        className={cn(
+                          'h-24 w-full p-1 text-left rounded-lg border transition-colors relative group',
+                          'hover:bg-accent hover:border-primary/50',
+                          isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
                         )}
-                      </div>
-                    </button>
-                  );
-
-                  if (isCreateOpen) {
-                    return (
-                      <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
-                        <PopoverTrigger asChild>
-                          <div>{cell}</div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4" align="start" side="bottom">
-                          {!localEmpreendimentoId && (
-                            <div className="mb-3">
-                              <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
-                              <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
-                                <SelectTrigger className="text-xs h-8 mt-1">
-                                  <SelectValue placeholder="Selecione..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {empreendimentos?.map((emp) => (
-                                    <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
+                            isTodayDate && 'bg-primary text-primary-foreground'
+                          )}>
+                            {format(day, 'd')}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleAddClick(day); }}
+                            className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity"
+                          >
+                            <Plus className="h-3 w-3 text-primary" />
+                          </button>
+                        </div>
+                        {/* Reserve space for multi-day bars */}
+                        {multiDayCount > 0 && (
+                          <div style={{ height: multiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
+                        )}
+                        <div className="mt-1 space-y-0.5 overflow-hidden">
+                          {daySingleItems.slice(0, maxSingleVisible).map((item) => {
+                            const empColor = empColors.get(item.empreendimento?.id || '');
+                            const color = empColor?.color || '#6b7280';
+                            return (
+                              <div
+                                key={item.id}
+                                className="text-xs truncate px-1 py-0.5 rounded"
+                                style={{ backgroundColor: hexToRgba(color, 0.2), color }}
+                              >
+                                {item.item}
+                              </div>
+                            );
+                          })}
+                          {daySingleItems.length < maxSingleVisible && dayGoogleEvents.slice(0, maxSingleVisible - daySingleItems.length).map((evt, idx) => (
+                            <div
+                              key={`gc-${idx}`}
+                              className="text-xs truncate px-1 py-0.5 rounded bg-muted text-muted-foreground flex items-center gap-1"
+                            >
+                              <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+                              {evt.summary}
+                            </div>
+                          ))}
+                          {(totalSingleAndGoogle + multiDayCount) > 2 && totalSingleAndGoogle > maxSingleVisible && (
+                            <div className="text-xs text-muted-foreground px-1">
+                              +{totalSingleAndGoogle - maxSingleVisible} mais
                             </div>
                           )}
-                          <CalendarioCriarTarefaPopover
-                            date={day}
-                            fases={fases || []}
-                            statusList={statusList || []}
-                            responsaveis={responsaveis}
-                            onSubmit={handleCreateSubmit}
-                            onCancel={() => setCreatePopoverDate(null)}
-                            isSubmitting={createItem.isPending}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                        </div>
+                      </button>
                     );
-                  }
 
-                  return cell;
-                })}
+                    if (isCreateOpen) {
+                      return (
+                        <Popover key={key} open onOpenChange={(open) => { if (!open) setCreatePopoverDate(null); }}>
+                          <PopoverTrigger asChild>
+                            <div>{cell}</div>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-4" align="start" side="bottom">
+                            {!localEmpreendimentoId && (
+                              <div className="mb-3">
+                                <label className="text-xs font-medium text-muted-foreground">Empreendimento *</label>
+                                <Select value={createEmpreendimentoId} onValueChange={setCreateEmpreendimentoId}>
+                                  <SelectTrigger className="text-xs h-8 mt-1">
+                                    <SelectValue placeholder="Selecione..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {empreendimentos?.map((emp) => (
+                                      <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                            <CalendarioCriarTarefaPopover
+                              date={day}
+                              fases={fases || []}
+                              statusList={statusList || []}
+                              responsaveis={responsaveis}
+                              onSubmit={handleCreateSubmit}
+                              onCancel={() => setCreatePopoverDate(null)}
+                              isSubmitting={createItem.isPending}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      );
+                    }
+
+                    return cell;
+                  })}
+                </div>
+
+                {/* Multi-day bars overlay */}
+                <TooltipProvider delayDuration={200}>
+                  <div className="absolute inset-0 pointer-events-none" style={{ margin: '0 0' }}>
+                    {multiDaySegments.map((seg, idx) => {
+                      // Calculate position based on grid
+                      // Each cell is 1/7 of width, gap is 4px (gap-1)
+                      const gapPx = 4;
+                      const leftPercent = (seg.startCol / 7) * 100;
+                      const widthPercent = ((seg.endCol - seg.startCol + 1) / 7) * 100;
+                      const topPx = seg.weekRow * (CELL_HEIGHT + gapPx) + BAR_TOP_OFFSET + seg.slotIndex * (BAR_HEIGHT + BAR_GAP);
+
+                      // Account for empty cells at the start
+                      // The empty cells are included in the grid, so startCol already accounts for them on row 0
+
+                      return (
+                        <Tooltip key={idx}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="absolute pointer-events-auto cursor-pointer transition-opacity hover:opacity-90"
+                              style={{
+                                left: `calc(${leftPercent}% + ${gapPx / 2}px)`,
+                                width: `calc(${widthPercent}% - ${gapPx}px)`,
+                                top: `${topPx}px`,
+                                height: `${BAR_HEIGHT}px`,
+                                backgroundColor: hexToRgba(seg.color, 0.25),
+                                borderLeft: seg.isFirst ? `3px solid ${seg.color}` : undefined,
+                                borderRight: seg.isLast ? `3px solid ${seg.color}` : undefined,
+                                borderRadius: `${seg.isFirst ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isLast ? 4 : 0}px ${seg.isFirst ? 4 : 0}px`,
+                              }}
+                              onClick={() => {
+                                const inicio = seg.item.data_inicio ? parseISO(seg.item.data_inicio) : new Date();
+                                setSelectedDate(inicio);
+                              }}
+                            >
+                              {seg.isFirst && (
+                                <span
+                                  className="text-xs font-medium truncate px-1.5 leading-[18px] block"
+                                  style={{ color: seg.color }}
+                                >
+                                  {seg.item.item}
+                                </span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-medium">{seg.item.item}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {seg.item.data_inicio && format(parseISO(seg.item.data_inicio), 'dd/MM')}
+                              {' → '}
+                              {seg.item.data_fim && format(parseISO(seg.item.data_fim), 'dd/MM')}
+                            </p>
+                            {seg.item.empreendimento && (
+                              <p className="text-xs text-muted-foreground">{seg.item.empreendimento.nome}</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </TooltipProvider>
               </div>
 
               {/* Legend */}
