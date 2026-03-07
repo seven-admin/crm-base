@@ -16,7 +16,7 @@ import { ImportarPlanejamentoDialog } from '@/components/planejamento/ImportarPl
 
 export default function Planejamento() {
   const [empreendimentoId, setEmpreendimentoId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('planilha');
+  const [activeTab, setActiveTab] = useState('calendario');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'empreendimento' | 'global'>('empreendimento');
   const { data: empreendimentos } = useEmpreendimentosSelect();
@@ -104,6 +104,10 @@ export default function Planejamento() {
             {empreendimentoId ? (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
+                  <TabsTrigger value="calendario" className="gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Calendário
+                  </TabsTrigger>
                   <TabsTrigger value="planilha" className="gap-2">
                     <ClipboardList className="h-4 w-4" />
                     Planilha
@@ -112,15 +116,15 @@ export default function Planejamento() {
                     <CalendarDays className="h-4 w-4" />
                     Timeline
                   </TabsTrigger>
-                  <TabsTrigger value="calendario" className="gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Calendário
-                  </TabsTrigger>
                   <TabsTrigger value="dashboard" className="gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Dashboard
                   </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="calendario" className="mt-4">
+                  <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly={!canEdit} />
+                </TabsContent>
 
                 <TabsContent value="planilha" className="mt-4">
                   <PlanejamentoPlanilha empreendimentoId={empreendimentoId} readOnly={!canEdit} />
@@ -128,10 +132,6 @@ export default function Planejamento() {
 
                 <TabsContent value="timeline" className="mt-4">
                   <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly={!canEdit} />
-                </TabsContent>
-
-                <TabsContent value="calendario" className="mt-4">
-                  <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly={!canEdit} />
                 </TabsContent>
 
                 <TabsContent value="dashboard" className="mt-4">

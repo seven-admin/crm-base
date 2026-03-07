@@ -1,25 +1,32 @@
-import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
   isSameDay,
-  isToday,
   addMonths,
   subMonths,
   parseISO,
   isWithinInterval,
+  addDays,
+  getDay,
+  lastDayOfMonth,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
+import { usePlanejamentoFases } from '@/hooks/usePlanejamentoFases';
+import { usePlanejamentoStatus } from '@/hooks/usePlanejamentoStatus';
+import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
+import { CalendarioDiaCell } from './CalendarioDiaCell';
+import { CalendarioDiaDetalhe } from './CalendarioDiaDetalhe';
+import { CalendarioCriarTarefaPopover } from './CalendarioCriarTarefaPopover';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 
 interface Props {
@@ -27,19 +34,23 @@ interface Props {
   readOnly?: boolean;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnly }: Props) {
+  const { itens, isLoading, createItem, updateItem, deleteItem, duplicateItem } =
+    usePlanejamentoItens({ empreendimento_id: empreendimentoId });
+  const { fases } = usePlanejamentoFases();
+  const { statusList } = usePlanejamentoStatus();
+  const { data: funcionarios } = useFuncionariosSeven();
 
-export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props) {
-  const { itens, isLoading } = usePlanejamentoItens({ empreendimento_id: empreendimentoId });
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [createPopoverDate, setCreatePopoverDate] = useState<Date | null>(null);
 
-  // Agrupar tarefas por dia
+  const responsaveis = useMemo(
+    () => (funcionarios || []).map((f) => ({ id: f.id, full_name: f.full_name })),
+    [funcionarios]
+  );
+
+  // Group tasks by day
   const itensPorDia = useMemo(() => {
     const map = new Map<string, PlanejamentoItemWithRelations[]>();
     if (!itens) return map;
@@ -48,9 +59,9 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props
     const monthEnd = endOfMonth(currentMonth);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    days.forEach(day => {
+    days.forEach((day) => {
       const key = format(day, 'yyyy-MM-dd');
-      const dayItems = itens.filter(item => {
+      const dayItems = itens.filter((item) => {
         if (!item.data_inicio || !item.data_fim) return false;
         try {
           const inicio = parseISO(item.data_inicio);
@@ -68,17 +79,26 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props
     return map;
   }, [itens, currentMonth]);
 
-  // Tarefas do dia selecionado
+  // Selected day items
   const itensDoDia = useMemo(() => {
     const key = format(selectedDate, 'yyyy-MM-dd');
     return itensPorDia.get(key) || [];
   }, [selectedDate, itensPorDia]);
 
-  // Gerar dias do mês
+  // Days of month
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
     return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
+
+  // Trailing days to fill grid
+  const trailingDays = useMemo(() => {
+    const lastDay = lastDayOfMonth(currentMonth);
+    const lastDayOfWeek = getDay(lastDay);
+    if (lastDayOfWeek === 6) return [];
+    const count = 6 - lastDayOfWeek;
+    return Array.from({ length: count }, (_, i) => addDays(lastDay, i + 1));
   }, [currentMonth]);
 
   const firstDayOfMonth = startOfMonth(currentMonth);
@@ -92,6 +112,57 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props
     setSelectedDate(today);
   };
 
+  const handleAddClick = useCallback((day: Date) => {
+    setSelectedDate(day);
+    setCreatePopoverDate(day);
+  }, []);
+
+  const handleCreateSubmit = useCallback(
+    (data: {
+      item: string;
+      fase_id: string;
+      status_id: string;
+      data_inicio: string;
+      data_fim: string;
+      responsavel_tecnico_id?: string;
+      obs?: string;
+    }) => {
+      createItem.mutate(
+        {
+          empreendimento_id: empreendimentoId,
+          ...data,
+          responsavel_tecnico_id: data.responsavel_tecnico_id || null,
+          obs: data.obs || null,
+        },
+        {
+          onSuccess: () => setCreatePopoverDate(null),
+        }
+      );
+    },
+    [createItem, empreendimentoId]
+  );
+
+  const handleUpdate = useCallback(
+    (id: string, updates: Record<string, unknown>) => {
+      updateItem.mutate({ id, ...updates });
+    },
+    [updateItem]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteItem.mutate(id);
+    },
+    [deleteItem]
+  );
+
+  const handleDuplicate = useCallback(
+    (id: string) => {
+      duplicateItem.mutate(id);
+    },
+    [duplicateItem]
+  );
+
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   if (isLoading) {
@@ -100,7 +171,7 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-      {/* Calendário */}
+      {/* Calendar Grid */}
       <div className="lg:col-span-2">
         <Card>
           <CardHeader className="pb-2">
@@ -138,169 +209,115 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId }: Props
             {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-1">
               {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                <div key={`empty-${index}`} className="h-24" />
+                <div key={`empty-${index}`} className="h-28" />
               ))}
 
               {days.map((day) => {
                 const key = format(day, 'yyyy-MM-dd');
                 const dayItems = itensPorDia.get(key) || [];
                 const isSelected = isSameDay(day, selectedDate);
-                const isTodayDate = isToday(day);
-                const hasItems = dayItems.length > 0;
+                const isCreateOpen = createPopoverDate && isSameDay(day, createPopoverDate);
 
-                return (
-                  <button
+                return isCreateOpen && !readOnly ? (
+                  <Popover
                     key={key}
-                    onClick={() => setSelectedDate(day)}
-                    className={cn(
-                      'h-24 w-full p-1 text-left rounded-lg border transition-colors relative',
-                      'hover:bg-accent hover:border-primary/50',
-                      isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
-                    )}
+                    open
+                    onOpenChange={(open) => {
+                      if (!open) setCreatePopoverDate(null);
+                    }}
                   >
-                    <div className="flex items-center">
-                      <span
-                        className={cn(
-                          'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
-                          isTodayDate && 'bg-primary text-primary-foreground'
-                        )}
-                      >
-                        {format(day, 'd')}
-                      </span>
-                    </div>
+                    <PopoverTrigger asChild>
+                      <div>
+                        <CalendarioDiaCell
+                          day={day}
+                          items={dayItems}
+                          isSelected={isSelected}
+                          readOnly={readOnly}
+                          onSelect={setSelectedDate}
+                          onAddClick={handleAddClick}
+                        />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="start" side="bottom">
+                      <CalendarioCriarTarefaPopover
+                        date={day}
+                        fases={fases || []}
+                        statusList={statusList || []}
+                        responsaveis={responsaveis}
+                        onSubmit={handleCreateSubmit}
+                        onCancel={() => setCreatePopoverDate(null)}
+                        isSubmitting={createItem.isPending}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <CalendarioDiaCell
+                    key={key}
+                    day={day}
+                    items={dayItems}
+                    isSelected={isSelected}
+                    readOnly={readOnly}
+                    onSelect={setSelectedDate}
+                    onAddClick={handleAddClick}
+                  />
+                );
+              })}
 
-                    {/* Preview das tarefas com cor da fase */}
-                    <div className="mt-1 space-y-0.5 overflow-hidden">
-                      {dayItems.slice(0, 2).map((item) => {
-                        const color = item.fase?.cor || '#6b7280';
-                        return (
-                          <div
-                            key={item.id}
-                            className="text-xs truncate px-1 py-0.5 rounded"
-                            style={{
-                              backgroundColor: hexToRgba(color, 0.2),
-                              color: color,
-                            }}
-                          >
-                            {item.item}
-                          </div>
-                        );
-                      })}
-                      {dayItems.length > 2 && (
-                        <div className="text-xs text-muted-foreground px-1">
-                          +{dayItems.length - 2} mais
-                        </div>
-                      )}
-                    </div>
-                  </button>
+              {/* Trailing days */}
+              {trailingDays.map((day) => {
+                const key = format(day, 'yyyy-MM-dd');
+                return (
+                  <div
+                    key={key}
+                    className="h-28 w-full p-1.5 rounded-lg border border-dashed opacity-30"
+                  >
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {format(day, 'd')}
+                    </span>
+                  </div>
                 );
               })}
             </div>
 
-            {/* Legenda de fases */}
-            {itens && itens.length > 0 && (() => {
-              const fasesMap = new Map<string, { cor: string; nome: string }>();
-              itens.forEach(i => {
-                if (i.fase && !fasesMap.has(i.fase.id)) {
-                  fasesMap.set(i.fase.id, { cor: i.fase.cor, nome: i.fase.nome });
-                }
-              });
-              return fasesMap.size > 0 ? (
-                <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
-                  <span className="text-muted-foreground font-medium">Fases:</span>
-                  {Array.from(fasesMap.entries()).map(([id, { cor, nome }]) => (
-                    <div key={id} className="flex items-center gap-1.5">
-                      <div
-                        className="h-3 w-3 rounded-sm"
-                        style={{ backgroundColor: cor }}
-                      />
-                      <span className="text-muted-foreground">{nome}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null;
-            })()}
+            {/* Phase legend */}
+            {itens && itens.length > 0 &&
+              (() => {
+                const fasesMap = new Map<string, { cor: string; nome: string }>();
+                itens.forEach((i) => {
+                  if (i.fase && !fasesMap.has(i.fase.id)) {
+                    fasesMap.set(i.fase.id, { cor: i.fase.cor, nome: i.fase.nome });
+                  }
+                });
+                return fasesMap.size > 0 ? (
+                  <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+                    <span className="text-muted-foreground font-medium">Fases:</span>
+                    {Array.from(fasesMap.entries()).map(([id, { cor, nome }]) => (
+                      <div key={id} className="flex items-center gap-1.5">
+                        <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: cor }} />
+                        <span className="text-muted-foreground">{nome}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
           </CardContent>
         </Card>
       </div>
 
-      {/* Painel de detalhes do dia */}
+      {/* Side panel */}
       <div className="lg:col-span-1">
-        <Card className="h-full flex flex-col">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              {format(selectedDate, "d 'de' MMMM", { locale: ptBR })}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {itensDoDia.length} tarefa{itensDoDia.length !== 1 ? 's' : ''} ativa{itensDoDia.length !== 1 ? 's' : ''}
-            </p>
-          </CardHeader>
-          <CardContent className="pt-0 flex-1 overflow-hidden">
-            {itensDoDia.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground text-sm">
-                  Nenhuma tarefa neste dia
-                </p>
-                <p className="text-muted-foreground/60 text-xs mt-1">
-                  Selecione outro dia no calendário
-                </p>
-              </div>
-            ) : (
-              <div className="max-h-[400px] overflow-y-auto pr-2">
-                <div className="space-y-3">
-                  {itensDoDia.map((item) => {
-                    const faseColor = item.fase?.cor || '#6b7280';
-                    const isAtrasada = !item.status?.is_final &&
-                      item.data_fim && parseISO(item.data_fim) < new Date();
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="p-3 rounded-lg border bg-card transition-colors hover:bg-muted/30"
-                        style={{
-                          borderLeftWidth: 4,
-                          borderLeftColor: faseColor,
-                        }}
-                      >
-                        <p className="font-medium text-sm">{item.item}</p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                          <span>
-                            {item.data_inicio && format(parseISO(item.data_inicio), 'dd/MM')}
-                            {' - '}
-                            {item.data_fim && format(parseISO(item.data_fim), 'dd/MM')}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          {item.fase && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                              style={{ borderColor: item.fase.cor, color: item.fase.cor }}
-                            >
-                              {item.fase.nome}
-                            </Badge>
-                          )}
-                          {item.status && (
-                            <Badge variant="secondary" className="text-xs">
-                              {item.status.nome}
-                            </Badge>
-                          )}
-                          {isAtrasada && (
-                            <Badge variant="destructive" className="text-xs">
-                              Atrasada
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <CalendarioDiaDetalhe
+          selectedDate={selectedDate}
+          items={itensDoDia}
+          fases={fases || []}
+          statusList={statusList || []}
+          responsaveis={responsaveis}
+          readOnly={readOnly}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
+          onAddClick={() => handleAddClick(selectedDate)}
+        />
       </div>
     </div>
   );
