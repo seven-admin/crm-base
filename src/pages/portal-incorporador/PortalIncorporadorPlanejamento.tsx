@@ -44,30 +44,30 @@ export default function PortalIncorporadorPlanejamento() {
       {empreendimentoId ? (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="dashboard" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
+            <TabsTrigger value="calendario" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendário
             </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-2">
               <CalendarDays className="h-4 w-4" />
               Timeline
             </TabsTrigger>
-            <TabsTrigger value="calendario" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Calendário
+            <TabsTrigger value="dashboard" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="mt-4">
-            <PlanejamentoDashboard empreendimentoId={empreendimentoId} />
+          <TabsContent value="calendario" className="mt-4">
+            <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly />
           </TabsContent>
 
           <TabsContent value="timeline" className="mt-4">
             <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly />
           </TabsContent>
 
-          <TabsContent value="calendario" className="mt-4">
-            <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly />
+          <TabsContent value="dashboard" className="mt-4">
+            <PlanejamentoDashboard empreendimentoId={empreendimentoId} />
           </TabsContent>
         </Tabs>
       ) : (

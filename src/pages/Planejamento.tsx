@@ -122,16 +122,16 @@ export default function Planejamento() {
                   </TabsTrigger>
                 </TabsList>
 
+                <TabsContent value="calendario" className="mt-4">
+                  <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly={!canEdit} />
+                </TabsContent>
+
                 <TabsContent value="planilha" className="mt-4">
                   <PlanejamentoPlanilha empreendimentoId={empreendimentoId} readOnly={!canEdit} />
                 </TabsContent>
 
                 <TabsContent value="timeline" className="mt-4">
                   <PlanejamentoTimeline empreendimentoId={empreendimentoId} readOnly={!canEdit} />
-                </TabsContent>
-
-                <TabsContent value="calendario" className="mt-4">
-                  <PlanejamentoCalendarioEmpreendimento empreendimentoId={empreendimentoId} readOnly={!canEdit} />
                 </TabsContent>
 
                 <TabsContent value="dashboard" className="mt-4">
