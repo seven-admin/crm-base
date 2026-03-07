@@ -61,6 +61,7 @@ export default function Planejamento() {
           <TabsContent value="equipe" className="mt-4">
             <PlanejamentoGlobalEquipe 
               filters={filters} 
+              onFiltersChange={setFilters}
               limiteSobrecarga={limiteSobrecarga}
             />
           </TabsContent>
