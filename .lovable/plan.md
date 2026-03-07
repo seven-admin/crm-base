@@ -1,36 +1,21 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Fix: Fases do empreendimento no modal de criacao de tarefa
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema
+No `PlanejamentoCalendario.tsx`, o hook `usePlanejamentoFases` e chamado com `localEmpreendimentoId` (linha 58). Quando o usuario esta na visao global (sem empreendimento filtrado), `localEmpreendimentoId` e `undefined`, entao so fases globais sao carregadas.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+Quando o usuario abre o popover de criacao e seleciona um empreendimento via `createEmpreendimentoId`, as fases **nao sao recarregadas** porque o hook continua usando `localEmpreendimentoId` (que permanece `undefined`). As fases especificas daquele empreendimento nunca aparecem.
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+## Solucao
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+No `PlanejamentoCalendario.tsx`:
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+1. Calcular um `effectiveEmpreendimentoId` = `localEmpreendimentoId || createEmpreendimentoId` 
+2. Usar esse ID no `usePlanejamentoFases(effectiveEmpreendimentoId)` para que, ao selecionar um empreendimento no popover de criacao, as fases desse empreendimento sejam carregadas automaticamente
+
+Alternativamente, adicionar um segundo `usePlanejamentoFases(createEmpreendimentoId)` e usar essas fases no popover quando em visao global.
+
+### Arquivo afetado
+- `src/components/planejamento/PlanejamentoCalendario.tsx` — ajustar o ID passado ao hook de fases
+
