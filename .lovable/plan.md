@@ -1,55 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Reestilização do Calendário — Estilo Google Calendar
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema atual
-O layout usa um overlay absoluto para barras multi-dia + um `div` spacer dentro das células. Isso causa desalinhamento dos números porque o spacer e o overlay não sincronizam perfeitamente. Qualquer variação de padding/gap quebra o alinhamento.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Abordagem: Google Calendar-like
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-Abandonar o overlay absoluto. Renderizar tudo **inline** dentro de cada célula, com layout por CSS grid interno fixo.
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### Estrutura de cada célula (Google-style)
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-```text
-┌─────────────────────┐
-│        14           │  ← Número centralizado, fonte leve
-│ ██ Criação DRIVE... │  ← Barra multi-dia (inline, não overlay)
-│ ██ Invasões FASE... │  ← Barra multi-dia
-│ • 8am Reunião Fix.. │  ← Evento single-day (bullet style)
-│ +2 mais             │  ← Overflow
-└─────────────────────┘
-```
-
-### Mudanças em `PlanejamentoCalendario.tsx`
-
-1. **Eliminar overlay absoluto** — Remover o `<div className="absolute inset-0">` que renderiza as barras multi-dia como camada flutuante.
-
-2. **Renderizar barras multi-dia inline nas células** — Para cada dia, calcular quais multi-day items o cobrem e renderizá-los como chips dentro da célula (não como barras contínuas cross-cell). Cada chip terá estilo de barra (cor de fundo, borda esquerda colorida) e será truncado.
-
-3. **Número do dia centralizado** — Mudar de `text-left` + `flex justify-between` para número centralizado no topo (como Google Calendar). Botão "+" aparece no hover ao lado.
-
-4. **Altura da célula** — Aumentar para `h-32` (128px) para acomodar mais conteúdo sem overflow.
-
-5. **Layout interno com grid fixo** — Usar CSS grid com rows fixas:
-   - Row 1: número do dia (24px, fixo)
-   - Row 2: área de eventos (flex-1, overflow hidden)
-
-6. **Estilo dos itens** — Multi-dia: chip com borda-esquerda colorida (3px) + fundo suave. Single-day: bullet colorido + texto (como Google Calendar mostra eventos de horário específico).
-
-7. **Barra contínua simplificada** — Em vez de barras cross-cell (complexas e fonte dos bugs), cada célula renderiza seus próprios chips inline. Perde-se a barra visual contínua, mas ganha-se robustez e alinhamento perfeito. A continuidade visual fica indicada pela mesma cor/nome repetido nas células adjacentes.
-
-### Mudanças em `CalendarioDiaCell.tsx`
-
-- Atualizar para o mesmo padrão (usado no calendário de empreendimento). Número centralizado, bullets para single-day.
-
-### Resultado esperado
-- Números **sempre** alinhados (são a primeira row fixa de cada célula, sem dependência de overlay)
-- Eventos **sempre** abaixo do número, nunca sobrepõem
-- Visual limpo e familiar (Google Calendar)
-- Código mais simples (sem cálculos de posição absoluta, sem slots, sem overlay)
-
-### Arquivos afetados
-- `src/components/planejamento/PlanejamentoCalendario.tsx` (principal)
-- `src/components/planejamento/CalendarioDiaCell.tsx` (atualizar estilo)
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
