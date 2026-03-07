@@ -25,6 +25,7 @@ import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { ResponsaveisEditor } from './ResponsaveisEditor';
 import { ConverterTarefaDialog } from './ConverterTarefaDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getEmpreendimentoColor } from '@/utils/empreendimentoColors';
 
 interface Props {
   filters: PlanejamentoGlobalFilters;
