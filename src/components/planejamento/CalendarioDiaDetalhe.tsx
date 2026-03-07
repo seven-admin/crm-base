@@ -37,6 +37,19 @@ import type {
 import { ConverterTarefaDialog } from './ConverterTarefaDialog';
 import { getEmpreendimentoColor } from '@/utils/empreendimentoColors';
 
+interface Props {
+  selectedDate: Date;
+  items: PlanejamentoItemWithRelations[];
+  fases: PlanejamentoFase[];
+  statusList: PlanejamentoStatus[];
+  responsaveis: { id: string; full_name: string }[];
+  readOnly?: boolean;
+  onUpdate: (id: string, updates: Record<string, unknown>) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onAddClick: () => void;
+}
+
 function EditableItemCard({
   item,
   fases,
