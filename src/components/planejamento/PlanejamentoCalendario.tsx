@@ -328,11 +328,12 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
   // Calculate total weeks for grid height
   const totalCells = startingDayOfWeek + days.length;
   const totalWeeks = Math.ceil(totalCells / 7);
-  const CELL_HEIGHT = 96; // h-24 = 6rem = 96px
+  const CELL_HEIGHT = 112; // h-28 = 7rem = 112px
   const BAR_HEIGHT = 18;
   const BAR_GAP = 2;
-  const BAR_TOP_OFFSET = 24; // space for day number
+  const BAR_TOP_OFFSET = 28; // space for day number
   const MAX_MULTI_DAY_VISIBLE = 2;
+  const MULTI_DAY_ZONE_HEIGHT = MAX_MULTI_DAY_VISIBLE * (BAR_HEIGHT + BAR_GAP); // always reserved
 
   if (isLoading) return <Skeleton className="h-[600px]" />;
 
@@ -399,7 +400,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
               <div className="relative overflow-hidden">
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                    <div key={`empty-${index}`} className="h-24" />
+                    <div key={`empty-${index}`} className="h-28" />
                   ))}
 
                   {days.map((day) => {
@@ -429,7 +430,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                         key={key}
                         onClick={() => setSelectedDate(day)}
                         className={cn(
-                          'h-24 w-full p-1 text-left rounded-lg border transition-colors relative group',
+                          'h-28 w-full p-1 text-left rounded-lg border transition-colors relative group',
                           'hover:bg-accent hover:border-primary/50',
                           isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
                         )}
@@ -448,10 +449,8 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <Plus className="h-3 w-3 text-primary" />
                           </button>
                         </div>
-                        {/* Reserve space for visible multi-day bars */}
-                        {visibleMultiDayCount > 0 && (
-                          <div style={{ height: visibleMultiDayCount * (BAR_HEIGHT + BAR_GAP) }} />
-                        )}
+                        {/* Always reserve fixed space for multi-day bar zone */}
+                        <div style={{ height: MULTI_DAY_ZONE_HEIGHT }} />
                         <div className="mt-1 space-y-0.5 overflow-hidden">
                           {daySingleItems.slice(0, maxSingleVisible).map((item) => {
                             const empColor = empColors.get(item.empreendimento?.id || '');
