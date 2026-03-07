@@ -25,6 +25,7 @@ import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { ResponsaveisEditor } from './ResponsaveisEditor';
 import { ConverterTarefaDialog } from './ConverterTarefaDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getEmpreendimentoColor } from '@/utils/empreendimentoColors';
 
 interface Props {
   filters: PlanejamentoGlobalFilters;
@@ -72,11 +73,13 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
         map.get(key)!.items.push(item);
       });
     } else {
-      // Group by empreendimento
+      // Group by empreendimento — assign colors from shared palette
+      const allEmpIds = [...new Set(filteredItens.map(i => i.empreendimento?.id).filter(Boolean))] as string[];
       filteredItens.forEach(item => {
         const key = item.empreendimento?.id || 'sem-empreendimento';
         const label = item.empreendimento?.nome || 'Sem empreendimento';
-        if (!map.has(key)) map.set(key, { label, items: [] });
+        const color = key !== 'sem-empreendimento' ? getEmpreendimentoColor(key, allEmpIds) : '#94a3b8';
+        if (!map.has(key)) map.set(key, { label, color, items: [] });
         map.get(key)!.items.push(item);
       });
     }
@@ -231,7 +234,7 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
           <TableBody>
             {grouped.size === 0 && (
               <TableRow>
-                <TableCell colSpan={localEmpreendimentoId ? 9 : 10} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={localEmpreendimentoId ? 8 : 9} className="text-center py-12 text-muted-foreground">
                   Nenhuma tarefa encontrada
                 </TableCell>
               </TableRow>
@@ -245,7 +248,11 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                     className="bg-muted/30 hover:bg-muted/40 cursor-pointer"
                     onClick={() => toggleGroup(groupId)}
                   >
-                    <TableCell className="py-2" onClick={e => e.stopPropagation()}>
+                    <TableCell
+                      className="py-2 relative"
+                      onClick={e => e.stopPropagation()}
+                      style={{ borderLeft: `4px solid ${group.color || 'transparent'}` }}
+                    >
                       <Checkbox
                         checked={group.items.length > 0 && group.items.every(i => selectedIds.has(i.id))}
                         onCheckedChange={() => {
@@ -258,10 +265,10 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                         }}
                       />
                     </TableCell>
-                    <TableCell colSpan={localEmpreendimentoId ? 7 : 8} className="py-2">
+                    <TableCell colSpan={localEmpreendimentoId ? 6 : 7} className="py-2">
                       <div className="flex items-center gap-2 font-medium">
                         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        {group.color && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color }} />}
+                        {group.color && <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: group.color }} />}
                         <span>{group.label}</span>
                         <Badge variant="secondary" className="ml-2">{group.items.length}</Badge>
                       </div>
@@ -299,7 +306,7 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
                       {/* Add task row */}
                       <TableRow className="hover:bg-muted/20">
                         <TableCell className="py-1"></TableCell>
-                        <TableCell className="py-1" colSpan={localEmpreendimentoId ? 7 : 8}>
+                        <TableCell className="py-1" colSpan={localEmpreendimentoId ? 6 : 7}>
                           {newItemGroupId === groupId ? (
                             <Input
                               value={newItemValue}

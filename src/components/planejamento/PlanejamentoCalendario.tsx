@@ -43,17 +43,7 @@ interface Props {
   onFiltersChange: (filters: PlanejamentoGlobalFilters) => void;
 }
 
-const EMPREENDIMENTO_COLORS = [
-  '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899',
-  '#06b6d4', '#f97316', '#84cc16', '#14b8a6', '#6366f1',
-];
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+import { EMPREENDIMENTO_COLORS, hexToRgba } from '@/utils/empreendimentoColors';
 
 // Multi-day bar segment type
 interface MultiDaySegment {
