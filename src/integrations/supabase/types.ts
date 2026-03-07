@@ -2928,6 +2928,41 @@ export type Database = {
           },
         ]
       }
+      google_calendar_embeds: {
+        Row: {
+          created_at: string | null
+          embed_url: string
+          id: string
+          is_active: boolean | null
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          embed_url: string
+          id?: string
+          is_active?: boolean | null
+          nome?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          embed_url?: string
+          id?: string
+          is_active?: boolean | null
+          nome?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_calendar_embeds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imobiliarias: {
         Row: {
           cnpj: string | null
@@ -4095,6 +4130,7 @@ export type Database = {
         Row: {
           cor: string | null
           created_at: string | null
+          empreendimento_id: string | null
           id: string
           is_active: boolean | null
           nome: string
@@ -4104,6 +4140,7 @@ export type Database = {
         Insert: {
           cor?: string | null
           created_at?: string | null
+          empreendimento_id?: string | null
           id?: string
           is_active?: boolean | null
           nome: string
@@ -4113,13 +4150,22 @@ export type Database = {
         Update: {
           cor?: string | null
           created_at?: string | null
+          empreendimento_id?: string | null
           id?: string
           is_active?: boolean | null
           nome?: string
           ordem?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "planejamento_fases_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       planejamento_historico: {
         Row: {
