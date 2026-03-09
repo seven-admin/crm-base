@@ -23,12 +23,10 @@ import {
 } from '@/components/ui/select';
 import { Car, Home, Banknote, Package, Calculator, Sparkles } from 'lucide-react';
 import {
-  TIPO_PARCELA_LABELS,
   FORMA_QUITACAO_LABELS,
   FORMA_PAGAMENTO_LABELS,
   EVENTO_VENCIMENTO_LABELS,
   INDICES_CORRECAO,
-  TIPOS_PARCELA,
   FORMAS_QUITACAO,
   FORMAS_PAGAMENTO,
   EVENTOS_VENCIMENTO,
@@ -39,6 +37,7 @@ import {
   type FormaPagamento,
   type EventoVencimento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 
 interface CondicaoPagamentoFormProps {
   open: boolean;
