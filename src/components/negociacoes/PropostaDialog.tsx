@@ -112,10 +112,10 @@ export function PropostaDialog({
   };
 
   const handleAceitarProposta = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
-      await aceitarProposta.mutateAsync(negociacao.id);
+      await aceitarProposta.mutateAsync(neg.id);
       handleClose();
     } catch (error) {
       console.error('Erro ao aceitar proposta:', error);
@@ -123,11 +123,11 @@ export function PropostaDialog({
   };
 
   const handleRecusarProposta = async () => {
-    if (!negociacao || !motivoRecusa.trim()) return;
+    if (!neg || !motivoRecusa.trim()) return;
 
     try {
       await recusarProposta.mutateAsync({
-        id: negociacao.id,
+        id: neg.id,
         data: { motivo_recusa: motivoRecusa },
       });
       handleClose();
@@ -137,10 +137,10 @@ export function PropostaDialog({
   };
 
   const handleGerarContrato = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
-      const result = await converterContrato.mutateAsync(negociacao.id);
+      const result = await converterContrato.mutateAsync(neg.id);
       handleClose();
       navigate('/contratos');
     } catch (error) {
@@ -149,12 +149,12 @@ export function PropostaDialog({
   };
 
   const handleExcluir = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
     
     if (!window.confirm('Tem certeza que deseja excluir esta proposta?')) return;
 
     try {
-      await excluirProposta.mutateAsync(negociacao.id);
+      await excluirProposta.mutateAsync(neg.id);
       handleClose();
     } catch (error) {
       console.error('Erro ao excluir proposta:', error);
