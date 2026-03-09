@@ -269,7 +269,7 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
                 return (
                   <div
                     key={key}
-                    className="h-28 w-full p-1.5 rounded-lg border border-dashed opacity-30"
+                    className="min-h-[100px] w-full p-1.5 border-r border-b bg-muted/20 opacity-30"
                   >
                     <span className="text-sm font-medium text-muted-foreground">
                       {format(day, 'd')}
