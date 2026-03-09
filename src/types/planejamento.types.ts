@@ -91,6 +91,7 @@ export interface PlanejamentoItemCreate {
   data_fim?: string | null;
   obs?: string | null;
   ordem?: number;
+  destaque?: boolean;
 }
 
 export interface PlanejamentoItemUpdate {
