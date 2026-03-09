@@ -105,6 +105,7 @@ export interface PlanejamentoItemUpdate {
   obs?: string | null;
   ordem?: number;
   is_active?: boolean;
+  destaque?: boolean;
 }
 
 export interface PlanejamentoFilters {

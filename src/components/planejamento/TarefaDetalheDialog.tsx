@@ -21,10 +21,15 @@ interface TarefaDetalheDialogProps {
 
 export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheDialogProps) {
   const { historico, isLoading: loadingHistorico } = usePlanejamentoHistorico(item?.id);
+  const { updateItem } = usePlanejamentoItens();
 
   if (!item) return null;
 
   const isOverdue = item.data_fim && isBefore(parseISO(item.data_fim), new Date()) && !item.status?.is_final;
+
+  const handleToggleDestaque = () => {
+    updateItem.mutate({ id: item.id, destaque: !item.destaque });
+  };
 
   const formatCampo = (campo: string) => {
     const map: Record<string, string> = {
