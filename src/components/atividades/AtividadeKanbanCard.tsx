@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Phone, Users, MapPin, MessageSquare, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
