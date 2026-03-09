@@ -1,36 +1,26 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Implementar CRUD completo na aba Inscritos
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema
+O arquivo `EventoInscritosTab.tsx` contém apenas a listagem read-only. O CRUD (adicionar, editar, excluir, alternar status) não foi aplicado.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Solução
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+Reescrever `src/components/eventos/EventoInscritosTab.tsx` com:
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+1. **Botão "Adicionar Inscrito"** no header — abre Dialog com formulário (nome, telefone, email, imobiliária)
+2. **Botão Editar** por linha — abre Dialog de edição com os mesmos campos
+3. **Botão Excluir** por linha — AlertDialog de confirmação, executa DELETE
+4. **Botão Alternar Status** por linha — toggle entre "confirmada" e "cancelada" via UPDATE
+5. Todas as mutations invalidam `['evento-inscricoes-admin', eventoId]`
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### Componentes usados
+- `Dialog` para formulário de adicionar/editar
+- `AlertDialog` para confirmar exclusão
+- `useMutation` do React Query para cada operação
+- `Input`, `Button`, `Badge`, `Table` já existentes no projeto
+
+### Arquivo afetado
+- `src/components/eventos/EventoInscritosTab.tsx` — reescrever com CRUD completo
+
