@@ -85,7 +85,8 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
         className={cn(
           'flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors',
           'hover:bg-accent/50',
-          isVencida && 'border-l-2 border-destructive bg-destructive/5'
+          isVencida && 'border-l-2 border-destructive bg-destructive/5',
+          atividade.destaque && 'border-l-2 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
         )}
       >
         <div className={cn('p-1.5 rounded-md shrink-0', TIPO_COLORS[atividade.tipo])}>
