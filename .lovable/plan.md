@@ -1,36 +1,45 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Validação de cadastro para conversão em proposta — Campo `estado_civil` ausente
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema encontrado
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+O `ValidarDadosLeadDialog` valida 13 campos obrigatórios para conversão em proposta, incluindo `estado_civil`. Porém, o **formulário de cadastro do cliente (`ClienteForm.tsx`) não renderiza o campo de Estado Civil** — ele existe no schema Zod (linha 56) e nos defaults, mas não há nenhum `<FormField>` para ele no JSX.
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+Isso significa que o usuário **nunca consegue preencher o estado civil** pelo formulário, e a validação sempre vai acusar pendência nesse campo.
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+## Campos validados vs campos no formulário
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+| Campo validado | Existe no form? |
+|---|---|
+| nome | Sim |
+| cpf | Sim |
+| **estado_civil** | **NÃO — FALTANDO** |
+| profissao | Sim |
+| data_nascimento | Sim |
+| endereco_logradouro | Sim |
+| endereco_numero | Sim |
+| endereco_bairro | Sim |
+| endereco_cidade | Sim |
+| endereco_uf | Sim |
+| endereco_cep | Sim |
+| telefone | Sim |
+| email | Sim |
+
+## Solução
+
+### `src/components/clientes/ClienteForm.tsx`
+Adicionar um `FormField` com `Select` para `estado_civil` na seção "Dados Pessoais" (Step 1), logo após o campo de profissão (linha ~491). Usar as opções de `ESTADOS_CIVIS` já importado do types (linha 24):
+
+- Solteiro(a)
+- Casado(a)
+- Divorciado(a)
+- Viúvo(a)
+- Separado(a)
+- União Estável
+
+O campo já é importado (`ESTADOS_CIVIS` na linha 24), já está no schema Zod, e já tem default — só falta o componente visual.
+
+### Arquivo afetado
+- `src/components/clientes/ClienteForm.tsx` (adicionar ~20 linhas de FormField/Select)
+
