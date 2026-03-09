@@ -1,36 +1,63 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Eventos no Portal do Corretor — Inscrições em Eventos
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Resumo
+Criar uma aba "Eventos" no portal do corretor onde os corretores podem visualizar eventos cadastrados e se inscrever. O sistema precisa de controle de abertura/fechamento de inscrições, limite de vagas e disparo de webhook na confirmação.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## 1. Alterações no Banco de Dados
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### Novos campos na tabela `eventos`
+- `inscricoes_abertas` (boolean, default false) — controla se o evento aceita inscrições
+- `limite_inscricoes` (integer, nullable) — limite de vagas (null = sem limite)
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### Nova tabela `evento_inscricoes`
+```text
+evento_inscricoes
+├── id (uuid, PK)
+├── evento_id (FK → eventos)
+├── corretor_id (FK → corretores)
+├── user_id (FK → profiles) 
+├── nome_corretor (text)
+├── telefone (text, nullable)
+├── email (text, nullable)
+├── imobiliaria_nome (text, nullable)
+├── status ('confirmada' | 'cancelada')
+├── created_at (timestamptz)
+└── UNIQUE(evento_id, user_id)
+```
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+RLS: corretores/gestores podem INSERT e SELECT suas próprias inscrições. Admins/Seven team podem ver tudo.
+
+## 2. Alterações no Frontend
+
+### `PortalLayout.tsx`
+- Adicionar item "Eventos" (ícone `CalendarDays`) no `baseMenuItems` apontando para `/portal-corretor/eventos`
+- Adicionar título/subtítulo no `routeTitles`
+
+### `App.tsx`
+- Adicionar rota `eventos` dentro do layout do portal
+
+### Nova página `src/pages/portal/PortalEventos.tsx`
+- Lista cards dos eventos ativos com `inscricoes_abertas = true` ou todos (com badge indicando status)
+- Cada card mostra: nome, data, local, empreendimento, vagas restantes
+- Botão "Inscrever-se" (desabilitado se fechado ou lotado)
+- Botão "Cancelar inscrição" se já inscrito
+- Ao inscrever, dispara `dispararWebhook('evento_inscricao', { ... })` com dados do corretor e evento
+
+### Novo hook `src/hooks/useEventoInscricoes.ts`
+- Query para listar inscrições do usuário logado
+- Query para contar inscrições por evento
+- Mutation para inscrever (INSERT + webhook)
+- Mutation para cancelar (UPDATE status → 'cancelada')
+
+## 3. Webhook
+Usa o sistema existente `dispararWebhook()` com evento `evento_inscricao_corretor`, enviando dados do corretor e do evento.
+
+## Arquivos afetados
+- **Banco**: migração (nova tabela + novos campos)
+- `src/components/portal/PortalLayout.tsx` — nova aba
+- `src/App.tsx` — nova rota
+- `src/pages/portal/PortalEventos.tsx` — nova página (criar)
+- `src/hooks/useEventoInscricoes.ts` — novo hook (criar)
+
