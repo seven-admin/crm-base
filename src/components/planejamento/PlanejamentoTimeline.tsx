@@ -364,11 +364,15 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                     {!isCollapsed && faseItens.map(item => (
                       <div 
                         key={item.id}
-                        className="border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer"
+                        className={cn(
+                          "border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer gap-1",
+                          item.destaque && "bg-amber-50/50 dark:bg-amber-950/20"
+                        )}
                         style={{ height: ROW_HEIGHT }}
                         title={item.item}
                         onClick={() => handleItemClick(item)}
                       >
+                        {item.destaque && <Star className="h-3 w-3 text-amber-500 fill-amber-500 flex-shrink-0" />}
                         <span className="truncate">{item.item}</span>
                       </div>
                     ))}
