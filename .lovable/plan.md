@@ -1,36 +1,29 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Adicionar botão de Destaque nas views de Calendário e Lista
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Situação atual
+O botão de destaque (estrela) existe **apenas** dentro do `TarefaDetalheDialog`, que só é usado na aba Timeline. As abas **Calendário** e **Lista** (as mais usadas) não têm acesso a essa funcionalidade.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Alterações
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. `CalendarioDiaDetalhe.tsx` — Adicionar "Destaque" no menu de ações
+- No dropdown de cada card (linhas 166-184), adicionar um `DropdownMenuItem` para alternar destaque
+- Usar `onUpdate(item.id, { destaque: !item.destaque })` 
+- Ícone: `Star` (preenchida se `item.destaque` for true)
+- Texto: "Marcar destaque" / "Remover destaque"
+- Adicionar indicador visual de estrela no card quando `item.destaque === true`
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. `PlanejamentoListaGlobal.tsx` — Adicionar "Destaque" no menu de ações
+- No dropdown de cada linha (linhas 528-542), adicionar um `DropdownMenuItem` para alternar destaque
+- Mesma lógica: `Star` icon + toggle via `updateItem.mutate`
+- Adicionar ícone de estrela na célula do nome da tarefa quando `item.destaque === true`
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 3. `PlanejamentoCalendario.tsx` — Indicador visual nas barras do calendário
+- Nas barras multi-day e single-day events, mostrar ícone de estrela quando `item.destaque === true` (similar ao que já existe no Timeline)
+
+### Arquivos afetados
+- `src/components/planejamento/CalendarioDiaDetalhe.tsx`
+- `src/components/planejamento/PlanejamentoListaGlobal.tsx`
+- `src/components/planejamento/PlanejamentoCalendario.tsx`
+
