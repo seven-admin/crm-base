@@ -1,31 +1,36 @@
 
-# Fix: Gestor não atualiza nas Atividades
+# Plano Completo — Implementado ✅
 
-## Problema raiz
-Existe um trigger `trigger_prevent_gestor_id_change` na tabela `atividades` que **impede qualquer alteração** do campo `gestor_id`, revertendo silenciosamente o valor para o original. Por isso, mesmo com o Select funcionando no modal, o banco nunca aceita a mudança.
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Solução
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-### 1. Migration: Alterar trigger para permitir super_admin
-Modificar a função `prevent_gestor_id_change` para verificar se o usuário é `super_admin` antes de bloquear. Se for super_admin, permite a alteração; caso contrário, mantém o bloqueio.
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-```sql
-CREATE OR REPLACE FUNCTION public.prevent_gestor_id_change()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF OLD.gestor_id IS NOT NULL 
-     AND NEW.gestor_id IS DISTINCT FROM OLD.gestor_id 
-     AND NOT public.is_super_admin(auth.uid()) THEN
-    NEW.gestor_id := OLD.gestor_id;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-```
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### 2. Invalidação correta no `useUpdateAtividade`
-Verificar que após o update, as queries `['atividades']` e `['atividade', id]` são invalidadas para que a lista e o modal reflitam a mudança. O hook atual já invalida `['atividades']` — adicionar invalidação de `['atividade']` individual se necessário.
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-### Arquivos afetados
-- Nova migration SQL (alterar função do trigger)
-- Verificar `useUpdateAtividade` em `src/hooks/useAtividades.ts` para garantir invalidação completa
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
