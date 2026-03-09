@@ -339,7 +339,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
               )}
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="telefone">WhatsApp *</Label>
               <Input
                 id="telefone"
@@ -351,6 +351,21 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
               />
               {errors.telefone && (
                 <p className="text-xs text-destructive">{errors.telefone}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefone_contato">Telefone de Contato</Label>
+              <Input
+                id="telefone_contato"
+                value={formData.telefone_contato}
+                onChange={(e) => handleChange('telefone_contato', e.target.value)}
+                placeholder="(00) 0000-0000"
+                maxLength={15}
+                className={errors.telefone_contato ? 'border-destructive' : ''}
+              />
+              {errors.telefone_contato && (
+                <p className="text-xs text-destructive">{errors.telefone_contato}</p>
               )}
             </div>
           </div>

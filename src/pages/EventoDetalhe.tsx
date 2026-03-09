@@ -219,6 +219,10 @@ export default function EventoDetalhe() {
         <TabsContent value="equipe">
           <EventoEquipeTab eventoId={id || ''} responsavelId={evento.responsavel_id} />
         </TabsContent>
+
+        <TabsContent value="inscritos">
+          <EventoInscritosTab eventoId={id || ''} />
+        </TabsContent>
       </Tabs>
 
       {/* Description */}
