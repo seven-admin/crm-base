@@ -537,6 +537,10 @@ function ListaItemRow({
               <Zap className="h-4 w-4 mr-2" />
               Converter em Atividade/Marketing
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onSelectChange(item.id, 'destaque', (!item.destaque).toString())}>
+              <Star className={cn("h-4 w-4 mr-2", item.destaque && "fill-amber-500 text-amber-500")} />
+              {item.destaque ? 'Remover destaque' : 'Marcar destaque'}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
               <Trash2 className="h-4 w-4 mr-2" />

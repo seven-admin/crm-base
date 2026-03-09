@@ -176,6 +176,10 @@ function EditableItemCard({
                 <Zap className="h-3.5 w-3.5 mr-2" />
                 Converter em Atividade
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdate(item.id, { destaque: !item.destaque })}>
+                <Star className={cn("h-3.5 w-3.5 mr-2", item.destaque && "fill-amber-500 text-amber-500")} />
+                {item.destaque ? 'Remover destaque' : 'Marcar destaque'}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(item.id)}

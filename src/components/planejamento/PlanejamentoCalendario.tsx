@@ -442,7 +442,11 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <div className="flex-1 overflow-hidden px-1 pb-1 space-y-0.5">
                               {daySingleItems.slice(0, 3).map((di) => (
                                 <div key={di.item.id} className="text-[10px] truncate px-0.5 flex items-center gap-1">
-                                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: di.color }} />
+                                  {di.item.destaque ? (
+                                    <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500 shrink-0" />
+                                  ) : (
+                                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: di.color }} />
+                                  )}
                                   <span className="text-foreground truncate">{di.item.item}</span>
                                 </div>
                               ))}
