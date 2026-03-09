@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info, Star, Star, Star, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info, Star } from 'lucide-react';
 import {
   format,
   startOfMonth,
