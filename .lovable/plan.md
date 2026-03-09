@@ -1,36 +1,24 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Alterar Gestor/Responsável de Atividades e Planejamento (Super Admin)
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema
+1. Atividades criadas para o Gilson não tiveram o gestor corrigido para o responsável do empreendimento
+2. Super admins não conseguem alterar o gestor responsável de atividades (Diário de Bordo e Forecast) nem do Planejamento
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Alterações
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Seletor de Gestor no Detalhe da Atividade (`AtividadeDetalheDialog.tsx`)
+- Na seção onde exibe "Gestor: {nome}", para `super_admin`, substituir o texto estático por um `Select` com a lista de gestores (via `useGestoresProduto`)
+- Ao alterar, chamar `updateAtividade.mutate({ id, data: { gestor_id: novoGestorId } })`
+- Para não-super_admin, manter exibição somente leitura
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Seletor de Responsável Técnico no Detalhe da Tarefa do Planejamento (`TarefaDetalheDialog.tsx`)
+- Na seção de responsáveis, adicionar um `Select` (visível apenas para super_admin) para alterar o `responsavel_tecnico_id`
+- Usar `updateItem.mutate({ id: item.id, responsavel_tecnico_id: novoId })` 
+- Lista de opções: `useAllProfiles()` (todos os usuários ativos)
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### Arquivos afetados
+- `src/components/atividades/AtividadeDetalheDialog.tsx` — adicionar Select de gestor para super_admin
+- `src/components/planejamento/TarefaDetalheDialog.tsx` — adicionar Select de responsável técnico para super_admin
+
