@@ -160,6 +160,7 @@ export interface AtividadeFormData {
   deadline_date?: string;
   qtd_participantes?: number;
   qtd_corretores?: number;
+  destaque?: boolean;
 }
 
 export interface ConcluirAtividadeData {

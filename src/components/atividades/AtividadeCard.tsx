@@ -153,6 +153,7 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-1.5">
+                {atividade.destaque && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
                 <h4 className="font-medium text-sm">{atividade.titulo}</h4>
                 {isSuperAdminCreated && (
                   <Tooltip>

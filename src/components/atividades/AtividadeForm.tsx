@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus, Star } from 'lucide-react';
 import { NovoClienteRapidoDialog } from './NovoClienteRapidoDialog';
 import { TemperaturaSelector } from './TemperaturaSelector';
 import { Card } from '@/components/ui/card';
