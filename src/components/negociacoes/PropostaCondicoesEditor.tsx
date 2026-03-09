@@ -46,6 +46,7 @@ export function PropostaCondicoesEditor({
   onValidationChange
 }: PropostaCondicoesEditorProps) {
   const { data: condicoes = [], isLoading } = useNegociacaoCondicoesPagamento(negociacaoId);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const createCondicao = useCreateNegociacaoCondicao();
   const updateCondicao = useUpdateNegociacaoCondicao();
   const deleteCondicao = useDeleteNegociacaoCondicao();
