@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +14,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle, Home } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
 import { ComentariosTab } from './ComentariosTab';
@@ -38,7 +43,9 @@ interface UnidadeDisponivel {
   id: string;
   numero: string;
   valor: number;
-  bloco: { nome: string } | null;
+  andar: number | null;
+  empreendimento_id: string;
+  bloco: { id: string; nome: string } | null;
 }
 
 interface PropostaDialogProps {
@@ -81,7 +88,7 @@ export function PropostaDialog({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unidades')
-        .select('id, numero, valor, bloco:blocos(nome)')
+        .select('id, numero, valor, andar, empreendimento_id, bloco:blocos(id, nome)')
         .eq('empreendimento_id', neg!.empreendimento_id)
         .in('status', ['disponivel', 'reservada'])
         .order('numero');
@@ -89,8 +96,36 @@ export function PropostaDialog({
       return (data || []) as UnidadeDisponivel[];
     },
   });
+  // Group available units by block
+  const unidadesAgrupadas = useMemo(() => {
+    if (!unidadesDisponiveis.length) return new Map<string, UnidadeDisponivel[]>();
+    const groups = new Map<string, UnidadeDisponivel[]>();
+    unidadesDisponiveis.forEach((u) => {
+      const key = u.bloco?.nome || 'Sem Bloco';
+      const existing = groups.get(key) || [];
+      existing.push(u);
+      groups.set(key, existing);
+    });
+    // Sort units within each group
+    groups.forEach((units) => {
+      units.sort((a, b) => {
+        const andarA = a.andar ?? -Infinity;
+        const andarB = b.andar ?? -Infinity;
+        if (andarA !== andarB) return andarA - andarB;
+        return a.numero.localeCompare(b.numero, 'pt-BR', { numeric: true });
+      });
+    });
+    // Sort keys naturally
+    const sortedKeys = Array.from(groups.keys()).sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { numeric: true })
+    );
+    const sorted = new Map<string, UnidadeDisponivel[]>();
+    sortedKeys.filter(k => k !== 'Sem Bloco').forEach(k => sorted.set(k, groups.get(k)!));
+    if (groups.has('Sem Bloco')) sorted.set('Sem Bloco', groups.get('Sem Bloco')!);
+    return sorted;
+  }, [unidadesDisponiveis]);
 
-  // Mutation to link units to negotiation
+
   const linkUnidadesMutation = useMutation({
     mutationFn: async ({ negociacaoId, unidadeIds }: { negociacaoId: string; unidadeIds: string[] }) => {
       const records = unidadeIds.map(unidade_id => {
@@ -338,50 +373,62 @@ export function PropostaDialog({
                             <AlertTriangle className="h-4 w-4" />
                             Nenhuma unidade vinculada. Selecione abaixo:
                           </div>
-                          <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-1">
-                            {unidadesDisponiveis.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-2">
-                                Nenhuma unidade disponível
-                              </p>
+                          <div className="max-h-[300px] overflow-y-auto space-y-2">
+                            {unidadesAgrupadas.size === 0 ? (
+                              <div className="p-8 text-center border rounded-lg bg-muted/20">
+                                <Home className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">
+                                  Nenhuma unidade disponível
+                                </p>
+                              </div>
                             ) : (
-                              unidadesDisponiveis.map((unidade) => (
-                                <label
-                                  key={unidade.id}
-                                  className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                                >
-                                  <Checkbox
-                                    checked={selectedUnidadeIds.includes(unidade.id)}
-                                    onCheckedChange={(checked) => {
-                                      setSelectedUnidadeIds(prev =>
-                                        checked
-                                          ? [...prev, unidade.id]
-                                          : prev.filter(id => id !== unidade.id)
-                                      );
-                                      // Recalculate values
-                                      const newIds = checked
-                                        ? [...selectedUnidadeIds, unidade.id]
-                                        : selectedUnidadeIds.filter(id => id !== unidade.id);
-                                      const total = newIds.reduce((sum, id) => {
-                                        const u = unidadesDisponiveis.find(x => x.id === id);
-                                        return sum + (u?.valor || 0);
-                                      }, 0);
-                                      setValorTabela(total);
-                                      setValorProposta(total);
-                                    }}
-                                  />
-                                  <div className="flex-1 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Home className="h-4 w-4 text-muted-foreground" />
-                                      <span className="font-medium">{unidade.numero}</span>
-                                      {unidade.bloco?.nome && (
-                                        <Badge variant="outline" className="text-xs">{unidade.bloco.nome}</Badge>
-                                      )}
+                              Array.from(unidadesAgrupadas.entries()).map(([blocoNome, unidadesDoBloco]) => (
+                                <Collapsible key={blocoNome} defaultOpen className="border rounded-lg">
+                                  <CollapsibleTrigger className="w-full p-3 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-t-lg">
+                                    <span className="font-medium text-sm">{blocoNome}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {unidadesDoBloco.length} {unidadesDoBloco.length === 1 ? 'unidade' : 'unidades'}
+                                    </Badge>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="p-3 pt-0">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                      {unidadesDoBloco.map(unidade => {
+                                        const isSelected = selectedUnidadeIds.includes(unidade.id);
+                                        return (
+                                          <button
+                                            key={unidade.id}
+                                            type="button"
+                                            onClick={() => {
+                                              const newIds = isSelected
+                                                ? selectedUnidadeIds.filter(id => id !== unidade.id)
+                                                : [...selectedUnidadeIds, unidade.id];
+                                              setSelectedUnidadeIds(newIds);
+                                              const total = newIds.reduce((sum, id) => {
+                                                const u = unidadesDisponiveis.find(x => x.id === id);
+                                                return sum + (u?.valor || 0);
+                                              }, 0);
+                                              setValorTabela(total);
+                                              setValorProposta(total);
+                                            }}
+                                            className={cn(
+                                              "p-2 rounded-lg border text-left transition-all",
+                                              "hover:border-primary/50 hover:bg-primary/5",
+                                              isSelected && "border-primary bg-primary/10 ring-1 ring-primary"
+                                            )}
+                                          >
+                                            <div className="font-medium text-sm">{unidade.numero}</div>
+                                            {unidade.andar != null && (
+                                              <div className="text-xs text-muted-foreground">{unidade.andar}º andar</div>
+                                            )}
+                                            <div className="text-xs font-mono mt-1">
+                                              {unidade.valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
                                     </div>
-                                    <span className="text-sm font-mono">
-                                      {unidade.valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                    </span>
-                                  </div>
-                                </label>
+                                  </CollapsibleContent>
+                                </Collapsible>
                               ))
                             )}
                           </div>

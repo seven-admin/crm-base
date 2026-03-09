@@ -1,29 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Alinhar seletor de unidades do PropostaDialog com o padrão do UnidadeSelectorCard
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-O seletor de unidades no `PropostaDialog` usa uma lista simples com checkboxes, enquanto o `UnidadeSelectorCard` (usado na página Nova Proposta) agrupa por bloco com collapsibles e grid visual. O usuário quer consistência.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Solução
-Refatorar a seção de seleção de unidades no `PropostaDialog` para usar o mesmo padrão visual do `UnidadeSelectorCard`:
-- Agrupar unidades por bloco usando `groupUnidadesByBloco`
-- Usar `Collapsible` com header por bloco e badge de contagem
-- Grid de botões clicáveis (toggle) ao invés de checkboxes em lista
-- Mostrar andar e valor formatado em cada card
-- Manter o botão "Vincular X unidade(s)" existente
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-## Arquivo a modificar
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### `src/components/negociacoes/PropostaDialog.tsx`
-- Importar `groupUnidadesByBloco` de `@/lib/mapaUtils`, `Collapsible`/`CollapsibleContent`/`CollapsibleTrigger` de Radix, e `cn` de utils
-- Expandir a query de unidades disponíveis para incluir `andar` e `status` (para filtrar apenas disponíveis)
-- Substituir o bloco de checkboxes (linhas 341-405) pelo padrão de grid agrupado por bloco:
-  - `groupUnidadesByBloco` nos resultados (requer cast para `Unidade` ou adaptação — a query já retorna `numero`, `valor`, `bloco` — basta adicionar os campos mínimos necessários: `andar`, `status`, `empreendimento_id`)
-  - `Collapsible` por bloco com `CollapsibleTrigger` mostrando nome do bloco + badge de contagem
-  - Grid `grid-cols-2 sm:grid-cols-3` com botões toggle (highlight quando selecionado via `ring-1 ring-primary`)
-  - Cada botão mostra número, andar (se houver) e valor formatado
-- Recalcular `valorTabela`/`valorProposta` ao toggle de cada unidade (mesma lógica atual)
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-A query será ajustada para: `id, numero, valor, andar, status, empreendimento_id, bloco:blocos(id, nome)` — campos suficientes para `groupUnidadesByBloco` funcionar (precisa de `bloco?.nome` e `numero`).
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
