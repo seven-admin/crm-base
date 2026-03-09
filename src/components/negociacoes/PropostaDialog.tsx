@@ -256,12 +256,12 @@ export function PropostaDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Empreendimento</Label>
-                      <p className="text-sm font-medium">{negociacao?.empreendimento?.nome}</p>
+                      <p className="text-sm font-medium">{neg?.empreendimento?.nome}</p>
                     </div>
                     <div className="space-y-2">
                       <Label>Unidades</Label>
                       <div className="flex flex-wrap gap-1">
-                        {negociacao?.unidades?.map((u) => (
+                        {neg?.unidades?.map((u) => (
                           <Badge key={u.id} variant="outline">
                             {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
                             {u.unidade?.numero}
