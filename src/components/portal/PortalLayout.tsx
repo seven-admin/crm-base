@@ -8,6 +8,7 @@ import {
   Users,
   LogOut,
   UserCog,
+  CalendarDays,
 } from 'lucide-react';
 import logo from '@/assets/logo-full.png';
 
@@ -16,6 +17,7 @@ const baseMenuItems = [
   { icon: Building2, label: 'Empreendimentos', path: '/portal-corretor/empreendimentos' },
   { icon: Calendar, label: 'Solicitações', path: '/portal-corretor/solicitacoes' },
   { icon: Users, label: 'Clientes', path: '/portal-corretor/clientes' },
+  { icon: CalendarDays, label: 'Eventos', path: '/portal-corretor/eventos' },
 ];
 
 const gestorExtraItems = [
@@ -39,6 +41,10 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
   '/portal-corretor/clientes': { 
     title: 'Clientes', 
     subtitle: 'Gerencie seus clientes e leads' 
+  },
+  '/portal-corretor/eventos': { 
+    title: 'Eventos', 
+    subtitle: 'Veja os eventos disponíveis e inscreva-se' 
   },
   '/portal-corretor/corretores': { 
     title: 'Meus Corretores', 

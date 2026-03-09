@@ -67,6 +67,7 @@ const PlanejamentoConfiguracoes = lazy(() => import("./pages/PlanejamentoConfigu
 const DesignTest = lazy(() => import("./pages/DesignTest"));
 const PortalCorretoresGestao = lazy(() => import("./pages/portal/PortalCorretoresGestao"));
 const PortalMinhaImobiliaria = lazy(() => import("./pages/portal/PortalMinhaImobiliaria"));
+const PortalEventos = lazy(() => import("./pages/portal/PortalEventos"));
 
 // Portal Incorporador pages
 const PortalIncorporadorDashboard = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDashboard"));
@@ -343,6 +344,7 @@ const App = () => (
               <Route path="empreendimentos/:id" element={<PortalEmpreendimentoDetalhe />} />
               <Route path="solicitacoes" element={<PortalSolicitacoes />} />
               <Route path="clientes" element={<PortalClientes />} />
+              <Route path="eventos" element={<PortalEventos />} />
               <Route path="corretores" element={<PortalCorretoresGestao />} />
               <Route path="minha-imobiliaria" element={<PortalMinhaImobiliaria />} />
             </Route>
