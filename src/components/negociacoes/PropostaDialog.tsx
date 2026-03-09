@@ -85,6 +85,7 @@ export function PropostaDialog({
 
   const handleClose = () => {
     setMotivoRecusa('');
+    setInternalMode(mode);
     onOpenChange(false);
   };
 
