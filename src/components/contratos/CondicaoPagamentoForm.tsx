@@ -62,6 +62,7 @@ export function CondicaoPagamentoForm({
     ...DEFAULT_CONDICAO_PAGAMENTO,
     ...initialData,
   });
+  const { data: tiposParcela = [] } = useTiposParcela();
   const [modoCalculo, setModoCalculo] = useState<'manual' | 'automatico'>('manual');
 
   useEffect(() => {
