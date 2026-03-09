@@ -1,4 +1,4 @@
-import { Phone, Users, MapPin, MessageSquare, Clock, Building2, Calendar, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, Clock, Building2, Calendar, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, Star } from 'lucide-react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
