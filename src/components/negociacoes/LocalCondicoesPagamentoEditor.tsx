@@ -40,8 +40,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { CondicaoPagamentoForm } from '@/components/contratos/CondicaoPagamentoForm';
 import {
-  TIPOS_PARCELA,
-  TIPO_PARCELA_LABELS,
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
@@ -49,6 +47,7 @@ import {
   type TipoParcelaCodigo,
   type FormaPagamento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { cn } from '@/lib/utils';
 
 // Interface para condição local (sem ID, pois ainda não está salva)
