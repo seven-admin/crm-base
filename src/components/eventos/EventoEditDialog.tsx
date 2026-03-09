@@ -30,8 +30,7 @@ import {
 } from '@/components/ui/select';
 import { useEventos } from '@/hooks/useEventos';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
 import type { Evento } from '@/types/marketing.types';
 
 const formSchema = z.object({
