@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Phone, Users, MapPin, MessageSquare, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, FileText, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -83,12 +83,14 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
       <Card
         className={cn(
           'p-3 cursor-pointer hover:shadow-md transition-shadow',
-          isDragging && 'shadow-xl'
+          isDragging && 'shadow-xl',
+          atividade.destaque && 'border-amber-400 ring-1 ring-amber-400/30 bg-amber-50/30 dark:bg-amber-950/10'
         )}
         onClick={() => onOpenDetalhe?.(atividade.id)}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
+            {atividade.destaque && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
             <TipoIcon className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-sm font-medium truncate">{atividade.titulo}</span>
           </div>

@@ -1,0 +1,1 @@
+ALTER TABLE public.atividades ADD COLUMN destaque boolean NOT NULL DEFAULT false;

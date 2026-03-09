@@ -134,6 +134,7 @@ export interface Atividade {
   duracao_minutos?: number | null;
   qtd_participantes?: number | null;
   qtd_corretores?: number | null;
+  destaque?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -159,6 +160,7 @@ export interface AtividadeFormData {
   deadline_date?: string;
   qtd_participantes?: number;
   qtd_corretores?: number;
+  destaque?: boolean;
 }
 
 export interface ConcluirAtividadeData {

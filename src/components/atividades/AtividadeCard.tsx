@@ -1,4 +1,4 @@
-import { Phone, Users, MapPin, MessageSquare, Clock, Building2, Calendar, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, Clock, Building2, Calendar, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, Star } from 'lucide-react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -85,7 +85,8 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
         className={cn(
           'flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors',
           'hover:bg-accent/50',
-          isVencida && 'border-l-2 border-destructive bg-destructive/5'
+          isVencida && 'border-l-2 border-destructive bg-destructive/5',
+          atividade.destaque && 'border-l-2 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
         )}
       >
         <div className={cn('p-1.5 rounded-md shrink-0', TIPO_COLORS[atividade.tipo])}>
@@ -106,7 +107,10 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
             </p>
           </div>
 
-          <p className="text-[13px] font-normal leading-snug line-clamp-2">{atividade.titulo}</p>
+          <div className="flex items-center gap-1">
+            {atividade.destaque && <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />}
+            <p className="text-[13px] font-normal leading-snug line-clamp-2">{atividade.titulo}</p>
+          </div>
 
           <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
             <Building2 className="h-3 w-3 shrink-0" />
@@ -132,12 +136,13 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
   return (
     <div
       onClick={onClick}
-      className={cn(
-        'p-4 rounded-lg border bg-card cursor-pointer transition-all',
-        'hover:shadow-md hover:border-primary/30',
-        isVencida && 'border-destructive/50 bg-destructive/5',
-        isSuperAdminCreated && 'border-amber-500/50 ring-1 ring-amber-500/20'
-      )}
+        className={cn(
+          'p-4 rounded-lg border bg-card cursor-pointer transition-all',
+          'hover:shadow-md hover:border-primary/30',
+          isVencida && 'border-destructive/50 bg-destructive/5',
+          isSuperAdminCreated && 'border-amber-500/50 ring-1 ring-amber-500/20',
+          atividade.destaque && 'border-amber-400 ring-1 ring-amber-400/30 bg-amber-50/30 dark:bg-amber-950/10'
+        )}
     >
       <div className="flex items-start gap-3">
         <div className={cn('p-2 rounded-lg', TIPO_COLORS[atividade.tipo])}>
@@ -148,6 +153,7 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-1.5">
+                {atividade.destaque && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
                 <h4 className="font-medium text-sm">{atividade.titulo}</h4>
                 {isSuperAdminCreated && (
                   <Tooltip>

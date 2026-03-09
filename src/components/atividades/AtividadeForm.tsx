@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus } from 'lucide-react';
+import { Phone, Users, MapPin, MessageSquare, CalendarIcon, ChevronDown, ChevronRight, ChevronLeft, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, ClipboardList, Plus, Star } from 'lucide-react';
 import { NovoClienteRapidoDialog } from './NovoClienteRapidoDialog';
 import { TemperaturaSelector } from './TemperaturaSelector';
 import { Card } from '@/components/ui/card';
@@ -118,6 +118,7 @@ export interface AtividadeFormProps {
 export function AtividadeForm(props: AtividadeFormProps) {
   const { initialData, onSubmit, isLoading, defaultClienteId, lockCliente, tiposPermitidos } = props;
   const [modo, setModo] = useState<'negociacao' | 'atividade' | null>(tiposPermitidos ? null : null);
+  const [destaqueAtivo, setDestaqueAtivo] = useState(initialData?.destaque ?? false);
   const tiposVisiveis = tiposPermitidos || (modo === 'negociacao' ? TIPOS_NEGOCIACAO : modo === 'atividade' ? TIPOS_DIARIO : (Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]));
   const showModoSelection = !tiposPermitidos && !initialData;
   const { user } = useAuth();
@@ -249,6 +250,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       requer_followup: values.requer_followup,
       data_followup: values.data_followup?.toISOString(),
       deadline_date: values.deadline_date ? format(values.deadline_date, 'yyyy-MM-dd') : undefined,
+      destaque: destaqueAtivo,
     };
 
 
@@ -984,6 +986,19 @@ export function AtividadeForm(props: AtividadeFormProps) {
                   )}
                 />
               )}
+            </div>
+
+            {/* Toggle Destaque */}
+            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-amber-500" />
+                <Label htmlFor="destaque-toggle" className="text-sm font-medium cursor-pointer">Marcar como destaque</Label>
+              </div>
+              <Switch
+                id="destaque-toggle"
+                checked={destaqueAtivo}
+                onCheckedChange={setDestaqueAtivo}
+              />
             </div>
 
             {/* Botões Voltar + Próximo/Salvar */}
