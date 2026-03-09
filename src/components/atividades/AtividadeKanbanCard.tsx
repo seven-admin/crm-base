@@ -13,6 +13,7 @@ import { TemperaturaSelector } from './TemperaturaSelector';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useCliente } from '@/hooks/useClientes';
 import { ValidarDadosLeadDialog } from '@/components/negociacoes/ValidarDadosLeadDialog';
+import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
