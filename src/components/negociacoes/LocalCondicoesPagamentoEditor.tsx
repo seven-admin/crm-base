@@ -70,6 +70,7 @@ export function LocalCondicoesPagamentoEditor({
   readonly = false,
 }: LocalCondicoesPagamentoEditorProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const [conditionToDelete, setConditionToDelete] = useState<string | null>(null);
   const [advancedFormOpen, setAdvancedFormOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
