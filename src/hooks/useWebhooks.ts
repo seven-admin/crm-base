@@ -40,6 +40,7 @@ export const WEBHOOK_EVENTS = [
   { value: 'proposta_aprovada_incorporador', label: 'Proposta Aprovada pelo Incorporador' },
   { value: 'proposta_contra_proposta', label: 'Contra-Proposta do Incorporador' },
   { value: 'assinatura_enviada', label: 'Assinatura Enviada (Webhook n8n)' },
+  { value: 'evento_inscricao_corretor', label: 'Inscrição em Evento (Corretor)' },
   // ── Eventos planejados (ainda não disparados) ──
   { value: 'briefing_triado', label: 'Briefing Triado (planejado)' },
   { value: 'contrato_assinado', label: 'Contrato Assinado (planejado)' },

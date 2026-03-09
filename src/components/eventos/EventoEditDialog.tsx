@@ -30,8 +30,7 @@ import {
 } from '@/components/ui/select';
 import { useEventos } from '@/hooks/useEventos';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
 import type { Evento } from '@/types/marketing.types';
 
 const formSchema = z.object({
@@ -67,18 +66,7 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
   const { updateEvento } = useEventos();
   const { data: empreendimentos } = useEmpreendimentos();
 
-  // Buscar usuários
-  const { data: usuarios } = useQuery({
-    queryKey: ['profiles-list'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .order('full_name');
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: funcionarios } = useFuncionariosSeven();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -259,9 +247,9 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {usuarios?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.full_name}
+                        {funcionarios?.map((func) => (
+                          <SelectItem key={func.id} value={func.id}>
+                            {func.full_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
