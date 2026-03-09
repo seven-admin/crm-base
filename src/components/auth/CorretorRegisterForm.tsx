@@ -113,7 +113,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     
     if (field === 'cpf' && typeof value === 'string') {
       formattedValue = formatarCPF(value);
-    } else if (field === 'telefone' && typeof value === 'string') {
+    } else if ((field === 'telefone' || field === 'telefone_contato') && typeof value === 'string') {
       formattedValue = formatarTelefone(value);
     }
     
