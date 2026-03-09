@@ -4,6 +4,7 @@ import { CalendarDays, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Evento } from '@/types/marketing.types';
+import { parseDateLocal } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   planejamento: 'Planejamento',
@@ -29,7 +30,7 @@ interface EventoCardProps {
 }
 
 export function EventoCard({ evento, tarefasConcluidas = 0, totalTarefas = 0, onClick }: EventoCardProps) {
-  const dataEvento = new Date(evento.data_evento);
+  const dataEvento = parseDateLocal(evento.data_evento);
   const diasRestantes = differenceInDays(dataEvento, new Date());
   const eventoPassou = isPast(dataEvento);
   const progresso = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0;

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, parseDateLocal } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   planejamento: 'Planejamento',
@@ -35,7 +35,7 @@ export default function EventosCalendarioPage() {
   const eventosDoDia = useMemo(() => {
     if (!eventos) return [];
     return eventos.filter((evento) =>
-      isSameDay(new Date(evento.data_evento), selectedDate)
+      isSameDay(parseDateLocal(evento.data_evento), selectedDate)
     );
   }, [eventos, selectedDate]);
 
@@ -52,7 +52,7 @@ export default function EventosCalendarioPage() {
       planejamento: eventos.filter((e) => e.status === 'planejamento').length,
       emAndamento: eventos.filter((e) => e.status === 'em_andamento').length,
       esteMes: eventos.filter((e) => 
-        isWithinInterval(new Date(e.data_evento), { start: inicioMes, end: fimMes })
+        isWithinInterval(parseDateLocal(e.data_evento), { start: inicioMes, end: fimMes })
       ).length,
     };
   }, [eventos]);

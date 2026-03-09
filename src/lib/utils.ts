@@ -14,3 +14,12 @@ export function parseDecimalInput(value: string): number {
   const parsed = parseFloat(normalized);
   return isNaN(parsed) ? 0 : parsed;
 }
+
+/**
+ * Parses a date string (yyyy-MM-dd) as local time instead of UTC.
+ * Prevents the "one day behind" bug in negative UTC offsets (e.g. Brazil).
+ */
+export function parseDateLocal(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}

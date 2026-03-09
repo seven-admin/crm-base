@@ -15,6 +15,7 @@ import {
 import { Plus, Search, Calendar, MapPin, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEventos } from '@/hooks/useEventos';
 import { format, addDays } from 'date-fns';
+import { parseDateLocal } from '@/lib/utils';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -141,7 +142,7 @@ export default function Eventos() {
 
       // Se usou template, criar as tarefas predefinidas
       if (selectedTemplate && selectedTemplate.tarefas && novoEvento) {
-        const dataEvento = new Date(data.data_evento);
+        const dataEvento = parseDateLocal(data.data_evento);
         
         for (const tarefaTemplate of selectedTemplate.tarefas) {
           const dataTarefa = addDays(dataEvento, tarefaTemplate.dias_antes_evento);
@@ -233,7 +234,7 @@ export default function Eventos() {
                     <p className="font-medium">{evento.nome}</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                      {format(parseDateLocal(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
                     </div>
                   </div>
                   <DropdownMenu>
@@ -310,7 +311,7 @@ export default function Eventos() {
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                        {format(parseDateLocal(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
                       </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">

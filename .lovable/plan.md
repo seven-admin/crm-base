@@ -1,35 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Corrigir bug de data (1 dia a menos) em Eventos
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-Quando o banco retorna `"2026-03-15"` (string date-only), `new Date("2026-03-15")` interpreta como **UTC midnight**. No fuso brasileiro (UTC-3), isso vira **14/03 às 21h** — exibindo um dia a menos.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Solução
-Substituir `new Date(data_evento)` por `parseISO(data_evento)` do date-fns em todos os arquivos. O `parseISO` também interpreta como UTC para date-only strings, então a correção real é usar uma função helper que force horário local:
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-```typescript
-// Helper: parseDateLocal("2026-03-15") → new Date(2026, 2, 15) em horário local
-function parseDateLocal(dateStr: string): Date {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-```
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-Criar este helper em `src/lib/utils.ts` e substituir todas as ocorrências.
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-## Arquivos afetados (6 arquivos, ~12 ocorrências)
-
-| Arquivo | Linhas |
-|---------|--------|
-| `src/lib/utils.ts` | Adicionar `parseDateLocal` |
-| `src/components/eventos/EventoCard.tsx` | L32 |
-| `src/components/eventos/EventosCalendario.tsx` | L75 |
-| `src/pages/Eventos.tsx` | L144, L236, L313 |
-| `src/pages/EventoDetalhe.tsx` | L82 |
-| `src/pages/EventosCalendario.tsx` | L38, L55 |
-| `src/pages/portal/PortalEventos.tsx` | L134 |
-
-## Mudança em cada arquivo
-Importar `parseDateLocal` de `@/lib/utils` e substituir `new Date(evento.data_evento)` ou `new Date(data.data_evento)` por `parseDateLocal(evento.data_evento)`.
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar

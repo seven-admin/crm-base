@@ -12,7 +12,7 @@ import {
   subMonths,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, parseDateLocal } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,7 +72,7 @@ export function EventosCalendario({
   const eventosPorDia = useMemo(() => {
     const map = new Map<string, Evento[]>();
     eventos.forEach((evento) => {
-      const key = format(new Date(evento.data_evento), 'yyyy-MM-dd');
+      const key = format(parseDateLocal(evento.data_evento), 'yyyy-MM-dd');
       if (!map.has(key)) {
         map.set(key, []);
       }

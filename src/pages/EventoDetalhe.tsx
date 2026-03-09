@@ -18,6 +18,7 @@ import {
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { parseDateLocal } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   planejamento: 'Planejamento',
@@ -79,7 +80,7 @@ export default function EventoDetalhe() {
   const tarefasTotal = tarefas?.length || 0;
   const progresso = tarefasTotal > 0 ? (tarefasConcluidas / tarefasTotal) * 100 : 0;
   
-  const dataEvento = new Date(evento.data_evento);
+  const dataEvento = parseDateLocal(evento.data_evento);
   const hoje = new Date();
   const diasRestantes = differenceInDays(dataEvento, hoje);
   const eventoPassou = isPast(dataEvento);
