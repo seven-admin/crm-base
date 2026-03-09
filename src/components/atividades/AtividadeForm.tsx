@@ -249,6 +249,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       requer_followup: values.requer_followup,
       data_followup: values.data_followup?.toISOString(),
       deadline_date: values.deadline_date ? format(values.deadline_date, 'yyyy-MM-dd') : undefined,
+      destaque: destaqueAtivo,
     };
 
 
