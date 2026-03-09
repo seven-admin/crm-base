@@ -120,7 +120,8 @@ export function PlanejamentoListaGlobal({ filters, onFiltersChange }: Props) {
   };
 
   const handleSelectChange = (id: string, field: string, value: string) => {
-    updateItem.mutate({ id, [field]: value });
+    const parsedValue = field === 'destaque' ? value === 'true' : value;
+    updateItem.mutate({ id, [field]: parsedValue });
   };
 
   const handleDateChange = (id: string, field: string, date: Date | undefined) => {
