@@ -55,11 +55,13 @@ export function PropostaDialog({
   mode = 'view',
 }: PropostaDialogProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('dados');
   const [dataValidade, setDataValidade] = useState('');
   const [valorTabela, setValorTabela] = useState(0);
   const [valorProposta, setValorProposta] = useState(0);
   const [internalMode, setInternalMode] = useState(mode);
+  const [selectedUnidadeIds, setSelectedUnidadeIds] = useState<string[]>([]);
   
   const [motivoRecusa, setMotivoRecusa] = useState('');
   const [condicoesValidas, setCondicoesValidas] = useState(false);
@@ -69,6 +71,44 @@ export function PropostaDialog({
     open && negociacao?.id ? negociacao.id : undefined
   );
   const neg = negociacaoCompleta || negociacao;
+  
+  const hasUnidades = neg?.unidades && neg.unidades.length > 0;
+
+  // Fetch available units when negotiation has no units
+  const { data: unidadesDisponiveis = [] } = useQuery({
+    queryKey: ['unidades-disponiveis-proposta', neg?.empreendimento_id],
+    enabled: !!neg?.empreendimento_id && open && !hasUnidades,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('unidades')
+        .select('id, numero, valor, bloco:blocos(nome)')
+        .eq('empreendimento_id', neg!.empreendimento_id)
+        .in('status', ['disponivel', 'reservada'])
+        .order('numero');
+      if (error) throw error;
+      return (data || []) as UnidadeDisponivel[];
+    },
+  });
+
+  // Mutation to link units to negotiation
+  const linkUnidadesMutation = useMutation({
+    mutationFn: async ({ negociacaoId, unidadeIds }: { negociacaoId: string; unidadeIds: string[] }) => {
+      const records = unidadeIds.map(unidade_id => {
+        const unidade = unidadesDisponiveis.find(u => u.id === unidade_id);
+        return {
+          negociacao_id: negociacaoId,
+          unidade_id,
+          valor_tabela: unidade?.valor || 0,
+        };
+      });
+      const { error } = await supabase.from('negociacao_unidades').insert(records);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacao'] });
+      toast.success('Unidades vinculadas com sucesso!');
+    },
+  });
   
   // Callback estável para evitar loops de render infinito
   const handleValidationChange = useCallback((isValid: boolean) => {
@@ -102,7 +142,7 @@ export function PropostaDialog({
       
       setValorTabela(neg.valor_tabela || valorUnidades);
       setValorProposta(neg.valor_proposta || valorUnidades);
-      
+      setSelectedUnidadeIds([]);
     }
   }, [open, neg]);
 
