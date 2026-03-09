@@ -233,7 +233,7 @@ export default function Eventos() {
                     <p className="font-medium">{evento.nome}</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                      {format(parseDateLocal(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
                     </div>
                   </div>
                   <DropdownMenu>
