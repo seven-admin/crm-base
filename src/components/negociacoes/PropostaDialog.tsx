@@ -43,7 +43,9 @@ interface UnidadeDisponivel {
   id: string;
   numero: string;
   valor: number;
-  bloco: { nome: string } | null;
+  andar: number | null;
+  empreendimento_id: string;
+  bloco: { id: string; nome: string } | null;
 }
 
 interface PropostaDialogProps {
