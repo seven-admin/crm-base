@@ -24,6 +24,8 @@ import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
 import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import type { ClienteTemperatura } from '@/types/clientes.types';
+import { useGestoresProduto } from '@/hooks/useGestores';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AtividadeDetalheDialogProps {
   atividade: Atividade | null;
@@ -79,6 +81,8 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
   const [alterarStatusOpen, setAlterarStatusOpen] = useState(false);
   const updateAtividade = useUpdateAtividade();
   const { data: historico = [] } = useAtividadeHistorico(atividade?.id ?? null);
+  const isSuperAdmin = role === 'super_admin';
+  const { data: gestores = [] } = useGestoresProduto({ enabled: isSuperAdmin && open });
   
   const TipoIcon = atividade ? TIPO_ICONS[atividade.tipo] : Phone;
   const temperatura = atividade?.temperatura_cliente 
@@ -215,15 +219,29 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                 </div>
               )}
 
-              {atividade.gestor && (
-                <div className="flex items-start gap-2">
-                  <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Gestor</p>
-                    <p className="font-medium">{atividade.gestor.full_name}</p>
-                  </div>
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Gestor</p>
+                  {isSuperAdmin ? (
+                    <Select
+                      value={atividade.gestor_id ?? ''}
+                      onValueChange={(val) => updateAtividade.mutate({ id: atividade.id, data: { gestor_id: val } })}
+                    >
+                      <SelectTrigger className="h-8 text-sm mt-1">
+                        <SelectValue placeholder="Selecionar gestor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gestores.map(g => (
+                          <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium">{atividade.gestor?.full_name || '—'}</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Responsáveis */}

@@ -12,6 +12,9 @@ import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAllProfiles } from '@/hooks/useFuncionariosSeven';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TarefaDetalheDialogProps {
   open: boolean;
@@ -22,6 +25,9 @@ interface TarefaDetalheDialogProps {
 export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheDialogProps) {
   const { historico, isLoading: loadingHistorico } = usePlanejamentoHistorico(item?.id);
   const { updateItem } = usePlanejamentoItens();
+  const { role } = useAuth();
+  const isSuperAdmin = role === 'super_admin';
+  const { data: allProfiles = [] } = useAllProfiles();
 
   if (!item) return null;
 
@@ -143,6 +149,24 @@ export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheD
                         </Avatar>
                         <span className="text-sm">{item.responsavel.full_name}</span>
                         <Badge variant="secondary" className="text-xs">Principal</Badge>
+                      </div>
+                    )}
+                    {isSuperAdmin && (
+                      <div className="mt-2">
+                        <span className="text-xs text-muted-foreground mb-1 block">Alterar responsável principal:</span>
+                        <Select
+                          value={item.responsavel_tecnico_id ?? ''}
+                          onValueChange={(val) => updateItem.mutate({ id: item.id, responsavel_tecnico_id: val })}
+                        >
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Selecionar responsável" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allProfiles.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                     {item.responsaveis?.map(resp => (
