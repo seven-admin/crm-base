@@ -219,15 +219,29 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                 </div>
               )}
 
-              {atividade.gestor && (
-                <div className="flex items-start gap-2">
-                  <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Gestor</p>
-                    <p className="font-medium">{atividade.gestor.full_name}</p>
-                  </div>
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Gestor</p>
+                  {isSuperAdmin ? (
+                    <Select
+                      value={atividade.gestor_id ?? ''}
+                      onValueChange={(val) => updateAtividade.mutate({ id: atividade.id, data: { gestor_id: val } })}
+                    >
+                      <SelectTrigger className="h-8 text-sm mt-1">
+                        <SelectValue placeholder="Selecionar gestor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gestores.map(g => (
+                          <SelectItem key={g.id} value={g.id}>{g.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium">{atividade.gestor?.full_name || '—'}</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Responsáveis */}

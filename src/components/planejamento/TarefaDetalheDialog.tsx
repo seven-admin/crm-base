@@ -151,6 +151,24 @@ export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheD
                         <Badge variant="secondary" className="text-xs">Principal</Badge>
                       </div>
                     )}
+                    {isSuperAdmin && (
+                      <div className="mt-2">
+                        <span className="text-xs text-muted-foreground mb-1 block">Alterar responsável principal:</span>
+                        <Select
+                          value={item.responsavel_tecnico_id ?? ''}
+                          onValueChange={(val) => updateItem.mutate({ id: item.id, responsavel_tecnico_id: val })}
+                        >
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Selecionar responsável" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allProfiles.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     {item.responsaveis?.map(resp => (
                       <div key={resp.id} className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
