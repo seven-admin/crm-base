@@ -61,15 +61,24 @@ function formatarTelefone(value: string): string {
 }
 
 const registerSchema = z.object({
-  nome_completo: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  nome_completo: z.string()
+    .min(3, 'Nome deve ter no mínimo 3 caracteres')
+    .refine(val => /^[A-Za-zÀ-ÿ\s]+$/.test(val.trim()), 'Nome deve conter apenas letras')
+    .refine(val => val.trim().split(/\s+/).length >= 2, 'Informe nome e sobrenome'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
   confirmPassword: z.string(),
   cpf: z.string().refine(validarCPF, 'CPF inválido'),
-  creci: z.string().min(1, 'CRECI é obrigatório'),
+  creci: z.string()
+    .min(3, 'CRECI deve ter no mínimo 3 caracteres')
+    .refine(val => /^[A-Za-z0-9\-\/]+$/.test(val.trim()), 'CRECI deve conter apenas letras, números, - e /'),
   cidade: z.string().min(2, 'Cidade é obrigatória'),
   uf: z.string().min(2, 'Estado é obrigatório'),
-  telefone: z.string().min(14, 'WhatsApp é obrigatório'),
+  telefone: z.string().min(15, 'WhatsApp obrigatório no formato (XX) XXXXX-XXXX'),
+  telefone_contato: z.string().optional().refine(
+    val => !val || val.length === 0 || val.length >= 14,
+    'Telefone deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX'
+  ),
   aceite_termos: z.literal(true, { errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }) })
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não conferem',
