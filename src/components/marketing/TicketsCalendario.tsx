@@ -158,9 +158,9 @@ export function TicketsCalendario({
               <button
                 onClick={() => onDateSelect(day)}
                 className={cn(
-                  'h-24 w-full p-1 text-left rounded-lg border transition-colors relative',
-                  'hover:bg-accent hover:border-primary/50',
-                  isSelected && 'border-primary bg-accent',
+                  'min-h-[100px] w-full p-1 text-left border-r border-b transition-colors relative',
+                  'hover:bg-accent/50',
+                  isSelected && 'bg-accent',
                   !isSameMonth(day, currentMonth) && 'opacity-50'
                 )}
               >
