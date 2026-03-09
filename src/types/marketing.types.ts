@@ -155,6 +155,8 @@ export interface Evento {
   responsavel_id: string | null;
   status: 'planejamento' | 'em_andamento' | 'concluido' | 'cancelado';
   orcamento: number | null;
+  inscricoes_abertas: boolean;
+  limite_inscricoes: number | null;
   created_by: string | null;
   is_active: boolean;
   created_at: string;
