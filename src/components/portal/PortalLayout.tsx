@@ -42,6 +42,10 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
     title: 'Clientes', 
     subtitle: 'Gerencie seus clientes e leads' 
   },
+  '/portal-corretor/eventos': { 
+    title: 'Eventos', 
+    subtitle: 'Veja os eventos disponíveis e inscreva-se' 
+  },
   '/portal-corretor/corretores': { 
     title: 'Meus Corretores', 
     subtitle: 'Gerencie os corretores da sua imobiliária' 
