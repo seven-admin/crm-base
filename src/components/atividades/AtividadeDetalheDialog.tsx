@@ -22,6 +22,7 @@ import { TemperaturaSelector } from './TemperaturaSelector';
 import { AtividadeCronometro } from './AtividadeCronometro';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
+import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 
 interface AtividadeDetalheDialogProps {
