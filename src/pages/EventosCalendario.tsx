@@ -35,7 +35,7 @@ export default function EventosCalendarioPage() {
   const eventosDoDia = useMemo(() => {
     if (!eventos) return [];
     return eventos.filter((evento) =>
-      isSameDay(new Date(evento.data_evento), selectedDate)
+      isSameDay(parseDateLocal(evento.data_evento), selectedDate)
     );
   }, [eventos, selectedDate]);
 
