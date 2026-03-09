@@ -1,36 +1,28 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Destaque de Atividades
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Objetivo
+Adicionar um campo `destaque` (boolean) na tabela `atividades` e na interface, permitindo marcar atividades importantes com visual diferenciado (borda colorida, ícone de estrela, etc).
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Alterações
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Banco de Dados
+- Adicionar coluna `destaque boolean default false` na tabela `atividades`
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Tipos (`src/types/atividades.types.ts`)
+- Adicionar `destaque?: boolean` nas interfaces `Atividade` e `AtividadeFormData`
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 3. Formulário (`src/components/atividades/AtividadeForm.tsx`)
+- Adicionar um toggle/switch "Marcar como destaque" (com ícone de estrela) no formulário de criação/edição
+
+### 4. Cards e Listagens
+- **AtividadeKanbanCard.tsx** — Adicionar borda amarela/dourada e ícone de estrela quando `destaque = true`
+- **AtividadeCard.tsx** — Mesmo tratamento visual: borda destacada + badge/ícone de estrela
+
+### 5. Hook de Atividades
+- Garantir que o campo `destaque` seja incluído nas queries e mutations existentes (insert/update)
+
+### Resultado Visual
+Atividades com destaque terão uma borda dourada (`border-amber-400`) e um ícone de estrela (★) no canto superior, tornando-as facilmente identificáveis tanto no Kanban quanto na lista.
+
