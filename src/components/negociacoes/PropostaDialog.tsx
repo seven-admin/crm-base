@@ -321,10 +321,10 @@ export function PropostaDialog({
             </TabsContent>
 
             <TabsContent value="condicoes" className="mt-4">
-              {negociacao && (
+              {neg && (
                 <NegociacaoCondicoesPagamentoInlineEditor
-                  negociacaoId={negociacao.id}
-                  empreendimentoId={negociacao.empreendimento_id}
+                  negociacaoId={neg.id}
+                  empreendimentoId={neg.empreendimento_id}
                   valorReferencia={valorProposta || valorTabela}
                   readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida' || statusProposta === 'em_analise'}
                   onValidationChange={handleValidationChange}
@@ -333,7 +333,7 @@ export function PropostaDialog({
             </TabsContent>
 
             <TabsContent value="comentarios" className="mt-4">
-              {negociacao && <ComentariosTab negociacaoId={negociacao.id} />}
+              {neg && <ComentariosTab negociacaoId={neg.id} />}
             </TabsContent>
           </Tabs>
         )}
