@@ -83,7 +83,8 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
       <Card
         className={cn(
           'p-3 cursor-pointer hover:shadow-md transition-shadow',
-          isDragging && 'shadow-xl'
+          isDragging && 'shadow-xl',
+          atividade.destaque && 'border-amber-400 ring-1 ring-amber-400/30 bg-amber-50/30 dark:bg-amber-950/10'
         )}
         onClick={() => onOpenDetalhe?.(atividade.id)}
       >
