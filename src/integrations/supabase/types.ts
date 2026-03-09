@@ -4296,6 +4296,7 @@ export type Database = {
           created_by: string | null
           data_fim: string | null
           data_inicio: string | null
+          destaque: boolean
           empreendimento_id: string
           fase_id: string
           id: string
@@ -4312,6 +4313,7 @@ export type Database = {
           created_by?: string | null
           data_fim?: string | null
           data_inicio?: string | null
+          destaque?: boolean
           empreendimento_id: string
           fase_id: string
           id?: string
@@ -4328,6 +4330,7 @@ export type Database = {
           created_by?: string | null
           data_fim?: string | null
           data_inicio?: string | null
+          destaque?: boolean
           empreendimento_id?: string
           fase_id?: string
           id?: string

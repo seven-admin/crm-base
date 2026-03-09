@@ -1,0 +1,1 @@
+ALTER TABLE public.planejamento_itens ADD COLUMN destaque boolean NOT NULL DEFAULT false;
