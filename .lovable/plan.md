@@ -1,36 +1,35 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Evento CONECTA não aparece — Problema de RLS
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Causa
+A tabela `eventos` tem RLS ativo com apenas 3 políticas de acesso:
+- Admins
+- supervisor_relacionamento
+- Marketing supervisors
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+O usuário do portal (role `gestor_imobiliaria`) **não tem permissão de SELECT** na tabela `eventos`, por isso a query retorna vazio e aparece "Nenhum evento disponível".
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+O evento CONECTA existe e está ativo (`is_active = true`), mas com `inscricoes_abertas = false`.
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+## Solução
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 1. Migração SQL — Nova política RLS
+Adicionar uma política que permita qualquer usuário autenticado **visualizar** eventos ativos:
+
+```sql
+CREATE POLICY "Authenticated users can view active eventos"
+ON public.eventos
+FOR SELECT
+TO authenticated
+USING (is_active = true);
+```
+
+Isso permite que corretores e gestores de imobiliária vejam os eventos no portal sem comprometer a segurança (somente leitura de eventos ativos).
+
+### 2. Ativar inscrições do evento CONECTA
+O evento CONECTA tem `inscricoes_abertas = false`. Após a correção de RLS, ele vai aparecer na listagem mas com badge "Fechado". Para que os corretores possam se inscrever, será necessário atualizar o campo `inscricoes_abertas` para `true` via painel administrativo.
+
+### Arquivo afetado
+- Apenas migração SQL (nenhum arquivo de código precisa mudar)
+
