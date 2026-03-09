@@ -88,7 +88,7 @@ export function PropostaDialog({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unidades')
-        .select('id, numero, valor, bloco:blocos(nome)')
+        .select('id, numero, valor, andar, empreendimento_id, bloco:blocos(id, nome)')
         .eq('empreendimento_id', neg!.empreendimento_id)
         .in('status', ['disponivel', 'reservada'])
         .order('numero');
