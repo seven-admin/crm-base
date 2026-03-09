@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info, Star, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info, Star, Star, Star } from 'lucide-react';
 import {
   format,
   startOfMonth,
@@ -372,7 +372,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                     {visibleBars.map((bar) => (
                       <div
                         key={`bar-${bar.item.id}-${weekIdx}`}
-                        className="absolute z-10 text-[10px] font-medium text-white truncate px-1.5 flex items-cgap-0.5 enter rounded-sm"
+                        className="absolute z-10 text-[10px] font-medium text-white truncate px-1.5 flex igap-0.5 tems-cgap-0.5 enter rounded-sm"
                         style={{
                           top: DAY_HEADER_HEIGHT + bar.slot * SLOT_HEIGHT + 1,
                           left: `calc(${(bar.colStart / 7) * 100}% + 2px)`,
