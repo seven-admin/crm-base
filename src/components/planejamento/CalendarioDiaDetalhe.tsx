@@ -13,6 +13,7 @@ import {
   Zap,
   ChevronDown,
   ChevronRight,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -139,12 +140,15 @@ function EditableItemCard({
         ) : (
           <p
             className={cn(
-              'font-medium text-sm flex-1',
+              'font-medium text-sm flex-1 flex items-center gap-1',
               !readOnly && 'cursor-pointer hover:text-primary transition-colors'
             )}
             onClick={startEditName}
             title={!readOnly ? 'Clique para editar' : undefined}
           >
+            {item.destaque && (
+              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+            )}
             {item.item}
             {!readOnly && (
               <Pencil className="h-3 w-3 inline ml-1.5 opacity-0 group-hover:opacity-50 transition-opacity" />
@@ -171,6 +175,10 @@ function EditableItemCard({
               <DropdownMenuItem onClick={() => onConvert(item)}>
                 <Zap className="h-3.5 w-3.5 mr-2" />
                 Converter em Atividade
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdate(item.id, { destaque: !item.destaque })}>
+                <Star className={cn("h-3.5 w-3.5 mr-2", item.destaque && "fill-amber-500 text-amber-500")} />
+                {item.destaque ? 'Remover destaque' : 'Marcar destaque'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

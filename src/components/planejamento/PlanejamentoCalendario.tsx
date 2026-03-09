@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building2, CalendarDays, Plus, Settings, Info, Star } from 'lucide-react';
 import {
   format,
   startOfMonth,
@@ -372,7 +372,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                     {visibleBars.map((bar) => (
                       <div
                         key={`bar-${bar.item.id}-${weekIdx}`}
-                        className="absolute z-10 text-[10px] font-medium text-white truncate px-1.5 flex items-center rounded-sm"
+                        className="absolute z-10 text-[10px] font-medium text-white truncate px-1.5 flex items-center gap-0.5 rounded-sm"
                         style={{
                           top: DAY_HEADER_HEIGHT + bar.slot * SLOT_HEIGHT + 1,
                           left: `calc(${(bar.colStart / 7) * 100}% + 2px)`,
@@ -381,6 +381,7 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                           backgroundColor: bar.color,
                         }}
                       >
+                        {bar.item.destaque && <Star className="h-2.5 w-2.5 fill-white/80 shrink-0" />}
                         {bar.item.item}
                       </div>
                     ))}
@@ -441,7 +442,11 @@ export function PlanejamentoCalendario({ filters, onFiltersChange }: Props) {
                             <div className="flex-1 overflow-hidden px-1 pb-1 space-y-0.5">
                               {daySingleItems.slice(0, 3).map((di) => (
                                 <div key={di.item.id} className="text-[10px] truncate px-0.5 flex items-center gap-1">
-                                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: di.color }} />
+                                  {di.item.destaque ? (
+                                    <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500 shrink-0" />
+                                  ) : (
+                                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: di.color }} />
+                                  )}
                                   <span className="text-foreground truncate">{di.item.item}</span>
                                 </div>
                               ))}
