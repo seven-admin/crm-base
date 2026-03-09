@@ -61,15 +61,24 @@ function formatarTelefone(value: string): string {
 }
 
 const registerSchema = z.object({
-  nome_completo: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  nome_completo: z.string()
+    .min(3, 'Nome deve ter no mínimo 3 caracteres')
+    .refine(val => /^[A-Za-zÀ-ÿ\s]+$/.test(val.trim()), 'Nome deve conter apenas letras')
+    .refine(val => val.trim().split(/\s+/).length >= 2, 'Informe nome e sobrenome'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
   confirmPassword: z.string(),
   cpf: z.string().refine(validarCPF, 'CPF inválido'),
-  creci: z.string().min(1, 'CRECI é obrigatório'),
+  creci: z.string()
+    .min(3, 'CRECI deve ter no mínimo 3 caracteres')
+    .refine(val => /^[A-Za-z0-9\-\/]+$/.test(val.trim()), 'CRECI deve conter apenas letras, números, - e /'),
   cidade: z.string().min(2, 'Cidade é obrigatória'),
   uf: z.string().min(2, 'Estado é obrigatório'),
-  telefone: z.string().min(14, 'WhatsApp é obrigatório'),
+  telefone: z.string().min(15, 'WhatsApp obrigatório no formato (XX) XXXXX-XXXX'),
+  telefone_contato: z.string().optional().refine(
+    val => !val || val.length === 0 || val.length >= 14,
+    'Telefone deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX'
+  ),
   aceite_termos: z.literal(true, { errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }) })
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não conferem',
@@ -91,6 +100,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     cidade: '',
     uf: '',
     telefone: '',
+    telefone_contato: '',
     aceite_termos: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -103,7 +113,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     
     if (field === 'cpf' && typeof value === 'string') {
       formattedValue = formatarCPF(value);
-    } else if (field === 'telefone' && typeof value === 'string') {
+    } else if ((field === 'telefone' || field === 'telefone_contato') && typeof value === 'string') {
       formattedValue = formatarTelefone(value);
     }
     
@@ -329,7 +339,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
               )}
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="telefone">WhatsApp *</Label>
               <Input
                 id="telefone"
@@ -341,6 +351,21 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
               />
               {errors.telefone && (
                 <p className="text-xs text-destructive">{errors.telefone}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefone_contato">Telefone de Contato</Label>
+              <Input
+                id="telefone_contato"
+                value={formData.telefone_contato}
+                onChange={(e) => handleChange('telefone_contato', e.target.value)}
+                placeholder="(00) 0000-0000"
+                maxLength={15}
+                className={errors.telefone_contato ? 'border-destructive' : ''}
+              />
+              {errors.telefone_contato && (
+                <p className="text-xs text-destructive">{errors.telefone_contato}</p>
               )}
             </div>
           </div>

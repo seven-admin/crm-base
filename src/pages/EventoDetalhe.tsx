@@ -12,7 +12,8 @@ import {
   EventoTarefasTab, 
   EventoCronograma, 
   EventoEquipeTab, 
-  EventoEditDialog 
+  EventoEditDialog,
+  EventoInscritosTab 
 } from '@/components/eventos';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -201,6 +202,10 @@ export default function EventoDetalhe() {
             <Users className="h-4 w-4" />
             Equipe
           </TabsTrigger>
+          <TabsTrigger value="inscritos" className="gap-2">
+            <Users className="h-4 w-4" />
+            Inscritos
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tarefas">
@@ -213,6 +218,10 @@ export default function EventoDetalhe() {
 
         <TabsContent value="equipe">
           <EventoEquipeTab eventoId={id || ''} responsavelId={evento.responsavel_id} />
+        </TabsContent>
+
+        <TabsContent value="inscritos">
+          <EventoInscritosTab eventoId={id || ''} />
         </TabsContent>
       </Tabs>
 
