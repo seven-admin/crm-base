@@ -291,6 +291,45 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
               )}
             />
 
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground">Configurações de Inscrições</h4>
+              <FormField
+                control={form.control}
+                name="inscricoes_abertas"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <FormLabel className="text-base">Inscrições Abertas</FormLabel>
+                      <p className="text-sm text-muted-foreground">Permitir que corretores se inscrevam neste evento</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="limite_inscricoes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Limite de Inscrições</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        value={field.value ?? ''}
+                        placeholder="Sem limite"
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Deixe vazio para não limitar vagas</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
