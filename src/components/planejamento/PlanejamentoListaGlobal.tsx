@@ -435,9 +435,12 @@ function ListaItemRow({
           />
         ) : (
           <div
-            className="px-2 py-1 rounded cursor-pointer min-h-[32px] flex items-center hover:bg-muted/50"
+            className="px-2 py-1 rounded cursor-pointer min-h-[32px] flex items-center gap-1.5 hover:bg-muted/50"
             onClick={() => onCellClick(item.id, 'item', item.item)}
           >
+            {item.destaque && (
+              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+            )}
             {item.item}
           </div>
         )}
