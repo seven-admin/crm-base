@@ -988,6 +988,19 @@ export function AtividadeForm(props: AtividadeFormProps) {
               )}
             </div>
 
+            {/* Toggle Destaque */}
+            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-amber-500" />
+                <Label htmlFor="destaque-toggle" className="text-sm font-medium cursor-pointer">Marcar como destaque</Label>
+              </div>
+              <Switch
+                id="destaque-toggle"
+                checked={destaqueAtivo}
+                onCheckedChange={setDestaqueAtivo}
+              />
+            </div>
+
             {/* Botões Voltar + Próximo/Salvar */}
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
