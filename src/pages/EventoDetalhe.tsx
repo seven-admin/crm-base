@@ -12,7 +12,8 @@ import {
   EventoTarefasTab, 
   EventoCronograma, 
   EventoEquipeTab, 
-  EventoEditDialog 
+  EventoEditDialog,
+  EventoInscritosTab 
 } from '@/components/eventos';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
