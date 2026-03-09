@@ -20,6 +20,7 @@ import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesP
 import { ComentariosTab } from './ComentariosTab';
 import { MessageSquare } from 'lucide-react';
 import {
+  useNegociacao,
   useGerarProposta,
   useAceitarProposta,
   useRecusarProposta,
