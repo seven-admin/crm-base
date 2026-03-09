@@ -216,12 +216,12 @@ export function PropostaDialog({
         </DialogHeader>
 
         {/* Alerta de Contra Proposta */}
-        {isContraProposta && negociacao?.motivo_contra_proposta && (
+        {isContraProposta && neg?.motivo_contra_proposta && (
           <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
             <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-orange-800 dark:text-orange-200">Contra Proposta do Incorporador</p>
-              <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">{negociacao.motivo_contra_proposta}</p>
+              <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">{neg.motivo_contra_proposta}</p>
             </div>
           </div>
         )}
