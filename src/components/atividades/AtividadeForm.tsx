@@ -118,6 +118,7 @@ export interface AtividadeFormProps {
 export function AtividadeForm(props: AtividadeFormProps) {
   const { initialData, onSubmit, isLoading, defaultClienteId, lockCliente, tiposPermitidos } = props;
   const [modo, setModo] = useState<'negociacao' | 'atividade' | null>(tiposPermitidos ? null : null);
+  const [destaqueAtivo, setDestaqueAtivo] = useState(initialData?.destaque ?? false);
   const tiposVisiveis = tiposPermitidos || (modo === 'negociacao' ? TIPOS_NEGOCIACAO : modo === 'atividade' ? TIPOS_DIARIO : (Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]));
   const showModoSelection = !tiposPermitidos && !initialData;
   const { user } = useAuth();
