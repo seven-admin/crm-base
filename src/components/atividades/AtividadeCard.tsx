@@ -136,12 +136,13 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
   return (
     <div
       onClick={onClick}
-      className={cn(
-        'p-4 rounded-lg border bg-card cursor-pointer transition-all',
-        'hover:shadow-md hover:border-primary/30',
-        isVencida && 'border-destructive/50 bg-destructive/5',
-        isSuperAdminCreated && 'border-amber-500/50 ring-1 ring-amber-500/20'
-      )}
+        className={cn(
+          'p-4 rounded-lg border bg-card cursor-pointer transition-all',
+          'hover:shadow-md hover:border-primary/30',
+          isVencida && 'border-destructive/50 bg-destructive/5',
+          isSuperAdminCreated && 'border-amber-500/50 ring-1 ring-amber-500/20',
+          atividade.destaque && 'border-amber-400 ring-1 ring-amber-400/30 bg-amber-50/30 dark:bg-amber-950/10'
+        )}
     >
       <div className="flex items-start gap-3">
         <div className={cn('p-2 rounded-lg', TIPO_COLORS[atividade.tipo])}>
