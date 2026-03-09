@@ -472,6 +472,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                                     onClick={() => handleItemClick(item)}
                                   >
                                     <div className="flex items-center gap-1 px-2 h-full text-xs text-white font-medium truncate">
+                                      {item.destaque && <Star className="h-3 w-3 flex-shrink-0 fill-white/80" />}
                                       {pos.isOverdue && <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
                                       <span className="truncate">{item.item}</span>
                                     </div>

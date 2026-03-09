@@ -47,8 +47,20 @@ export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-lg">Detalhes da Tarefa</DialogTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleDestaque}
+            className={cn(
+              "h-8 w-8",
+              item.destaque && "text-amber-500"
+            )}
+            title={item.destaque ? 'Remover destaque' : 'Marcar como destaque'}
+          >
+            <Star className={cn("h-5 w-5", item.destaque && "fill-amber-500")} />
+          </Button>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4">
