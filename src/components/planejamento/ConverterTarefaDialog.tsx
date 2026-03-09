@@ -25,6 +25,7 @@ interface Props {
 export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimentoId }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: gestorEmpreendimento } = useGestorEmpreendimento(empreendimentoId);
   const [tab, setTab] = useState<'atividade' | 'marketing'>('atividade');
   const [saving, setSaving] = useState(false);
 
