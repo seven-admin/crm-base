@@ -1,36 +1,32 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Destaque em Tarefas do Planejamento
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+O campo `destaque` foi adicionado apenas na tabela `atividades`. Para o módulo de **Planejamento** (`planejamento_itens`), o campo não existe ainda. Precisamos replicar a funcionalidade.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Alterações
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Banco de Dados
+- Adicionar coluna `destaque boolean default false` na tabela `planejamento_itens`
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Tipos (`src/types/planejamento.types.ts`)
+- Adicionar `destaque?: boolean` em `PlanejamentoItem`, `PlanejamentoItemCreate` e `PlanejamentoItemUpdate`
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 3. Detalhe da Tarefa (`TarefaDetalheDialog.tsx`)
+- Adicionar botão/toggle de destaque (estrela) no header, junto aos badges
+- Usar `usePlanejamentoItens` para chamar a mutation de update com `{ destaque: !item.destaque }`
+
+### 4. Visual na Timeline e Lista
+- No `PlanejamentoTimeline.tsx` — adicionar ícone de estrela nas barras de itens com destaque
+- Nos componentes de lista (se houver cards) — borda amber + estrela, mesmo padrão das atividades
+
+### 5. Formulário de criação/edição
+- Adicionar toggle de destaque no formulário inline ou popover de criação de tarefas do planejamento
+
+### Arquivos afetados
+- Nova migration SQL
+- `src/types/planejamento.types.ts`
+- `src/components/planejamento/TarefaDetalheDialog.tsx`
+- `src/components/planejamento/PlanejamentoTimeline.tsx`
+- Componentes de formulário/lista do planejamento (se aplicável)
+
