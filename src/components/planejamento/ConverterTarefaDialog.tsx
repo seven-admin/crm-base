@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS } from '@/types/atividades.types';
+import { useGestorEmpreendimento } from '@/hooks/useGestorEmpreendimento';
 
 interface Props {
   open: boolean;
