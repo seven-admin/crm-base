@@ -1,26 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Adicionar configurações de inscrições no EventoEditDialog
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-O formulário de edição de eventos (`EventoEditDialog.tsx`) não possui campos para `inscricoes_abertas` e `limite_inscricoes`, impossibilitando o admin de controlar inscrições pelo painel.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Solução
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### `src/components/eventos/EventoEditDialog.tsx`
-Adicionar dois campos ao formulário:
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-1. **Switch "Inscrições Abertas"** — campo booleano `inscricoes_abertas` (usando componente `Switch`)
-2. **Input "Limite de Inscrições"** — campo numérico `limite_inscricoes` (null = sem limite)
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-Ambos ficam em uma seção "Configurações de Inscrições" antes do botão de salvar.
-
-Alterações:
-- Adicionar `inscricoes_abertas` (boolean) e `limite_inscricoes` (number optional) ao schema Zod
-- Adicionar defaults no `useForm` e no `useEffect` reset
-- Adicionar os dois `FormField` no JSX
-- Incluir os campos no `onSubmit`
-
-### Arquivo afetado
-- `src/components/eventos/EventoEditDialog.tsx`
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar

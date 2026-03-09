@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,8 @@ const formSchema = z.object({
   responsavel_id: z.string().optional(),
   orcamento: z.coerce.number().optional(),
   status: z.string().optional(),
+  inscricoes_abertas: z.boolean().optional(),
+  limite_inscricoes: z.coerce.number().optional().nullable(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -88,6 +91,8 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
       responsavel_id: evento.responsavel_id || '',
       orcamento: evento.orcamento || undefined,
       status: evento.status || 'planejamento',
+      inscricoes_abertas: evento.inscricoes_abertas ?? false,
+      limite_inscricoes: evento.limite_inscricoes ?? null,
     },
   });
 
@@ -102,6 +107,8 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
       responsavel_id: evento.responsavel_id || '',
       orcamento: evento.orcamento || undefined,
       status: evento.status || 'planejamento',
+      inscricoes_abertas: evento.inscricoes_abertas ?? false,
+      limite_inscricoes: evento.limite_inscricoes ?? null,
     });
   }, [evento, form]);
 
@@ -115,6 +122,8 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
       orcamento: data.orcamento,
       empreendimento_id: data.empreendimento_id || null,
       responsavel_id: data.responsavel_id || null,
+      inscricoes_abertas: data.inscricoes_abertas ?? false,
+      limite_inscricoes: data.limite_inscricoes || null,
     });
     onOpenChange(false);
   };
@@ -281,6 +290,45 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
                 </FormItem>
               )}
             />
+
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground">Configurações de Inscrições</h4>
+              <FormField
+                control={form.control}
+                name="inscricoes_abertas"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <FormLabel className="text-base">Inscrições Abertas</FormLabel>
+                      <p className="text-sm text-muted-foreground">Permitir que corretores se inscrevam neste evento</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="limite_inscricoes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Limite de Inscrições</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        value={field.value ?? ''}
+                        placeholder="Sem limite"
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Deixe vazio para não limitar vagas</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
