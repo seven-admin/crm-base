@@ -157,6 +157,7 @@ export type Database = {
           data_followup: string | null
           data_inicio: string
           deadline_date: string | null
+          destaque: boolean
           duracao_minutos: number | null
           empreendimento_id: string | null
           gestor_id: string | null
@@ -190,6 +191,7 @@ export type Database = {
           data_followup?: string | null
           data_inicio: string
           deadline_date?: string | null
+          destaque?: boolean
           duracao_minutos?: number | null
           empreendimento_id?: string | null
           gestor_id?: string | null
@@ -223,6 +225,7 @@ export type Database = {
           data_followup?: string | null
           data_inicio?: string
           deadline_date?: string | null
+          destaque?: boolean
           duracao_minutos?: number | null
           empreendimento_id?: string | null
           gestor_id?: string | null
