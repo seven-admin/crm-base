@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle, ChevronDown, ChevronRight as ChevronRightIcon, Star } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, differenceInDays, isWithinInterval, isBefore, isAfter, addDays, startOfWeek, endOfWeek, eachWeekOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
