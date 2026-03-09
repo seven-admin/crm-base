@@ -107,7 +107,10 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
             </p>
           </div>
 
-          <p className="text-[13px] font-normal leading-snug line-clamp-2">{atividade.titulo}</p>
+          <div className="flex items-center gap-1">
+            {atividade.destaque && <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />}
+            <p className="text-[13px] font-normal leading-snug line-clamp-2">{atividade.titulo}</p>
+          </div>
 
           <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
             <Building2 className="h-3 w-3 shrink-0" />
