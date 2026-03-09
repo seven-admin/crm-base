@@ -66,18 +66,7 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
   const { updateEvento } = useEventos();
   const { data: empreendimentos } = useEmpreendimentos();
 
-  // Buscar usuários
-  const { data: usuarios } = useQuery({
-    queryKey: ['profiles-list'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .order('full_name');
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: funcionarios } = useFuncionariosSeven();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
