@@ -49,9 +49,16 @@ export function PropostaDialog({
   const [dataValidade, setDataValidade] = useState('');
   const [valorTabela, setValorTabela] = useState(0);
   const [valorProposta, setValorProposta] = useState(0);
+  const [internalMode, setInternalMode] = useState(mode);
   
   const [motivoRecusa, setMotivoRecusa] = useState('');
   const [condicoesValidas, setCondicoesValidas] = useState(false);
+
+  // Fetch full negotiation data when dialog opens
+  const { data: negociacaoCompleta } = useNegociacao(
+    open && negociacao?.id ? negociacao.id : undefined
+  );
+  const neg = negociacaoCompleta || negociacao;
   
   // Callback estável para evitar loops de render infinito
   const handleValidationChange = useCallback((isValid: boolean) => {
@@ -65,24 +72,29 @@ export function PropostaDialog({
   const excluirProposta = useExcluirProposta();
   const reenviarParaAnalise = useReenviarParaAnalise();
 
+  // Sync internal mode with prop
+  useEffect(() => {
+    setInternalMode(mode);
+  }, [mode]);
+
   // Calculate default validity (30 days)
   useEffect(() => {
-    if (open && negociacao) {
+    if (open && neg) {
       const hoje = new Date();
       hoje.setDate(hoje.getDate() + 30);
-      setDataValidade(negociacao.data_validade_proposta || hoje.toISOString().split('T')[0]);
+      setDataValidade(neg.data_validade_proposta || hoje.toISOString().split('T')[0]);
       
       // Calculate valor tabela from units
-      const valorUnidades = negociacao.unidades?.reduce(
+      const valorUnidades = neg.unidades?.reduce(
         (acc, u) => acc + (u.valor_tabela || u.unidade?.valor || 0),
         0
-      ) || negociacao.valor_negociacao || 0;
+      ) || neg.valor_negociacao || 0;
       
-      setValorTabela(negociacao.valor_tabela || valorUnidades);
-      setValorProposta(negociacao.valor_proposta || valorUnidades);
+      setValorTabela(neg.valor_tabela || valorUnidades);
+      setValorProposta(neg.valor_proposta || valorUnidades);
       
     }
-  }, [open, negociacao]);
+  }, [open, neg]);
 
   const handleClose = () => {
     setMotivoRecusa('');
