@@ -164,8 +164,10 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
           id,
           codigo,
           created_at,
+          updated_at,
           valor_negociacao,
           valor_proposta,
+          valor_tabela,
           valor_entrada,
           numero_proposta,
           status_proposta,
@@ -173,15 +175,27 @@ export function useNegociacoesKanban(filters?: NegociacaoFilters, options?: { en
           gestor_id,
           corretor_id,
           imobiliaria_id,
+          empreendimento_id,
+          cliente_id,
           ordem_kanban,
           data_previsao_fechamento,
+          data_validade_proposta,
+          desconto_percentual,
+          motivo_contra_proposta,
           observacoes,
           cliente:clientes(id, nome, temperatura, email, telefone, cpf),
           empreendimento:empreendimentos(id, nome),
           gestor:profiles!gestor_id(id, full_name),
           corretor:corretores(id, nome_completo),
           imobiliaria:imobiliarias(id, nome),
-          unidades:negociacao_unidades(id)
+          unidades:negociacao_unidades(
+            id,
+            unidade_id,
+            valor_unidade,
+            valor_tabela,
+            valor_proposta,
+            unidade:unidades(id, numero, valor, bloco:blocos(nome))
+          )
         `)
         .eq('is_active', true)
         .order('ordem_kanban', { ascending: true });

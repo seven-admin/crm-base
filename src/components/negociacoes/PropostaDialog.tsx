@@ -370,9 +370,9 @@ export function PropostaDialog({
           )}
 
           {/* Aceitar/Recusar Proposta */}
-          {isRascunho && mode !== 'recusar' && (
+          {isRascunho && internalMode !== 'recusar' && (
             <>
-              <Button variant="destructive" onClick={() => onOpenChange(true)}>
+              <Button variant="destructive" onClick={() => setInternalMode('recusar')}>
                 <X className="h-4 w-4 mr-2" />
                 Recusar
               </Button>
@@ -384,7 +384,7 @@ export function PropostaDialog({
             </>
           )}
 
-          {mode === 'recusar' && (
+          {internalMode === 'recusar' && (
             <Button
               variant="destructive"
               onClick={handleRecusarProposta}
