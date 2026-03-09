@@ -47,8 +47,6 @@ import {
   NegociacaoCondicaoPagamento,
 } from '@/hooks/useNegociacaoCondicoesPagamento';
 import {
-  TIPOS_PARCELA,
-  TIPO_PARCELA_LABELS,
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
@@ -57,6 +55,7 @@ import {
   type FormaQuitacao,
   type FormaPagamento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { validarCondicoesVsConfiguracao } from '@/hooks/useValidacaoComercial';
 import { useConfiguracaoComercial } from '@/hooks/useConfiguracaoComercial';
 import { cn } from '@/lib/utils';
