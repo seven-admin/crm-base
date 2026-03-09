@@ -24,6 +24,8 @@ import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
 import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import type { ClienteTemperatura } from '@/types/clientes.types';
+import { useGestoresProduto } from '@/hooks/useGestores';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AtividadeDetalheDialogProps {
   atividade: Atividade | null;
