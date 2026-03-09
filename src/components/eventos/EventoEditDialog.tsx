@@ -91,6 +91,8 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
       responsavel_id: evento.responsavel_id || '',
       orcamento: evento.orcamento || undefined,
       status: evento.status || 'planejamento',
+      inscricoes_abertas: (evento as any).inscricoes_abertas ?? false,
+      limite_inscricoes: (evento as any).limite_inscricoes ?? null,
     },
   });
 
