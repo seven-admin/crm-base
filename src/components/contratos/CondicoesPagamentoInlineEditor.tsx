@@ -39,8 +39,6 @@ import {
   useDeleteContratoCondicao,
 } from '@/hooks/useCondicoesPagamento';
 import {
-  TIPOS_PARCELA,
-  TIPO_PARCELA_LABELS,
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
@@ -50,6 +48,7 @@ import {
   type FormaQuitacao,
   type FormaPagamento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { toCents, fromCents, round2 } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
