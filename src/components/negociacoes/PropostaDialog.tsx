@@ -96,8 +96,36 @@ export function PropostaDialog({
       return (data || []) as UnidadeDisponivel[];
     },
   });
+  // Group available units by block
+  const unidadesAgrupadas = useMemo(() => {
+    if (!unidadesDisponiveis.length) return new Map<string, UnidadeDisponivel[]>();
+    const groups = new Map<string, UnidadeDisponivel[]>();
+    unidadesDisponiveis.forEach((u) => {
+      const key = u.bloco?.nome || 'Sem Bloco';
+      const existing = groups.get(key) || [];
+      existing.push(u);
+      groups.set(key, existing);
+    });
+    // Sort units within each group
+    groups.forEach((units) => {
+      units.sort((a, b) => {
+        const andarA = a.andar ?? -Infinity;
+        const andarB = b.andar ?? -Infinity;
+        if (andarA !== andarB) return andarA - andarB;
+        return a.numero.localeCompare(b.numero, 'pt-BR', { numeric: true });
+      });
+    });
+    // Sort keys naturally
+    const sortedKeys = Array.from(groups.keys()).sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { numeric: true })
+    );
+    const sorted = new Map<string, UnidadeDisponivel[]>();
+    sortedKeys.filter(k => k !== 'Sem Bloco').forEach(k => sorted.set(k, groups.get(k)!));
+    if (groups.has('Sem Bloco')) sorted.set('Sem Bloco', groups.get('Sem Bloco')!);
+    return sorted;
+  }, [unidadesDisponiveis]);
 
-  // Mutation to link units to negotiation
+
   const linkUnidadesMutation = useMutation({
     mutationFn: async ({ negociacaoId, unidadeIds }: { negociacaoId: string; unidadeIds: string[] }) => {
       const records = unidadeIds.map(unidade_id => {
