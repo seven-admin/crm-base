@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, ChevronRight, Plus, Trash2, Copy, MessageSquare, Loader2, MoreHorizontal, Zap, Building2, Search, Star, Star } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Trash2, Copy, MessageSquare, Loader2, MoreHorizontal, Zap, Building2, Search, Star, Star, Star } from 'lucide-react';
 import { format, parseISO, isBefore, isAfter, startOfDay } from 'date-fns';
 import { toast } from 'sonner';
 import { ptBR } from 'date-fns/locale';
