@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, UsersRound } from 'lucide-react';
+import { Phone, Users, MapPin, Headphones, Calendar, Clock, User, Building2, MessageSquare, ThermometerSun, CalendarCheck, Shield, Video, Handshake, PenTool, PackageCheck, GraduationCap, Briefcase, UsersRound, Star } from 'lucide-react';
 import type { Atividade, AtividadeTipo, AtividadeStatus, AtividadeSubtipo } from '@/types/atividades.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_LABELS, ATIVIDADE_SUBTIPO_LABELS, TIPOS_COM_CRONOMETRO } from '@/types/atividades.types';
 import { cn } from '@/lib/utils';
@@ -141,7 +141,7 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
             {/* Título e Badges */}
             <div>
               <h3 className="font-semibold text-lg mb-3">{atividade.titulo}</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={cn('border', TIPO_COLORS[atividade.tipo])}>
                   <TipoIcon className="h-3 w-3 mr-1" />
                   {ATIVIDADE_TIPO_LABELS[atividade.tipo]}
@@ -154,6 +154,18 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                 <Badge variant="outline" className={cn('border', STATUS_COLORS[atividade.status])}>
                   {ATIVIDADE_STATUS_LABELS[atividade.status]}
                 </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'h-7 px-2 gap-1 ml-auto',
+                    atividade.destaque && 'text-amber-500'
+                  )}
+                  onClick={() => updateAtividade.mutate({ id: atividade.id, data: { destaque: !atividade.destaque } })}
+                >
+                  <Star className={cn('h-4 w-4', atividade.destaque && 'fill-amber-500')} />
+                  <span className="text-xs">{atividade.destaque ? 'Destaque' : 'Destacar'}</span>
+                </Button>
               </div>
             </div>
 

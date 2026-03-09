@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS } from '@/types/atividades.types';
+import { useGestorEmpreendimento } from '@/hooks/useGestorEmpreendimento';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
 export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimentoId }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: gestorEmpreendimento } = useGestorEmpreendimento(empreendimentoId);
   const [tab, setTab] = useState<'atividade' | 'marketing'>('atividade');
   const [saving, setSaving] = useState(false);
 
@@ -47,7 +49,7 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
         empreendimento_id: empreendimentoId,
         data_inicio: item.data_inicio || format(new Date(), 'yyyy-MM-dd'),
         data_fim: item.data_fim || format(new Date(), 'yyyy-MM-dd'),
-        gestor_id: user?.id,
+        gestor_id: gestorEmpreendimento || user?.id,
         status: 'pendente',
       });
       if (error) throw error;
