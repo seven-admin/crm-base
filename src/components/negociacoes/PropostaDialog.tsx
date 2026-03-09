@@ -177,16 +177,16 @@ export function PropostaDialog({
     excluirProposta.isPending ||
     reenviarParaAnalise.isPending;
 
-  const statusProposta = negociacao?.status_proposta;
+  const statusProposta = neg?.status_proposta;
   const isRascunho = statusProposta === 'rascunho';
   const isContraProposta = statusProposta === 'contra_proposta';
   const isAceita = statusProposta === 'aceita' || statusProposta === 'aprovada_incorporador';
-  const temProposta = !!negociacao?.numero_proposta;
+  const temProposta = !!neg?.numero_proposta;
 
   const handleReenviarParaAnalise = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
     try {
-      await reenviarParaAnalise.mutateAsync(negociacao);
+      await reenviarParaAnalise.mutateAsync(neg as Negociacao);
       handleClose();
     } catch (error) {
       console.error('Erro ao reenviar para análise:', error);
