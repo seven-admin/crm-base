@@ -39,9 +39,9 @@ export function CalendarioDiaCell({
       onClick={() => onSelect(day)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(day); } }}
       className={cn(
-        'h-32 w-full rounded-lg border transition-colors relative group cursor-pointer flex flex-col',
-        'hover:bg-accent hover:border-primary/50',
-        isSelected && 'border-primary ring-2 ring-primary/20 bg-accent'
+        'min-h-[100px] w-full border-r border-b transition-colors relative group cursor-pointer flex flex-col',
+        'hover:bg-accent/50',
+        isSelected && 'bg-accent'
       )}
     >
       {/* Fixed header — day number centered */}

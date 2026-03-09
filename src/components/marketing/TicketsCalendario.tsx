@@ -303,7 +303,7 @@ export function TicketsCalendario({
         </div>
 
         {/* Legenda */}
-        <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+        <div className="flex flex-wrap items-center gap-3 px-4 pt-4 mt-0 pb-4 border-t text-xs">
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded-sm bg-destructive" />
             <span className="text-muted-foreground">Atrasado</span>

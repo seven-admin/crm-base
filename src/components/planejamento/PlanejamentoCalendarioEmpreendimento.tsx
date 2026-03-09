@@ -289,7 +289,7 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
                   }
                 });
                 return fasesMap.size > 0 ? (
-                  <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+                  <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-4 border-t text-xs">
                     <span className="text-muted-foreground font-medium">Fases:</span>
                     {Array.from(fasesMap.entries()).map(([id, { cor, nome }]) => (
                       <div key={id} className="flex items-center gap-1.5">

@@ -73,10 +73,13 @@ export function AgendaCalendario({
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+  const firstDayOfMonth = startOfMonth(currentMonth);
+  const startingDayOfWeek = firstDayOfMonth.getDay();
+
   return (
-    <div className="bg-card rounded-lg border p-4">
+    <div className="bg-card border overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between p-4">
         <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -89,11 +92,11 @@ export function AgendaCalendario({
       </div>
 
       {/* Week days header */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 border-b">
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-muted-foreground py-2"
+            className="text-center text-xs font-medium text-muted-foreground py-2 border-r last:border-r-0"
           >
             {day}
           </div>
@@ -101,7 +104,12 @@ export function AgendaCalendario({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7">
+        {/* Empty cells before first day */}
+        {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+          <div key={`empty-${index}`} className="min-h-[100px] border-r border-b bg-muted/20" />
+        ))}
+
         {days.map((day) => {
           const key = format(day, 'yyyy-MM-dd');
           const dayAtividades = atividadesPorDia.get(key) || [];
@@ -117,37 +125,38 @@ export function AgendaCalendario({
               key={key}
               onClick={() => onDateSelect(day)}
               className={cn(
-                'relative aspect-square p-1 rounded-lg transition-colors',
-                'flex flex-col items-center justify-center',
-                'hover:bg-accent',
+                'relative min-h-[100px] p-1 border-r border-b transition-colors',
+                'flex flex-col items-start',
+                'hover:bg-accent/50',
                 !isCurrentMonth && 'text-muted-foreground/50',
-                isToday(day) && 'ring-1 ring-primary',
-                isSelected && 'bg-primary text-primary-foreground hover:bg-primary/90'
+                isSelected && 'bg-accent'
               )}
             >
-              <span className="text-sm">{format(day, 'd')}</span>
+              <span
+                className={cn(
+                  'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
+                  isToday(day) && 'bg-primary text-primary-foreground'
+                )}
+              >
+                {format(day, 'd')}
+              </span>
               
               {/* Indicadores de atividades */}
               {hasAtividades && (
-                <div className="flex gap-0.5 mt-0.5">
+                <div className="flex gap-0.5 mt-1">
                   {dayAtividades.slice(0, 3).map((_, idx) => (
                     <div
                       key={idx}
                       className={cn(
-                        'w-1 h-1 rounded-full',
+                        'w-1.5 h-1.5 rounded-full',
                         hasVencidas && idx === 0
                           ? 'bg-destructive'
-                          : isSelected
-                          ? 'bg-primary-foreground'
                           : 'bg-primary'
                       )}
                     />
                   ))}
                   {dayAtividades.length > 3 && (
-                    <span className={cn(
-                      'text-[8px]',
-                      isSelected ? 'text-primary-foreground' : 'text-muted-foreground'
-                    )}>
+                    <span className="text-[8px] text-muted-foreground">
                       +{dayAtividades.length - 3}
                     </span>
                   )}
