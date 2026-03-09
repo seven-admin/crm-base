@@ -100,6 +100,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     cidade: '',
     uf: '',
     telefone: '',
+    telefone_contato: '',
     aceite_termos: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
