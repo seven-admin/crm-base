@@ -126,13 +126,13 @@ export function TicketsCalendario({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 pb-0">
         {/* Cabeçalho dos dias da semana */}
-        <div className="grid grid-cols-7 mb-2">
+        <div className="grid grid-cols-7 border-b">
           {weekDays.map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-medium text-muted-foreground py-2"
+              className="text-center text-xs font-medium text-muted-foreground py-2 border-r last:border-r-0"
             >
               {day}
             </div>
@@ -140,10 +140,10 @@ export function TicketsCalendario({
         </div>
 
         {/* Grid do calendário */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7">
           {/* Espaços vazios antes do primeiro dia */}
           {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-            <div key={`empty-${index}`} className="h-24" />
+            <div key={`empty-${index}`} className="min-h-[100px] border-r border-b bg-muted/20" />
           ))}
 
           {/* Dias do mês */}
@@ -158,9 +158,9 @@ export function TicketsCalendario({
               <button
                 onClick={() => onDateSelect(day)}
                 className={cn(
-                  'h-24 w-full p-1 text-left rounded-lg border transition-colors relative',
-                  'hover:bg-accent hover:border-primary/50',
-                  isSelected && 'border-primary bg-accent',
+                  'min-h-[100px] w-full p-1 text-left border-r border-b transition-colors relative',
+                  'hover:bg-accent/50',
+                  isSelected && 'bg-accent',
                   !isSameMonth(day, currentMonth) && 'opacity-50'
                 )}
               >
@@ -303,7 +303,7 @@ export function TicketsCalendario({
         </div>
 
         {/* Legenda */}
-        <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+        <div className="flex flex-wrap items-center gap-3 px-4 pt-4 mt-0 pb-4 border-t text-xs">
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded-sm bg-destructive" />
             <span className="text-muted-foreground">Atrasado</span>

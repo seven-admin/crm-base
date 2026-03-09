@@ -1,71 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Padronizar todos os calendários no estilo do Planejamento Global
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Referência (PlanejamentoCalendario.tsx — o modelo)
-- `gap-0` entre células (sem espaçamento)
-- Bordas retas via `border-r border-b` (sem `rounded-lg`)
-- Header dos dias da semana com `border-b` e `border-r last:border-r-0`
-- Células com `min-h-[100px]`, sem arredondamento
-- Hover com `bg-accent/50`, seleção com `bg-accent`
-- `px-0 pb-0` no CardContent para as bordas colarem nas laterais
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Calendários a padronizar (5 componentes)
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### 1. `src/components/eventos/EventosCalendario.tsx`
-- Remover `gap-1` do header e grid → sem gap
-- Adicionar `border-b` no header, `border-r last:border-r-0` em cada label
-- Células: trocar `rounded-lg border` por `border-r border-b`, remover arredondamento
-- Trocar `h-24` por `min-h-[100px]`
-- CardContent: `px-0 pb-0`
-- Células vazias: adicionar `border-r border-b bg-muted/20`
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### 2. `src/components/agenda/AgendaCalendario.tsx`
-- Remover `gap-1` do header e grid
-- Adicionar bordas retas no header
-- Células: trocar `rounded-lg aspect-square` por `min-h-[100px] border-r border-b` sem arredondamento
-- Manter indicadores de atividades mas adaptar layout para célula retangular (dia no topo-esquerda, indicadores abaixo)
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-### 3. `src/components/forecast/CalendarioCompacto.tsx`
-- Remover `gap-1` do header e grid
-- Adicionar bordas retas
-- Células: trocar `aspect-square rounded-md` por `min-h-[80px] border-r border-b` (menor pois é compacto)
-- Adaptar layout dos indicadores
-- CardContent: `px-0 pb-0`
-
-### 4. `src/components/marketing/TicketsCalendario.tsx`
-- Remover `gap-1` do grid
-- Células: trocar `rounded-lg border` por `border-r border-b`
-- Trocar `h-24` por `min-h-[100px]`
-- CardContent: `px-0 pb-0`
-- Células vazias: `border-r border-b bg-muted/20`
-
-### 5. `src/components/planejamento/PlanejamentoCalendarioEmpreendimento.tsx`
-- Remover `gap-1` do header e grid
-- Adicionar bordas retas no header (`border-b`, `border-r last:border-r-0`)
-- CardContent: `px-0 pb-0` (adicionar `className` override)
-- Células vazias: `border-r border-b bg-muted/20` em vez de simples `h-28`
-
-### 6. `src/components/planejamento/CalendarioDiaCell.tsx` (usado pelo empreendimento)
-- Trocar `rounded-lg border` por `border-r border-b` (bordas retas, sem arredondamento)
-- Trocar `h-32` por `min-h-[100px]`
-- Remover `ring-2 ring-primary/20` da seleção → usar apenas `bg-accent`
-
-## Padrão CSS unificado
-
-```text
-Header:    grid grid-cols-7 border-b
-           cada label: text-center text-xs font-medium text-muted-foreground py-2 border-r last:border-r-0
-
-Grid:      grid grid-cols-7  (sem gap)
-
-Célula:    min-h-[100px] border-r border-b transition-colors relative group cursor-pointer flex flex-col
-           hover:bg-accent/50
-           selected: bg-accent
-           last-col: border-r-0 (opcional)
-
-Vazia:     min-h-[100px] border-r border-b bg-muted/20
-
-CardContent: px-0 pb-0
-```
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar

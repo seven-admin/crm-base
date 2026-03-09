@@ -193,13 +193,13 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="px-0 pb-0">
             {/* Week days header */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 border-b">
               {weekDays.map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-medium text-muted-foreground py-2"
+                  className="text-center text-xs font-medium text-muted-foreground py-2 border-r last:border-r-0"
                 >
                   {day}
                 </div>
@@ -207,9 +207,9 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7">
               {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                <div key={`empty-${index}`} className="h-28" />
+                <div key={`empty-${index}`} className="min-h-[100px] border-r border-b bg-muted/20" />
               ))}
 
               {days.map((day) => {
@@ -269,7 +269,7 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
                 return (
                   <div
                     key={key}
-                    className="h-28 w-full p-1.5 rounded-lg border border-dashed opacity-30"
+                    className="min-h-[100px] w-full p-1.5 border-r border-b bg-muted/20 opacity-30"
                   >
                     <span className="text-sm font-medium text-muted-foreground">
                       {format(day, 'd')}
@@ -289,7 +289,7 @@ export function PlanejamentoCalendarioEmpreendimento({ empreendimentoId, readOnl
                   }
                 });
                 return fasesMap.size > 0 ? (
-                  <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t text-xs">
+                  <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-4 border-t text-xs">
                     <span className="text-muted-foreground font-medium">Fases:</span>
                     {Array.from(fasesMap.entries()).map(([id, { cor, nome }]) => (
                       <div key={id} className="flex items-center gap-1.5">

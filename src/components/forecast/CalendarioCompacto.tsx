@@ -94,21 +94,21 @@ export function CalendarioCompacto({ gestorId, empreendimentoIds, onDayClick, se
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 pb-0">
         {/* Header - dias da semana */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 border-b">
           {daysOfWeek.map((day, i) => (
-            <div key={i} className="text-center text-xs font-medium text-muted-foreground py-1">
+            <div key={i} className="text-center text-xs font-medium text-muted-foreground py-1 border-r last:border-r-0">
               {day}
             </div>
           ))}
         </div>
 
         {/* Grid de dias */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7">
           {/* Dias vazios */}
           {emptyDays.map((_, i) => (
-            <div key={`empty-${i}`} className="aspect-square" />
+            <div key={`empty-${i}`} className="min-h-[80px] border-r border-b bg-muted/20" />
           ))}
 
           {/* Dias do mês */}
@@ -122,22 +122,22 @@ export function CalendarioCompacto({ gestorId, empreendimentoIds, onDayClick, se
                 key={day.toISOString()}
                 onClick={() => onDayClick?.(day)}
                 className={cn(
-                  'aspect-square flex items-center justify-center rounded-md text-xs relative transition-all',
-                  'hover:ring-1 hover:ring-primary/50',
-                  isToday(day) && 'ring-2 ring-primary font-bold',
-                  isSelected && 'bg-primary text-primary-foreground ring-2 ring-primary',
+                  'min-h-[80px] flex flex-col items-start p-1 border-r border-b text-xs relative transition-all',
+                  'hover:bg-accent/50',
+                  isSelected && 'bg-accent',
                   !isSelected && intensity,
                   (quantidade > 0 || onDayClick) && 'cursor-pointer'
                 )}
                 title={quantidade > 0 ? `${quantidade} atividade(s)` : undefined}
               >
                 <span className={cn(
-                  isToday(day) && !isSelected && 'text-primary'
+                  'text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full',
+                  isToday(day) && 'bg-primary text-primary-foreground'
                 )}>
                   {format(day, 'd')}
                 </span>
                 {quantidade > 0 && !isSelected && (
-                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </div>
             );
@@ -145,7 +145,7 @@ export function CalendarioCompacto({ gestorId, empreendimentoIds, onDayClick, se
         </div>
 
         {/* Legenda */}
-        <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 px-4 py-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-primary/20" />
             <span>1-2</span>
