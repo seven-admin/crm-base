@@ -43,6 +43,8 @@ const formSchema = z.object({
   responsavel_id: z.string().optional(),
   orcamento: z.coerce.number().optional(),
   status: z.string().optional(),
+  inscricoes_abertas: z.boolean().optional(),
+  limite_inscricoes: z.coerce.number().optional().nullable(),
 });
 
 type FormData = z.infer<typeof formSchema>;
