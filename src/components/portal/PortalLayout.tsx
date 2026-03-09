@@ -17,6 +17,7 @@ const baseMenuItems = [
   { icon: Building2, label: 'Empreendimentos', path: '/portal-corretor/empreendimentos' },
   { icon: Calendar, label: 'Solicitações', path: '/portal-corretor/solicitacoes' },
   { icon: Users, label: 'Clientes', path: '/portal-corretor/clientes' },
+  { icon: CalendarDays, label: 'Eventos', path: '/portal-corretor/eventos' },
 ];
 
 const gestorExtraItems = [
