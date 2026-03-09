@@ -323,14 +323,88 @@ export function PropostaDialog({
                     </div>
                     <div className="space-y-2">
                       <Label>Unidades</Label>
-                      <div className="flex flex-wrap gap-1">
-                        {neg?.unidades?.map((u) => (
-                          <Badge key={u.id} variant="outline">
-                            {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
-                            {u.unidade?.numero}
-                          </Badge>
-                        ))}
-                      </div>
+                      {hasUnidades ? (
+                        <div className="flex flex-wrap gap-1">
+                          {neg?.unidades?.map((u) => (
+                            <Badge key={u.id} variant="outline">
+                              {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
+                              {u.unidade?.numero}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-amber-600 text-sm">
+                            <AlertTriangle className="h-4 w-4" />
+                            Nenhuma unidade vinculada. Selecione abaixo:
+                          </div>
+                          <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-1">
+                            {unidadesDisponiveis.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-2">
+                                Nenhuma unidade disponível
+                              </p>
+                            ) : (
+                              unidadesDisponiveis.map((unidade) => (
+                                <label
+                                  key={unidade.id}
+                                  className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
+                                >
+                                  <Checkbox
+                                    checked={selectedUnidadeIds.includes(unidade.id)}
+                                    onCheckedChange={(checked) => {
+                                      setSelectedUnidadeIds(prev =>
+                                        checked
+                                          ? [...prev, unidade.id]
+                                          : prev.filter(id => id !== unidade.id)
+                                      );
+                                      // Recalculate values
+                                      const newIds = checked
+                                        ? [...selectedUnidadeIds, unidade.id]
+                                        : selectedUnidadeIds.filter(id => id !== unidade.id);
+                                      const total = newIds.reduce((sum, id) => {
+                                        const u = unidadesDisponiveis.find(x => x.id === id);
+                                        return sum + (u?.valor || 0);
+                                      }, 0);
+                                      setValorTabela(total);
+                                      setValorProposta(total);
+                                    }}
+                                  />
+                                  <div className="flex-1 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Home className="h-4 w-4 text-muted-foreground" />
+                                      <span className="font-medium">{unidade.numero}</span>
+                                      {unidade.bloco?.nome && (
+                                        <Badge variant="outline" className="text-xs">{unidade.bloco.nome}</Badge>
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-mono">
+                                      {unidade.valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </span>
+                                  </div>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          {selectedUnidadeIds.length > 0 && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => {
+                                if (neg) {
+                                  linkUnidadesMutation.mutate({
+                                    negociacaoId: neg.id,
+                                    unidadeIds: selectedUnidadeIds,
+                                  });
+                                }
+                              }}
+                              disabled={linkUnidadesMutation.isPending}
+                            >
+                              {linkUnidadesMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                              Vincular {selectedUnidadeIds.length} unidade(s)
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
