@@ -47,6 +47,7 @@ export interface PlanejamentoItem {
   obs: string | null;
   ordem: number;
   is_active: boolean;
+  destaque: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
