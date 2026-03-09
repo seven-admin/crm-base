@@ -79,6 +79,7 @@ export function CondicoesPagamentoInlineEditor({
   onValidationChange
 }: CondicoesPagamentoInlineEditorProps) {
   const { data: condicoes = [], isLoading } = useContratoCondicoesPagamento(contratoId);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const createCondicao = useCreateContratoCondicao();
   const updateCondicao = useUpdateContratoCondicao();
   const deleteCondicao = useDeleteContratoCondicao();
