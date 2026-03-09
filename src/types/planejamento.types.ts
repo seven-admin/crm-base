@@ -47,6 +47,7 @@ export interface PlanejamentoItem {
   obs: string | null;
   ordem: number;
   is_active: boolean;
+  destaque: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -90,6 +91,7 @@ export interface PlanejamentoItemCreate {
   data_fim?: string | null;
   obs?: string | null;
   ordem?: number;
+  destaque?: boolean;
 }
 
 export interface PlanejamentoItemUpdate {
@@ -103,6 +105,7 @@ export interface PlanejamentoItemUpdate {
   obs?: string | null;
   ordem?: number;
   is_active?: boolean;
+  destaque?: boolean;
 }
 
 export interface PlanejamentoFilters {

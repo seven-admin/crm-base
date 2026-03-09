@@ -5,10 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CalendarDays, Users, FileText, History, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CalendarDays, Users, FileText, History, AlertTriangle, Star } from 'lucide-react';
 import { usePlanejamentoHistorico } from '@/hooks/usePlanejamentoHistorico';
+import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface TarefaDetalheDialogProps {
   open: boolean;
@@ -18,10 +21,15 @@ interface TarefaDetalheDialogProps {
 
 export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheDialogProps) {
   const { historico, isLoading: loadingHistorico } = usePlanejamentoHistorico(item?.id);
+  const { updateItem } = usePlanejamentoItens();
 
   if (!item) return null;
 
   const isOverdue = item.data_fim && isBefore(parseISO(item.data_fim), new Date()) && !item.status?.is_final;
+
+  const handleToggleDestaque = () => {
+    updateItem.mutate({ id: item.id, destaque: !item.destaque });
+  };
 
   const formatCampo = (campo: string) => {
     const map: Record<string, string> = {
@@ -39,8 +47,20 @@ export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-lg">Detalhes da Tarefa</DialogTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleDestaque}
+            className={cn(
+              "h-8 w-8",
+              item.destaque && "text-amber-500"
+            )}
+            title={item.destaque ? 'Remover destaque' : 'Marcar como destaque'}
+          >
+            <Star className={cn("h-5 w-5", item.destaque && "fill-amber-500")} />
+          </Button>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4">

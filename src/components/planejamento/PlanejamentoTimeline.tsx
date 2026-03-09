@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CalendarDays, AlertTriangle, ChevronDown, ChevronRight as ChevronRightIcon, Star } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, differenceInDays, isWithinInterval, isBefore, isAfter, addDays, startOfWeek, endOfWeek, eachWeekOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -364,11 +364,15 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                     {!isCollapsed && faseItens.map(item => (
                       <div 
                         key={item.id}
-                        className="border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer"
+                        className={cn(
+                          "border-b flex items-center px-3 text-sm hover:bg-muted/20 cursor-pointer gap-1",
+                          item.destaque && "bg-amber-50/50 dark:bg-amber-950/20"
+                        )}
                         style={{ height: ROW_HEIGHT }}
                         title={item.item}
                         onClick={() => handleItemClick(item)}
                       >
+                        {item.destaque && <Star className="h-3 w-3 text-amber-500 fill-amber-500 flex-shrink-0" />}
                         <span className="truncate">{item.item}</span>
                       </div>
                     ))}
@@ -468,6 +472,7 @@ export function PlanejamentoTimeline({ empreendimentoId, readOnly = false }: Pro
                                     onClick={() => handleItemClick(item)}
                                   >
                                     <div className="flex items-center gap-1 px-2 h-full text-xs text-white font-medium truncate">
+                                      {item.destaque && <Star className="h-3 w-3 flex-shrink-0 fill-white/80" />}
                                       {pos.isOverdue && <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
                                       <span className="truncate">{item.item}</span>
                                     </div>
