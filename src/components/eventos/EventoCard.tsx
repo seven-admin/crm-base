@@ -30,7 +30,7 @@ interface EventoCardProps {
 }
 
 export function EventoCard({ evento, tarefasConcluidas = 0, totalTarefas = 0, onClick }: EventoCardProps) {
-  const dataEvento = new Date(evento.data_evento);
+  const dataEvento = parseDateLocal(evento.data_evento);
   const diasRestantes = differenceInDays(dataEvento, new Date());
   const eventoPassou = isPast(dataEvento);
   const progresso = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0;

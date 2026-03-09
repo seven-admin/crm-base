@@ -23,7 +23,3 @@ export function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
-  const normalized = value.replace(',', '.');
-  const parsed = parseFloat(normalized);
-  return isNaN(parsed) ? 0 : parsed;
-}
