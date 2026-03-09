@@ -230,6 +230,10 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
                 <span>{atividade.corretor.nome_completo}</span>
               </div>
             )}
+
+            <div className="flex items-center gap-1.5 text-xs" onClick={(e) => e.stopPropagation()}>
+              <AtividadeResponsaveisEditor atividadeId={atividade.id} readOnly compact />
+            </div>
           </div>
         </div>
       </div>

@@ -116,6 +116,9 @@ export function AtividadeKanbanCard({ atividade, isDragging, onOpenDetalhe }: At
           {atividade.empreendimento?.nome && (
             <p className="truncate text-muted-foreground/70">{atividade.empreendimento.nome}</p>
           )}
+          <div className="pt-1" onClick={(e) => e.stopPropagation()}>
+            <AtividadeResponsaveisEditor atividadeId={atividade.id} readOnly compact />
+          </div>
         </div>
 
         {TIPOS_NEGOCIACAO.includes(atividade.tipo) && (
