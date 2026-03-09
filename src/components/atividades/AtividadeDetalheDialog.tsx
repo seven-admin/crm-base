@@ -81,6 +81,8 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
   const [alterarStatusOpen, setAlterarStatusOpen] = useState(false);
   const updateAtividade = useUpdateAtividade();
   const { data: historico = [] } = useAtividadeHistorico(atividade?.id ?? null);
+  const isSuperAdmin = role === 'super_admin';
+  const { data: gestores = [] } = useGestoresProduto({ enabled: isSuperAdmin && open });
   
   const TipoIcon = atividade ? TIPO_ICONS[atividade.tipo] : Phone;
   const temperatura = atividade?.temperatura_cliente 
