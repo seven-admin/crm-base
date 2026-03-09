@@ -40,8 +40,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { CondicaoPagamentoForm } from '@/components/contratos/CondicaoPagamentoForm';
 import {
-  TIPOS_PARCELA,
-  TIPO_PARCELA_LABELS,
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
@@ -49,6 +47,7 @@ import {
   type TipoParcelaCodigo,
   type FormaPagamento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { cn } from '@/lib/utils';
 
 // Interface para condição local (sem ID, pois ainda não está salva)
@@ -71,6 +70,7 @@ export function LocalCondicoesPagamentoEditor({
   readonly = false,
 }: LocalCondicoesPagamentoEditorProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const [conditionToDelete, setConditionToDelete] = useState<string | null>(null);
   const [advancedFormOpen, setAdvancedFormOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -389,9 +389,9 @@ export function LocalCondicoesPagamentoEditor({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {TIPOS_PARCELA.map(tipo => (
-                                <SelectItem key={tipo} value={tipo}>
-                                  {TIPO_PARCELA_LABELS[tipo]}
+                              {tiposParcela.map(tipo => (
+                                <SelectItem key={tipo.codigo} value={tipo.codigo}>
+                                  {tipo.nome}
                                 </SelectItem>
                               ))}
                             </SelectContent>

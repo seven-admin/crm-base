@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Building2, User, Home, Banknote, CreditCard, Calendar, Wallet } from 'lucide-react';
 import { LocalCondicao } from '@/components/negociacoes/LocalCondicoesPagamentoEditor';
-import { TIPO_PARCELA_LABELS } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import logoSeven from '@/assets/logo.png';
 
 interface UnidadeSelecionada {
@@ -44,6 +44,7 @@ export function ApresentacaoDialog({
 }: ApresentacaoDialogProps) {
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const { data: tiposParcela = [] } = useTiposParcela();
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -207,7 +208,7 @@ export function ApresentacaoDialog({
                           <tr key={cond._localId || index} className="border-b last:border-0">
                             <td className="py-3 px-2">
                               <Badge variant="secondary">
-                                {TIPO_PARCELA_LABELS[cond.tipo_parcela_codigo as keyof typeof TIPO_PARCELA_LABELS] || cond.tipo_parcela_codigo}
+                                {tiposParcela.find(t => t.codigo === cond.tipo_parcela_codigo)?.nome || cond.tipo_parcela_codigo}
                               </Badge>
                             </td>
                             <td className="text-center py-3 px-2 font-mono">{cond.quantidade}</td>

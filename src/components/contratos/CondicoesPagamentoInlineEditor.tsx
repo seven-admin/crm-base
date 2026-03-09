@@ -39,8 +39,6 @@ import {
   useDeleteContratoCondicao,
 } from '@/hooks/useCondicoesPagamento';
 import {
-  TIPOS_PARCELA,
-  TIPO_PARCELA_LABELS,
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
@@ -50,6 +48,7 @@ import {
   type FormaQuitacao,
   type FormaPagamento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { toCents, fromCents, round2 } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -80,6 +79,7 @@ export function CondicoesPagamentoInlineEditor({
   onValidationChange
 }: CondicoesPagamentoInlineEditorProps) {
   const { data: condicoes = [], isLoading } = useContratoCondicoesPagamento(contratoId);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const createCondicao = useCreateContratoCondicao();
   const updateCondicao = useUpdateContratoCondicao();
   const deleteCondicao = useDeleteContratoCondicao();
@@ -542,7 +542,7 @@ export function CondicoesPagamentoInlineEditor({
                         <TableCell>
                           {readonly ? (
                             <Badge variant="secondary">
-                              {TIPO_PARCELA_LABELS[tipoParcela] || tipoParcela}
+                              {tiposParcela.find(t => t.codigo === tipoParcela)?.nome || tipoParcela}
                             </Badge>
                           ) : (
                             <Select 
@@ -553,8 +553,8 @@ export function CondicoesPagamentoInlineEditor({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {TIPOS_PARCELA.map(t => (
-                                  <SelectItem key={t} value={t}>{TIPO_PARCELA_LABELS[t]}</SelectItem>
+                                {tiposParcela.map(t => (
+                                  <SelectItem key={t.codigo} value={t.codigo}>{t.nome}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -665,8 +665,8 @@ export function CondicoesPagamentoInlineEditor({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {TIPOS_PARCELA.map(t => (
-                                <SelectItem key={t} value={t}>{TIPO_PARCELA_LABELS[t]}</SelectItem>
+                              {tiposParcela.map(t => (
+                                  <SelectItem key={t.codigo} value={t.codigo}>{t.nome}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

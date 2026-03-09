@@ -23,12 +23,10 @@ import {
 } from '@/components/ui/select';
 import { Car, Home, Banknote, Package, Calculator, Sparkles } from 'lucide-react';
 import {
-  TIPO_PARCELA_LABELS,
   FORMA_QUITACAO_LABELS,
   FORMA_PAGAMENTO_LABELS,
   EVENTO_VENCIMENTO_LABELS,
   INDICES_CORRECAO,
-  TIPOS_PARCELA,
   FORMAS_QUITACAO,
   FORMAS_PAGAMENTO,
   EVENTOS_VENCIMENTO,
@@ -39,6 +37,7 @@ import {
   type FormaPagamento,
   type EventoVencimento,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 
 interface CondicaoPagamentoFormProps {
   open: boolean;
@@ -63,6 +62,7 @@ export function CondicaoPagamentoForm({
     ...DEFAULT_CONDICAO_PAGAMENTO,
     ...initialData,
   });
+  const { data: tiposParcela = [] } = useTiposParcela();
   const [modoCalculo, setModoCalculo] = useState<'manual' | 'automatico'>('manual');
 
   useEffect(() => {
@@ -150,9 +150,9 @@ export function CondicaoPagamentoForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS_PARCELA.map(tipo => (
-                  <SelectItem key={tipo} value={tipo}>
-                    {TIPO_PARCELA_LABELS[tipo]}
+                {tiposParcela.map(tipo => (
+                  <SelectItem key={tipo.codigo} value={tipo.codigo}>
+                    {tipo.nome}
                   </SelectItem>
                 ))}
               </SelectContent>

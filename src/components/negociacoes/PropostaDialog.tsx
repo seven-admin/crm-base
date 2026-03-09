@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle, Home } from 'lucide-react';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
 import { ComentariosTab } from './ComentariosTab';
@@ -30,6 +31,15 @@ import {
 } from '@/hooks/useNegociacoes';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UnidadeDisponivel {
+  id: string;
+  numero: string;
+  valor: number;
+  bloco: { nome: string } | null;
+}
 
 interface PropostaDialogProps {
   open: boolean;
@@ -45,11 +55,13 @@ export function PropostaDialog({
   mode = 'view',
 }: PropostaDialogProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('dados');
   const [dataValidade, setDataValidade] = useState('');
   const [valorTabela, setValorTabela] = useState(0);
   const [valorProposta, setValorProposta] = useState(0);
   const [internalMode, setInternalMode] = useState(mode);
+  const [selectedUnidadeIds, setSelectedUnidadeIds] = useState<string[]>([]);
   
   const [motivoRecusa, setMotivoRecusa] = useState('');
   const [condicoesValidas, setCondicoesValidas] = useState(false);
@@ -59,6 +71,44 @@ export function PropostaDialog({
     open && negociacao?.id ? negociacao.id : undefined
   );
   const neg = negociacaoCompleta || negociacao;
+  
+  const hasUnidades = neg?.unidades && neg.unidades.length > 0;
+
+  // Fetch available units when negotiation has no units
+  const { data: unidadesDisponiveis = [] } = useQuery({
+    queryKey: ['unidades-disponiveis-proposta', neg?.empreendimento_id],
+    enabled: !!neg?.empreendimento_id && open && !hasUnidades,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('unidades')
+        .select('id, numero, valor, bloco:blocos(nome)')
+        .eq('empreendimento_id', neg!.empreendimento_id)
+        .in('status', ['disponivel', 'reservada'])
+        .order('numero');
+      if (error) throw error;
+      return (data || []) as UnidadeDisponivel[];
+    },
+  });
+
+  // Mutation to link units to negotiation
+  const linkUnidadesMutation = useMutation({
+    mutationFn: async ({ negociacaoId, unidadeIds }: { negociacaoId: string; unidadeIds: string[] }) => {
+      const records = unidadeIds.map(unidade_id => {
+        const unidade = unidadesDisponiveis.find(u => u.id === unidade_id);
+        return {
+          negociacao_id: negociacaoId,
+          unidade_id,
+          valor_tabela: unidade?.valor || 0,
+        };
+      });
+      const { error } = await supabase.from('negociacao_unidades').insert(records);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['negociacao'] });
+      toast.success('Unidades vinculadas com sucesso!');
+    },
+  });
   
   // Callback estável para evitar loops de render infinito
   const handleValidationChange = useCallback((isValid: boolean) => {
@@ -92,7 +142,7 @@ export function PropostaDialog({
       
       setValorTabela(neg.valor_tabela || valorUnidades);
       setValorProposta(neg.valor_proposta || valorUnidades);
-      
+      setSelectedUnidadeIds([]);
     }
   }, [open, neg]);
 
@@ -273,14 +323,88 @@ export function PropostaDialog({
                     </div>
                     <div className="space-y-2">
                       <Label>Unidades</Label>
-                      <div className="flex flex-wrap gap-1">
-                        {neg?.unidades?.map((u) => (
-                          <Badge key={u.id} variant="outline">
-                            {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
-                            {u.unidade?.numero}
-                          </Badge>
-                        ))}
-                      </div>
+                      {hasUnidades ? (
+                        <div className="flex flex-wrap gap-1">
+                          {neg?.unidades?.map((u) => (
+                            <Badge key={u.id} variant="outline">
+                              {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
+                              {u.unidade?.numero}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-amber-600 text-sm">
+                            <AlertTriangle className="h-4 w-4" />
+                            Nenhuma unidade vinculada. Selecione abaixo:
+                          </div>
+                          <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-1">
+                            {unidadesDisponiveis.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-2">
+                                Nenhuma unidade disponível
+                              </p>
+                            ) : (
+                              unidadesDisponiveis.map((unidade) => (
+                                <label
+                                  key={unidade.id}
+                                  className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
+                                >
+                                  <Checkbox
+                                    checked={selectedUnidadeIds.includes(unidade.id)}
+                                    onCheckedChange={(checked) => {
+                                      setSelectedUnidadeIds(prev =>
+                                        checked
+                                          ? [...prev, unidade.id]
+                                          : prev.filter(id => id !== unidade.id)
+                                      );
+                                      // Recalculate values
+                                      const newIds = checked
+                                        ? [...selectedUnidadeIds, unidade.id]
+                                        : selectedUnidadeIds.filter(id => id !== unidade.id);
+                                      const total = newIds.reduce((sum, id) => {
+                                        const u = unidadesDisponiveis.find(x => x.id === id);
+                                        return sum + (u?.valor || 0);
+                                      }, 0);
+                                      setValorTabela(total);
+                                      setValorProposta(total);
+                                    }}
+                                  />
+                                  <div className="flex-1 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Home className="h-4 w-4 text-muted-foreground" />
+                                      <span className="font-medium">{unidade.numero}</span>
+                                      {unidade.bloco?.nome && (
+                                        <Badge variant="outline" className="text-xs">{unidade.bloco.nome}</Badge>
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-mono">
+                                      {unidade.valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </span>
+                                  </div>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          {selectedUnidadeIds.length > 0 && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => {
+                                if (neg) {
+                                  linkUnidadesMutation.mutate({
+                                    negociacaoId: neg.id,
+                                    unidadeIds: selectedUnidadeIds,
+                                  });
+                                }
+                              }}
+                              disabled={linkUnidadesMutation.isPending}
+                            >
+                              {linkUnidadesMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                              Vincular {selectedUnidadeIds.length} unidade(s)
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
