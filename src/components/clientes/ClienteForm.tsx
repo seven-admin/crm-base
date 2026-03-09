@@ -491,6 +491,28 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                 />
                 <FormField
                   control={form.control}
+                  name="estado_civil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado Civil</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ESTADOS_CIVIS.map((ec) => (
+                            <SelectItem key={ec} value={ec}>{ec}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="renda_mensal"
                   render={({ field }) => (
                     <FormItem>
