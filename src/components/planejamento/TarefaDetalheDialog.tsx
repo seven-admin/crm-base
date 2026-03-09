@@ -12,6 +12,9 @@ import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAllProfiles } from '@/hooks/useFuncionariosSeven';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TarefaDetalheDialogProps {
   open: boolean;
