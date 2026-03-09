@@ -344,6 +344,7 @@ const App = () => (
               <Route path="empreendimentos/:id" element={<PortalEmpreendimentoDetalhe />} />
               <Route path="solicitacoes" element={<PortalSolicitacoes />} />
               <Route path="clientes" element={<PortalClientes />} />
+              <Route path="eventos" element={<PortalEventos />} />
               <Route path="corretores" element={<PortalCorretoresGestao />} />
               <Route path="minha-imobiliaria" element={<PortalMinhaImobiliaria />} />
             </Route>
