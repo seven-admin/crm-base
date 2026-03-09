@@ -122,6 +122,8 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
       orcamento: data.orcamento,
       empreendimento_id: data.empreendimento_id || null,
       responsavel_id: data.responsavel_id || null,
+      inscricoes_abertas: data.inscricoes_abertas ?? false,
+      limite_inscricoes: data.limite_inscricoes || null,
     });
     onOpenChange(false);
   };
