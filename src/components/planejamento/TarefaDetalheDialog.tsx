@@ -5,10 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CalendarDays, Users, FileText, History, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CalendarDays, Users, FileText, History, AlertTriangle, Star } from 'lucide-react';
 import { usePlanejamentoHistorico } from '@/hooks/usePlanejamentoHistorico';
+import { usePlanejamentoItens } from '@/hooks/usePlanejamentoItens';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface TarefaDetalheDialogProps {
   open: boolean;
