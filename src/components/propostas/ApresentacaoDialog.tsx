@@ -208,7 +208,7 @@ export function ApresentacaoDialog({
                           <tr key={cond._localId || index} className="border-b last:border-0">
                             <td className="py-3 px-2">
                               <Badge variant="secondary">
-                                {TIPO_PARCELA_LABELS[cond.tipo_parcela_codigo as keyof typeof TIPO_PARCELA_LABELS] || cond.tipo_parcela_codigo}
+                                {tiposParcela.find(t => t.codigo === cond.tipo_parcela_codigo)?.nome || cond.tipo_parcela_codigo}
                               </Badge>
                             </td>
                             <td className="text-center py-3 px-2 font-mono">{cond.quantidade}</td>

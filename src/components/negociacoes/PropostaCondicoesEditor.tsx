@@ -253,7 +253,7 @@ export function PropostaCondicoesEditor({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary" className="text-xs">
-                          {TIPO_PARCELA_LABELS[condicao.tipo_parcela_codigo] || condicao.tipo_parcela_codigo}
+                          {tiposParcela.find(t => t.codigo === condicao.tipo_parcela_codigo)?.nome || condicao.tipo_parcela_codigo}
                         </Badge>
                         <Badge variant="outline" className="text-xs flex items-center gap-1">
                           {getFormaQuitacaoIcon(condicao.forma_quitacao as FormaQuitacao)}

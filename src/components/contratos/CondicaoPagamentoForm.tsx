@@ -150,9 +150,9 @@ export function CondicaoPagamentoForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS_PARCELA.map(tipo => (
-                  <SelectItem key={tipo} value={tipo}>
-                    {TIPO_PARCELA_LABELS[tipo]}
+                {tiposParcela.map(tipo => (
+                  <SelectItem key={tipo.codigo} value={tipo.codigo}>
+                    {tipo.nome}
                   </SelectItem>
                 ))}
               </SelectContent>

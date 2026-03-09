@@ -665,8 +665,8 @@ export function CondicoesPagamentoInlineEditor({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {TIPOS_PARCELA.map(t => (
-                                <SelectItem key={t} value={t}>{TIPO_PARCELA_LABELS[t]}</SelectItem>
+                              {tiposParcela.map(t => (
+                                  <SelectItem key={t.codigo} value={t.codigo}>{t.nome}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
