@@ -141,7 +141,7 @@ export default function Eventos() {
 
       // Se usou template, criar as tarefas predefinidas
       if (selectedTemplate && selectedTemplate.tarefas && novoEvento) {
-        const dataEvento = new Date(data.data_evento);
+        const dataEvento = parseDateLocal(data.data_evento);
         
         for (const tarefaTemplate of selectedTemplate.tarefas) {
           const dataTarefa = addDays(dataEvento, tarefaTemplate.dias_antes_evento);
