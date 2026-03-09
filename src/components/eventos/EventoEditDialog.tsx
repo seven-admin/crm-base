@@ -247,9 +247,9 @@ export function EventoEditDialog({ evento, open, onOpenChange }: EventoEditDialo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {usuarios?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.full_name}
+                        {funcionarios?.map((func) => (
+                          <SelectItem key={func.id} value={func.id}>
+                            {func.full_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
