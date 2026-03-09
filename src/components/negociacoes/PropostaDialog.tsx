@@ -20,6 +20,7 @@ import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesP
 import { ComentariosTab } from './ComentariosTab';
 import { MessageSquare } from 'lucide-react';
 import {
+  useNegociacao,
   useGerarProposta,
   useAceitarProposta,
   useRecusarProposta,
@@ -48,9 +49,16 @@ export function PropostaDialog({
   const [dataValidade, setDataValidade] = useState('');
   const [valorTabela, setValorTabela] = useState(0);
   const [valorProposta, setValorProposta] = useState(0);
+  const [internalMode, setInternalMode] = useState(mode);
   
   const [motivoRecusa, setMotivoRecusa] = useState('');
   const [condicoesValidas, setCondicoesValidas] = useState(false);
+
+  // Fetch full negotiation data when dialog opens
+  const { data: negociacaoCompleta } = useNegociacao(
+    open && negociacao?.id ? negociacao.id : undefined
+  );
+  const neg = negociacaoCompleta || negociacao;
   
   // Callback estável para evitar loops de render infinito
   const handleValidationChange = useCallback((isValid: boolean) => {
@@ -64,36 +72,42 @@ export function PropostaDialog({
   const excluirProposta = useExcluirProposta();
   const reenviarParaAnalise = useReenviarParaAnalise();
 
+  // Sync internal mode with prop
+  useEffect(() => {
+    setInternalMode(mode);
+  }, [mode]);
+
   // Calculate default validity (30 days)
   useEffect(() => {
-    if (open && negociacao) {
+    if (open && neg) {
       const hoje = new Date();
       hoje.setDate(hoje.getDate() + 30);
-      setDataValidade(negociacao.data_validade_proposta || hoje.toISOString().split('T')[0]);
+      setDataValidade(neg.data_validade_proposta || hoje.toISOString().split('T')[0]);
       
       // Calculate valor tabela from units
-      const valorUnidades = negociacao.unidades?.reduce(
+      const valorUnidades = neg.unidades?.reduce(
         (acc, u) => acc + (u.valor_tabela || u.unidade?.valor || 0),
         0
-      ) || negociacao.valor_negociacao || 0;
+      ) || neg.valor_negociacao || 0;
       
-      setValorTabela(negociacao.valor_tabela || valorUnidades);
-      setValorProposta(negociacao.valor_proposta || valorUnidades);
+      setValorTabela(neg.valor_tabela || valorUnidades);
+      setValorProposta(neg.valor_proposta || valorUnidades);
       
     }
-  }, [open, negociacao]);
+  }, [open, neg]);
 
   const handleClose = () => {
     setMotivoRecusa('');
+    setInternalMode(mode);
     onOpenChange(false);
   };
 
   const handleGerarProposta = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
       await gerarProposta.mutateAsync({
-        id: negociacao.id,
+        id: neg.id,
         data: {
           data_validade: dataValidade,
           valor_tabela: valorTabela,
@@ -111,10 +125,10 @@ export function PropostaDialog({
   };
 
   const handleAceitarProposta = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
-      await aceitarProposta.mutateAsync(negociacao.id);
+      await aceitarProposta.mutateAsync(neg.id);
       handleClose();
     } catch (error) {
       console.error('Erro ao aceitar proposta:', error);
@@ -122,11 +136,11 @@ export function PropostaDialog({
   };
 
   const handleRecusarProposta = async () => {
-    if (!negociacao || !motivoRecusa.trim()) return;
+    if (!neg || !motivoRecusa.trim()) return;
 
     try {
       await recusarProposta.mutateAsync({
-        id: negociacao.id,
+        id: neg.id,
         data: { motivo_recusa: motivoRecusa },
       });
       handleClose();
@@ -136,10 +150,10 @@ export function PropostaDialog({
   };
 
   const handleGerarContrato = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
-      const result = await converterContrato.mutateAsync(negociacao.id);
+      const result = await converterContrato.mutateAsync(neg.id);
       handleClose();
       navigate('/contratos');
     } catch (error) {
@@ -148,12 +162,12 @@ export function PropostaDialog({
   };
 
   const handleExcluir = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
     
     if (!window.confirm('Tem certeza que deseja excluir esta proposta?')) return;
 
     try {
-      await excluirProposta.mutateAsync(negociacao.id);
+      await excluirProposta.mutateAsync(neg.id);
       handleClose();
     } catch (error) {
       console.error('Erro ao excluir proposta:', error);
@@ -176,16 +190,16 @@ export function PropostaDialog({
     excluirProposta.isPending ||
     reenviarParaAnalise.isPending;
 
-  const statusProposta = negociacao?.status_proposta;
+  const statusProposta = neg?.status_proposta;
   const isRascunho = statusProposta === 'rascunho';
   const isContraProposta = statusProposta === 'contra_proposta';
   const isAceita = statusProposta === 'aceita' || statusProposta === 'aprovada_incorporador';
-  const temProposta = !!negociacao?.numero_proposta;
+  const temProposta = !!neg?.numero_proposta;
 
   const handleReenviarParaAnalise = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
     try {
-      await reenviarParaAnalise.mutateAsync(negociacao);
+      await reenviarParaAnalise.mutateAsync(neg as Negociacao);
       handleClose();
     } catch (error) {
       console.error('Erro ao reenviar para análise:', error);
@@ -198,10 +212,10 @@ export function PropostaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {temProposta ? `Proposta ${negociacao?.numero_proposta}` : 'Nova Proposta'}
+            {temProposta ? `Proposta ${neg?.numero_proposta}` : 'Nova Proposta'}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            {negociacao?.codigo} - {negociacao?.cliente?.nome}
+            {neg?.codigo} - {neg?.cliente?.nome}
             {statusProposta && (
               <Badge
                 variant="secondary"
@@ -215,17 +229,17 @@ export function PropostaDialog({
         </DialogHeader>
 
         {/* Alerta de Contra Proposta */}
-        {isContraProposta && negociacao?.motivo_contra_proposta && (
+        {isContraProposta && neg?.motivo_contra_proposta && (
           <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
             <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-orange-800 dark:text-orange-200">Contra Proposta do Incorporador</p>
-              <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">{negociacao.motivo_contra_proposta}</p>
+              <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">{neg.motivo_contra_proposta}</p>
             </div>
           </div>
         )}
 
-        {mode === 'recusar' ? (
+        {internalMode === 'recusar' ? (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="motivo_recusa">Motivo da Recusa *</Label>
@@ -255,12 +269,12 @@ export function PropostaDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Empreendimento</Label>
-                      <p className="text-sm font-medium">{negociacao?.empreendimento?.nome}</p>
+                      <p className="text-sm font-medium">{neg?.empreendimento?.nome}</p>
                     </div>
                     <div className="space-y-2">
                       <Label>Unidades</Label>
                       <div className="flex flex-wrap gap-1">
-                        {negociacao?.unidades?.map((u) => (
+                        {neg?.unidades?.map((u) => (
                           <Badge key={u.id} variant="outline">
                             {u.unidade?.bloco?.nome ? `${u.unidade.bloco.nome}-` : ''}
                             {u.unidade?.numero}
@@ -320,10 +334,10 @@ export function PropostaDialog({
             </TabsContent>
 
             <TabsContent value="condicoes" className="mt-4">
-              {negociacao && (
+              {neg && (
                 <NegociacaoCondicoesPagamentoInlineEditor
-                  negociacaoId={negociacao.id}
-                  empreendimentoId={negociacao.empreendimento_id}
+                  negociacaoId={neg.id}
+                  empreendimentoId={neg.empreendimento_id}
                   valorReferencia={valorProposta || valorTabela}
                   readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida' || statusProposta === 'em_analise'}
                   onValidationChange={handleValidationChange}
@@ -332,7 +346,7 @@ export function PropostaDialog({
             </TabsContent>
 
             <TabsContent value="comentarios" className="mt-4">
-              {negociacao && <ComentariosTab negociacaoId={negociacao.id} />}
+              {neg && <ComentariosTab negociacaoId={neg.id} />}
             </TabsContent>
           </Tabs>
         )}
@@ -369,9 +383,9 @@ export function PropostaDialog({
           )}
 
           {/* Aceitar/Recusar Proposta */}
-          {isRascunho && mode !== 'recusar' && (
+          {isRascunho && internalMode !== 'recusar' && (
             <>
-              <Button variant="destructive" onClick={() => onOpenChange(true)}>
+              <Button variant="destructive" onClick={() => setInternalMode('recusar')}>
                 <X className="h-4 w-4 mr-2" />
                 Recusar
               </Button>
@@ -383,7 +397,7 @@ export function PropostaDialog({
             </>
           )}
 
-          {mode === 'recusar' && (
+          {internalMode === 'recusar' && (
             <Button
               variant="destructive"
               onClick={handleRecusarProposta}
