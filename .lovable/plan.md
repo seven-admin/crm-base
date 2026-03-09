@@ -1,36 +1,21 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Duas alterações
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## 1. Toggle de Destaque no Detalhe da Atividade
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+Adicionar um toggle de destaque (estrela) no `AtividadeDetalheDialog`, na seção do lado direito (junto aos badges/título), permitindo ativar/desativar o destaque diretamente na visualização de detalhes sem abrir o formulário de edição.
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+**Arquivo**: `src/components/atividades/AtividadeDetalheDialog.tsx`
+- Importar `Star` do lucide-react e `Switch` do UI
+- Adicionar um toggle inline na área de badges (linha ~144), com ícone de estrela e switch que chama `updateAtividade.mutate({ id, data: { destaque: !atividade.destaque } })`
+- Visual consistente com o formulário: borda amber quando ativo
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+## 2. Gestor do Produto na Conversão de Tarefa
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+Atualmente o `ConverterTarefaDialog` usa `user?.id` (usuário logado) como `gestor_id`. O correto é buscar o gestor de produto do empreendimento selecionado via a RPC `get_gestor_empreendimento`.
+
+**Arquivo**: `src/components/planejamento/ConverterTarefaDialog.tsx`
+- Importar e usar `useGestorEmpreendimento(empreendimentoId)`
+- Na inserção da atividade, usar `gestor_id: gestorEmpreendimento || user?.id` (fallback para o usuário logado caso não haja gestor cadastrado)
+
