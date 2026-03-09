@@ -8,6 +8,7 @@ import {
   Users,
   LogOut,
   UserCog,
+  CalendarDays,
 } from 'lucide-react';
 import logo from '@/assets/logo-full.png';
 
