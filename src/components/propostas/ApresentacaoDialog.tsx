@@ -44,6 +44,7 @@ export function ApresentacaoDialog({
 }: ApresentacaoDialogProps) {
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const { data: tiposParcela = [] } = useTiposParcela();
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
