@@ -226,7 +226,7 @@ export function PropostaDialog({
           </div>
         )}
 
-        {mode === 'recusar' ? (
+        {internalMode === 'recusar' ? (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="motivo_recusa">Motivo da Recusa *</Label>
