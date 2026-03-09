@@ -202,6 +202,10 @@ export default function EventoDetalhe() {
             <Users className="h-4 w-4" />
             Equipe
           </TabsTrigger>
+          <TabsTrigger value="inscritos" className="gap-2">
+            <Users className="h-4 w-4" />
+            Inscritos
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tarefas">
