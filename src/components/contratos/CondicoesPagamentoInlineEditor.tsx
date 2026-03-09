@@ -542,7 +542,7 @@ export function CondicoesPagamentoInlineEditor({
                         <TableCell>
                           {readonly ? (
                             <Badge variant="secondary">
-                              {TIPO_PARCELA_LABELS[tipoParcela] || tipoParcela}
+                              {tiposParcela.find(t => t.codigo === tipoParcela)?.nome || tipoParcela}
                             </Badge>
                           ) : (
                             <Select 
@@ -553,8 +553,8 @@ export function CondicoesPagamentoInlineEditor({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {TIPOS_PARCELA.map(t => (
-                                  <SelectItem key={t} value={t}>{TIPO_PARCELA_LABELS[t]}</SelectItem>
+                                {tiposParcela.map(t => (
+                                  <SelectItem key={t.codigo} value={t.codigo}>{t.nome}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
