@@ -18,6 +18,7 @@ import {
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { parseDateLocal } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   planejamento: 'Planejamento',

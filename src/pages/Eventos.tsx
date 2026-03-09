@@ -15,6 +15,7 @@ import {
 import { Plus, Search, Calendar, MapPin, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEventos } from '@/hooks/useEventos';
 import { format, addDays } from 'date-fns';
+import { parseDateLocal } from '@/lib/utils';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
