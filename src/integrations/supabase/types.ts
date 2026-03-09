@@ -2529,6 +2529,67 @@ export type Database = {
           },
         ]
       }
+      evento_inscricoes: {
+        Row: {
+          corretor_id: string | null
+          created_at: string
+          email: string | null
+          evento_id: string
+          id: string
+          imobiliaria_nome: string | null
+          nome_corretor: string
+          status: string
+          telefone: string | null
+          user_id: string
+        }
+        Insert: {
+          corretor_id?: string | null
+          created_at?: string
+          email?: string | null
+          evento_id: string
+          id?: string
+          imobiliaria_nome?: string | null
+          nome_corretor: string
+          status?: string
+          telefone?: string | null
+          user_id: string
+        }
+        Update: {
+          corretor_id?: string | null
+          created_at?: string
+          email?: string | null
+          evento_id?: string
+          id?: string
+          imobiliaria_nome?: string | null
+          nome_corretor?: string
+          status?: string
+          telefone?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_inscricoes_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_inscricoes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_inscricoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evento_membros: {
         Row: {
           created_at: string | null
@@ -2718,7 +2779,9 @@ export type Database = {
           descricao: string | null
           empreendimento_id: string | null
           id: string
+          inscricoes_abertas: boolean
           is_active: boolean | null
+          limite_inscricoes: number | null
           local: string | null
           nome: string
           orcamento: number | null
@@ -2734,7 +2797,9 @@ export type Database = {
           descricao?: string | null
           empreendimento_id?: string | null
           id?: string
+          inscricoes_abertas?: boolean
           is_active?: boolean | null
+          limite_inscricoes?: number | null
           local?: string | null
           nome: string
           orcamento?: number | null
@@ -2750,7 +2815,9 @@ export type Database = {
           descricao?: string | null
           empreendimento_id?: string | null
           id?: string
+          inscricoes_abertas?: boolean
           is_active?: boolean | null
+          limite_inscricoes?: number | null
           local?: string | null
           nome?: string
           orcamento?: number | null
