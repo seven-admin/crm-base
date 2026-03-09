@@ -199,10 +199,10 @@ export function PropostaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {temProposta ? `Proposta ${negociacao?.numero_proposta}` : 'Nova Proposta'}
+            {temProposta ? `Proposta ${neg?.numero_proposta}` : 'Nova Proposta'}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            {negociacao?.codigo} - {negociacao?.cliente?.nome}
+            {neg?.codigo} - {neg?.cliente?.nome}
             {statusProposta && (
               <Badge
                 variant="secondary"
