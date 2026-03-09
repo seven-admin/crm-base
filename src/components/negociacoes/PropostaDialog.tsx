@@ -90,11 +90,11 @@ export function PropostaDialog({
   };
 
   const handleGerarProposta = async () => {
-    if (!negociacao) return;
+    if (!neg) return;
 
     try {
       await gerarProposta.mutateAsync({
-        id: negociacao.id,
+        id: neg.id,
         data: {
           data_validade: dataValidade,
           valor_tabela: valorTabela,
