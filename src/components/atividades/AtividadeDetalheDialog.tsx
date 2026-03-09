@@ -22,6 +22,7 @@ import { TemperaturaSelector } from './TemperaturaSelector';
 import { AtividadeCronometro } from './AtividadeCronometro';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 import { useAtividadeHistorico } from '@/hooks/useAtividadeHistorico';
+import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import type { ClienteTemperatura } from '@/types/clientes.types';
 
 interface AtividadeDetalheDialogProps {
@@ -223,6 +224,15 @@ export function AtividadeDetalheDialog({ atividade, loading = false, open, onOpe
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Responsáveis */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">Responsáveis</span>
+              </div>
+              <AtividadeResponsaveisEditor atividadeId={atividade.id} />
             </div>
 
             <Separator />

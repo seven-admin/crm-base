@@ -8,6 +8,7 @@ import type { Atividade, AtividadeTipo, AtividadeCategoria, AtividadeSubtipo } f
 import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_STATUS_COLORS, ATIVIDADE_CATEGORIA_LABELS, ATIVIDADE_SUBTIPO_SHORT_LABELS } from '@/types/atividades.types';
 import { CLIENTE_TEMPERATURA_COLORS, type ClienteTemperatura } from '@/types/clientes.types';
 import { TemperaturaSelector } from './TemperaturaSelector';
+import { AtividadeResponsaveisEditor } from './AtividadeResponsaveisEditor';
 import { useUpdateAtividade } from '@/hooks/useAtividades';
 
 const TIPO_ICONS: Record<AtividadeTipo, typeof Phone> = {
@@ -229,6 +230,10 @@ export function AtividadeCard({ atividade, compact = false, onClick, isSuperAdmi
                 <span>{atividade.corretor.nome_completo}</span>
               </div>
             )}
+
+            <div className="flex items-center gap-1.5 text-xs" onClick={(e) => e.stopPropagation()}>
+              <AtividadeResponsaveisEditor atividadeId={atividade.id} readOnly compact />
+            </div>
           </div>
         </div>
       </div>
