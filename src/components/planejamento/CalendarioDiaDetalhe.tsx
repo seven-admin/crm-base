@@ -157,39 +157,46 @@ function EditableItemCard({
         )}
 
         {!readOnly && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onDuplicate(item.id)}>
-                <Copy className="h-3.5 w-3.5 mr-2" />
-                Duplicar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onConvert(item)}>
-                <Zap className="h-3.5 w-3.5 mr-2" />
-                Converter em Atividade
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onUpdate(item.id, { destaque: !item.destaque })}>
-                <Star className={cn("h-3.5 w-3.5 mr-2", item.destaque && "fill-amber-500 text-amber-500")} />
-                {item.destaque ? 'Remover destaque' : 'Marcar destaque'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete(item.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onUpdate(item.id, { destaque: !item.destaque })}
+              title={item.destaque ? 'Remover destaque' : 'Marcar destaque'}
+            >
+              <Star className={cn("h-3.5 w-3.5", item.destaque ? "fill-amber-500 text-amber-500" : "text-muted-foreground")} />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onDuplicate(item.id)}>
+                  <Copy className="h-3.5 w-3.5 mr-2" />
+                  Duplicar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onConvert(item)}>
+                  <Zap className="h-3.5 w-3.5 mr-2" />
+                  Converter em Atividade
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(item.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
 
