@@ -25,11 +25,11 @@ import {
   type NegociacaoCondicaoPagamento,
 } from '@/hooks/useNegociacaoCondicoesPagamento';
 import {
-  TIPO_PARCELA_LABELS,
   FORMA_QUITACAO_LABELS,
   type CondicaoPagamentoFormData,
   type FormaQuitacao,
 } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { cn } from '@/lib/utils';
 
 interface PropostaCondicoesEditorProps {
