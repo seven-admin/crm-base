@@ -25,6 +25,9 @@ interface TarefaDetalheDialogProps {
 export function TarefaDetalheDialog({ open, onOpenChange, item }: TarefaDetalheDialogProps) {
   const { historico, isLoading: loadingHistorico } = usePlanejamentoHistorico(item?.id);
   const { updateItem } = usePlanejamentoItens();
+  const { role } = useAuth();
+  const isSuperAdmin = role === 'super_admin';
+  const { data: allProfiles = [] } = useAllProfiles();
 
   if (!item) return null;
 
