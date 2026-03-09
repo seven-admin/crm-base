@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Building2, User, Home, Banknote, CreditCard, Calendar, Wallet } from 'lucide-react';
 import { LocalCondicao } from '@/components/negociacoes/LocalCondicoesPagamentoEditor';
-import { TIPO_PARCELA_LABELS } from '@/types/condicoesPagamento.types';
+import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import logoSeven from '@/assets/logo.png';
 
 interface UnidadeSelecionada {
