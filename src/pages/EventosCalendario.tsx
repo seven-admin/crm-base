@@ -52,7 +52,7 @@ export default function EventosCalendarioPage() {
       planejamento: eventos.filter((e) => e.status === 'planejamento').length,
       emAndamento: eventos.filter((e) => e.status === 'em_andamento').length,
       esteMes: eventos.filter((e) => 
-        isWithinInterval(new Date(e.data_evento), { start: inicioMes, end: fimMes })
+        isWithinInterval(parseDateLocal(e.data_evento), { start: inicioMes, end: fimMes })
       ).length,
     };
   }, [eventos]);

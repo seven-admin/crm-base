@@ -4,6 +4,7 @@ import { CalendarDays, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Evento } from '@/types/marketing.types';
+import { parseDateLocal } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   planejamento: 'Planejamento',

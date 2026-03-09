@@ -131,7 +131,7 @@ export default function PortalEventos() {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <CalendarDays className="h-4 w-4 shrink-0" />
                   <span>
-                    {format(new Date(evento.data_evento), "dd 'de' MMMM 'de' yyyy", {
+                    {format(parseDateLocal(evento.data_evento), "dd 'de' MMMM 'de' yyyy", {
                       locale: ptBR,
                     })}
                   </span>

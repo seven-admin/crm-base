@@ -310,7 +310,7 @@ export default function Eventos() {
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {format(new Date(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
+                        {format(parseDateLocal(evento.data_evento), "dd/MM/yyyy", { locale: ptBR })}
                       </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">

@@ -79,7 +79,7 @@ export default function EventoDetalhe() {
   const tarefasTotal = tarefas?.length || 0;
   const progresso = tarefasTotal > 0 ? (tarefasConcluidas / tarefasTotal) * 100 : 0;
   
-  const dataEvento = new Date(evento.data_evento);
+  const dataEvento = parseDateLocal(evento.data_evento);
   const hoje = new Date();
   const diasRestantes = differenceInDays(dataEvento, hoje);
   const eventoPassou = isPast(dataEvento);
