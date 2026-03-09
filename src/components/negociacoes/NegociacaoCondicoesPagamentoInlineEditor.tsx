@@ -90,6 +90,7 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
 }: NegociacaoCondicoesPagamentoInlineEditorProps) {
   const { data: condicoes = [], isLoading } = useNegociacaoCondicoesPagamento(negociacaoId);
   const { data: configComercial } = useConfiguracaoComercial(empreendimentoId);
+  const { data: tiposParcela = [] } = useTiposParcela();
   const createCondicao = useCreateNegociacaoCondicao();
   const updateCondicao = useUpdateNegociacaoCondicao();
   const deleteCondicao = useDeleteNegociacaoCondicao();
