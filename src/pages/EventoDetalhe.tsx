@@ -225,17 +225,6 @@ export default function EventoDetalhe() {
         </TabsContent>
       </Tabs>
 
-      {/* Description */}
-      {evento.descricao && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Descrição</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap">{evento.descricao}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Edit Dialog */}
       <EventoEditDialog 
