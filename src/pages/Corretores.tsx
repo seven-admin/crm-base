@@ -238,7 +238,9 @@ export default function Corretores() {
                   <TableCell className="text-muted-foreground">{c.cpf || '—'}</TableCell>
                   <TableCell className="text-muted-foreground">{c.creci || '—'}</TableCell>
                   <TableCell>{c.imobiliaria?.nome || '—'}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {c.cidade ? `${c.cidade}${c.uf ? `/${c.uf}` : ''}` : (c.imobiliaria as any)?.endereco_cidade || '—'}
+                  </TableCell>
                     <Badge variant={c.is_active ? 'default' : 'secondary'}>
                       {c.is_active ? 'Ativo' : 'Inativo'}
                     </Badge>
