@@ -56,7 +56,22 @@ function filtersToParams(filters: NegociacoesFilters, view: string, page: number
 const Funil = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isSuperAdmin } = usePermissions();
   const [formOpen, setFormOpen] = useState(false);
+
+  const showGate = isSuperAdmin() && !searchParams.get('empreendimento_id');
+
+  const handleGateSelect = useCallback((empreendimentoId: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('empreendimento_id', empreendimentoId);
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleClearEmpreendimento = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('empreendimento_id');
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const view = (searchParams.get('view') as 'kanban' | 'lista') || 'kanban';
   const page = Number(searchParams.get('page') || '1');
