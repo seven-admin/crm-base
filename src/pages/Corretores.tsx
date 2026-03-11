@@ -136,7 +136,7 @@ export default function Corretores() {
   const handleExport = async () => {
     const { data: allCorretores } = await supabase
       .from('corretores')
-      .select('nome_completo, cpf, creci, email, telefone, is_active, user_id, imobiliaria:imobiliarias(nome)')
+      .select('nome_completo, cpf, creci, email, telefone, is_active, user_id, cidade, uf, imobiliaria:imobiliarias(nome)')
       .order('nome_completo');
     if (!allCorretores) return;
     const rows = allCorretores.map((c: any) => ({
@@ -146,6 +146,8 @@ export default function Corretores() {
       Email: c.email || '',
       Telefone: c.telefone || '',
       Imobiliária: c.imobiliaria?.nome || '',
+      Cidade: c.cidade || '',
+      UF: c.uf || '',
       Status: c.is_active ? 'Ativo' : 'Inativo',
       'Com Acesso': c.user_id ? 'Sim' : 'Não',
     }));
