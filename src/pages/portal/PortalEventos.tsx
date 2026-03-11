@@ -29,10 +29,10 @@ export default function PortalEventos() {
     queryFn: async () => {
       const { data } = await supabase
         .from('corretores')
-        .select('id, telefone, whatsapp, imobiliaria:imobiliaria_id(nome)')
+        .select('id, telefone, whatsapp, imobiliaria:imobiliaria_id(nome, gestor_telefone)')
         .eq('user_id', user!.id)
         .maybeSingle();
-      return data as { id: string; telefone: string | null; whatsapp: string | null; imobiliaria: { nome: string } | null } | null;
+      return data as { id: string; telefone: string | null; whatsapp: string | null; imobiliaria: { nome: string; gestor_telefone: string | null } | null } | null;
     },
     enabled: !!user?.id,
   });
