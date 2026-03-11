@@ -79,6 +79,7 @@ export default function PortalEventos() {
       imobiliaria_nome: corretor?.imobiliaria?.nome || undefined,
       evento_nome: evento.nome,
       evento_data: evento.data_evento,
+      corretor_celular: corretor?.whatsapp || corretor?.telefone || undefined,
     });
   };
 
