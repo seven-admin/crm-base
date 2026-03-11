@@ -218,6 +218,16 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Reenviar mensagem"
+                            disabled={sendingId === insc.id}
+                            onClick={() => handleReenviar(insc)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(insc)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
