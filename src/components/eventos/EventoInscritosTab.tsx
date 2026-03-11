@@ -49,7 +49,33 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         .eq('evento_id', eventoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Buscar telefones via user_id para inscritos sem corretor_id
+      const userIdsWithoutCorretor = data
+        .filter(d => !d.corretor_id && d.user_id)
+        .map(d => d.user_id);
+
+      let corretorMap: Record<string, { telefone: string | null; whatsapp: string | null }> = {};
+      if (userIdsWithoutCorretor.length > 0) {
+        const { data: corretoresByUser } = await supabase
+          .from('corretores')
+          .select('user_id, telefone, whatsapp')
+          .in('user_id', userIdsWithoutCorretor);
+        if (corretoresByUser) {
+          corretorMap = Object.fromEntries(
+            corretoresByUser.map(c => [c.user_id, { telefone: c.telefone, whatsapp: c.whatsapp }])
+          );
+        }
+      }
+
+      // Enriquecer dados com fallback de celular
+      return data.map(insc => ({
+        ...insc,
+        _celular_corretor:
+          insc.corretor?.whatsapp || insc.corretor?.telefone ||
+          corretorMap[insc.user_id]?.whatsapp || corretorMap[insc.user_id]?.telefone ||
+          insc.telefone || null,
+      }));
     },
     enabled: !!eventoId,
   });
