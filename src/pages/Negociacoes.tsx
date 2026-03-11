@@ -204,6 +204,13 @@ const Funil = () => {
           </TabsList>
         </Tabs>
 
+        {isSuperAdmin() && filters.empreendimento_id && (
+          <Button variant="outline" onClick={handleClearEmpreendimento} className="w-full sm:w-auto">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Trocar Empreendimento
+          </Button>
+        )}
+
         <Button onClick={() => navigate('/negociacoes/nova')} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Nova Ficha de Proposta
