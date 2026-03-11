@@ -765,7 +765,7 @@ export function useAtividadesVencidas(gestorId?: string) {
           gestor:profiles(id, full_name)
         `)
         .eq('status', 'pendente')
-        .lt('data_fim', new Date().toISOString().split('T')[0])
+        .lt('data_fim', format(new Date(), 'yyyy-MM-dd'))
         .order('data_fim', { ascending: true });
 
       if (gestorId) query = query.eq('gestor_id', gestorId);
