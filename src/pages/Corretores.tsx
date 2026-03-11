@@ -19,7 +19,7 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { Plus, Search, Pencil, KeyRound, Download, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function Corretores() {
@@ -28,6 +28,7 @@ export default function Corretores() {
   const [search, setSearch] = useState('');
   const [searchDebounced, setSearchDebounced] = useState('');
   const [imobiliariaFilter, setImobiliariaFilter] = useState<string>('all');
+  const [cidadeFilter, setCidadeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCorretor, setEditingCorretor] = useState<Corretor | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -37,10 +38,24 @@ export default function Corretores() {
   const { data, isLoading } = useCorretoresPaginated(
     page, 20,
     searchDebounced || undefined,
-    imobiliariaFilter !== 'all' ? imobiliariaFilter : undefined
+    imobiliariaFilter !== 'all' ? imobiliariaFilter : undefined,
+    cidadeFilter !== 'all' ? cidadeFilter : undefined
   );
   const { create, update, delete: deleteCorretor, isCreating, isUpdating, isDeleting } = useCorretores();
   const { imobiliarias } = useImobiliarias();
+
+  const { data: cidades = [] } = useQuery({
+    queryKey: ['corretores-cidades'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('corretores')
+        .select('cidade')
+        .not('cidade', 'is', null)
+        .neq('cidade', '');
+      const unique = [...new Set(data?.map(c => c.cidade?.trim()).filter(Boolean))].sort() as string[];
+      return unique;
+    },
+  });
   const { canAccessModule } = usePermissions();
 
   const handleSearch = (value: string) => {
@@ -121,7 +136,7 @@ export default function Corretores() {
   const handleExport = async () => {
     const { data: allCorretores } = await supabase
       .from('corretores')
-      .select('nome_completo, cpf, creci, email, telefone, is_active, user_id, imobiliaria:imobiliarias(nome)')
+      .select('nome_completo, cpf, creci, email, telefone, is_active, user_id, cidade, uf, imobiliaria:imobiliarias(nome)')
       .order('nome_completo');
     if (!allCorretores) return;
     const rows = allCorretores.map((c: any) => ({
@@ -131,6 +146,8 @@ export default function Corretores() {
       Email: c.email || '',
       Telefone: c.telefone || '',
       Imobiliária: c.imobiliaria?.nome || '',
+      Cidade: c.cidade || '',
+      UF: c.uf || '',
       Status: c.is_active ? 'Ativo' : 'Inativo',
       'Com Acesso': c.user_id ? 'Sim' : 'Não',
     }));
@@ -164,6 +181,17 @@ export default function Corretores() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={cidadeFilter} onValueChange={(v) => { setCidadeFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Todas cidades" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas cidades</SelectItem>
+            {cidades.map(c => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button variant="outline" onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Exportar
@@ -186,6 +214,7 @@ export default function Corretores() {
               <TableHead>CPF</TableHead>
               <TableHead>CRECI</TableHead>
               <TableHead>Imobiliária</TableHead>
+              <TableHead>Cidade/UF</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Acesso</TableHead>
               <TableHead className="w-[100px]" />
@@ -194,13 +223,13 @@ export default function Corretores() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+               <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : corretores.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhum corretor encontrado
                 </TableCell>
               </TableRow>
@@ -211,6 +240,9 @@ export default function Corretores() {
                   <TableCell className="text-muted-foreground">{c.cpf || '—'}</TableCell>
                   <TableCell className="text-muted-foreground">{c.creci || '—'}</TableCell>
                   <TableCell>{c.imobiliaria?.nome || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {c.cidade ? `${c.cidade}${c.uf ? `/${c.uf}` : ''}` : (c.imobiliaria as any)?.endereco_cidade || '—'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={c.is_active ? 'default' : 'secondary'}>
                       {c.is_active ? 'Ativo' : 'Inativo'}

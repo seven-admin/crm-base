@@ -54,6 +54,8 @@ export interface Corretor {
   email?: string | null;
   creci?: string | null;
   is_active: boolean;
+  cidade?: string | null;
+  uf?: string | null;
   created_at: string;
   updated_at: string;
   user_id?: string | null;
