@@ -213,6 +213,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Telefone</TableHead>
+                    <TableHead>Celular Corretor</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Imobiliária</TableHead>
                     <TableHead>Status</TableHead>
