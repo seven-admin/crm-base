@@ -45,7 +45,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evento_inscricoes')
-        .select('*')
+        .select('*, corretor:corretor_id(telefone, whatsapp)')
         .eq('evento_id', eventoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
