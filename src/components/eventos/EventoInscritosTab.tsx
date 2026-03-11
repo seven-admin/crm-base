@@ -45,7 +45,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evento_inscricoes')
-        .select('*, corretor:corretor_id(telefone, whatsapp)')
+        .select('*, corretor:corretor_id(telefone, whatsapp, imobiliaria:imobiliaria_id(gestor_telefone))')
         .eq('evento_id', eventoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -55,27 +55,47 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         .filter(d => !d.corretor_id && d.user_id)
         .map(d => d.user_id);
 
-      let corretorMap: Record<string, { telefone: string | null; whatsapp: string | null }> = {};
+      let corretorMap: Record<string, { telefone: string | null; whatsapp: string | null; imobiliaria_id: string | null }> = {};
+      let gestorMapByImob: Record<string, string | null> = {};
+
       if (userIdsWithoutCorretor.length > 0) {
         const { data: corretoresByUser } = await supabase
           .from('corretores')
-          .select('user_id, telefone, whatsapp')
+          .select('user_id, telefone, whatsapp, imobiliaria_id')
           .in('user_id', userIdsWithoutCorretor);
         if (corretoresByUser) {
           corretorMap = Object.fromEntries(
-            corretoresByUser.map(c => [c.user_id, { telefone: c.telefone, whatsapp: c.whatsapp }])
+            corretoresByUser.map(c => [c.user_id, { telefone: c.telefone, whatsapp: c.whatsapp, imobiliaria_id: c.imobiliaria_id }])
           );
+          // Buscar gestor_telefone das imobiliárias
+          const imobIds = [...new Set(corretoresByUser.map(c => c.imobiliaria_id).filter(Boolean))] as string[];
+          if (imobIds.length > 0) {
+            const { data: imobs } = await supabase
+              .from('imobiliarias')
+              .select('id, gestor_telefone')
+              .in('id', imobIds);
+            if (imobs) {
+              gestorMapByImob = Object.fromEntries(imobs.map(i => [i.id, i.gestor_telefone]));
+            }
+          }
         }
       }
 
-      // Enriquecer dados com fallback de celular
-      return data.map(insc => ({
-        ...insc,
-        _celular_corretor:
-          insc.corretor?.whatsapp || insc.corretor?.telefone ||
-          corretorMap[insc.user_id]?.whatsapp || corretorMap[insc.user_id]?.telefone ||
-          insc.telefone || null,
-      }));
+      // Enriquecer dados com fallback de celular e gestor_telefone
+      return data.map(insc => {
+        const fallbackCorretor = corretorMap[insc.user_id];
+        return {
+          ...insc,
+          _celular_corretor:
+            insc.corretor?.whatsapp || insc.corretor?.telefone ||
+            fallbackCorretor?.whatsapp || fallbackCorretor?.telefone ||
+            insc.telefone || null,
+          _gestor_telefone:
+            (insc.corretor as any)?.imobiliaria?.gestor_telefone ||
+            (fallbackCorretor?.imobiliaria_id ? gestorMapByImob[fallbackCorretor.imobiliaria_id] : null) ||
+            null,
+        };
+      });
     },
     enabled: !!eventoId,
   });
@@ -143,6 +163,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         email: insc.email,
         imobiliaria_nome: insc.imobiliaria_nome,
         corretor_celular: (insc as any)._celular_corretor || null,
+        gestor_telefone: (insc as any)._gestor_telefone || null,
         evento_nome: eventoNome,
         evento_data: eventoData,
         evento_id: eventoId,

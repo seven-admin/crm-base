@@ -87,13 +87,6 @@ export default function EventoDetalhe() {
 
   const progressoMetadata = (
     <div className="flex items-center gap-4">
-      <span className={eventoPassou ? 'text-muted-foreground' : diasRestantes <= 7 ? 'text-destructive font-medium' : ''}>
-        {eventoPassou 
-          ? 'Evento já ocorreu' 
-          : diasRestantes === 0 
-            ? 'Evento é hoje!' 
-            : `${diasRestantes} dias restantes`}
-      </span>
       <div className="flex items-center gap-2">
         <ListTodo className="h-4 w-4 text-muted-foreground" />
         <Progress value={progresso} className="h-2 w-24" />
@@ -189,8 +182,12 @@ export default function EventoDetalhe() {
       </div>
 
       {/* Tabs with real components */}
-      <Tabs defaultValue="tarefas" className="space-y-4">
+      <Tabs defaultValue="inscritos" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="inscritos" className="gap-2">
+            <Users className="h-4 w-4" />
+            Inscritos
+          </TabsTrigger>
           <TabsTrigger value="tarefas" className="gap-2">
             <ListTodo className="h-4 w-4" />
             Tarefas
@@ -203,11 +200,11 @@ export default function EventoDetalhe() {
             <Users className="h-4 w-4" />
             Equipe
           </TabsTrigger>
-          <TabsTrigger value="inscritos" className="gap-2">
-            <Users className="h-4 w-4" />
-            Inscritos
-          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="inscritos">
+          <EventoInscritosTab eventoId={id || ''} eventoNome={evento.nome} eventoData={evento.data_evento} />
+        </TabsContent>
 
         <TabsContent value="tarefas">
           <EventoTarefasTab eventoId={id || ''} />
@@ -219,10 +216,6 @@ export default function EventoDetalhe() {
 
         <TabsContent value="equipe">
           <EventoEquipeTab eventoId={id || ''} responsavelId={evento.responsavel_id} />
-        </TabsContent>
-
-        <TabsContent value="inscritos">
-          <EventoInscritosTab eventoId={id || ''} eventoNome={evento.nome} eventoData={evento.data_evento} />
         </TabsContent>
       </Tabs>
 

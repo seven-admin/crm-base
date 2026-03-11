@@ -29,10 +29,10 @@ export default function PortalEventos() {
     queryFn: async () => {
       const { data } = await supabase
         .from('corretores')
-        .select('id, telefone, whatsapp, imobiliaria:imobiliaria_id(nome)')
+        .select('id, telefone, whatsapp, imobiliaria:imobiliaria_id(nome, gestor_telefone)')
         .eq('user_id', user!.id)
         .maybeSingle();
-      return data as { id: string; telefone: string | null; whatsapp: string | null; imobiliaria: { nome: string } | null } | null;
+      return data as { id: string; telefone: string | null; whatsapp: string | null; imobiliaria: { nome: string; gestor_telefone: string | null } | null } | null;
     },
     enabled: !!user?.id,
   });
@@ -80,6 +80,7 @@ export default function PortalEventos() {
       evento_nome: evento.nome,
       evento_data: evento.data_evento,
       corretor_celular: corretor?.whatsapp || corretor?.telefone || undefined,
+      gestor_telefone: corretor?.imobiliaria?.gestor_telefone || undefined,
     });
   };
 
