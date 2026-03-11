@@ -19,7 +19,7 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { Plus, Search, Pencil, KeyRound, Download, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function Corretores() {
