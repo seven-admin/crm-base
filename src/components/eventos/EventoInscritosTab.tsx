@@ -45,7 +45,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     queryFn: async () => {
       const { data, error } = await supabase
         .from('evento_inscricoes')
-        .select('*')
+        .select('*, corretor:corretor_id(telefone, whatsapp)')
         .eq('evento_id', eventoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -116,6 +116,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         telefone: insc.telefone,
         email: insc.email,
         imobiliaria_nome: insc.imobiliaria_nome,
+        corretor_celular: insc.corretor?.whatsapp || insc.corretor?.telefone || null,
         evento_nome: eventoNome,
         evento_data: eventoData,
         evento_id: eventoId,
