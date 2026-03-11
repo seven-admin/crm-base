@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, LayoutGrid, List } from 'lucide-react';
+import { Plus, LayoutGrid, List, ArrowLeft } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { NegociacoesEmpreendimentoGate } from '@/pages/negociacoes/NegociacoesEmpreendimentoGate';
 import { FunilKanbanBoard } from '@/components/negociacoes/FunilKanbanBoard';
 import { NegociacaoForm } from '@/components/negociacoes/NegociacaoForm';
 import { NegociacoesToolbar, type NegociacoesFilters } from '@/pages/negociacoes/NegociacoesToolbar';
@@ -54,7 +56,22 @@ function filtersToParams(filters: NegociacoesFilters, view: string, page: number
 const Funil = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isSuperAdmin } = usePermissions();
   const [formOpen, setFormOpen] = useState(false);
+
+  const showGate = isSuperAdmin() && !searchParams.get('empreendimento_id');
+
+  const handleGateSelect = useCallback((empreendimentoId: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('empreendimento_id', empreendimentoId);
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleClearEmpreendimento = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('empreendimento_id');
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const view = (searchParams.get('view') as 'kanban' | 'lista') || 'kanban';
   const page = Number(searchParams.get('page') || '1');
@@ -128,6 +145,14 @@ const Funil = () => {
     setExcluirNeg(null);
   };
 
+  if (showGate) {
+    return (
+      <MainLayout title="Forecast" subtitle="Gerencie seu forecast e propostas comerciais">
+        <NegociacoesEmpreendimentoGate onSelect={handleGateSelect} />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout
       title="Forecast"
@@ -178,6 +203,13 @@ const Funil = () => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {isSuperAdmin() && filters.empreendimento_id && (
+          <Button variant="outline" onClick={handleClearEmpreendimento} className="w-full sm:w-auto">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Trocar Empreendimento
+          </Button>
+        )}
 
         <Button onClick={() => navigate('/negociacoes/nova')} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
