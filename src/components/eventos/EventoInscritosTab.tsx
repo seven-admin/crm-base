@@ -31,7 +31,7 @@ interface InscricaoForm {
 
 const emptyForm: InscricaoForm = { nome_corretor: '', telefone: '', email: '', imobiliaria_nome: '' };
 
-export function EventoInscritosTab({ eventoId }: EventoInscritosTabProps) {
+export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoInscritosTabProps) {
   const queryClient = useQueryClient();
   const queryKey = ['evento-inscricoes-admin', eventoId];
 
