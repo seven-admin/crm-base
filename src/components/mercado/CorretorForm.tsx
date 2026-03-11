@@ -224,14 +224,15 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone</Label>
+                <Label htmlFor="telefone">Celular *</Label>
                 <Input 
                   id="telefone" 
                   value={watch('telefone') || ''}
                   onChange={(e) => setValue('telefone', formatarTelefone(e.target.value))}
-                  placeholder="(00) 0000-0000" 
+                  placeholder="(00) 00000-0000" 
                   maxLength={15}
                 />
+                {errors.telefone && <p className="text-sm text-destructive">{errors.telefone.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="whatsapp">WhatsApp</Label>
