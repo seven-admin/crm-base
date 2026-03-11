@@ -222,7 +222,7 @@ export default function EventoDetalhe() {
         </TabsContent>
 
         <TabsContent value="inscritos">
-          <EventoInscritosTab eventoId={id || ''} />
+          <EventoInscritosTab eventoId={id || ''} eventoNome={evento.nome} eventoData={evento.data_evento} />
         </TabsContent>
       </Tabs>
 

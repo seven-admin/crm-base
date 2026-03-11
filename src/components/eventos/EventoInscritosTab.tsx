@@ -9,14 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { dispararWebhook } from '@/lib/webhookUtils';
 
 interface EventoInscritosTabProps {
   eventoId: string;
+  eventoNome?: string;
+  eventoData?: string;
 }
 
 interface InscricaoForm {
@@ -28,7 +31,7 @@ interface InscricaoForm {
 
 const emptyForm: InscricaoForm = { nome_corretor: '', telefone: '', email: '', imobiliaria_nome: '' };
 
-export function EventoInscritosTab({ eventoId }: EventoInscritosTabProps) {
+export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoInscritosTabProps) {
   const queryClient = useQueryClient();
   const queryKey = ['evento-inscricoes-admin', eventoId];
 
@@ -102,6 +105,28 @@ export function EventoInscritosTab({ eventoId }: EventoInscritosTabProps) {
     onSuccess: () => { invalidate(); toast.success('Status atualizado.'); },
     onError: (e: Error) => toast.error('Erro: ' + e.message),
   });
+
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const handleReenviar = async (insc: any) => {
+    setSendingId(insc.id);
+    try {
+      await dispararWebhook('evento_inscricao_corretor', {
+        nome_corretor: insc.nome_corretor,
+        telefone: insc.telefone,
+        email: insc.email,
+        imobiliaria_nome: insc.imobiliaria_nome,
+        evento_nome: eventoNome,
+        evento_data: eventoData,
+        evento_id: eventoId,
+      });
+      toast.success('Mensagem reenviada com sucesso.');
+    } catch {
+      toast.error('Erro ao reenviar mensagem.');
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   const closeDialog = () => { setDialogOpen(false); setEditingId(null); setForm(emptyForm); };
 
@@ -193,6 +218,16 @@ export function EventoInscritosTab({ eventoId }: EventoInscritosTabProps) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Reenviar mensagem"
+                            disabled={sendingId === insc.id}
+                            onClick={() => handleReenviar(insc)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(insc)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
