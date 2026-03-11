@@ -9,14 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { dispararWebhook } from '@/lib/webhookUtils';
 
 interface EventoInscritosTabProps {
   eventoId: string;
+  eventoNome?: string;
+  eventoData?: string;
 }
 
 interface InscricaoForm {
