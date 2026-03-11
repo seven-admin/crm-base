@@ -89,9 +89,9 @@ export function useGestorCorretores() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Corretor atualizado!');
-      queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+      await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
     },
     onError: () => {
       toast.error('Erro ao atualizar corretor');
