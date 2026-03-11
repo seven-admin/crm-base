@@ -28,6 +28,7 @@ export default function Corretores() {
   const [search, setSearch] = useState('');
   const [searchDebounced, setSearchDebounced] = useState('');
   const [imobiliariaFilter, setImobiliariaFilter] = useState<string>('all');
+  const [cidadeFilter, setCidadeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCorretor, setEditingCorretor] = useState<Corretor | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
