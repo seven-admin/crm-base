@@ -254,6 +254,9 @@ export function useCorretoresPaginated(page = 1, pageSize = 20, search?: string,
       if (imobiliariaId && imobiliariaId !== 'all') {
         query = query.eq('imobiliaria_id', imobiliariaId);
       }
+      if (cidade) {
+        query = query.eq('cidade', cidade);
+      }
 
       const { data, error, count } = await query;
       if (error) throw error;

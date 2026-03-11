@@ -38,10 +38,24 @@ export default function Corretores() {
   const { data, isLoading } = useCorretoresPaginated(
     page, 20,
     searchDebounced || undefined,
-    imobiliariaFilter !== 'all' ? imobiliariaFilter : undefined
+    imobiliariaFilter !== 'all' ? imobiliariaFilter : undefined,
+    cidadeFilter !== 'all' ? cidadeFilter : undefined
   );
   const { create, update, delete: deleteCorretor, isCreating, isUpdating, isDeleting } = useCorretores();
   const { imobiliarias } = useImobiliarias();
+
+  const { data: cidades = [] } = useQuery({
+    queryKey: ['corretores-cidades'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('corretores')
+        .select('cidade')
+        .not('cidade', 'is', null)
+        .neq('cidade', '');
+      const unique = [...new Set(data?.map(c => c.cidade?.trim()).filter(Boolean))].sort() as string[];
+      return unique;
+    },
+  });
   const { canAccessModule } = usePermissions();
 
   const handleSearch = (value: string) => {
