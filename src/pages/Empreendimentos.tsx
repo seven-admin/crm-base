@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmpreendimentoCard } from '@/components/empreendimentos/EmpreendimentoCard';
 import { EmpreendimentoForm } from '@/components/empreendimentos/EmpreendimentoForm';
@@ -11,10 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Loader2, Building2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Search, Loader2, Building2, ChevronDown } from 'lucide-react';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import type { EmpreendimentoFilters, EmpreendimentoTipo, EmpreendimentoStatus } from '@/types/empreendimentos.types';
 import { EMPREENDIMENTO_TIPO_LABELS, EMPREENDIMENTO_STATUS_LABELS } from '@/types/empreendimentos.types';
+
+const UF_NAMES: Record<string, string> = {
+  AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia',
+  CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás',
+  MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais',
+  PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí',
+  RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul',
+  RO: 'Rondônia', RR: 'Roraima', SC: 'Santa Catarina', SP: 'São Paulo',
+  SE: 'Sergipe', TO: 'Tocantins',
+};
 
 const Empreendimentos = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -23,14 +34,30 @@ const Empreendimentos = () => {
 
   const { data: empreendimentos, isLoading } = useEmpreendimentos(filters);
 
+  const groupedByUF = useMemo(() => {
+    if (!empreendimentos) return {};
+    const groups: Record<string, typeof empreendimentos> = {};
+    for (const emp of empreendimentos) {
+      const uf = emp.endereco_uf || '__sem_uf';
+      (groups[uf] ??= []).push(emp);
+    }
+    // Sort keys: real UFs alphabetically, then __sem_uf at end
+    const sorted: Record<string, typeof empreendimentos> = {};
+    const keys = Object.keys(groups).sort((a, b) => {
+      if (a === '__sem_uf') return 1;
+      if (b === '__sem_uf') return -1;
+      return (UF_NAMES[a] || a).localeCompare(UF_NAMES[b] || b);
+    });
+    for (const k of keys) sorted[k] = groups[k];
+    return sorted;
+  }, [empreendimentos]);
+
   const handleSearch = () => {
     setFilters(prev => ({ ...prev, search: searchInput || undefined }));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    if (e.key === 'Enter') handleSearch();
   };
 
   return (
@@ -100,12 +127,30 @@ const Empreendimentos = () => {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : empreendimentos && empreendimentos.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-          {empreendimentos.map((empreendimento) => (
-            <EmpreendimentoCard
-              key={empreendimento.id}
-              empreendimento={empreendimento}
-            />
+        <div className="space-y-4">
+          {Object.entries(groupedByUF).map(([uf, items]) => (
+            <Collapsible key={uf} defaultOpen>
+              <CollapsibleTrigger className="flex items-center gap-2 w-full group py-2">
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                  {uf === '__sem_uf' ? 'Sem estado definido' : `${UF_NAMES[uf] || uf} (${uf})`}
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {items.length} {items.length === 1 ? 'empreendimento' : 'empreendimentos'}
+                </span>
+                <div className="flex-1 border-t border-border ml-2" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 pt-2 pb-4">
+                  {items.map((empreendimento) => (
+                    <EmpreendimentoCard
+                      key={empreendimento.id}
+                      empreendimento={empreendimento}
+                    />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           ))}
         </div>
       ) : (
