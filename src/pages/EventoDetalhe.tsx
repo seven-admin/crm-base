@@ -87,13 +87,6 @@ export default function EventoDetalhe() {
 
   const progressoMetadata = (
     <div className="flex items-center gap-4">
-      <span className={eventoPassou ? 'text-muted-foreground' : diasRestantes <= 7 ? 'text-destructive font-medium' : ''}>
-        {eventoPassou 
-          ? 'Evento já ocorreu' 
-          : diasRestantes === 0 
-            ? 'Evento é hoje!' 
-            : `${diasRestantes} dias restantes`}
-      </span>
       <div className="flex items-center gap-2">
         <ListTodo className="h-4 w-4 text-muted-foreground" />
         <Progress value={progresso} className="h-2 w-24" />
