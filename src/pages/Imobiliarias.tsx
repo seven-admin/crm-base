@@ -431,6 +431,36 @@ export default function Imobiliarias() {
             </AlertDialogContent>
           </AlertDialog>
         )}
+        {/* Modal lista de corretores */}
+        <Dialog open={!!corretoresModalImob} onOpenChange={(open) => !open && setCorretoresModalImob(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Corretores — {corretoresModalImob?.nome}</DialogTitle>
+            </DialogHeader>
+            {corretoresLista && corretoresLista.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CRECI</TableHead>
+                    <TableHead>Telefone</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {corretoresLista.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">{c.nome_completo}</TableCell>
+                      <TableCell>{c.creci || '—'}</TableCell>
+                      <TableCell>{c.telefone || '—'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum corretor cadastrado.</p>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
