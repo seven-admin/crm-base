@@ -88,11 +88,11 @@ export function useEventoInscricoes(userId?: string) {
         evento_nome,
         evento_data,
         corretor_nome: insertData.nome_corretor,
-        corretor_telefone: insertData.telefone,
-        corretor_email: insertData.email,
+        corretor_telefone: insertData.telefone || null,
+        corretor_email: insertData.email || null,
         corretor_celular: corretor_celular || null,
         gestor_telefone: gestor_telefone || null,
-        imobiliaria: insertData.imobiliaria_nome,
+        imobiliaria: insertData.imobiliaria_nome || null,
       });
     },
     onSuccess: () => {

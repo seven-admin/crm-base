@@ -158,15 +158,15 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     setSendingId(insc.id);
     try {
       await dispararWebhook('evento_inscricao_corretor', {
-        nome_corretor: insc.nome_corretor,
-        telefone: insc.telefone,
-        email: insc.email,
-        imobiliaria_nome: insc.imobiliaria_nome,
-        corretor_celular: (insc as any)._celular_corretor || null,
-        gestor_telefone: (insc as any)._gestor_telefone || null,
+        evento_id: eventoId,
         evento_nome: eventoNome,
         evento_data: eventoData,
-        evento_id: eventoId,
+        corretor_nome: insc.nome_corretor,
+        corretor_telefone: insc.telefone || null,
+        corretor_email: insc.email || null,
+        corretor_celular: (insc as any)._celular_corretor || null,
+        gestor_telefone: (insc as any)._gestor_telefone || null,
+        imobiliaria: insc.imobiliaria_nome || null,
       });
       toast.success('Mensagem reenviada com sucesso.');
     } catch {
