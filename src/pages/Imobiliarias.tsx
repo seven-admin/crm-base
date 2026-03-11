@@ -30,6 +30,23 @@ export default function Imobiliarias() {
   const [imobiliariaParaExcluir, setImobiliariaParaExcluir] = useState<Pick<Imobiliaria, 'id' | 'nome'> | null>(null);
   const [isCheckingDelete, setIsCheckingDelete] = useState(false);
   const [deleteCheck, setDeleteCheck] = useState<{ negociacoes: number; corretores: number } | null>(null);
+
+  // Modal de corretores
+  const [corretoresModalImob, setCorretoresModalImob] = useState<Pick<Imobiliaria, 'id' | 'nome'> | null>(null);
+
+  const { data: corretoresLista } = useQuery({
+    queryKey: ['corretores-por-imobiliaria', corretoresModalImob?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('corretores')
+        .select('id, nome_completo, creci, telefone')
+        .eq('imobiliaria_id', corretoresModalImob!.id)
+        .order('nome_completo');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!corretoresModalImob?.id,
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
