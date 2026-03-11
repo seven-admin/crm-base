@@ -60,9 +60,9 @@ export function useGestorCorretores() {
 
       return { ...data, ...dados };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success('Corretor cadastrado com sucesso! Senha de acesso: Seven@1234', { duration: 10000 });
-      queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+      await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
       dispararWebhook('corretor_cadastrado', {
         user_id: data?.user_id,
         nome_completo: data?.nome,
