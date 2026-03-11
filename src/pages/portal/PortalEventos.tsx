@@ -80,6 +80,7 @@ export default function PortalEventos() {
       evento_nome: evento.nome,
       evento_data: evento.data_evento,
       corretor_celular: corretor?.whatsapp || corretor?.telefone || undefined,
+      gestor_telefone: corretor?.imobiliaria?.gestor_telefone || undefined,
     });
   };
 

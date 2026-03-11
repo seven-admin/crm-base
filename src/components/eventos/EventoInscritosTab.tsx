@@ -163,6 +163,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         email: insc.email,
         imobiliaria_nome: insc.imobiliaria_nome,
         corretor_celular: (insc as any)._celular_corretor || null,
+        gestor_telefone: (insc as any)._gestor_telefone || null,
         evento_nome: eventoNome,
         evento_data: eventoData,
         evento_id: eventoId,

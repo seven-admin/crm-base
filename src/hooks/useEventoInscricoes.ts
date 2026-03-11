@@ -91,6 +91,7 @@ export function useEventoInscricoes(userId?: string) {
         corretor_telefone: insertData.telefone,
         corretor_email: insertData.email,
         corretor_celular: corretor_celular || null,
+        gestor_telefone: gestor_telefone || null,
         imobiliaria: insertData.imobiliaria_nome,
       });
     },
