@@ -1,37 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Permitir super admin confirmar/cancelar inscrições
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-A política de RLS para UPDATE na tabela `evento_inscricoes` só permite que o próprio usuário atualize suas inscrições (`user_id = auth.uid()`). Super admins e admins não conseguem alterar o status de inscrições de outros usuários.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Solução
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### Migração SQL
-Alterar a política de UPDATE para incluir admins e equipe Seven:
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-```sql
-DROP POLICY "Users can update own inscricoes" ON public.evento_inscricoes;
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-CREATE POLICY "Users and admins can update inscricoes"
-ON public.evento_inscricoes
-FOR UPDATE
-TO authenticated
-USING (
-  user_id = auth.uid()
-  OR is_admin(auth.uid())
-  OR is_seven_team(auth.uid())
-)
-WITH CHECK (
-  user_id = auth.uid()
-  OR is_admin(auth.uid())
-  OR is_seven_team(auth.uid())
-);
-```
-
-### Código
-Nenhuma alteração de código necessária — o `toggleStatusMutation` no `EventoInscritosTab.tsx` já implementa a lógica de confirmar/cancelar corretamente. O problema é exclusivamente de permissão no banco.
-
-## Arquivo alterado
-- Migração SQL (RLS policy)
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
