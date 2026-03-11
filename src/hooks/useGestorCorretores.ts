@@ -107,9 +107,9 @@ export function useGestorCorretores() {
 
       if (error) throw error;
     },
-    onSuccess: (_, vars) => {
+    onSuccess: async (_, vars) => {
       toast.success(vars.is_active ? 'Corretor ativado!' : 'Corretor desativado!');
-      queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+      await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
     },
     onError: () => {
       toast.error('Erro ao alterar status');
