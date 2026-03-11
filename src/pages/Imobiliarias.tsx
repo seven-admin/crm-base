@@ -336,11 +336,15 @@ export default function Imobiliarias() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 hover:text-primary transition-colors"
+                          onClick={() => setCorretoresModalImob({ id: imob.id, nome: imob.nome })}
+                        >
                           <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{imob.corretores_count || 0}</span>
-                        </div>
+                          <span className="underline">{imob.corretores_count || 0}</span>
+                        </button>
                       </TableCell>
                       <TableCell>
                         <Badge variant={imob.is_active ? 'default' : 'secondary'}>
