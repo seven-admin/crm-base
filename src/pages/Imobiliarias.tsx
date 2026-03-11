@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Building, Phone, Mail, MapPin, Users, Trash2, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -29,6 +30,23 @@ export default function Imobiliarias() {
   const [imobiliariaParaExcluir, setImobiliariaParaExcluir] = useState<Pick<Imobiliaria, 'id' | 'nome'> | null>(null);
   const [isCheckingDelete, setIsCheckingDelete] = useState(false);
   const [deleteCheck, setDeleteCheck] = useState<{ negociacoes: number; corretores: number } | null>(null);
+
+  // Modal de corretores
+  const [corretoresModalImob, setCorretoresModalImob] = useState<Pick<Imobiliaria, 'id' | 'nome'> | null>(null);
+
+  const { data: corretoresLista } = useQuery({
+    queryKey: ['corretores-por-imobiliaria', corretoresModalImob?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('corretores')
+        .select('id, nome_completo, creci, telefone')
+        .eq('imobiliaria_id', corretoresModalImob!.id)
+        .order('nome_completo');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!corretoresModalImob?.id,
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -318,11 +336,15 @@ export default function Imobiliarias() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 hover:text-primary transition-colors"
+                          onClick={() => setCorretoresModalImob({ id: imob.id, nome: imob.nome })}
+                        >
                           <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{imob.corretores_count || 0}</span>
-                        </div>
+                          <span className="underline">{imob.corretores_count || 0}</span>
+                        </button>
                       </TableCell>
                       <TableCell>
                         <Badge variant={imob.is_active ? 'default' : 'secondary'}>
@@ -409,6 +431,36 @@ export default function Imobiliarias() {
             </AlertDialogContent>
           </AlertDialog>
         )}
+        {/* Modal lista de corretores */}
+        <Dialog open={!!corretoresModalImob} onOpenChange={(open) => !open && setCorretoresModalImob(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Corretores — {corretoresModalImob?.nome}</DialogTitle>
+            </DialogHeader>
+            {corretoresLista && corretoresLista.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CRECI</TableHead>
+                    <TableHead>Telefone</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {corretoresLista.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">{c.nome_completo}</TableCell>
+                      <TableCell>{c.creci || '—'}</TableCell>
+                      <TableCell>{c.telefone || '—'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum corretor cadastrado.</p>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

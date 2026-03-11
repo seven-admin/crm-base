@@ -1,30 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Plano: Modal de corretores na imobiliária + celular obrigatório
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## 1. Modal com lista de corretores ao clicar no contador
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-**Arquivo: `src/pages/Imobiliarias.tsx`**
-- Adicionar estado para controlar o modal e a imobiliária selecionada
-- Tornar o contador de corretores clicável (botão/link)
-- Ao clicar, abrir um Dialog que busca os corretores da imobiliária via `supabase.from('corretores').select('id, nome_completo, creci, telefone').eq('imobiliaria_id', id)`
-- Exibir lista com nome, CRECI e telefone de cada corretor
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-## 2. Celular obrigatório nos formulários de corretor
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-Três formulários precisam ser alterados:
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-### `src/components/mercado/CorretorForm.tsx` (admin)
-- Alterar `telefone` no schema zod de `.optional()` para `.min(1, 'Celular é obrigatório')`
-
-### `src/pages/portal/PortalCorretoresGestao.tsx` (gestor imobiliária)
-- Adicionar `required` no campo Telefone do `NovoCorretorDialog`
-
-### `src/components/auth/CorretorRegisterForm.tsx` (auto-cadastro)
-- Já exige WhatsApp obrigatório — manter como está
-
-## Arquivos alterados
-- `src/pages/Imobiliarias.tsx`
-- `src/components/mercado/CorretorForm.tsx`
-- `src/pages/portal/PortalCorretoresGestao.tsx`
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar

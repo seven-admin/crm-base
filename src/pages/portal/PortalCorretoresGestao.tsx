@@ -68,8 +68,8 @@ function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => voi
               <Input value={form.creci} onChange={e => setForm(f => ({ ...f, creci: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
+              <Label>Telefone / Celular *</Label>
+              <Input required value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
