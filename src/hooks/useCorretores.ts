@@ -232,9 +232,9 @@ export function useCorretor(id: string | undefined) {
 }
 
 // Paginated hook for corretores
-export function useCorretoresPaginated(page = 1, pageSize = 20, search?: string, imobiliariaId?: string) {
+export function useCorretoresPaginated(page = 1, pageSize = 20, search?: string, imobiliariaId?: string, cidade?: string) {
   return useQuery({
-    queryKey: ['corretores-paginated', page, pageSize, search, imobiliariaId],
+    queryKey: ['corretores-paginated', page, pageSize, search, imobiliariaId, cidade],
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
