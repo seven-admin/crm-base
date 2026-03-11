@@ -1,30 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Corrigir lista de corretores não atualizando após cadastro
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problema
-Após cadastrar um corretor pelo portal da imobiliária, a lista não atualiza automaticamente. O usuário precisa fazer reload manual.
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Causa raiz
-No `onSuccess` do `createCorretor`, o `invalidateQueries` não é `await`-ado. Em React Query v5, a invalidação retorna uma Promise e, sem `await`, a refetch pode não completar corretamente antes do React processar o próximo ciclo de renderização.
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-## Solução
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-**Arquivo: `src/hooks/useGestorCorretores.ts`**
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-Tornar o `onSuccess` do `createCorretor` assíncrono e aguardar a invalidação:
-
-```typescript
-onSuccess: async (data) => {
-  toast.success('Corretor cadastrado com sucesso! Senha de acesso: Seven@1234', { duration: 10000 });
-  await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
-  // webhook depois da invalidação
-  dispararWebhook('corretor_cadastrado', { ... });
-},
-```
-
-Aplicar o mesmo padrão nos `onSuccess` de `updateCorretor` e `toggleStatus` para consistência.
-
-## Arquivo alterado
-- `src/hooks/useGestorCorretores.ts`
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
