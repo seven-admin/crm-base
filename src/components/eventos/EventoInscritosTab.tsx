@@ -226,6 +226,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
                     <TableRow key={insc.id}>
                       <TableCell className="font-medium">{insc.nome_corretor}</TableCell>
                       <TableCell>{insc.telefone || '—'}</TableCell>
+                      <TableCell>{(insc as any)._celular_corretor || '—'}</TableCell>
                       <TableCell>{insc.email || '—'}</TableCell>
                       <TableCell>{insc.imobiliaria_nome || '—'}</TableCell>
                       <TableCell>
