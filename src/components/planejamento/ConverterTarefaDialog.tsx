@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { PlanejamentoItemWithRelations } from '@/types/planejamento.types';
-import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS } from '@/types/atividades.types';
+import { ATIVIDADE_TIPO_LABELS, ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, TIPOS_DIARIO } from '@/types/atividades.types';
 import { useGestorEmpreendimento } from '@/hooks/useGestorEmpreendimento';
 
 interface Props {
@@ -26,19 +26,23 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: gestorEmpreendimento } = useGestorEmpreendimento(empreendimentoId);
-  const [tab, setTab] = useState<'atividade' | 'marketing'>('atividade');
+  const [tab, setTab] = useState<'forecast' | 'diario' | 'marketing'>('forecast');
   const [saving, setSaving] = useState(false);
 
-  // Atividade fields
-  const [titulo, setTitulo] = useState(item.item);
-  const [tipo, setTipo] = useState('administrativa');
-  const [categoria, setCategoria] = useState('seven');
+  // Forecast fields
+  const [tituloForecast, setTituloForecast] = useState(item.item);
+  const [tipoForecast, setTipoForecast] = useState('atendimento');
+
+  // Diário de Bordo fields
+  const [tituloDiario, setTituloDiario] = useState(item.item);
+  const [tipoDiario, setTipoDiario] = useState('ligacao');
+  const [categoriaDiario, setCategoriaDiario] = useState('seven');
 
   // Marketing fields
   const [tituloMkt, setTituloMkt] = useState(item.item);
   const [categoriaMkt, setCategoriaMkt] = useState('');
 
-  const handleSaveAtividade = async () => {
+  const handleSaveAtividade = async (tipo: string, titulo: string, categoria: string) => {
     if (!titulo.trim()) { toast.error('Título é obrigatório'); return; }
     setSaving(true);
     try {
@@ -62,6 +66,9 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
       setSaving(false);
     }
   };
+
+  const handleSaveForecast = () => handleSaveAtividade(tipoForecast, tituloForecast, 'cliente');
+  const handleSaveDiario = () => handleSaveAtividade(tipoDiario, tituloDiario, categoriaDiario);
 
   const handleSaveMarketing = async () => {
     if (!tituloMkt.trim()) { toast.error('Título é obrigatório'); return; }
@@ -89,6 +96,22 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
     }
   };
 
+  const getHandleSave = () => {
+    switch (tab) {
+      case 'forecast': return handleSaveForecast;
+      case 'diario': return handleSaveDiario;
+      case 'marketing': return handleSaveMarketing;
+    }
+  };
+
+  const getButtonLabel = () => {
+    switch (tab) {
+      case 'forecast': return 'Criar Atividade (Forecast)';
+      case 'diario': return 'Criar Atividade (Diário)';
+      case 'marketing': return 'Criar Ticket';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -96,32 +119,57 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
           <DialogTitle>Converter Tarefa</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'atividade' | 'marketing')}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList className="w-full">
-            <TabsTrigger value="atividade" className="flex-1">Atividade (Forecast)</TabsTrigger>
-            <TabsTrigger value="marketing" className="flex-1">Ticket Marketing</TabsTrigger>
+            <TabsTrigger value="forecast" className="flex-1">Forecast</TabsTrigger>
+            <TabsTrigger value="diario" className="flex-1">Diário de Bordo</TabsTrigger>
+            <TabsTrigger value="marketing" className="flex-1">Marketing</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="atividade" className="space-y-4 pt-4">
+          <TabsContent value="forecast" className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>Título</Label>
-              <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+              <Input value={tituloForecast} onChange={(e) => setTituloForecast(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={tipoForecast} onValueChange={setTipoForecast}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TIPOS_FORECAST.map((k) => (
+                    <SelectItem key={k} value={k}>{ATIVIDADE_TIPO_LABELS[k]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">Categoria: Cliente (automático)</p>
+            {item.data_inicio && (
+              <p className="text-xs text-muted-foreground">
+                Datas: {item.data_inicio} → {item.data_fim || item.data_inicio}
+              </p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="diario" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={tituloDiario} onChange={(e) => setTituloDiario(e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tipo</Label>
-                <Select value={tipo} onValueChange={setTipo}>
+                <Select value={tipoDiario} onValueChange={setTipoDiario}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ATIVIDADE_TIPO_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    {TIPOS_DIARIO.map((k) => (
+                      <SelectItem key={k} value={k}>{ATIVIDADE_TIPO_LABELS[k]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <Select value={categoria} onValueChange={setCategoria}>
+                <Select value={categoriaDiario} onValueChange={setCategoriaDiario}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(ATIVIDADE_CATEGORIA_LABELS).map(([k, v]) => (
@@ -162,12 +210,9 @@ export function ConverterTarefaDialog({ open, onOpenChange, item, empreendimento
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button
-            onClick={tab === 'atividade' ? handleSaveAtividade : handleSaveMarketing}
-            disabled={saving}
-          >
+          <Button onClick={getHandleSave()} disabled={saving}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Criar {tab === 'atividade' ? 'Atividade' : 'Ticket'}
+            {getButtonLabel()}
           </Button>
         </DialogFooter>
       </DialogContent>

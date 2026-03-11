@@ -1,34 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Two Changes: Fix Conversion Dialog + New Empreendimentos Layout
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## 1. Conversão de Tarefas do Planejamento
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-### Problema encontrado
-O `ConverterTarefaDialog` (linha 101) exibe a aba como **"Atividade (Forecast)"**, mas permite selecionar **todos** os tipos de atividade (ligacao, meeting, reuniao, etc.) sem distinção entre Diário de Bordo e Forecast. Isso significa que o usuário pode criar uma atividade de tipo "Ligação" (Diário de Bordo) através de uma aba rotulada "Forecast".
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-Além disso, não existe uma aba dedicada para "Diário de Bordo" -- apenas "Atividade (Forecast)" e "Ticket Marketing".
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### Solução
-Alterar o `ConverterTarefaDialog` para ter **3 abas**: Forecast, Diário de Bordo e Ticket Marketing.
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-- **Aba Forecast**: Filtrar tipos apenas para `TIPOS_FORECAST` (atendimento, fechamento, assinatura). Categoria fixa como `cliente`.
-- **Aba Diário de Bordo**: Filtrar tipos para `TIPOS_DIARIO` (ligacao, meeting, reuniao, visita, acompanhamento, treinamento, administrativa). Permitir seleção de categoria.
-- **Aba Marketing**: Manter como está.
-
-### Arquivo alterado
-- `src/components/planejamento/ConverterTarefaDialog.tsx`
-
----
-
-## 2. Nova exibição de Empreendimentos agrupada por Estado (UF)
-
-### Situação atual
-A página `/empreendimentos` exibe cards em grid sem agrupamento. Todos os empreendimentos aparecem em ordem de criação.
-
-### Solução
-Agrupar os empreendimentos por `endereco_uf` (estado), exibindo seções colapsáveis com o nome do estado como cabeçalho. Dentro de cada grupo, manter os cards existentes (`EmpreendimentoCard`). Empreendimentos sem UF ficam em grupo "Sem estado definido".
-
-### Arquivo alterado
-- `src/pages/Empreendimentos.tsx` -- adicionar lógica de agrupamento por UF com `useMemo`, renderizar seções com `Collapsible` ou accordion simples.
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
