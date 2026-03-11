@@ -63,8 +63,9 @@ export function useEventoInscricoes(userId?: string) {
       imobiliaria_nome?: string;
       evento_nome: string;
       evento_data: string;
+      corretor_celular?: string;
     }) => {
-      const { evento_nome, evento_data, ...insertData } = params;
+      const { evento_nome, evento_data, corretor_celular, ...insertData } = params;
 
       const { error } = await supabase
         .from('evento_inscricoes')
