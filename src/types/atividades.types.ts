@@ -11,7 +11,11 @@ export const TIPOS_FORECAST: AtividadeTipo[] = ['atendimento', 'fechamento', 'as
 export const TIPOS_NEGOCIACAO: AtividadeTipo[] = ['atendimento', 'negociacao', 'contra_proposta_atividade'];
 
 // Tipos que exibem o cronômetro de tempo
-export const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = ['atendimento', 'visita', 'negociacao'];
+export const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = [
+  'ligacao', 'meeting', 'reuniao', 'visita', 'atendimento',
+  'fechamento', 'assinatura', 'acompanhamento', 'treinamento',
+  'administrativa', 'negociacao', 'contra_proposta_atividade'
+];
 
 // Tipos que são exclusivamente categoria "cliente" (fluxo comercial)
 export const TIPOS_CATEGORIA_CLIENTE: AtividadeTipo[] = ['atendimento', 'fechamento', 'assinatura', 'negociacao', 'contra_proposta_atividade'];
