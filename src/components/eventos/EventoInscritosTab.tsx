@@ -106,6 +106,28 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     onError: (e: Error) => toast.error('Erro: ' + e.message),
   });
 
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const handleReenviar = async (insc: any) => {
+    setSendingId(insc.id);
+    try {
+      await dispararWebhook('evento_inscricao_corretor', {
+        nome_corretor: insc.nome_corretor,
+        telefone: insc.telefone,
+        email: insc.email,
+        imobiliaria_nome: insc.imobiliaria_nome,
+        evento_nome: eventoNome,
+        evento_data: eventoData,
+        evento_id: eventoId,
+      });
+      toast.success('Mensagem reenviada com sucesso.');
+    } catch {
+      toast.error('Erro ao reenviar mensagem.');
+    } finally {
+      setSendingId(null);
+    }
+  };
+
   const closeDialog = () => { setDialogOpen(false); setEditingId(null); setForm(emptyForm); };
 
   const openAdd = () => { setForm(emptyForm); setEditingId(null); setDialogOpen(true); };
