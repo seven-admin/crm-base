@@ -179,6 +179,17 @@ export default function Corretores() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={cidadeFilter} onValueChange={(v) => { setCidadeFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Todas cidades" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas cidades</SelectItem>
+            {cidades.map(c => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button variant="outline" onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Exportar
