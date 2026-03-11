@@ -49,7 +49,33 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         .eq('evento_id', eventoId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Buscar telefones via user_id para inscritos sem corretor_id
+      const userIdsWithoutCorretor = data
+        .filter(d => !d.corretor_id && d.user_id)
+        .map(d => d.user_id);
+
+      let corretorMap: Record<string, { telefone: string | null; whatsapp: string | null }> = {};
+      if (userIdsWithoutCorretor.length > 0) {
+        const { data: corretoresByUser } = await supabase
+          .from('corretores')
+          .select('user_id, telefone, whatsapp')
+          .in('user_id', userIdsWithoutCorretor);
+        if (corretoresByUser) {
+          corretorMap = Object.fromEntries(
+            corretoresByUser.map(c => [c.user_id, { telefone: c.telefone, whatsapp: c.whatsapp }])
+          );
+        }
+      }
+
+      // Enriquecer dados com fallback de celular
+      return data.map(insc => ({
+        ...insc,
+        _celular_corretor:
+          insc.corretor?.whatsapp || insc.corretor?.telefone ||
+          corretorMap[insc.user_id]?.whatsapp || corretorMap[insc.user_id]?.telefone ||
+          insc.telefone || null,
+      }));
     },
     enabled: !!eventoId,
   });
@@ -116,7 +142,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
         telefone: insc.telefone,
         email: insc.email,
         imobiliaria_nome: insc.imobiliaria_nome,
-        corretor_celular: insc.corretor?.whatsapp || insc.corretor?.telefone || null,
+        corretor_celular: (insc as any)._celular_corretor || null,
         evento_nome: eventoNome,
         evento_data: eventoData,
         evento_id: eventoId,
@@ -187,6 +213,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Telefone</TableHead>
+                    <TableHead>Celular Corretor</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Imobiliária</TableHead>
                     <TableHead>Status</TableHead>
@@ -199,6 +226,7 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
                     <TableRow key={insc.id}>
                       <TableCell className="font-medium">{insc.nome_corretor}</TableCell>
                       <TableCell>{insc.telefone || '—'}</TableCell>
+                      <TableCell>{(insc as any)._celular_corretor || '—'}</TableCell>
                       <TableCell>{insc.email || '—'}</TableCell>
                       <TableCell>{insc.imobiliaria_nome || '—'}</TableCell>
                       <TableCell>
