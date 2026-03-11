@@ -65,8 +65,7 @@ export function useResumoAtividadesPorCategoria(
         if (ativ.status === 'concluida') {
           resultado[cat]!.fechadas++;
         } else if (ativ.status === 'pendente') {
-          const deadlineOrFim = ativ.deadline_date || ativ.data_fim;
-          if (deadlineOrFim < hojeStr) {
+          if (ativ.data_fim < hojeStr) {
             resultado[cat]!.atrasadas++;
           } else if (ativ.data_inicio > hojeStr) {
             resultado[cat]!.futuras++;

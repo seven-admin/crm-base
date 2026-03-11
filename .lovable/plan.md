@@ -1,40 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Bug: Atividade de hoje aparecendo como "vencida" no Forecast
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Causa raiz
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-Encontrei **duas inconsistências** no cálculo de "hoje" e na lógica de vencimento:
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### 1. Timezone UTC vs Local
-O hook `useAtividadesVencidas` usa `new Date().toISOString().split('T')[0]` que retorna a data em **UTC**. Se o usuário está no Brasil (UTC-3) e acessa o sistema após 21h, o `toISOString()` já retorna o dia seguinte em UTC. Isso faz com que atividades de "hoje" (pelo horário local) sejam classificadas como vencidas porque `data_fim < amanhã_utc` é verdadeiro.
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-Os outros hooks (`useForecast`, `useResumoAtividadesPorCategoria`) usam `format(new Date(), 'yyyy-MM-dd')` do date-fns que respeita o timezone local — e estão corretos.
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-### 2. Inconsistência no campo de referência
-- `useResumoAtividadesPorCategoria` usa `deadline_date || data_fim` para determinar atraso
-- `useForecast` e `useAtividadesVencidas` usam apenas `data_fim`
-- `ForecastBatchStatusDialog` usa apenas `data_fim`
-
-Isso gera discrepância: o card de categoria pode mostrar "atrasada" mas o dialog de batch e os alertas não concordam.
-
-## Correções
-
-### `src/hooks/useAtividades.ts` — `useAtividadesVencidas`
-- Trocar `new Date().toISOString().split('T')[0]` por `format(new Date(), 'yyyy-MM-dd')` (importar `format` do date-fns)
-- Garante que "hoje" é calculado no timezone local
-
-### `src/hooks/useForecast.ts` — `useResumoAtividades`
-- Está correto (já usa `format`), sem alteração
-
-### `src/hooks/useResumoAtividadesPorCategoria.ts`
-- Padronizar: usar `data_fim` ao invés de `deadline_date || data_fim` para manter consistência com os outros hooks
-- OU: propagar `deadline_date || data_fim` para os outros hooks
-
-### `src/components/forecast/ForecastBatchStatusDialog.tsx`
-- A lógica de "abertas" (linha 62: `gte('data_fim', hoje)`) e "atrasadas" (linha 65: `lt('data_fim', hoje)`) está correta em termos de timezone (usa `format`), mas atividades de hoje com `data_fim === hoje` caem em "abertas" (correto). Sem alteração necessária.
-
-## Resumo das edições
-1. **`useAtividades.ts`**: Corrigir timezone em `useAtividadesVencidas` — usar `format` do date-fns
-2. **`useResumoAtividadesPorCategoria.ts`**: Padronizar para usar apenas `data_fim` (sem `deadline_date`) na lógica de atraso, alinhando com todos os outros hooks
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
