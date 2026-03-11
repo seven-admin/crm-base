@@ -1,36 +1,20 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Cronômetro em todas as atividades
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Mudança
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+Uma única linha: remover a restrição de tipos no `TIPOS_COM_CRONOMETRO`, fazendo-o incluir todos os tipos de atividade.
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### `src/types/atividades.types.ts`
+Alterar a constante para incluir todos os tipos:
+```typescript
+export const TIPOS_COM_CRONOMETRO: AtividadeTipo[] = [
+  'ligacao', 'meeting', 'reuniao', 'visita', 'atendimento',
+  'fechamento', 'assinatura', 'acompanhamento', 'treinamento',
+  'administrativa', 'negociacao', 'contra_proposta_atividade'
+];
+```
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+Nenhuma outra alteração necessária — o `AtividadeDetalheDialog` e a página `Atividades` já usam essa constante para decidir se exibem o cronômetro. Ao incluir todos os tipos, ele aparece em todas as atividades automaticamente.
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
