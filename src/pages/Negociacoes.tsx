@@ -145,6 +145,14 @@ const Funil = () => {
     setExcluirNeg(null);
   };
 
+  if (showGate) {
+    return (
+      <MainLayout title="Forecast" subtitle="Gerencie seu forecast e propostas comerciais">
+        <NegociacoesEmpreendimentoGate onSelect={handleGateSelect} />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout
       title="Forecast"
