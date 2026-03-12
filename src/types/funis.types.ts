@@ -48,6 +48,7 @@ export interface FunilEtapaFormData {
   is_inicial?: boolean;
   is_final_sucesso?: boolean;
   is_final_perda?: boolean;
+  visivel_incorporador?: boolean;
 }
 
 // Cores predefinidas para etapas
