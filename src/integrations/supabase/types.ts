@@ -2952,6 +2952,7 @@ export type Database = {
           is_inicial: boolean | null
           nome: string
           ordem: number
+          visivel_incorporador: boolean
         }
         Insert: {
           codigo: string
@@ -2967,6 +2968,7 @@ export type Database = {
           is_inicial?: boolean | null
           nome: string
           ordem?: number
+          visivel_incorporador?: boolean
         }
         Update: {
           codigo?: string
@@ -2982,6 +2984,7 @@ export type Database = {
           is_inicial?: boolean | null
           nome?: string
           ordem?: number
+          visivel_incorporador?: boolean
         }
         Relationships: [
           {
