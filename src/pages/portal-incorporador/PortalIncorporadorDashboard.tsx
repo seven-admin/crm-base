@@ -1,6 +1,5 @@
 import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
 import { useDashboardExecutivo } from '@/hooks/useDashboardExecutivo';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Building2,
