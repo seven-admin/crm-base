@@ -126,11 +126,14 @@ export default function PortalIncorporadorPropostas() {
   });
 
   const etapasVisiveisIds = etapasVisiveis as string[];
+  const temEtapasConfiguradas = etapasVisiveisIds.length > 0;
 
   const negociacoesEmAndamento = todasNegociacoes.filter(
     (n) =>
       empreendimentoIds.includes(n.empreendimento_id) &&
-      etapasVisiveisIds.includes(n.funil_etapa_id || '') &&
+      (temEtapasConfiguradas
+        ? etapasVisiveisIds.includes(n.funil_etapa_id || '')
+        : true) &&
       !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
   );
 
