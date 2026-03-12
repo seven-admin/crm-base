@@ -89,12 +89,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   // Estado otimista para manter a posição visual durante a mutation
   const [optimisticNegociacoes, setOptimisticNegociacoes] = useState<Negociacao[] | null>(null);
 
-  // Limpar estado otimista quando dados reais chegam
-  useEffect(() => {
-    if (negociacoes.length > 0 && !moverMutation.isPending) {
-      setOptimisticNegociacoes(null);
-    }
-  }, [negociacoes, moverMutation.isPending]);
+  // Estado otimista é limpo apenas no onSettled da mutation
 
   // Usar dados otimistas se disponíveis
   const displayNegociacoes = optimisticNegociacoes ?? negociacoes;
