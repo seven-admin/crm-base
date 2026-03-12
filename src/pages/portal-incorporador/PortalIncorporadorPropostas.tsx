@@ -24,6 +24,8 @@ import { ptBR } from 'date-fns/locale';
 import PropostaCard from '@/components/portal-incorporador/PropostaCard';
 import { formatarMoeda } from '@/lib/formatters';
 import { STATUS_PROPOSTA_LABELS } from '@/types/negociacoes.types';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 // ─── Comentários ────────────────────────────────────────────────
 function ComentariosSection({ negociacaoId }: { negociacaoId: string }) {
