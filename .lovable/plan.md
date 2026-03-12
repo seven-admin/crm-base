@@ -1,36 +1,48 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Correções no Portal do Incorporador
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## 1. Negociações não aparecem — Causa raiz
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+Dados do banco confirmam:
+- 105 negociações na etapa **Atendimento** (vinculadas aos empreendimentos do incorporador Kraft)
+- Etapa "Atendimento" tem `visivel_incorporador = false`
+- Apenas "Negociação" (1 registro) e "Retorno do incorporador" (1 registro) estão marcadas como visíveis
+- O fallback "mostrar tudo se nenhuma etapa configurada" não dispara porque 2 etapas já estão configuradas
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+**Solução**: Marcar "Atendimento" como `visivel_incorporador = true` via migration. O incorporador precisa ver todas as negociações dos seus empreendimentos desde o início do funil.
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+```sql
+UPDATE public.funil_etapas SET visivel_incorporador = true WHERE nome = 'Atendimento';
+```
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+Adicionalmente, marcar "Proposta completa" como visível também (faz sentido para o incorporador acompanhar).
+
+## 2. Refatoração do layout da Home
+
+Problemas atuais:
+- KPIs aparecem **depois** dos cards de navegação (deveria ser antes)
+- Cards de navegação em 2 colunas ocupam muito espaço vertical
+- UX pesada
+
+**Solução**:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  KPIs (faixa compacta, 4 cols)                               │
+├──────────────────────────────────────────────────────────────┤
+│  6 cards de navegação em UMA LINHA (6 colunas)               │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐     │
+│  │Exec. │ │Forec.│ │Disp. │ │Prop. │ │Mktg. │ │Plan. │     │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Cards em formato compacto/vertical (ícone em cima, título embaixo) para caber 6 em uma linha. No mobile: 3 colunas (2 linhas).
+
+### Arquivos alterados
+
+- **Migration**: `UPDATE funil_etapas SET visivel_incorporador = true WHERE nome IN ('Atendimento', 'Proposta completa')`
+- `src/components/portal-incorporador/PortalIncorporadorLayout.tsx` — grid 6 colunas, cards compactos verticais, KPIs antes dos cards
+- `src/pages/portal-incorporador/PortalIncorporadorDashboard.tsx` — sem mudanças estruturais (já está compacto)
+
