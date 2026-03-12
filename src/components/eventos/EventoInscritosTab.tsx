@@ -209,18 +209,18 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     const rows = sorted
       .map(
         (i) =>
-          `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.nome_corretor || '—'}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.telefone || '—'}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.imobiliaria_nome || '—'}</td></tr>`
+          `<tr><td style="padding:4px 8px;border-bottom:1px solid #eee">${i.nome_corretor || '—'}</td><td style="padding:4px 8px;border-bottom:1px solid #eee">${(i as any)._celular_corretor || '—'}</td><td style="padding:4px 8px;border-bottom:1px solid #eee">${i.imobiliaria_nome || '—'}</td></tr>`
       )
       .join('');
     const html = `
-      <div style="font-family:Arial,sans-serif;padding:20px">
-        <h2 style="margin-bottom:4px">${eventoNome || 'Evento'}</h2>
-        <p style="color:#666;margin-bottom:16px;font-size:13px">${sorted.length} inscrito(s)</p>
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <div style="font-family:'Courier New',monospace;padding:20px">
+        <h2 style="margin-bottom:4px;font-size:10px">${eventoNome || 'Evento'}</h2>
+        <p style="color:#666;margin-bottom:16px;font-size:10px">${sorted.length} inscrito(s)</p>
+        <table style="width:100%;border-collapse:collapse;font-size:8px">
           <thead><tr style="background:#f5f5f5;text-align:left">
-            <th style="padding:8px 10px">Nome</th>
-            <th style="padding:8px 10px">Telefone</th>
-            <th style="padding:8px 10px">Imobiliária</th>
+            <th style="padding:4px 8px">Nome</th>
+            <th style="padding:4px 8px">Celular</th>
+            <th style="padding:4px 8px">Imobiliária</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
