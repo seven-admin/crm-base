@@ -137,8 +137,7 @@ export default function PortalIncorporadorPropostas() {
   const propostasEmAnalise = todasNegociacoes.filter(
     (n) =>
       empreendimentoIds.includes(n.empreendimento_id) &&
-      (n.status_proposta === 'em_analise' ||
-        (n.funil_etapa_id === ETAPA_ANALISE_PROPOSTA && !n.status_proposta))
+      n.status_proposta === 'em_analise'
   );
 
   const propostasEmPreparacao = todasNegociacoes.filter(
