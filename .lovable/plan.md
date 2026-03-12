@@ -1,36 +1,37 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Correções: Flickering do Kanban + Visibilidade do Portal Incorporador
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## 1. Flickering ao mover cards no Kanban
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+### Causa raiz
+O `useEffect` nas linhas 93-97 do `FunilKanbanBoard.tsx` limpa o estado otimista (`setOptimisticNegociacoes(null)`) assim que `negociacoes` muda E `moverMutation.isPending` é `false`. O problema é que o react-query pode refazer a query (com dados antigos ainda no servidor) **antes** da mutation completar, gerando a sequência:
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+1. Card arrastado → atualização otimista (card na posição nova)
+2. React-query refetch automático retorna dados antigos → useEffect limpa otimista → card volta à posição antiga
+3. Mutation completa → `onSuccess` invalida queries → dados novos chegam → card vai para posição nova de novo
+4. Toast "movido com sucesso" aparece
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### Solução
+- Remover o `useEffect` que limpa otimisticamente baseado em `negociacoes`
+- Manter apenas o `onSettled` callback da mutation para limpar o estado otimista (já existe na linha 282-286)
+- Isso garante que o estado otimista persiste até a mutation de fato terminar
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### Arquivo: `src/components/negociacoes/FunilKanbanBoard.tsx`
+Remover linhas 92-97 (o useEffect problemático).
+
+---
+
+## 2. Portal do Incorporador - Visibilidade de negociações
+
+### Situação atual
+Em `PortalIncorporadorPropostas.tsx` (linhas 114-118), o incorporador só vê negociações com `status_proposta === 'em_analise'` ou na etapa de Análise de Proposta. Não há seção para negociações na etapa "Negociação".
+
+### Solução
+Adicionar uma nova seção "Negociações em Andamento" que mostra todas as negociações dos empreendimentos do incorporador que estejam na etapa "Negociação" (independente de terem proposta), permitindo que ele acompanhe e interaja com elas.
+
+### Arquivo: `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`
+- Adicionar constante `ETAPA_NEGOCIACAO` com o ID correto
+- Filtrar negociações na etapa "Negociação" que pertençam aos empreendimentos do incorporador
+- Renderizar uma seção "Negociações em Andamento" com os cards correspondentes, antes da seção de propostas em análise
+
