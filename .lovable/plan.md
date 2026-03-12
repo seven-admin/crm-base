@@ -1,36 +1,40 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Diagnóstico: Negociações não aparecem no Portal do Incorporador
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Causa raiz identificada
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+Após consultar o banco de dados, encontrei o seguinte cenário:
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+| Etapa | Negociações | visivel_incorporador |
+|---|---|---|
+| Atendimento | **105** | false |
+| Negociação | 1 | **true** |
+| Retorno do incorporador | 1 | false |
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+O problema: quase todas as negociações (105 de 107) estão na etapa "Atendimento", que **não está marcada** como visível. Apenas "Negociação" está marcada, e tem somente 1 registro. Dependendo de qual incorporador faz login, pode não haver nenhuma negociação na etapa visível.
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+Além disso, as seções "Propostas Aguardando Aprovação" e "Em Preparação" filtram por `status_proposta`, e todas as negociações têm `status_proposta = null` -- logo essas seções também ficam vazias.
+
+## Solução proposta
+
+### 1. Marcar automaticamente as etapas relevantes como visíveis
+
+Criar migration que marca "Negociação" e "Retorno do incorporador" como `visivel_incorporador = true` (caso o admin esqueça de configurar).
+
+### 2. Tornar o portal mais resiliente
+
+Alterar `PortalIncorporadorPropostas.tsx` para:
+
+- Se **nenhuma etapa** estiver marcada como `visivel_incorporador`, mostrar **todas** as negociações dos empreendimentos do incorporador (fallback)
+- Mostrar a seção "Negociações em Andamento" mesmo quando a lista está vazia, com mensagem informativa (igual à seção "Propostas Aguardando Aprovação" já faz)
+- Remover a condição `{negociacoesEmAndamento.length > 0 && ...}` que esconde a seção inteira quando vazia
+
+### 3. Adicionar RLS policy para funil_etapas para incorporadores
+
+Verificar que incorporadores podem ler `funil_etapas` -- a policy atual de SELECT exige que a etapa pertença a um funil ativo, o que é correto, mas precisamos garantir que funcione para o role incorporador.
+
+### Arquivos alterados
+- **Migration**: UPDATE `funil_etapas` SET `visivel_incorporador = true` para etapas Negociação e Retorno do incorporador
+- `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` -- fallback quando nenhuma etapa visível configurada + seção sempre visível com empty state
+
