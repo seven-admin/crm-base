@@ -105,7 +105,7 @@ export function PortalIncorporadorLayout() {
               { to: '/portal-incorporador/executivo', icon: BarChart3, title: 'Executivo', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
               { to: '/portal-incorporador/forecast', icon: TrendingUp, title: 'Forecast', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
               { to: '/portal-incorporador/disponibilidade', icon: Map, title: 'Disponibilidade', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30' },
-              { to: '/portal-incorporador/propostas', icon: FileText, title: 'Propostas', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+              { to: '/portal-incorporador/propostas', icon: FileText, title: 'Negociações/Propostas', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
               { to: '/portal-incorporador/marketing', icon: Palette, title: 'Marketing', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
               { to: '/portal-incorporador/planejamento', icon: ClipboardList, title: 'Planejamento', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
             ].map((item) => (
