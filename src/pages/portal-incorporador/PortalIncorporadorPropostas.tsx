@@ -187,13 +187,20 @@ export default function PortalIncorporadorPropostas() {
   return (
     <div className="space-y-6">
       {/* Negociações em Andamento */}
-      {negociacoesEmAndamento.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <Handshake className="h-5 w-5" />
-            Negociações em Andamento
-            <Badge variant="secondary">{negociacoesEmAndamento.length}</Badge>
-          </h2>
+      <div>
+        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+          <Handshake className="h-5 w-5" />
+          Negociações em Andamento
+          {negociacoesEmAndamento.length > 0 && <Badge variant="secondary">{negociacoesEmAndamento.length}</Badge>}
+        </h2>
+        {negociacoesEmAndamento.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Handshake className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Nenhuma negociação em andamento no momento</p>
+            </CardContent>
+          </Card>
+        ) : (
           <div className="grid gap-4">
             {negociacoesEmAndamento.map((neg) => (
               <PropostaCardWithCondicoes
@@ -208,8 +215,8 @@ export default function PortalIncorporadorPropostas() {
               />
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Em Análise */}
       <div>
