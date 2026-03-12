@@ -97,96 +97,30 @@ export function PortalIncorporadorLayout() {
       
       {/* Cards de navegação - apenas na página principal */}
       {!isInternalPage && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Link to="/portal-incorporador/executivo" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
-                  <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Dashboard Executivo</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">KPIs e métricas detalhadas</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/portal-incorporador/forecast" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 flex-shrink-0">
-                  <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Forecast</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">Previsões e atividades</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/portal-incorporador/marketing" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex-shrink-0">
-                  <Palette className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Marketing</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">Tickets de criação</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/portal-incorporador/planejamento" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex-shrink-0">
-                  <ClipboardList className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Planejamento</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">Cronograma de tarefas</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/portal-incorporador/disponibilidade" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex-shrink-0">
-                  <Map className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Disponibilidade</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">Mapa de unidades</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/portal-incorporador/propostas" className="h-full">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardContent className="p-6 flex items-center gap-4 h-full">
-                <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex-shrink-0">
-                  <FileText className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">Propostas</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">Aprovação de propostas</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mb-6">
+          {[
+            { to: '/portal-incorporador/executivo', icon: BarChart3, title: 'Dashboard Executivo', desc: 'KPIs e métricas consolidadas do portfólio', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+            { to: '/portal-incorporador/forecast', icon: TrendingUp, title: 'Forecast', desc: 'Previsões de vendas, atividades e calendário', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
+            { to: '/portal-incorporador/disponibilidade', icon: Map, title: 'Disponibilidade', desc: 'Mapa de unidades por empreendimento', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30' },
+            { to: '/portal-incorporador/propostas', icon: FileText, title: 'Propostas', desc: 'Analise e aprove propostas comerciais', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+            { to: '/portal-incorporador/marketing', icon: Palette, title: 'Marketing', desc: 'Acompanhe tickets de criação', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+            { to: '/portal-incorporador/planejamento', icon: ClipboardList, title: 'Planejamento', desc: 'Cronograma de tarefas dos empreendimentos', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
+          ].map((item) => (
+            <Link key={item.to} to={item.to} className="h-full">
+              <Card className="hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer h-full border">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className={`p-3 rounded-lg ${item.bg} flex-shrink-0`}>
+                    <item.icon className={`h-6 w-6 ${item.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
       
