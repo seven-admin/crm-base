@@ -100,6 +100,38 @@ function PropostaCardWithCondicoes({
   );
 }
 
+// ─── Seção colapsável reutilizável ──────────────────────────────
+function CollapsibleSection({
+  title,
+  icon: Icon,
+  count,
+  children,
+  badgeVariant = 'secondary',
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: React.ElementType;
+  count: number;
+  children: React.ReactNode;
+  badgeVariant?: 'secondary' | 'outline' | 'default';
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="flex items-center gap-2 w-full text-left mb-3 group">
+          <Icon className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">{title}</h2>
+          {count > 0 && <Badge variant={badgeVariant}>{count}</Badge>}
+          <ChevronDown className={`h-4 w-4 ml-auto text-muted-foreground transition-transform ${open ? '' : '-rotate-90'}`} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>{children}</CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 // ─── Página principal ───────────────────────────────────────────
 export default function PortalIncorporadorPropostas() {
   const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
