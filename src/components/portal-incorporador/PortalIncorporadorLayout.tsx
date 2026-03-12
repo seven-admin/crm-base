@@ -97,26 +97,22 @@ export function PortalIncorporadorLayout() {
       
       {/* Cards de navegação - apenas na página principal */}
       {!isInternalPage && (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mb-6">
+        <div className="grid gap-3 grid-cols-3 lg:grid-cols-6 mb-6">
           {[
-            { to: '/portal-incorporador/executivo', icon: BarChart3, title: 'Dashboard Executivo', desc: 'KPIs e métricas consolidadas do portfólio', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-            { to: '/portal-incorporador/forecast', icon: TrendingUp, title: 'Forecast', desc: 'Previsões de vendas, atividades e calendário', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
-            { to: '/portal-incorporador/disponibilidade', icon: Map, title: 'Disponibilidade', desc: 'Mapa de unidades por empreendimento', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30' },
-            { to: '/portal-incorporador/propostas', icon: FileText, title: 'Propostas', desc: 'Analise e aprove propostas comerciais', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-            { to: '/portal-incorporador/marketing', icon: Palette, title: 'Marketing', desc: 'Acompanhe tickets de criação', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-            { to: '/portal-incorporador/planejamento', icon: ClipboardList, title: 'Planejamento', desc: 'Cronograma de tarefas dos empreendimentos', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
+            { to: '/portal-incorporador/executivo', icon: BarChart3, title: 'Executivo', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+            { to: '/portal-incorporador/forecast', icon: TrendingUp, title: 'Forecast', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
+            { to: '/portal-incorporador/disponibilidade', icon: Map, title: 'Disponibilidade', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30' },
+            { to: '/portal-incorporador/propostas', icon: FileText, title: 'Propostas', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+            { to: '/portal-incorporador/marketing', icon: Palette, title: 'Marketing', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+            { to: '/portal-incorporador/planejamento', icon: ClipboardList, title: 'Planejamento', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
           ].map((item) => (
-            <Link key={item.to} to={item.to} className="h-full">
-              <Card className="hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer h-full border">
-                <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className={`p-3 rounded-lg ${item.bg} flex-shrink-0`}>
-                    <item.icon className={`h-6 w-6 ${item.color}`} />
+            <Link key={item.to} to={item.to}>
+              <Card className="hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer border h-full">
+                <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
+                  <div className={`p-2.5 rounded-lg ${item.bg}`}>
+                    <item.icon className={`h-5 w-5 ${item.color}`} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs font-medium leading-tight">{item.title}</span>
                 </CardContent>
               </Card>
             </Link>
