@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock, Handshake } from 'lucide-react';
+import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock, Handshake, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import PropostaCard from '@/components/portal-incorporador/PropostaCard';
@@ -96,6 +97,38 @@ function PropostaCardWithCondicoes({
     >
       <ComentariosSection negociacaoId={neg.id} />
     </PropostaCard>
+  );
+}
+
+// ─── Seção colapsável reutilizável ──────────────────────────────
+function CollapsibleSection({
+  title,
+  icon: Icon,
+  count,
+  children,
+  badgeVariant = 'secondary',
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: React.ElementType;
+  count: number;
+  children: React.ReactNode;
+  badgeVariant?: 'secondary' | 'outline' | 'default';
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="flex items-center gap-2 w-full text-left mb-3 group">
+          <Icon className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">{title}</h2>
+          {count > 0 && <Badge variant={badgeVariant}>{count}</Badge>}
+          <ChevronDown className={`h-4 w-4 ml-auto text-muted-foreground transition-transform ${open ? '' : '-rotate-90'}`} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>{children}</CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -186,46 +219,8 @@ export default function PortalIncorporadorPropostas() {
 
   return (
     <div className="space-y-6">
-      {/* Negociações em Andamento */}
-      <div>
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Handshake className="h-5 w-5" />
-          Negociações em Andamento
-          {negociacoesEmAndamento.length > 0 && <Badge variant="secondary">{negociacoesEmAndamento.length}</Badge>}
-        </h2>
-        {negociacoesEmAndamento.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Handshake className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">Nenhuma negociação em andamento no momento</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {negociacoesEmAndamento.map((neg) => (
-              <PropostaCardWithCondicoes
-                key={neg.id}
-                neg={neg}
-                showActions={false}
-                onAprovar={setAprovarDialog}
-                onContraProposta={(n) => {
-                  setNegarDialog(n);
-                  setMotivoContra('');
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Em Análise */}
-      <div>
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <DollarSign className="h-5 w-5" />
-          Propostas Aguardando Aprovação
-          {propostasEmAnalise.length > 0 && <Badge variant="secondary">{propostasEmAnalise.length}</Badge>}
-        </h2>
-
+      <CollapsibleSection title="Propostas Aguardando Aprovação" icon={DollarSign} count={propostasEmAnalise.length}>
         {propostasEmAnalise.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
@@ -236,66 +231,51 @@ export default function PortalIncorporadorPropostas() {
         ) : (
           <div className="grid gap-4">
             {propostasEmAnalise.map((neg) => (
-              <PropostaCardWithCondicoes
-                key={neg.id}
-                neg={neg}
-                showActions
-                onAprovar={setAprovarDialog}
-                onContraProposta={(n) => {
-                  setNegarDialog(n);
-                  setMotivoContra('');
-                }}
-              />
+              <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
             ))}
           </div>
         )}
-      </div>
+      </CollapsibleSection>
 
       {/* Em Preparação */}
       {propostasEmPreparacao.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Em Preparação
-            <Badge variant="outline">{propostasEmPreparacao.length}</Badge>
-          </h2>
+        <CollapsibleSection title="Em Preparação" icon={Clock} count={propostasEmPreparacao.length} badgeVariant="outline">
           <div className="grid gap-4">
             {propostasEmPreparacao.map((neg) => (
-              <PropostaCardWithCondicoes
-                key={neg.id}
-                neg={neg}
-                showActions={false}
-                onAprovar={setAprovarDialog}
-                onContraProposta={(n) => {
-                  setNegarDialog(n);
-                  setMotivoContra('');
-                }}
-              />
+              <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions={false} onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
             ))}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {/* Resolvidas */}
       {propostasResolvidas.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-3">Propostas Recentes</h2>
+        <CollapsibleSection title="Propostas Recentes" icon={Check} count={propostasResolvidas.length} badgeVariant="outline" defaultOpen={false}>
           <div className="grid gap-4">
             {propostasResolvidas.map((neg) => (
-              <PropostaCardWithCondicoes
-                key={neg.id}
-                neg={neg}
-                showActions={false}
-                onAprovar={setAprovarDialog}
-                onContraProposta={(n) => {
-                  setNegarDialog(n);
-                  setMotivoContra('');
-                }}
-              />
+              <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions={false} onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
             ))}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
+
+      {/* Negociações em Andamento */}
+      <CollapsibleSection title="Negociações em Andamento" icon={Handshake} count={negociacoesEmAndamento.length}>
+        {negociacoesEmAndamento.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Handshake className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Nenhuma negociação em andamento no momento</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {negociacoesEmAndamento.map((neg) => (
+              <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions={false} onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
 
       {/* Dialog Aprovar */}
       <Dialog open={!!aprovarDialog} onOpenChange={(o) => !o && setAprovarDialog(null)}>

@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle, Send } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, CheckCircle, XCircle, Send, FileText } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -200,6 +201,35 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
     }
   };
 
+  const handleGerarPDF = () => {
+    if (!inscricoes?.length) return;
+    const sorted = [...inscricoes].sort((a, b) =>
+      (a.nome_corretor || '').localeCompare(b.nome_corretor || '', 'pt-BR')
+    );
+    const rows = sorted
+      .map(
+        (i) =>
+          `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.nome_corretor || '—'}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.telefone || '—'}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${i.imobiliaria_nome || '—'}</td></tr>`
+      )
+      .join('');
+    const html = `
+      <div style="font-family:Arial,sans-serif;padding:20px">
+        <h2 style="margin-bottom:4px">${eventoNome || 'Evento'}</h2>
+        <p style="color:#666;margin-bottom:16px;font-size:13px">${sorted.length} inscrito(s)</p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#f5f5f5;text-align:left">
+            <th style="padding:8px 10px">Nome</th>
+            <th style="padding:8px 10px">Telefone</th>
+            <th style="padding:8px 10px">Imobiliária</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    const el = document.createElement('div');
+    el.innerHTML = html;
+    html2pdf().set({ margin: 10, filename: `inscritos-${eventoNome || 'evento'}.pdf`, jsPDF: { format: 'a4' } }).from(el).save();
+  };
+
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
   const confirmadas = inscricoes?.filter(i => i.status === 'confirmada').length || 0;
@@ -216,6 +246,9 @@ export function EventoInscritosTab({ eventoId, eventoNome, eventoData }: EventoI
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{confirmadas} confirmado(s)</Badge>
             {total !== confirmadas && <Badge variant="outline">{total} total</Badge>}
+            <Button size="sm" variant="outline" onClick={handleGerarPDF} disabled={!inscricoes?.length} className="gap-1">
+              <FileText className="h-4 w-4" /> PDF
+            </Button>
             <Button size="sm" onClick={openAdd} className="gap-1">
               <Plus className="h-4 w-4" /> Adicionar
             </Button>

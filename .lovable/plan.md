@@ -1,32 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Two Changes: PDF Report for Event Subscribers + Portal Incorporador Propostas Reorder
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## 1. PDF Report — Event Subscribers List
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-Add a "Gerar PDF" button in `EventoInscritosTab.tsx` next to the "Adicionar" button. When clicked, generates a simple text-only PDF using `html2pdf.js` (already installed) containing:
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-- Event title as header
-- Alphabetically sorted table with columns: Nome, Telefone, Imobiliária
-- No images, clean minimal layout
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-**File**: `src/components/eventos/EventoInscritosTab.tsx`
-- Add a `handleGerarPDF` function that builds an HTML string with the event name as title and a table of subscribers sorted by `nome_corretor` alphabetically
-- Uses `html2pdf.js` to convert to PDF and download
-- Add a "Gerar PDF" button in the header next to "Adicionar"
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-## 2. Portal Incorporador Propostas — Reorder + Collapsible Sections
-
-Restructure `PortalIncorporadorPropostas.tsx`:
-
-- Move all proposal sections (Aguardando Aprovação, Em Preparação, Recentes) **before** Negociações em Andamento
-- Wrap each section in a `Collapsible` component (from `@radix-ui/react-collapsible`, already available) with a clickable header that toggles visibility
-- Each section header shows the count badge and a chevron icon indicating open/closed state
-- All sections start expanded by default
-
-**File**: `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`
-- Import `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` from UI components
-- Add `ChevronDown` icon for toggle indicator
-- Create a reusable `CollapsibleSection` wrapper component
-- Reorder: Propostas Aguardando → Em Preparação → Recentes → Negociações em Andamento
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
