@@ -1,0 +1,1 @@
+ALTER TABLE public.funil_etapas ADD COLUMN visivel_incorporador boolean NOT NULL DEFAULT false;

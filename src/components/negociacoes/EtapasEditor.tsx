@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, GripVertical, Trash2, Edit2, Check, X, Flag, Trophy, XCircle } from 'lucide-react';
+import { Plus, GripVertical, Trash2, Edit2, Check, X, Flag, Trophy, XCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -295,6 +295,28 @@ export function EtapasEditor({ funilId }: EtapasEditorProps) {
                       <TooltipContent>Etapa Final (Perda)</TooltipContent>
                     </Tooltip>
 
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant={etapa.visivel_incorporador ? 'default' : 'ghost'}
+                          className={cn(
+                            'h-7 w-7',
+                            etapa.visivel_incorporador && 'bg-blue-500 hover:bg-blue-600'
+                          )}
+                          onClick={() =>
+                            updateMutation.mutateAsync({
+                              id: etapa.id,
+                              data: { visivel_incorporador: !etapa.visivel_incorporador },
+                            })
+                          }
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Visível para Incorporador</TooltipContent>
+                    </Tooltip>
+
                     {/* Cores */}
                     <div className="flex items-center gap-0.5 ml-2 border-l pl-2">
                       {CORES_ETAPAS.slice(0, 6).map((cor) => (
@@ -418,6 +440,10 @@ export function EtapasEditor({ funilId }: EtapasEditorProps) {
           <div className="flex items-center gap-1">
             <XCircle className="h-3 w-3" />
             <span>Perda</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            <span>Visível Incorporador</span>
           </div>
           <span className="ml-auto">Arraste para reordenar</span>
         </div>
