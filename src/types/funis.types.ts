@@ -26,6 +26,7 @@ export interface FunilEtapa {
   is_inicial: boolean;
   is_final_sucesso: boolean;
   is_final_perda: boolean;
+  visivel_incorporador: boolean;
   is_active: boolean;
   created_at: string;
 }

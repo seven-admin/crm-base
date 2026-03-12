@@ -441,6 +441,10 @@ export function EtapasEditor({ funilId }: EtapasEditorProps) {
             <XCircle className="h-3 w-3" />
             <span>Perda</span>
           </div>
+          <div className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            <span>Visível Incorporador</span>
+          </div>
           <span className="ml-auto">Arraste para reordenar</span>
         </div>
       </CardContent>
