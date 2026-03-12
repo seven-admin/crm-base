@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock } from 'lucide-react';
+import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock, Handshake } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import PropostaCard from '@/components/portal-incorporador/PropostaCard';
@@ -110,6 +110,15 @@ export default function PortalIncorporadorPropostas() {
   const [motivoContra, setMotivoContra] = useState('');
 
   const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
+  const ETAPA_NEGOCIACAO = '8e7df233-2e38-407e-b87d-23122948c4fb';
+  const ETAPA_RETORNO_INCORPORADOR = '0ce3c47e-b603-4f62-8205-8ff9931452c1';
+
+  const negociacoesEmAndamento = todasNegociacoes.filter(
+    (n) =>
+      empreendimentoIds.includes(n.empreendimento_id) &&
+      [ETAPA_NEGOCIACAO, ETAPA_RETORNO_INCORPORADOR].includes(n.funil_etapa_id || '') &&
+      !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
+  );
 
   const propostasEmAnalise = todasNegociacoes.filter(
     (n) =>
@@ -161,6 +170,31 @@ export default function PortalIncorporadorPropostas() {
 
   return (
     <div className="space-y-6">
+      {/* Negociações em Andamento */}
+      {negociacoesEmAndamento.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Handshake className="h-5 w-5" />
+            Negociações em Andamento
+            <Badge variant="secondary">{negociacoesEmAndamento.length}</Badge>
+          </h2>
+          <div className="grid gap-4">
+            {negociacoesEmAndamento.map((neg) => (
+              <PropostaCardWithCondicoes
+                key={neg.id}
+                neg={neg}
+                showActions={false}
+                onAprovar={setAprovarDialog}
+                onContraProposta={(n) => {
+                  setNegarDialog(n);
+                  setMotivoContra('');
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Em Análise */}
       <div>
         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
