@@ -110,6 +110,15 @@ export default function PortalIncorporadorPropostas() {
   const [motivoContra, setMotivoContra] = useState('');
 
   const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
+  const ETAPA_NEGOCIACAO = '8e7df233-2e38-407e-b87d-23122948c4fb';
+  const ETAPA_RETORNO_INCORPORADOR = '0ce3c47e-b603-4f62-8205-8ff9931452c1';
+
+  const negociacoesEmAndamento = todasNegociacoes.filter(
+    (n) =>
+      empreendimentoIds.includes(n.empreendimento_id) &&
+      [ETAPA_NEGOCIACAO, ETAPA_RETORNO_INCORPORADOR].includes(n.funil_etapa_id || '') &&
+      !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
+  );
 
   const propostasEmAnalise = todasNegociacoes.filter(
     (n) =>
