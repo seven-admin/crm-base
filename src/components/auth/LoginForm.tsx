@@ -176,7 +176,7 @@ export function LoginForm({ onRegisterImobiliaria }: LoginFormProps) {
                     onClick={onRegisterImobiliaria}
                     className="text-sm text-primary hover:underline"
                   >
-                    Cadastrar Imobiliária
+                    Cadastrar Imobiliária</br>Corretores Autônomos
                   </button>
                 </div>
               )}
