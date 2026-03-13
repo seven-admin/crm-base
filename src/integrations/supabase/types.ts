@@ -3806,6 +3806,47 @@ export type Database = {
           },
         ]
       }
+      negociacao_dacao_anexos: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          id: string
+          negociacao_id: string
+          tipo_dacao: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url: string
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          negociacao_id: string
+          tipo_dacao?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          negociacao_id?: string
+          tipo_dacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negociacao_dacao_anexos_negociacao_id_fkey"
+            columns: ["negociacao_id"]
+            isOneToOne: false
+            referencedRelation: "negociacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negociacao_historico: {
         Row: {
           created_at: string
