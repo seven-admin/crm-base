@@ -315,6 +315,11 @@ export default function NovaPropostaComercial() {
             onCorretorChange={setCorretorId}
             onImobiliariaChange={setImobiliariaId}
           />
+          
+          <DacaoAnexosCard
+            negociacaoId={editId}
+            readonly={false}
+          />
         </div>
         
         {/* Right Column - 60% */}
