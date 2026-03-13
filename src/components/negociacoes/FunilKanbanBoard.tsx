@@ -177,9 +177,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   };
 
   const handleEditarProposta = (negociacao: Negociacao) => {
-    setSelectedNegociacao(negociacao);
-    setPropostaMode('view');
-    setPropostaOpen(true);
+    navigate(`/negociacoes/editar/${negociacao.id}`);
   };
 
   const handleSolicitarReserva = async (negociacao: Negociacao) => {
