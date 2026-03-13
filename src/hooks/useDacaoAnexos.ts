@@ -18,8 +18,8 @@ export function useDacaoAnexos(negociacaoId?: string) {
     queryKey: ['dacao-anexos', negociacaoId],
     enabled: !!negociacaoId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('negociacao_dacao_anexos' as any)
+      const { data, error } = await (supabase as any)
+        .from('negociacao_dacao_anexos')
         .select('*')
         .eq('negociacao_id', negociacaoId!)
         .order('created_at', { ascending: false });
