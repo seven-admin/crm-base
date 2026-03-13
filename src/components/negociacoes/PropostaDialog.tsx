@@ -521,6 +521,15 @@ export function PropostaDialog({
               )}
             </TabsContent>
 
+            <TabsContent value="dacao" className="mt-4">
+              {neg && (
+                <DacaoAnexosCard
+                  negociacaoId={neg.id}
+                  readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida'}
+                />
+              )}
+            </TabsContent>
+
             <TabsContent value="comentarios" className="mt-4">
               {neg && <ComentariosTab negociacaoId={neg.id} />}
             </TabsContent>
