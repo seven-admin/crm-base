@@ -6115,6 +6115,12 @@ export type Database = {
           seq_name: string
         }[]
       }
+      get_cidades_corretores: {
+        Args: never
+        Returns: {
+          cidade: string
+        }[]
+      }
       get_gestor_empreendimento: { Args: { emp_id: string }; Returns: string }
       get_module_scope: {
         Args: { _module_name: string; _user_id: string }
