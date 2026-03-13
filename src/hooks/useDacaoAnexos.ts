@@ -93,8 +93,8 @@ export function useDeleteDacaoAnexo() {
         await supabase.storage.from('negociacao-dacao').remove([pathMatch[1]]);
       }
 
-      const { error } = await supabase
-        .from('negociacao_dacao_anexos' as any)
+      const { error } = await (supabase as any)
+        .from('negociacao_dacao_anexos')
         .delete()
         .eq('id', id);
       if (error) throw error;
