@@ -11,6 +11,7 @@ import { ResumoPropostaCards } from '@/components/propostas/ResumoPropostaCards'
 import { ApresentacaoDialog } from '@/components/propostas/ApresentacaoDialog';
 import { LocalCondicoesPagamentoEditor, LocalCondicao } from '@/components/negociacoes/LocalCondicoesPagamentoEditor';
 import { DacaoAnexosCard } from '@/components/negociacoes/DacaoAnexosCard';
+import { ComentariosTab } from '@/components/negociacoes/ComentariosTab';
 import { useCreateNegociacao, useUpdateNegociacao, useNegociacao } from '@/hooks/useNegociacoes';
 import { useNegociacaoCondicoesPagamento } from '@/hooks/useNegociacaoCondicoesPagamento';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
@@ -320,6 +321,17 @@ export default function NovaPropostaComercial() {
             negociacaoId={editId}
             readonly={false}
           />
+          
+          {editId && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Comentários</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ComentariosTab negociacaoId={editId} />
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Right Column - 60% */}

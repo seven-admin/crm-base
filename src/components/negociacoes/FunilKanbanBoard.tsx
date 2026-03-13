@@ -149,9 +149,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
 
   // Proposal handlers
   const handleGerarProposta = (negociacao: Negociacao) => {
-    setSelectedNegociacao(negociacao);
-    setPropostaMode('gerar');
-    setPropostaOpen(true);
+    navigate(`/negociacoes/editar/${negociacao.id}`);
   };
 
   const handleEnviarParaAnalise = async (negociacao: Negociacao) => {
@@ -179,9 +177,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
   };
 
   const handleEditarProposta = (negociacao: Negociacao) => {
-    setSelectedNegociacao(negociacao);
-    setPropostaMode('view');
-    setPropostaOpen(true);
+    navigate(`/negociacoes/editar/${negociacao.id}`);
   };
 
   const handleSolicitarReserva = async (negociacao: Negociacao) => {
@@ -242,10 +238,8 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
 
     if (destinationColumn === ETAPA_ANALISE_PROPOSTA && !negociacao.numero_proposta) {
-      setSelectedNegociacao(negociacao);
-      setPropostaMode('gerar');
-      setPropostaOpen(true);
       toast.info('Gere uma proposta para enviar para análise.');
+      navigate(`/negociacoes/editar/${negociacao.id}`);
       return;
     }
 
