@@ -10,6 +10,7 @@ import { ResponsaveisCard } from '@/components/propostas/ResponsaveisCard';
 import { ResumoPropostaCards } from '@/components/propostas/ResumoPropostaCards';
 import { ApresentacaoDialog } from '@/components/propostas/ApresentacaoDialog';
 import { LocalCondicoesPagamentoEditor, LocalCondicao } from '@/components/negociacoes/LocalCondicoesPagamentoEditor';
+import { DacaoAnexosCard } from '@/components/negociacoes/DacaoAnexosCard';
 import { useCreateNegociacao, useUpdateNegociacao, useNegociacao } from '@/hooks/useNegociacoes';
 import { useNegociacaoCondicoesPagamento } from '@/hooks/useNegociacaoCondicoesPagamento';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
@@ -140,10 +141,10 @@ export default function NovaPropostaComercial() {
   const percentualConfigurado = useMemo(() => {
     if (valorTotal <= 0) return 0;
     const totalCents = condicoes.reduce((acc, c) => acc + toCents(c.valor || 0) * c.quantidade, 0);
-    return Math.min((totalCents / toCents(valorTotal)) * 100, 100);
+    return (totalCents / toCents(valorTotal)) * 100;
   }, [condicoes, valorTotal]);
   
-  const canSave = clienteId && empreendimentoId && unidades.length > 0 && percentualConfigurado >= 99.9;
+  const canSave = clienteId && empreendimentoId && unidades.length > 0;
   
   const handleSave = async () => {
     if (!clienteId || !empreendimentoId || unidades.length === 0) {
@@ -151,10 +152,6 @@ export default function NovaPropostaComercial() {
       return;
     }
     
-    if (percentualConfigurado < 99.9) {
-      toast.error('Configure as condições de pagamento para totalizar 100% do valor');
-      return;
-    }
     
     try {
       if (isEditMode && editId) {
@@ -317,6 +314,11 @@ export default function NovaPropostaComercial() {
             imobiliariaId={imobiliariaId}
             onCorretorChange={setCorretorId}
             onImobiliariaChange={setImobiliariaId}
+          />
+          
+          <DacaoAnexosCard
+            negociacaoId={editId}
+            readonly={false}
           />
         </div>
         

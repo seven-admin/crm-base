@@ -19,11 +19,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle, Home } from 'lucide-react';
+import { Loader2, FileText, Printer, Check, X, FileCheck, Trash2, RefreshCw, AlertTriangle, Home, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
 import { ComentariosTab } from './ComentariosTab';
+import { DacaoAnexosCard } from './DacaoAnexosCard';
 import { MessageSquare } from 'lucide-react';
 import {
   useNegociacao,
@@ -339,9 +340,13 @@ export function PropostaDialog({
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="dados">Dados da Proposta</TabsTrigger>
               <TabsTrigger value="condicoes">Condições de Pagamento</TabsTrigger>
+              <TabsTrigger value="dacao" className="gap-1.5">
+                <ImageIcon className="h-3.5 w-3.5" />
+                Dação
+              </TabsTrigger>
               <TabsTrigger value="comentarios" className="gap-1.5">
                 <MessageSquare className="h-3.5 w-3.5" />
                 Comentários
@@ -512,6 +517,15 @@ export function PropostaDialog({
                   valorReferencia={valorProposta || valorTabela}
                   readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida' || statusProposta === 'em_analise'}
                   onValidationChange={handleValidationChange}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="dacao" className="mt-4">
+              {neg && (
+                <DacaoAnexosCard
+                  negociacaoId={neg.id}
+                  readonly={isAceita || statusProposta === 'recusada' || statusProposta === 'convertida'}
                 />
               )}
             </TabsContent>
