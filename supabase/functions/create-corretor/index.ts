@@ -214,7 +214,24 @@ Deno.serve(async (req) => {
         .insert({ user_id: userId, role_id: roleData.id });
     }
 
-    // 4. Create corretor record
+    // 4. Auto-fill cidade/uf from imobiliaria if not provided
+    let finalCidade = cidade ? cidade.toUpperCase() : null;
+    let finalUf = uf ? uf.toUpperCase() : null;
+
+    if ((!finalCidade || !finalUf) && finalImobiliariaId) {
+      const { data: imobData } = await supabaseAdmin
+        .from('imobiliarias')
+        .select('endereco_cidade, endereco_uf')
+        .eq('id', finalImobiliariaId)
+        .maybeSingle();
+
+      if (imobData) {
+        if (!finalCidade && imobData.endereco_cidade) finalCidade = imobData.endereco_cidade.toUpperCase();
+        if (!finalUf && imobData.endereco_uf) finalUf = imobData.endereco_uf.toUpperCase();
+      }
+    }
+
+    // 5. Create corretor record
     const { error: corretorError } = await supabaseAdmin
       .from('corretores')
       .insert({
@@ -226,8 +243,8 @@ Deno.serve(async (req) => {
         email: email.toLowerCase(),
         user_id: userId,
         imobiliaria_id: finalImobiliariaId,
-        cidade: cidade ? cidade.toUpperCase() : null,
-        uf: uf ? uf.toUpperCase() : null,
+        cidade: finalCidade,
+        uf: finalUf,
         is_active: true
       });
 
@@ -235,7 +252,7 @@ Deno.serve(async (req) => {
       console.error('Corretor insert error:', corretorError);
     }
 
-    // 5. Inherit empreendimentos from imobiliaria
+    // 6. Inherit empreendimentos from imobiliaria
     const { data: empLinks } = await supabaseAdmin
       .from('empreendimento_imobiliarias')
       .select('empreendimento_id')
@@ -252,7 +269,7 @@ Deno.serve(async (req) => {
         .insert(userEmpLinks);
     }
 
-    // 6. Disparar webhook
+    // 7. Disparar webhook
     try {
       await supabaseAdmin.functions.invoke('webhook-dispatcher', {
         body: {
@@ -264,8 +281,8 @@ Deno.serve(async (req) => {
             cpf: cpfLimpo,
             creci: creci ? creci.trim().toUpperCase() : null,
             telefone: telefone?.replace(/\D/g, '') || null,
-            cidade: cidade ? cidade.toUpperCase() : null,
-            uf: uf ? uf.toUpperCase() : null,
+            cidade: finalCidade,
+            uf: finalUf,
             imobiliaria_id: finalImobiliariaId,
           },
         },
