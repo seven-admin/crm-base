@@ -143,7 +143,7 @@ export default function NovaPropostaComercial() {
     return Math.min((totalCents / toCents(valorTotal)) * 100, 100);
   }, [condicoes, valorTotal]);
   
-  const canSave = clienteId && empreendimentoId && unidades.length > 0 && percentualConfigurado >= 99.9;
+  const canSave = clienteId && empreendimentoId && unidades.length > 0;
   
   const handleSave = async () => {
     if (!clienteId || !empreendimentoId || unidades.length === 0) {
