@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { Negociacao, STATUS_PROPOSTA_LABELS, STATUS_PROPOSTA_COLORS } from '@/types/negociacoes.types';
 import { NegociacaoCondicoesPagamentoInlineEditor } from './NegociacaoCondicoesPagamentoInlineEditor';
 import { ComentariosTab } from './ComentariosTab';
+import { DacaoAnexosCard } from './DacaoAnexosCard';
 import { MessageSquare } from 'lucide-react';
 import {
   useNegociacao,
