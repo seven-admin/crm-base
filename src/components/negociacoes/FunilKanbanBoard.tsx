@@ -149,9 +149,7 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
 
   // Proposal handlers
   const handleGerarProposta = (negociacao: Negociacao) => {
-    setSelectedNegociacao(negociacao);
-    setPropostaMode('gerar');
-    setPropostaOpen(true);
+    navigate(`/negociacoes/editar/${negociacao.id}`);
   };
 
   const handleEnviarParaAnalise = async (negociacao: Negociacao) => {
