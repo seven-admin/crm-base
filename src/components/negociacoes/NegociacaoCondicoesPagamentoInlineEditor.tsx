@@ -144,7 +144,7 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
       });
     });
     
-    const percentual = valorRefCents > 0 ? Math.min((totalCents / valorRefCents) * 100, 100) : 0;
+    const percentual = valorRefCents > 0 ? (totalCents / valorRefCents) * 100 : 0;
     const diffCents = valorRefCents - totalCents;
     
     // Validar contra configuração comercial

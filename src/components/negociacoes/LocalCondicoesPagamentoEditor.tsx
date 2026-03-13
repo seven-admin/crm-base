@@ -94,7 +94,7 @@ export function LocalCondicoesPagamentoEditor({
       totalCents += c.quantidade * valorCents;
     });
     
-    const percentual = valorRefCents > 0 ? Math.min((totalCents / valorRefCents) * 100, 100) : 0;
+    const percentual = valorRefCents > 0 ? (totalCents / valorRefCents) * 100 : 0;
     const diffCents = valorRefCents - totalCents;
     
     return { 

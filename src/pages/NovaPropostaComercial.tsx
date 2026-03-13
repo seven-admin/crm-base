@@ -140,7 +140,7 @@ export default function NovaPropostaComercial() {
   const percentualConfigurado = useMemo(() => {
     if (valorTotal <= 0) return 0;
     const totalCents = condicoes.reduce((acc, c) => acc + toCents(c.valor || 0) * c.quantidade, 0);
-    return Math.min((totalCents / toCents(valorTotal)) * 100, 100);
+    return (totalCents / toCents(valorTotal)) * 100;
   }, [condicoes, valorTotal]);
   
   const canSave = clienteId && empreendimentoId && unidades.length > 0;
