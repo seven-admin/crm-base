@@ -1,36 +1,42 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Corrigir filtro de cidades: limite de 1000 linhas do Supabase
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema
+A query que popula o filtro de cidades busca `cidade` de todos os corretores, mas o Supabase retorna no máximo 1000 linhas por padrão. Como a maioria dos corretores é de "DOURADOS", os 1000 primeiros resultados são todos dessa cidade, e cidades como "Santa Maria" ficam de fora.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Solução
+Criar uma **database function** que retorna cidades distintas diretamente no banco, eliminando o limite de 1000 linhas.
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Migration SQL
+```sql
+CREATE OR REPLACE FUNCTION public.get_cidades_corretores()
+RETURNS TABLE(cidade TEXT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT DISTINCT TRIM(c.cidade) as cidade
+  FROM public.corretores c
+  WHERE c.cidade IS NOT NULL 
+    AND TRIM(c.cidade) <> ''
+  ORDER BY cidade;
+$$;
+```
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. `src/pages/Corretores.tsx` (linhas 47-58)
+Substituir a query atual por uma chamada RPC:
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+```typescript
+const { data: cidades = [] } = useQuery({
+  queryKey: ['corretores-cidades'],
+  queryFn: async () => {
+    const { data } = await supabase.rpc('get_cidades_corretores');
+    return (data?.map((c: any) => c.cidade).filter(Boolean) || []) as string[];
+  },
+});
+```
+
+Isso garante que **todas** as cidades distintas sejam retornadas, independentemente do número de corretores.
+
