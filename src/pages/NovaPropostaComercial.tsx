@@ -321,6 +321,17 @@ export default function NovaPropostaComercial() {
             negociacaoId={editId}
             readonly={false}
           />
+          
+          {editId && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Comentários</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ComentariosTab negociacaoId={editId} />
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Right Column - 60% */}

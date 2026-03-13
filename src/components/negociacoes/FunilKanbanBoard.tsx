@@ -238,10 +238,8 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
     const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
 
     if (destinationColumn === ETAPA_ANALISE_PROPOSTA && !negociacao.numero_proposta) {
-      setSelectedNegociacao(negociacao);
-      setPropostaMode('gerar');
-      setPropostaOpen(true);
       toast.info('Gere uma proposta para enviar para análise.');
+      navigate(`/negociacoes/editar/${negociacao.id}`);
       return;
     }
 
