@@ -151,10 +151,6 @@ export default function NovaPropostaComercial() {
       return;
     }
     
-    if (percentualConfigurado < 99.9) {
-      toast.error('Configure as condições de pagamento para totalizar 100% do valor');
-      return;
-    }
     
     try {
       if (isEditMode && editId) {
