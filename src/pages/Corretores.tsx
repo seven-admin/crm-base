@@ -47,13 +47,8 @@ export default function Corretores() {
   const { data: cidades = [] } = useQuery({
     queryKey: ['corretores-cidades'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('corretores')
-        .select('cidade')
-        .not('cidade', 'is', null)
-        .neq('cidade', '');
-      const unique = [...new Set(data?.map(c => c.cidade?.trim()).filter(Boolean))].sort() as string[];
-      return unique;
+      const { data } = await supabase.rpc('get_cidades_corretores');
+      return (data?.map((c: any) => c.cidade).filter(Boolean) || []) as string[];
     },
   });
   const { canAccessModule } = usePermissions();
