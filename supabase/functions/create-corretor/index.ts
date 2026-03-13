@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
       console.error('Corretor insert error:', corretorError);
     }
 
-    // 5. Inherit empreendimentos from imobiliaria
+    // 6. Inherit empreendimentos from imobiliaria
     const { data: empLinks } = await supabaseAdmin
       .from('empreendimento_imobiliarias')
       .select('empreendimento_id')
