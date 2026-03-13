@@ -1,36 +1,26 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Unificar Fluxo de Proposta: Redirecionar para NovaPropostaComercial + Adicionar Comentários
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Problema
+Quando o usuário clica em "Gerar Proposta" ou arrasta um card para "Análise de Proposta" no Kanban, abre o `PropostaDialog` (modal simplificado). O layout correto e completo é o da página `/negociacoes/editar/:id` (`NovaPropostaComercial`), que já tem cliente, unidades, responsáveis, condições, dação e resumo.
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Alterações
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. `src/components/negociacoes/FunilKanbanBoard.tsx`
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+- **`handleGerarProposta`** (linha 151): Em vez de abrir `PropostaDialog` com mode `gerar`, navegar para `/negociacoes/editar/${negociacao.id}`
+- **`handleEditarProposta`** (linha 181): Navegar para `/negociacoes/editar/${negociacao.id}` em vez de abrir o dialog com mode `view`
+- **Drag-and-drop para "Análise de Proposta"** (linha 244): Navegar para `/negociacoes/editar/${negociacao.id}` em vez de abrir o dialog
+- Manter `PropostaDialog` apenas para `aceitar` e `recusar` (que são ações pontuais com botão de confirmação)
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 2. `src/pages/NovaPropostaComercial.tsx`
+
+- Adicionar `ComentariosTab` na coluna esquerda, abaixo de `DacaoAnexosCard`, visível apenas em modo edição (`editId` existe)
+- Importar `ComentariosTab` de `@/components/negociacoes/ComentariosTab`
+- Envolver em um `Card` com título "Comentários"
+
+### Resultado
+- "Gerar Proposta" e "Editar Proposta" sempre abrem a página completa com todos os recursos (dação, comentários, condições, resumo)
+- "Aceitar" e "Recusar" continuam no dialog compacto (apropriado para essas ações)
+
