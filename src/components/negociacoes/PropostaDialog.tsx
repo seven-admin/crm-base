@@ -340,9 +340,13 @@ export function PropostaDialog({
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="dados">Dados da Proposta</TabsTrigger>
               <TabsTrigger value="condicoes">Condições de Pagamento</TabsTrigger>
+              <TabsTrigger value="dacao" className="gap-1.5">
+                <ImageIcon className="h-3.5 w-3.5" />
+                Dação
+              </TabsTrigger>
               <TabsTrigger value="comentarios" className="gap-1.5">
                 <MessageSquare className="h-3.5 w-3.5" />
                 Comentários
