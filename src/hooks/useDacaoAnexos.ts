@@ -58,8 +58,8 @@ export function useUploadDacaoAnexo() {
 
       const { data: user } = await supabase.auth.getUser();
 
-      const { error: insertError } = await supabase
-        .from('negociacao_dacao_anexos' as any)
+      const { error: insertError } = await (supabase as any)
+        .from('negociacao_dacao_anexos')
         .insert({
           negociacao_id: negociacaoId,
           tipo_dacao: tipoDacao,
