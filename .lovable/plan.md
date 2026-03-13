@@ -1,36 +1,35 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Vincular cidade do corretor à imobiliária
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Situação atual
+- Corretores têm campos `cidade` e `uf` próprios
+- Na tabela, já existe fallback visual (linha 239): se corretor não tem cidade, mostra `imobiliaria.endereco_cidade`
+- Porém o **filtro de cidades** (`get_cidades_corretores`) só busca `corretores.cidade`, ignorando corretores que herdam a cidade da imobiliária
+- Na criação (edge function `create-corretor`), cidade/uf são opcionais e nem sempre preenchidos
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Solução
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Edge function `create-corretor` — auto-preencher cidade/uf da imobiliária
+Quando o corretor é criado **sem** cidade/uf informados, buscar `endereco_cidade` e `endereco_uf` da imobiliária vinculada e usar como valores padrão.
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Edge function `register-corretor` — mesma lógica
+Aplicar o mesmo fallback no autocadastro.
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### 3. Atualizar `get_cidades_corretores()` — incluir cidades de imobiliárias
+A function SQL passará a considerar também `imobiliarias.endereco_cidade` para corretores que não têm cidade própria:
+
+```sql
+SELECT DISTINCT cidade FROM (
+  SELECT TRIM(c.cidade) as cidade FROM corretores c 
+  WHERE c.cidade IS NOT NULL AND TRIM(c.cidade) <> ''
+  UNION
+  SELECT TRIM(i.endereco_cidade) FROM corretores c 
+  JOIN imobiliarias i ON i.id = c.imobiliaria_id
+  WHERE c.cidade IS NULL AND i.endereco_cidade IS NOT NULL
+) sub ORDER BY cidade;
+```
+
+### 4. Migration para preencher corretores existentes
+Um `UPDATE` nos corretores que têm `cidade IS NULL` mas têm imobiliária com `endereco_cidade` preenchida, para normalizar os dados existentes.
+
