@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
         .insert(userEmpLinks);
     }
 
-    // 6. Disparar webhook
+    // 7. Disparar webhook
     try {
       await supabaseAdmin.functions.invoke('webhook-dispatcher', {
         body: {
@@ -281,8 +281,8 @@ Deno.serve(async (req) => {
             cpf: cpfLimpo,
             creci: creci ? creci.trim().toUpperCase() : null,
             telefone: telefone?.replace(/\D/g, '') || null,
-            cidade: cidade ? cidade.toUpperCase() : null,
-            uf: uf ? uf.toUpperCase() : null,
+            cidade: finalCidade,
+            uf: finalUf,
             imobiliaria_id: finalImobiliariaId,
           },
         },
