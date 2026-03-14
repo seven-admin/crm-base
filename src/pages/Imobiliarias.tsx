@@ -158,6 +158,23 @@ export default function Imobiliarias() {
     setIsDialogOpen(true);
   };
 
+  const handleResetPassword = async (imob: Imobiliaria) => {
+    if (!imob.user_id) return;
+    const confirmed = window.confirm(
+      `Resetar a senha do gestor de ${imob.nome}?\n\nA nova senha será: Seven@1234`
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: imob.user_id },
+      });
+      if (error) throw error;
+      toast({ title: 'Senha resetada para Seven@1234' });
+    } catch {
+      toast({ title: 'Erro ao resetar senha', variant: 'destructive' });
+    }
+  };
+
   const handleDialogOpenChange = (open: boolean) => {
     setIsDialogOpen(open);
     if (!open) {
