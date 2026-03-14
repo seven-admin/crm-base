@@ -1,28 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Resetar senha de corretores e imobiliárias
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Situação atual
-- A edge function `reset-user-password` já existe e funciona (reseta para `Seven@1234`)
-- A página `/usuarios` e o componente `CorretoresUsuariosTab` já usam essa função
-- A página `/corretores` **não** tem botão de reset de senha (só editar e excluir)
-- A página `/imobiliarias` **não** tem botão de reset de senha
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-## Plano
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### 1. Página `/corretores` — adicionar botão "Resetar Senha"
-Na coluna de ações da tabela, para corretores que têm `user_id` (com conta de acesso), adicionar um botão com ícone de chave que:
-- Exibe `confirm()` com aviso da senha padrão
-- Chama `supabase.functions.invoke('reset-user-password', { body: { user_id } })`
-- Exibe toast de sucesso/erro
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### 2. Página `/imobiliarias` — adicionar botão "Resetar Senha" 
-Na coluna de ações da tabela, para imobiliárias que têm `user_id` (gestor com conta), adicionar botão similar.
-- Precisará que a query de imobiliárias inclua o campo `user_id` (verificar se já vem)
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-### Arquivos a modificar
-- `src/pages/Corretores.tsx` — estado + handler + botão na tabela
-- `src/pages/Imobiliarias.tsx` — estado + handler + botão na tabela
-
-Não é necessário criar migrations ou edge functions novas; a infraestrutura já existe.
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar

@@ -72,6 +72,23 @@ export default function Corretores() {
     setDialogOpen(true);
   };
 
+  const handleResetPassword = async (corretor: Corretor) => {
+    if (!corretor.user_id) return;
+    const confirmed = window.confirm(
+      `Resetar a senha de ${corretor.nome_completo}?\n\nA nova senha será: Seven@1234`
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: corretor.user_id },
+      });
+      if (error) throw error;
+      toast.success('Senha resetada para Seven@1234');
+    } catch {
+      toast.error('Erro ao resetar senha');
+    }
+  };
+
   const handleSubmit = (formData: CorretorFormData) => {
     if (editingCorretor) {
       update({ id: editingCorretor.id, ...formData }, {
@@ -258,6 +275,11 @@ export default function Corretores() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {c.user_id && (
+                        <Button variant="ghost" size="icon" title="Resetar senha" onClick={() => handleResetPassword(c)}>
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                      )}
                       {canAccessModule('corretores', 'delete') && (
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(c)}>
                           <Trash2 className="h-4 w-4 text-destructive" />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Building, Phone, Mail, MapPin, Users, Trash2, Download } from 'lucide-react';
+import { Plus, Search, Building, Phone, Mail, MapPin, Users, Trash2, Download, KeyRound } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -158,6 +158,23 @@ export default function Imobiliarias() {
     setIsDialogOpen(true);
   };
 
+  const handleResetPassword = async (imob: Imobiliaria) => {
+    if (!imob.user_id) return;
+    const confirmed = window.confirm(
+      `Resetar a senha do gestor de ${imob.nome}?\n\nA nova senha será: Seven@1234`
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: imob.user_id },
+      });
+      if (error) throw error;
+      toast({ title: 'Senha resetada para Seven@1234' });
+    } catch {
+      toast({ title: 'Erro ao resetar senha', variant: 'destructive' });
+    }
+  };
+
   const handleDialogOpenChange = (open: boolean) => {
     setIsDialogOpen(open);
     if (!open) {
@@ -289,7 +306,7 @@ export default function Imobiliarias() {
                     <TableHead>Cidade</TableHead>
                     <TableHead>Corretores</TableHead>
                     <TableHead>Status</TableHead>
-                    {canDelete && <TableHead className="w-[60px]"></TableHead>}
+                    <TableHead className="w-[100px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -351,11 +368,20 @@ export default function Imobiliarias() {
                           {imob.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>
-                      {canDelete && (
+                      {(canDelete || imob.user_id) && (
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <div className="flex gap-1">
+                            {imob.user_id && (
+                              <Button variant="ghost" size="icon" title="Resetar senha do gestor" onClick={() => handleResetPassword(imob)}>
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
