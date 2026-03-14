@@ -72,6 +72,23 @@ export default function Corretores() {
     setDialogOpen(true);
   };
 
+  const handleResetPassword = async (corretor: Corretor) => {
+    if (!corretor.user_id) return;
+    const confirmed = window.confirm(
+      `Resetar a senha de ${corretor.nome_completo}?\n\nA nova senha será: Seven@1234`
+    );
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: corretor.user_id },
+      });
+      if (error) throw error;
+      toast.success('Senha resetada para Seven@1234');
+    } catch {
+      toast.error('Erro ao resetar senha');
+    }
+  };
+
   const handleSubmit = (formData: CorretorFormData) => {
     if (editingCorretor) {
       update({ id: editingCorretor.id, ...formData }, {
