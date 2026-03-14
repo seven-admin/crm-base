@@ -275,6 +275,11 @@ export default function Corretores() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {c.user_id && (
+                        <Button variant="ghost" size="icon" title="Resetar senha" onClick={() => handleResetPassword(c)}>
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                      )}
                       {canAccessModule('corretores', 'delete') && (
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(c)}>
                           <Trash2 className="h-4 w-4 text-destructive" />

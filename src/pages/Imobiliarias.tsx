@@ -368,11 +368,20 @@ export default function Imobiliarias() {
                           {imob.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>
-                      {canDelete && (
+                      {(canDelete || imob.user_id) && (
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <div className="flex gap-1">
+                            {imob.user_id && (
+                              <Button variant="ghost" size="icon" title="Resetar senha do gestor" onClick={() => handleResetPassword(imob)}>
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(imob)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
