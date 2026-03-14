@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Building, Phone, Mail, MapPin, Users, Trash2, Download } from 'lucide-react';
+import { Plus, Search, Building, Phone, Mail, MapPin, Users, Trash2, Download, KeyRound } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
