@@ -306,7 +306,7 @@ export default function Imobiliarias() {
                     <TableHead>Cidade</TableHead>
                     <TableHead>Corretores</TableHead>
                     <TableHead>Status</TableHead>
-                    {canDelete && <TableHead className="w-[60px]"></TableHead>}
+                    <TableHead className="w-[100px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
