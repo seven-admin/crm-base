@@ -1,32 +1,36 @@
 
+# Plano Completo — Implementado ✅
 
-# Corrigir lentidão na inscrição e remover contador
+## 1. Migração SQL ✅
+- `send_campanha` default `'1'` em `corretores`
+- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
+- Trigger `BEFORE INSERT` para geração automática
+- Backfill para corretores existentes
+- Coluna `qtd_corretores` (integer) em `atividades`
 
-## Problemas identificados
+## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
+- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
 
-### 1. Botões compartilham estado de loading
-`inscrever.isPending` e `cancelar.isPending` são estados globais da mutation. Quando o corretor clica "Inscrever-se" em um evento, **todos** os outros botões ficam desabilitados/com spinner — inclusive os de eventos encerrados. Isso causa a impressão de lentidão e comportamento errado.
+## 3. Campo `qtd_corretores` para ligações ✅
+- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
+- Detalhe: exibição no dialog
+- Tipos: `Atividade` e `AtividadeFormData` atualizados
 
-### 2. Webhook síncrono causa lentidão real
-Na mutation `inscrever`, o `await dispararWebhook(...)` é chamado de forma síncrona. O usuário fica esperando o webhook completar antes de ver o toast de sucesso. Isso adiciona latência desnecessária.
+## 4. Visão Global como entrada principal ✅
+- Removido toggle global/empreendimento em `Planejamento.tsx`
+- Calendário global com CRUD completo é a view padrão
+- Filtro de empreendimento inline no header do calendário
+- Removida restrição de `isSuperAdmin` para acessar
 
-### 3. Contador de inscritos visível no portal
-Os cards mostram "X inscritos" ou "X/Y inscritos" com ícone de Users. O pedido é remover essa informação do portal do corretor/imobiliária.
+## 5. Fases vinculadas a empreendimentos ✅
+- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
+- `NULL` = fase base (template global), com ID = fase customizada
+- `usePlanejamentoFases` aceita `empreendimentoId` opcional
+- Busca fases base + fases do empreendimento selecionado
 
-## Solução
-
-### `src/hooks/useEventoInscricoes.ts`
-- Remover o `await` do `dispararWebhook` — torná-lo fire-and-forget (`.catch(() => {})`)
-- Remover a query `contagemInscricoes` (não será mais usada no portal)
-
-### `src/pages/portal/PortalEventos.tsx`
-- Adicionar estado local `inscrevendoEventoId` para rastrear qual evento está em processo de inscrição/cancelamento
-- Usar esse estado para desabilitar/mostrar spinner apenas no botão correto
-- Remover o bloco de contagem de inscritos (linhas 154-166: ícone Users + texto "X inscritos" + badge Lotado)
-- Remover `contagemInscricoes` e `vagasRestantes` do componente
-- Ajustar lógica de `lotado`/`podeInscrever` — sem limite visível, apenas verificar `inscricoes_abertas`
-
-### Arquivos modificados
-- `src/hooks/useEventoInscricoes.ts`
-- `src/pages/portal/PortalEventos.tsx`
-
+## 6. Google Calendar embed (somente leitura) ✅
+- Tabela `google_calendar_embeds` com RLS
+- Componente `GoogleCalendarEmbed.tsx` com iframe
+- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
+- Hook `useGoogleCalendarEmbeds.ts` para CRUD
+- Drawer no calendário global para exibir Google Calendar
