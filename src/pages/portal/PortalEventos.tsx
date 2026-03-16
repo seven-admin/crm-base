@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, MapPin, Users, Building2, Loader2 } from 'lucide-react';
+import { CalendarDays, MapPin, Building2, Loader2 } from 'lucide-react';
 
 interface EventoPortal {
   id: string;
@@ -17,12 +18,12 @@ interface EventoPortal {
   data_evento: string;
   local: string | null;
   inscricoes_abertas: boolean;
-  limite_inscricoes: number | null;
   empreendimento: { id: string; nome: string } | null;
 }
 
 export default function PortalEventos() {
   const { user, profile } = useAuth();
+  const [actionEventoId, setActionEventoId] = useState<string | null>(null);
 
   const { data: corretor } = useQuery({
     queryKey: ['portal-corretor-dados', user?.id],
@@ -44,7 +45,7 @@ export default function PortalEventos() {
         .from('eventos')
         .select(`
           id, nome, descricao, data_evento, local,
-          inscricoes_abertas, limite_inscricoes,
+          inscricoes_abertas,
           empreendimento:empreendimento_id(id, nome)
         `)
         .eq('is_active', true)
@@ -55,38 +56,40 @@ export default function PortalEventos() {
     },
   });
 
-  const { minhasInscricoes, contagemInscricoes, inscrever, cancelar } =
+  const { minhasInscricoes, inscrever, cancelar } =
     useEventoInscricoes(user?.id);
 
   const isInscrito = (eventoId: string) =>
     minhasInscricoes?.some((i) => i.evento_id === eventoId) ?? false;
 
-  const vagasRestantes = (evento: EventoPortal) => {
-    if (!evento.limite_inscricoes) return null;
-    const inscritos = contagemInscricoes?.[evento.id] || 0;
-    return Math.max(0, evento.limite_inscricoes - inscritos);
-  };
-
-  const handleInscrever = (evento: EventoPortal) => {
+  const handleInscrever = async (evento: EventoPortal) => {
     if (!user || !profile) return;
-    inscrever.mutate({
-      evento_id: evento.id,
-      corretor_id: corretor?.id,
-      user_id: user.id,
-      nome_corretor: profile.full_name || 'Corretor',
-      telefone: profile.phone || undefined,
-      email: profile.email || undefined,
-      imobiliaria_nome: corretor?.imobiliaria?.nome || undefined,
-      evento_nome: evento.nome,
-      evento_data: evento.data_evento,
-      corretor_celular: corretor?.whatsapp || corretor?.telefone || undefined,
-      gestor_telefone: corretor?.imobiliaria?.gestor_telefone || undefined,
-    });
+    setActionEventoId(evento.id);
+    inscrever.mutate(
+      {
+        evento_id: evento.id,
+        corretor_id: corretor?.id,
+        user_id: user.id,
+        nome_corretor: profile.full_name || 'Corretor',
+        telefone: profile.phone || undefined,
+        email: profile.email || undefined,
+        imobiliaria_nome: corretor?.imobiliaria?.nome || undefined,
+        evento_nome: evento.nome,
+        evento_data: evento.data_evento,
+        corretor_celular: corretor?.whatsapp || corretor?.telefone || undefined,
+        gestor_telefone: corretor?.imobiliaria?.gestor_telefone || undefined,
+      },
+      { onSettled: () => setActionEventoId(null) }
+    );
   };
 
   const handleCancelar = (eventoId: string) => {
     if (!user) return;
-    cancelar.mutate({ evento_id: eventoId, user_id: user.id });
+    setActionEventoId(eventoId);
+    cancelar.mutate(
+      { evento_id: eventoId, user_id: user.id },
+      { onSettled: () => setActionEventoId(null) }
+    );
   };
 
   if (isLoading) {
@@ -109,10 +112,8 @@ export default function PortalEventos() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {eventos.map((evento) => {
         const inscrito = isInscrito(evento.id);
-        const vagas = vagasRestantes(evento);
-        const lotado = vagas !== null && vagas <= 0;
         const aberto = evento.inscricoes_abertas;
-        const podeInscrever = aberto && !lotado && !inscrito;
+        const isProcessing = actionEventoId === evento.id;
 
         return (
           <Card key={evento.id} className="flex flex-col">
@@ -151,19 +152,6 @@ export default function PortalEventos() {
                     <span>{evento.empreendimento.nome}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4 shrink-0" />
-                  <span>
-                    {evento.limite_inscricoes
-                      ? `${contagemInscricoes?.[evento.id] || 0}/${evento.limite_inscricoes} inscritos`
-                      : `${contagemInscricoes?.[evento.id] || 0} inscritos`}
-                  </span>
-                  {lotado && (
-                    <Badge variant="destructive" className="text-xs">
-                      Lotado
-                    </Badge>
-                  )}
-                </div>
               </div>
 
               <div className="mt-auto pt-3">
@@ -172,23 +160,19 @@ export default function PortalEventos() {
                     variant="outline"
                     className="w-full"
                     onClick={() => handleCancelar(evento.id)}
-                    disabled={cancelar.isPending}
+                    disabled={isProcessing}
                   >
-                    {cancelar.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Cancelar inscrição
                   </Button>
                 ) : (
                   <Button
                     className="w-full"
-                    disabled={!podeInscrever || inscrever.isPending}
+                    disabled={!aberto || isProcessing}
                     onClick={() => handleInscrever(evento)}
                   >
-                    {inscrever.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
-                    {lotado ? 'Lotado' : !aberto ? 'Inscrições fechadas' : 'Inscrever-se'}
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    {!aberto ? 'Inscrições fechadas' : 'Inscrever-se'}
                   </Button>
                 )}
               </div>

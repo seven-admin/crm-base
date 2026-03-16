@@ -82,8 +82,8 @@ export function useEventoInscricoes(userId?: string) {
 
       if (error) throw error;
 
-      // Webhook silencioso
-      await dispararWebhook('evento_inscricao_corretor', {
+      // Webhook fire-and-forget
+      dispararWebhook('evento_inscricao_corretor', {
         evento_id: insertData.evento_id,
         evento_nome,
         evento_data,
@@ -93,7 +93,7 @@ export function useEventoInscricoes(userId?: string) {
         corretor_celular: corretor_celular || null,
         gestor_telefone: gestor_telefone || null,
         imobiliaria: insertData.imobiliaria_nome || null,
-      });
+      }).catch(() => {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evento-inscricoes'] });
