@@ -215,7 +215,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     };
 
     // Separadores de linha via div (evita artefatos de border-bottom/border-top no html2canvas)
-    const rowSep = `<tr><td colspan="6" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
+    const rowSep = `<tr><td colspan="7" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
 
     const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
 
