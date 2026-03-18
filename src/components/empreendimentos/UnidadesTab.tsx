@@ -267,7 +267,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     `;
 
     const container = document.createElement('div');
-    container.style.width = '680px';
+    container.style.width = '780px';
     container.style.background = 'white';
     container.innerHTML = htmlContent;
 
