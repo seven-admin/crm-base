@@ -215,20 +215,22 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     };
 
     // Separadores de linha via div (evita artefatos de border-bottom/border-top no html2canvas)
-    const rowSep = `<tr><td colspan="6" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
+    const rowSep = `<tr><td colspan="7" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
 
     const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
 
-    const linhasHtml = ordenadas.map((u) =>
-      `${rowSep}<tr style="background:#ffffff;">` +
-      `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
-      `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
-      `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
-      `<td style="${tdBase}">${u.tipologia?.nome || '-'}</td>` +
-      `<td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td>` +
-      `<td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td>` +
-      `</tr>`
-    ).join('');
+    const linhasHtml = ordenadas.map((u) => {
+      const boxNumeros = (u as any).boxes?.map((b: any) => b.numero).join(', ') || '-';
+      return `${rowSep}<tr style="background:#ffffff;">` +
+        `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
+        `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
+        `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
+        `<td style="${tdBase}">${u.tipologia?.nome || '-'}</td>` +
+        `<td style="${tdBase} text-align:center;">${boxNumeros}</td>` +
+        `<td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td>` +
+        `<td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td>` +
+        `</tr>`;
+    }).join('');
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
@@ -250,6 +252,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">${blocoLabel}</th>
               <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Andar</th>
               <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Tipologia</th>
+              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Box</th>
               <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Área (m²)</th>
               <th style="padding: 4px 6px; text-align: right;  font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Valor (R$)</th>
             </tr>
@@ -264,7 +267,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     `;
 
     const container = document.createElement('div');
-    container.style.width = '680px';
+    container.style.width = '780px';
     container.style.background = 'white';
     container.innerHTML = htmlContent;
 
@@ -276,7 +279,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         margin: 15,
         filename: `Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 660, windowWidth: 660 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 760, windowWidth: 760 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       }).from(container).save();

@@ -23,7 +23,8 @@ export function useUnidades(empreendimentoId: string | undefined, filters?: Unid
           *,
           bloco:blocos(*),
           tipologia:tipologias(*),
-          fachada:fachadas(id, nome, descricao, imagem_url)
+          fachada:fachadas(id, nome, descricao, imagem_url),
+          boxes(numero)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
