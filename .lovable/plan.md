@@ -1,36 +1,26 @@
 
-# Plano Completo — Implementado ✅
 
-## 1. Migração SQL ✅
-- `send_campanha` default `'1'` em `corretores`
-- Coluna `cod_sorteio` (text, unique) com função `generate_cod_sorteio()` formato `0000-X0X0-XXXX`
-- Trigger `BEFORE INSERT` para geração automática
-- Backfill para corretores existentes
-- Coluna `qtd_corretores` (integer) em `atividades`
+# Adicionar coluna "Box" no PDF de unidades disponíveis
 
-## 2. Kanban de Negociações — `created_at` e campos faltantes ✅
-- `useNegociacoesKanban` expandido com `created_at`, `corretor`, `imobiliaria`, `valor_entrada`, `observacoes`, etc.
+## Situação atual
+- O PDF é gerado em `src/components/empreendimentos/UnidadesTab.tsx` na função `handleExportarDisponiveis`
+- A tabela atual tem 6 colunas: Número, Bloco/Quadra, Andar, Tipologia, Área, Valor
+- A tabela `boxes` tem FK `unidade_id` apontando para `unidades`, ou seja, a relação é inversa (box pertence a unidade)
+- O hook `useUnidades` **não** inclui boxes no select
 
-## 3. Campo `qtd_corretores` para ligações ✅
-- Formulário: campo visível quando `tipo=ligacao` + `categoria=imobiliaria`
-- Detalhe: exibição no dialog
-- Tipos: `Atividade` e `AtividadeFormData` atualizados
+## Plano
 
-## 4. Visão Global como entrada principal ✅
-- Removido toggle global/empreendimento em `Planejamento.tsx`
-- Calendário global com CRUD completo é a view padrão
-- Filtro de empreendimento inline no header do calendário
-- Removida restrição de `isSuperAdmin` para acessar
+### 1. Incluir boxes na query do `useUnidades`
+Em `src/hooks/useUnidades.ts`, adicionar `boxes(numero)` ao select para trazer o número do box vinculado a cada unidade.
 
-## 5. Fases vinculadas a empreendimentos ✅
-- Coluna `empreendimento_id` (nullable, FK) em `planejamento_fases`
-- `NULL` = fase base (template global), com ID = fase customizada
-- `usePlanejamentoFases` aceita `empreendimentoId` opcional
-- Busca fases base + fases do empreendimento selecionado
+### 2. Adicionar coluna "Box" no PDF
+Em `src/components/empreendimentos/UnidadesTab.tsx`, na função `handleExportarDisponiveis`:
+- Adicionar coluna "Box" na tabela do PDF (após Tipologia, antes de Área)
+- Exibir o número do box vinculado (ou "-" se não houver)
+- Ajustar `colspan` do separador de linhas de 6 para 7
+- Ajustar largura do container se necessário para acomodar a coluna extra
 
-## 6. Google Calendar embed (somente leitura) ✅
-- Tabela `google_calendar_embeds` com RLS
-- Componente `GoogleCalendarEmbed.tsx` com iframe
-- Dialog `ConfigurarGoogleCalendarDialog.tsx` para gerenciar URLs
-- Hook `useGoogleCalendarEmbeds.ts` para CRUD
-- Drawer no calendário global para exibir Google Calendar
+### Arquivos a modificar
+- `src/hooks/useUnidades.ts` — adicionar `boxes(numero)` ao select
+- `src/components/empreendimentos/UnidadesTab.tsx` — adicionar coluna Box no HTML do PDF
+
