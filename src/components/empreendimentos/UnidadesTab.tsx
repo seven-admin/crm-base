@@ -219,16 +219,18 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
 
-    const linhasHtml = ordenadas.map((u) =>
-      `${rowSep}<tr style="background:#ffffff;">` +
-      `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
-      `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
-      `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
-      `<td style="${tdBase}">${u.tipologia?.nome || '-'}</td>` +
-      `<td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td>` +
-      `<td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td>` +
-      `</tr>`
-    ).join('');
+    const linhasHtml = ordenadas.map((u) => {
+      const boxNumeros = (u as any).boxes?.map((b: any) => b.numero).join(', ') || '-';
+      return `${rowSep}<tr style="background:#ffffff;">` +
+        `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
+        `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
+        `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
+        `<td style="${tdBase}">${u.tipologia?.nome || '-'}</td>` +
+        `<td style="${tdBase} text-align:center;">${boxNumeros}</td>` +
+        `<td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td>` +
+        `<td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td>` +
+        `</tr>`;
+    }).join('');
 
     const htmlContent = `
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
