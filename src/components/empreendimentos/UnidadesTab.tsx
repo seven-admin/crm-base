@@ -252,6 +252,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
               <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">${blocoLabel}</th>
               <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Andar</th>
               <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Tipologia</th>
+              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Box</th>
               <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Área (m²)</th>
               <th style="padding: 4px 6px; text-align: right;  font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Valor (R$)</th>
             </tr>
