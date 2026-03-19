@@ -168,6 +168,7 @@ const MetasComerciais = () => {
     setMetaEscopo('geral');
     setMetaEmpreendimentoId('');
     setMetaGestorId('');
+    setSelecionarTodos(false);
     setMetaPeriodicidade('mensal');
     setMetaSemanaDate(undefined);
     setMetaTipo('comercial');
