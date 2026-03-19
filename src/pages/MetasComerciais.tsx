@@ -215,11 +215,11 @@ const MetasComerciais = () => {
       } else {
         competenciaStr = `${metaAno}-${metaMes}-01`;
       }
-      await createMeta.mutateAsync({
+
+      const baseData = {
         competencia: competenciaStr,
         periodicidade: metaPeriodicidade,
         empreendimento_id: metaEscopo === 'empreendimento' ? metaEmpreendimentoId : null,
-        gestor_id: metaEscopo === 'gestor' ? metaGestorId : null,
         corretor_id: null,
         meta_valor: metaTipo === 'comercial' ? (metaValor || 0) : 0,
         meta_unidades: metaTipo === 'comercial' ? (parseInt(metaUnidades) || 0) : 0,
@@ -229,8 +229,31 @@ const MetasComerciais = () => {
         meta_propostas: metaTipo === 'comercial' ? (parseInt(metaPropostas) || 0) : 0,
         meta_ligacoes: metaTipo === 'atividades' ? (parseInt(metaLigacoes) || 0) : 0,
         tipo: metaTipo,
-      });
-      toast.success('Meta salva com sucesso!');
+      };
+
+      if (metaEscopo === 'funcionario' && selecionarTodos) {
+        // Criar meta para cada funcionário
+        let criadas = 0;
+        for (const func of funcionariosSeven) {
+          try {
+            await createMeta.mutateAsync({
+              ...baseData,
+              gestor_id: func.id,
+            });
+            criadas++;
+          } catch (err) {
+            console.error(`Erro ao criar meta para ${func.full_name}:`, err);
+          }
+        }
+        toast.success(`${criadas} meta(s) criada(s) para todos os funcionários!`);
+      } else {
+        await createMeta.mutateAsync({
+          ...baseData,
+          gestor_id: metaEscopo === 'funcionario' ? metaGestorId : null,
+        });
+        toast.success('Meta salva com sucesso!');
+      }
+
       setShowEditMeta(false);
       setActiveTab('gerenciar');
     } catch (error) {
