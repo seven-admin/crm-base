@@ -27,7 +27,8 @@ import {
 } from '@/hooks/useMetasComerciais';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useGestoresProduto } from '@/hooks/useGestores';
+import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { CORES_DASHBOARD, TOOLTIP_STYLE } from '@/lib/chartColors';
