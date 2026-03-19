@@ -194,7 +194,8 @@ const MetasComerciais = () => {
     } else {
       setMetaSemanaDate(undefined);
     }
-    setMetaEscopo(metaItem.gestor_id ? 'gestor' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
+    setMetaEscopo(metaItem.gestor_id ? 'funcionario' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
+    setSelecionarTodos(false);
     setMetaEmpreendimentoId(metaItem.empreendimento_id || '');
     setMetaGestorId(metaItem.gestor_id || '');
     setMetaTipo((metaItem as any).tipo || 'comercial');
