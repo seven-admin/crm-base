@@ -27,7 +27,8 @@ import {
 } from '@/hooks/useMetasComerciais';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useGestoresProduto } from '@/hooks/useGestores';
+import { useFuncionariosSeven } from '@/hooks/useFuncionariosSeven';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { CORES_DASHBOARD, TOOLTIP_STYLE } from '@/lib/chartColors';
@@ -71,7 +72,8 @@ const MetasComerciais = () => {
   const [metaLigacoes, setMetaLigacoes] = useState('');
   const [metaMes, setMetaMes] = useState(format(new Date(), 'MM'));
   const [metaAno, setMetaAno] = useState(currentYear.toString());
-  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'gestor'>('geral');
+  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'funcionario'>('geral');
+  const [selecionarTodos, setSelecionarTodos] = useState(false);
   const [metaEmpreendimentoId, setMetaEmpreendimentoId] = useState<string>('');
   const [metaGestorId, setMetaGestorId] = useState<string>('');
   const [metaPeriodicidade, setMetaPeriodicidade] = useState<'mensal' | 'semanal'>('mensal');
@@ -85,7 +87,7 @@ const MetasComerciais = () => {
 
   const { isAdmin } = usePermissions();
   const { data: empreendimentos } = useEmpreendimentos();
-  const { data: gestoresProduto = [] } = useGestoresProduto();
+  const { data: funcionariosSeven = [] } = useFuncionariosSeven();
   
   const { data: meta, isLoading: loadingMeta } = useMetasPorMes(competencia, empreendimentoId);
   const { data: vendas, isLoading: loadingVendas } = useVendasRealizadasMes(competencia, empreendimentoId);
@@ -166,6 +168,7 @@ const MetasComerciais = () => {
     setMetaEscopo('geral');
     setMetaEmpreendimentoId('');
     setMetaGestorId('');
+    setSelecionarTodos(false);
     setMetaPeriodicidade('mensal');
     setMetaSemanaDate(undefined);
     setMetaTipo('comercial');
@@ -191,7 +194,8 @@ const MetasComerciais = () => {
     } else {
       setMetaSemanaDate(undefined);
     }
-    setMetaEscopo(metaItem.gestor_id ? 'gestor' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
+    setMetaEscopo(metaItem.gestor_id ? 'funcionario' : metaItem.empreendimento_id ? 'empreendimento' : 'geral');
+    setSelecionarTodos(false);
     setMetaEmpreendimentoId(metaItem.empreendimento_id || '');
     setMetaGestorId(metaItem.gestor_id || '');
     setMetaTipo((metaItem as any).tipo || 'comercial');
@@ -211,11 +215,11 @@ const MetasComerciais = () => {
       } else {
         competenciaStr = `${metaAno}-${metaMes}-01`;
       }
-      await createMeta.mutateAsync({
+
+      const baseData = {
         competencia: competenciaStr,
         periodicidade: metaPeriodicidade,
         empreendimento_id: metaEscopo === 'empreendimento' ? metaEmpreendimentoId : null,
-        gestor_id: metaEscopo === 'gestor' ? metaGestorId : null,
         corretor_id: null,
         meta_valor: metaTipo === 'comercial' ? (metaValor || 0) : 0,
         meta_unidades: metaTipo === 'comercial' ? (parseInt(metaUnidades) || 0) : 0,
@@ -225,8 +229,31 @@ const MetasComerciais = () => {
         meta_propostas: metaTipo === 'comercial' ? (parseInt(metaPropostas) || 0) : 0,
         meta_ligacoes: metaTipo === 'atividades' ? (parseInt(metaLigacoes) || 0) : 0,
         tipo: metaTipo,
-      });
-      toast.success('Meta salva com sucesso!');
+      };
+
+      if (metaEscopo === 'funcionario' && selecionarTodos) {
+        // Criar meta para cada funcionário
+        let criadas = 0;
+        for (const func of funcionariosSeven) {
+          try {
+            await createMeta.mutateAsync({
+              ...baseData,
+              gestor_id: func.id,
+            });
+            criadas++;
+          } catch (err) {
+            console.error(`Erro ao criar meta para ${func.full_name}:`, err);
+          }
+        }
+        toast.success(`${criadas} meta(s) criada(s) para todos os funcionários!`);
+      } else {
+        await createMeta.mutateAsync({
+          ...baseData,
+          gestor_id: metaEscopo === 'funcionario' ? metaGestorId : null,
+        });
+        toast.success('Meta salva com sucesso!');
+      }
+
       setShowEditMeta(false);
       setActiveTab('gerenciar');
     } catch (error) {
@@ -870,14 +897,14 @@ const MetasComerciais = () => {
             {/* Escopo */}
             <div className="space-y-2">
               <Label>Escopo</Label>
-              <Select value={metaEscopo} onValueChange={(v) => setMetaEscopo(v as 'geral' | 'empreendimento' | 'gestor')}>
+              <Select value={metaEscopo} onValueChange={(v) => { setMetaEscopo(v as 'geral' | 'empreendimento' | 'funcionario'); setSelecionarTodos(false); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o escopo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="geral">Meta Geral (todos empreendimentos)</SelectItem>
                   <SelectItem value="empreendimento">Por Empreendimento</SelectItem>
-                  <SelectItem value="gestor">Por Gestor de Produto</SelectItem>
+                  <SelectItem value="funcionario">Por Funcionário</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -900,21 +927,35 @@ const MetasComerciais = () => {
               </div>
             )}
 
-            {metaEscopo === 'gestor' && (
-              <div className="space-y-2">
-                <Label>Gestor de Produto</Label>
-                <Select value={metaGestorId} onValueChange={setMetaGestorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o gestor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gestoresProduto.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>
-                        {g.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {metaEscopo === 'funcionario' && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="selecionarTodos"
+                    checked={selecionarTodos}
+                    onCheckedChange={(checked) => setSelecionarTodos(checked === true)}
+                  />
+                  <Label htmlFor="selecionarTodos" className="text-sm font-normal cursor-pointer">
+                    Todos os funcionários ({funcionariosSeven.length})
+                  </Label>
+                </div>
+                {!selecionarTodos && (
+                  <div className="space-y-2">
+                    <Label>Funcionário</Label>
+                    <Select value={metaGestorId} onValueChange={setMetaGestorId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o funcionário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {funcionariosSeven.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1006,7 +1047,7 @@ const MetasComerciais = () => {
             </Button>
             <Button 
               onClick={handleSaveMeta} 
-              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId) || (metaEscopo === 'gestor' && !metaGestorId)}
+              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId) || (metaEscopo === 'funcionario' && !selecionarTodos && !metaGestorId)}
             >
               {createMeta.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar

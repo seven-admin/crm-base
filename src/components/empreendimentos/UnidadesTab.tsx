@@ -220,7 +220,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
 
     const linhasHtml = ordenadas.map((u) => {
-      const boxNumeros = (u as any).boxes?.map((b: any) => b.numero).join(', ') || '-';
+      const boxNumeros = (u as any).boxes?.map((b: any) => `${b.numero} (${b.tipo})`).join(', ') || '-';
       return `${rowSep}<tr style="background:#ffffff;">` +
         `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
         `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
