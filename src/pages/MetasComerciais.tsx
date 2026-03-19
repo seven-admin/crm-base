@@ -87,7 +87,7 @@ const MetasComerciais = () => {
 
   const { isAdmin } = usePermissions();
   const { data: empreendimentos } = useEmpreendimentos();
-  const { data: gestoresProduto = [] } = useGestoresProduto();
+  const { data: funcionariosSeven = [] } = useFuncionariosSeven();
   
   const { data: meta, isLoading: loadingMeta } = useMetasPorMes(competencia, empreendimentoId);
   const { data: vendas, isLoading: loadingVendas } = useVendasRealizadasMes(competencia, empreendimentoId);
