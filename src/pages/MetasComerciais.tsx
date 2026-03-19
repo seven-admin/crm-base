@@ -897,14 +897,14 @@ const MetasComerciais = () => {
             {/* Escopo */}
             <div className="space-y-2">
               <Label>Escopo</Label>
-              <Select value={metaEscopo} onValueChange={(v) => setMetaEscopo(v as 'geral' | 'empreendimento' | 'gestor')}>
+              <Select value={metaEscopo} onValueChange={(v) => { setMetaEscopo(v as 'geral' | 'empreendimento' | 'funcionario'); setSelecionarTodos(false); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o escopo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="geral">Meta Geral (todos empreendimentos)</SelectItem>
                   <SelectItem value="empreendimento">Por Empreendimento</SelectItem>
-                  <SelectItem value="gestor">Por Gestor de Produto</SelectItem>
+                  <SelectItem value="funcionario">Por Funcionário</SelectItem>
                 </SelectContent>
               </Select>
             </div>
