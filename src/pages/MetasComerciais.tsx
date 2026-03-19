@@ -1047,7 +1047,7 @@ const MetasComerciais = () => {
             </Button>
             <Button 
               onClick={handleSaveMeta} 
-              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId) || (metaEscopo === 'gestor' && !metaGestorId)}
+              disabled={createMeta.isPending || (metaEscopo === 'empreendimento' && !metaEmpreendimentoId) || (metaEscopo === 'funcionario' && !selecionarTodos && !metaGestorId)}
             >
               {createMeta.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar
