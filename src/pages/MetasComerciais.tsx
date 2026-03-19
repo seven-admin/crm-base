@@ -72,7 +72,8 @@ const MetasComerciais = () => {
   const [metaLigacoes, setMetaLigacoes] = useState('');
   const [metaMes, setMetaMes] = useState(format(new Date(), 'MM'));
   const [metaAno, setMetaAno] = useState(currentYear.toString());
-  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'gestor'>('geral');
+  const [metaEscopo, setMetaEscopo] = useState<'geral' | 'empreendimento' | 'funcionario'>('geral');
+  const [selecionarTodos, setSelecionarTodos] = useState(false);
   const [metaEmpreendimentoId, setMetaEmpreendimentoId] = useState<string>('');
   const [metaGestorId, setMetaGestorId] = useState<string>('');
   const [metaPeriodicidade, setMetaPeriodicidade] = useState<'mensal' | 'semanal'>('mensal');
