@@ -927,21 +927,35 @@ const MetasComerciais = () => {
               </div>
             )}
 
-            {metaEscopo === 'gestor' && (
-              <div className="space-y-2">
-                <Label>Gestor de Produto</Label>
-                <Select value={metaGestorId} onValueChange={setMetaGestorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o gestor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gestoresProduto.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>
-                        {g.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {metaEscopo === 'funcionario' && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="selecionarTodos"
+                    checked={selecionarTodos}
+                    onCheckedChange={(checked) => setSelecionarTodos(checked === true)}
+                  />
+                  <Label htmlFor="selecionarTodos" className="text-sm font-normal cursor-pointer">
+                    Todos os funcionários ({funcionariosSeven.length})
+                  </Label>
+                </div>
+                {!selecionarTodos && (
+                  <div className="space-y-2">
+                    <Label>Funcionário</Label>
+                    <Select value={metaGestorId} onValueChange={setMetaGestorId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o funcionário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {funcionariosSeven.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
 
