@@ -1,52 +1,20 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Loader2, Eye } from 'lucide-react';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
-import { useUserImobiliaria } from '@/hooks/useUserImobiliaria';
-import { supabase } from '@/integrations/supabase/client';
 
 import { EMPREENDIMENTO_STATUS_LABELS, EMPREENDIMENTO_TIPO_LABELS } from '@/types/empreendimentos.types';
 
 export default function PortalEmpreendimentos() {
   const navigate = useNavigate();
-  const { data: empreendimentos, isLoading: loadingEmps } = useEmpreendimentos();
-  const { imobiliariaId, isGestorImobiliaria, isLoading: isLoadingImob } = useUserImobiliaria();
-
-  // Buscar vínculos da imobiliária com empreendimentos
-  const { data: vinculosIds, isLoading: loadingVinculos } = useQuery({
-    queryKey: ['empreendimento-imobiliarias', imobiliariaId],
-    queryFn: async () => {
-      if (!imobiliariaId) return [];
-      const { data, error } = await supabase
-        .from('empreendimento_imobiliarias')
-        .select('empreendimento_id')
-        .eq('imobiliaria_id', imobiliariaId);
-      if (error) {
-        console.error('Erro ao buscar vínculos:', error);
-        return [];
-      }
-      return data.map(v => v.empreendimento_id);
-    },
-    enabled: !!imobiliariaId && isGestorImobiliaria,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: empreendimentos, isLoading } = useEmpreendimentos();
 
   const empreendimentosFiltrados = useMemo(() => {
-    const baseList = empreendimentos?.filter(e => ['lancamento', 'obra'].includes(e.status)) || [];
-    
-    // Gestor de imobiliária: filtrar apenas os vinculados
-    if (isGestorImobiliaria && vinculosIds) {
-      return baseList.filter(e => vinculosIds.includes(e.id));
-    }
-    
-    return baseList;
-  }, [empreendimentos, isGestorImobiliaria, vinculosIds]);
-
-  const isLoading = loadingEmps || (isGestorImobiliaria && (isLoadingImob || loadingVinculos));
+    return empreendimentos?.filter(e => ['lancamento', 'obra'].includes(e.status)) || [];
+  }, [empreendimentos]);
 
   if (isLoading) {
     return (
