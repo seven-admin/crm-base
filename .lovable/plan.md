@@ -1,30 +1,33 @@
 
 
-# Tornar empreendimentos visíveis para todos os corretores e imobiliárias
+# Corrigir validação de CPF para estrangeiros
 
 ## Problema
-A função RLS `user_has_empreendimento_access` exige vínculo explícito nas tabelas `empreendimento_corretores` / `empreendimento_imobiliarias` para que corretores e imobiliárias vejam um empreendimento. Esse vínculo manual na aba "Equipe" não faz sentido como pré-requisito de visibilidade — todo corretor/imobiliária ativo deveria ver todos os empreendimentos ativos.
+Dois pontos de validação exigem CPF incondicionalmente, bloqueando propostas de clientes estrangeiros:
+
+1. **`src/hooks/useValidacaoFichaProposta.ts`** (linha 35): `if (!cliente.cpf)` → pendência "CPF do cliente não preenchido"
+2. **`src/lib/validarContrato.ts`** (linha 26): `if (!contrato.cliente?.cpf)` → pendência "CPF do cliente não informado"
+
+O tipo `Cliente` já possui os campos `nacionalidade` e `passaporte`, e o formulário de cadastro (`ClienteForm.tsx`) já trata corretamente a lógica brasileiro/estrangeiro (exige passaporte em vez de CPF). O problema é que as validações de proposta/contrato ignoram a nacionalidade.
 
 ## Solução
 
-### 1. Migration SQL — atualizar `user_has_empreendimento_access`
+### 1. `src/hooks/useValidacaoFichaProposta.ts`
+Substituir a validação fixa de CPF por lógica condicional:
 
-Adicionar duas cláusulas à função para que:
-- Qualquer usuário com role `corretor` veja empreendimentos ativos
-- Qualquer usuário com role `gestor_imobiliaria` veja empreendimentos ativos
-
-```sql
-OR public.has_role(_user_id, 'corretor')
-OR public.is_gestor_imobiliaria(_user_id)
+```typescript
+const isBrasileiro = !cliente.nacionalidade || cliente.nacionalidade.toLowerCase() === 'brasileira';
+if (isBrasileiro) {
+  if (!cliente.cpf) pendencias.push('CPF do cliente não preenchido');
+} else {
+  if (!cliente.passaporte) pendencias.push('Passaporte do cliente não preenchido');
+}
 ```
 
-Isso elimina a necessidade de vínculo manual para **visualização**. Os vínculos nas tabelas de junção continuam úteis para controle de comissão e autorização de propostas.
-
-### 2. Frontend — `src/pages/PortalEmpreendimentos.tsx`
-
-Remover o filtro extra por `empreendimento_imobiliarias` que o gestor_imobiliaria aplica no frontend (linhas 22-37). Com a RLS liberada, o `useEmpreendimentos()` já retornará todos os empreendimentos ativos — o filtro adicional é redundante e causava ocultação.
+### 2. `src/lib/validarContrato.ts`
+Mesma lógica: se brasileiro, exigir CPF; se estrangeiro, exigir passaporte.
 
 ### Arquivos a modificar
-- Migration SQL (função `user_has_empreendimento_access`)
-- `src/pages/PortalEmpreendimentos.tsx` (remover query e filtro de vínculos)
+- `src/hooks/useValidacaoFichaProposta.ts`
+- `src/lib/validarContrato.ts`
 
