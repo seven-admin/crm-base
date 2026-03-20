@@ -23,12 +23,23 @@ export function validarContratoCompleto(contrato: Contrato): ResultadoValidacao 
     });
   }
 
-  if (!contrato.cliente?.cpf) {
-    pendencias.push({
-      campo: 'cliente.cpf',
-      mensagem: 'CPF do cliente não informado',
-      tipo: 'erro'
-    });
+  const isBrasileiro = !contrato.cliente?.nacionalidade || contrato.cliente.nacionalidade.toLowerCase() === 'brasileira';
+  if (isBrasileiro) {
+    if (!contrato.cliente?.cpf) {
+      pendencias.push({
+        campo: 'cliente.cpf',
+        mensagem: 'CPF do cliente não informado',
+        tipo: 'erro'
+      });
+    }
+  } else {
+    if (!contrato.cliente?.passaporte) {
+      pendencias.push({
+        campo: 'cliente.passaporte',
+        mensagem: 'Passaporte do cliente não informado',
+        tipo: 'erro'
+      });
+    }
   }
 
   if (!contrato.cliente?.email) {
