@@ -1,22 +1,30 @@
 
 
-# Corrigir erro "valor_total" na função de validação
+# Tornar empreendimentos visíveis para todos os corretores e imobiliárias
 
 ## Problema
-A função de banco `verificar_ficha_proposta_completa` referencia `v_negociacao.valor_total`, mas a tabela `negociacoes` não tem esse campo — o campo correto é `valor_negociacao`. Essa função é chamada pelo trigger `atualizar_ficha_completa` em cada UPDATE na tabela `negociacoes`, causando o erro.
+A função RLS `user_has_empreendimento_access` exige vínculo explícito nas tabelas `empreendimento_corretores` / `empreendimento_imobiliarias` para que corretores e imobiliárias vejam um empreendimento. Esse vínculo manual na aba "Equipe" não faz sentido como pré-requisito de visibilidade — todo corretor/imobiliária ativo deveria ver todos os empreendimentos ativos.
 
 ## Solução
-Criar uma migration para atualizar a função `verificar_ficha_proposta_completa`, substituindo `v_negociacao.valor_total` por `v_negociacao.valor_negociacao`.
 
-### Arquivo alterado
-- Migration SQL (via ferramenta de migração)
+### 1. Migration SQL — atualizar `user_has_empreendimento_access`
 
-### SQL da correção
+Adicionar duas cláusulas à função para que:
+- Qualquer usuário com role `corretor` veja empreendimentos ativos
+- Qualquer usuário com role `gestor_imobiliaria` veja empreendimentos ativos
+
 ```sql
-CREATE OR REPLACE FUNCTION public.verificar_ficha_proposta_completa(neg_id uuid)
-  -- mesma função, apenas trocando:
-  --   IF v_negociacao.valor_total IS NULL OR v_negociacao.valor_total <= 0
-  -- por:
-  --   IF v_negociacao.valor_negociacao IS NULL OR v_negociacao.valor_negociacao <= 0
+OR public.has_role(_user_id, 'corretor')
+OR public.is_gestor_imobiliaria(_user_id)
 ```
+
+Isso elimina a necessidade de vínculo manual para **visualização**. Os vínculos nas tabelas de junção continuam úteis para controle de comissão e autorização de propostas.
+
+### 2. Frontend — `src/pages/PortalEmpreendimentos.tsx`
+
+Remover o filtro extra por `empreendimento_imobiliarias` que o gestor_imobiliaria aplica no frontend (linhas 22-37). Com a RLS liberada, o `useEmpreendimentos()` já retornará todos os empreendimentos ativos — o filtro adicional é redundante e causava ocultação.
+
+### Arquivos a modificar
+- Migration SQL (função `user_has_empreendimento_access`)
+- `src/pages/PortalEmpreendimentos.tsx` (remover query e filtro de vínculos)
 
