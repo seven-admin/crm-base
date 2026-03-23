@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useGestorCorretores, CorretorGestao } from '@/hooks/useGestorCorretores';
-// Card import removed - using standard table layout
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, UserCheck, UserX } from 'lucide-react';
+import { Plus, UserCheck, UserX, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -105,7 +104,7 @@ function NovoCorretorDialog({ onSubmit, isPending }: { onSubmit: (d: any) => voi
 
 export default function PortalCorretoresGestao() {
   const { role } = useAuth();
-  const { corretores, isLoading, createCorretor, toggleStatus } = useGestorCorretores();
+  const { corretores, isLoading, createCorretor, toggleStatus, aprovarVinculo, rejeitarVinculo } = useGestorCorretores();
 
   if (role !== 'gestor_imobiliaria') {
     return <Navigate to="/portal-corretor" replace />;
@@ -119,12 +118,72 @@ export default function PortalCorretoresGestao() {
     );
   }
 
+  const pendentes = corretores.filter(c => c.status_vinculo === 'pendente');
+  const ativos = corretores.filter(c => c.status_vinculo !== 'pendente');
+
   return (
     <div className="space-y-6">
+      {/* Seção de Pendentes */}
+      {pendentes.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-amber-500" />
+            <h3 className="font-semibold text-sm">Solicitações Pendentes ({pendentes.length})</h3>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>CRECI</TableHead>
+                  <TableHead className="w-[150px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendentes.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.nome_completo}</TableCell>
+                    <TableCell>{c.email || '—'}</TableCell>
+                    <TableCell>{c.telefone || '—'}</TableCell>
+                    <TableCell>{c.creci || '—'}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={() => aprovarVinculo.mutate(c.id)}
+                          disabled={aprovarVinculo.isPending}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Aprovar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={() => rejeitarVinculo.mutate(c.id)}
+                          disabled={rejeitarVinculo.isPending}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Rejeitar
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
-            {corretores.length} corretor{corretores.length !== 1 ? 'es' : ''} cadastrado{corretores.length !== 1 ? 's' : ''}
+            {ativos.length} corretor{ativos.length !== 1 ? 'es' : ''} cadastrado{ativos.length !== 1 ? 's' : ''}
           </p>
         </div>
         <NovoCorretorDialog
@@ -147,14 +206,14 @@ export default function PortalCorretoresGestao() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {corretores.length === 0 ? (
+              {ativos.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhum corretor cadastrado. Clique em "Novo Corretor" para começar.
                   </TableCell>
                 </TableRow>
               ) : (
-                corretores.map((c: CorretorGestao) => (
+                ativos.map((c: CorretorGestao) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.nome_completo}</TableCell>
                     <TableCell>{c.email || '—'}</TableCell>

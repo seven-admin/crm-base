@@ -115,12 +115,17 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
   useEffect(() => {
     if (tipoVinculo === 'vinculado') {
       setLoadingImobs(true);
-      supabase.rpc('get_imobiliarias_ativas' as any)
-        .then(({ data }: any) => {
+      const fetchImobs = async () => {
+        try {
+          const { data } = await supabase.rpc('get_imobiliarias_ativas' as any);
           setImobiliarias((data as any[]) || []);
+        } catch {
+          // ignore
+        } finally {
           setLoadingImobs(false);
-        })
-        .catch(() => setLoadingImobs(false));
+        }
+      };
+      fetchImobs();
     }
   }, [tipoVinculo]);
 

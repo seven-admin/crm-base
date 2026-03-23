@@ -226,6 +226,7 @@ export default function Corretores() {
               <TableHead>CPF</TableHead>
               <TableHead>CRECI</TableHead>
               <TableHead>Imobiliária</TableHead>
+              <TableHead>Vínculo</TableHead>
               <TableHead>Cidade/UF</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Acesso</TableHead>
@@ -235,13 +236,13 @@ export default function Corretores() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-               <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+               <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : corretores.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Nenhum corretor encontrado
                 </TableCell>
               </TableRow>
@@ -251,7 +252,20 @@ export default function Corretores() {
                   <TableCell className="font-medium">{c.nome_completo}</TableCell>
                   <TableCell className="text-muted-foreground">{c.cpf || '—'}</TableCell>
                   <TableCell className="text-muted-foreground">{c.creci || '—'}</TableCell>
-                  <TableCell>{c.imobiliaria?.nome || '—'}</TableCell>
+                  <TableCell>{c.imobiliaria?.nome || <span className="text-xs text-muted-foreground">Autônomo</span>}</TableCell>
+                  <TableCell>
+                    {c.imobiliaria_id ? (
+                      <Badge variant={
+                        (c as any).status_vinculo === 'pendente' ? 'secondary' :
+                        (c as any).status_vinculo === 'rejeitado' ? 'destructive' : 'outline'
+                      }>
+                        {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
+                         (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {c.cidade ? `${c.cidade}${c.uf ? `/${c.uf}` : ''}` : (c.imobiliaria as any)?.endereco_cidade || '—'}
                   </TableCell>

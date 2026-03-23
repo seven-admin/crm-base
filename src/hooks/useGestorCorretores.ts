@@ -14,6 +14,7 @@ export interface CorretorGestao {
   is_active: boolean;
   created_at: string;
   user_id: string | null;
+  status_vinculo: string | null;
 }
 
 export function useGestorCorretores() {
@@ -27,7 +28,7 @@ export function useGestorCorretores() {
 
       const { data, error } = await supabase
         .from('corretores')
-        .select('id, nome_completo, email, cpf, creci, telefone, is_active, created_at, user_id')
+        .select('id, nome_completo, email, cpf, creci, telefone, is_active, created_at, user_id, status_vinculo')
         .eq('imobiliaria_id', imobiliariaId)
         .order('nome_completo');
 
@@ -116,6 +117,40 @@ export function useGestorCorretores() {
     },
   });
 
+  const aprovarVinculo = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('corretores')
+        .update({ status_vinculo: 'ativo', is_active: true } as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success('Corretor aprovado e ativado!');
+      await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+    },
+    onError: () => {
+      toast.error('Erro ao aprovar corretor');
+    },
+  });
+
+  const rejeitarVinculo = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('corretores')
+        .update({ status_vinculo: 'rejeitado', imobiliaria_id: null } as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success('Solicitação rejeitada');
+      await queryClient.invalidateQueries({ queryKey: ['gestor-corretores'] });
+    },
+    onError: () => {
+      toast.error('Erro ao rejeitar solicitação');
+    },
+  });
+
   return {
     corretores,
     isLoading: isLoading || imobLoading,
@@ -123,5 +158,7 @@ export function useGestorCorretores() {
     createCorretor,
     updateCorretor,
     toggleStatus,
+    aprovarVinculo,
+    rejeitarVinculo,
   };
 }
