@@ -141,6 +141,21 @@ export default function Corretores() {
     }
   };
 
+  const canEdit = canAccessModule('corretores', 'edit');
+
+  const handleUpdateVinculo = async (corretorId: string, status: 'ativo' | 'rejeitado') => {
+    try {
+      const updateData: any = { status_vinculo: status };
+      if (status === 'ativo') updateData.is_active = true;
+      const { error } = await supabase.from('corretores').update(updateData).eq('id', corretorId);
+      if (error) throw error;
+      toast.success(status === 'ativo' ? 'Vínculo aprovado' : 'Vínculo rejeitado');
+      queryClient.invalidateQueries({ queryKey: ['corretores'] });
+    } catch {
+      toast.error('Erro ao atualizar vínculo');
+    }
+  };
+
   const corretores = data?.corretores || [];
   const totalPages = data?.totalPages || 1;
   const total = data?.total || 0;
