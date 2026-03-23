@@ -81,37 +81,54 @@ const formSchemaBase = z.object({
 // Schema with conditional CPF requirement + always-on format validation
 function createClienteSchema(exigirCpf: boolean) {
   return formSchemaBase.superRefine((data, ctx) => {
-    const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
+    const tipoPessoa = data.tipo_pessoa || 'fisica';
     
-    if (isBrasileiro) {
-      const cpfDigits = data.cpf?.replace(/\D/g, '') || '';
-
-      // Se exigir CPF, campo obrigatório
-      if (exigirCpf && cpfDigits.length === 0) {
+    if (tipoPessoa === 'juridica') {
+      // PJ: exigir CNPJ válido
+      const cnpjDigits = data.cnpj?.replace(/\D/g, '') || '';
+      if (cnpjDigits.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'CPF é obrigatório',
-          path: ['cpf'],
+          message: 'CNPJ é obrigatório para Pessoa Jurídica',
+          path: ['cnpj'],
+        });
+      } else if (!validarCNPJ(data.cnpj!)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'CNPJ inválido',
+          path: ['cnpj'],
         });
       }
-
-      // Sempre validar formato quando preenchido
-      if (cpfDigits.length > 0 && !validarCPF(data.cpf!)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'CPF inválido',
-          path: ['cpf'],
-        });
+    } else {
+      // PF
+      const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
+      
+      if (isBrasileiro) {
+        const cpfDigits = data.cpf?.replace(/\D/g, '') || '';
+        if (exigirCpf && cpfDigits.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'CPF é obrigatório',
+            path: ['cpf'],
+          });
+        }
+        if (cpfDigits.length > 0 && !validarCPF(data.cpf!)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'CPF inválido',
+            path: ['cpf'],
+          });
+        }
       }
-    }
 
-    if (!isBrasileiro) {
-      if (!data.passaporte || data.passaporte.trim() === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Passaporte é obrigatório para estrangeiros',
-          path: ['passaporte'],
-        });
+      if (!isBrasileiro) {
+        if (!data.passaporte || data.passaporte.trim() === '') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Passaporte é obrigatório para estrangeiros',
+            path: ['passaporte'],
+          });
+        }
       }
     }
   });
