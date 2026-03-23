@@ -2455,6 +2455,7 @@ export type Database = {
           registro_incorporacao: string | null
           responsavel_comercial_id: string | null
           status: Database["public"]["Enums"]["empreendimento_status"]
+          texto_rodape_relatorio: string | null
           tipo: Database["public"]["Enums"]["empreendimento_tipo"]
           total_unidades: number | null
           updated_at: string
@@ -2489,6 +2490,7 @@ export type Database = {
           registro_incorporacao?: string | null
           responsavel_comercial_id?: string | null
           status?: Database["public"]["Enums"]["empreendimento_status"]
+          texto_rodape_relatorio?: string | null
           tipo: Database["public"]["Enums"]["empreendimento_tipo"]
           total_unidades?: number | null
           updated_at?: string
@@ -2523,6 +2525,7 @@ export type Database = {
           registro_incorporacao?: string | null
           responsavel_comercial_id?: string | null
           status?: Database["public"]["Enums"]["empreendimento_status"]
+          texto_rodape_relatorio?: string | null
           tipo?: Database["public"]["Enums"]["empreendimento_tipo"]
           total_unidades?: number | null
           updated_at?: string

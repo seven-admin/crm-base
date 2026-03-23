@@ -262,6 +262,11 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
           Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
         </p>
+        ${(empreendimento as any).texto_rodape_relatorio ? `
+        <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid #cccccc;">
+          <p style="font-size: 7.5pt; color: #555; line-height: 1.6; white-space: pre-line; font-family: 'Helvetica', 'Arial', sans-serif;">${(empreendimento as any).texto_rodape_relatorio}</p>
+        </div>
+        ` : ''}
         <div style="height: 20px;"></div>
       </div>
     `;
