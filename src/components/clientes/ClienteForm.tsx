@@ -175,6 +175,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      tipo_pessoa: 'fisica',
       nome: '',
       email: '',
       telefone: '',
@@ -182,6 +183,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       cpf: '',
       rg: '',
       passaporte: '',
+      cnpj: '',
+      razao_social: '',
+      inscricao_estadual: '',
       data_nascimento: '',
       profissao: '',
       renda_mensal: undefined,
