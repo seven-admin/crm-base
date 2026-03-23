@@ -445,10 +445,11 @@ export function useEnviarProposta() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       // Agora só funciona a partir de aprovada_incorporador -> enviada
       const { error } = await db
         .from('negociacoes')
-        .update({ status_proposta: 'enviada' })
+        .update({ status_proposta: 'enviada', updated_by: currentUser?.id })
         .eq('id', id);
 
       if (error) throw error;
