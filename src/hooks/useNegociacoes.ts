@@ -1210,7 +1210,6 @@ export function useMoverNegociacao() {
         funil_etapa_id: data.funil_etapa_id,
         updated_by: user?.id
       };
-      };
 
       // Auto-set status_proposta when moving to "Análise de Proposta"
       if (data.funil_etapa_id === ETAPA_ANALISE_PROPOSTA) {
