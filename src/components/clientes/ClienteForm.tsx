@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCorretores } from '@/hooks/useCorretores';
-import { Cliente, CLIENTE_ORIGENS, CLIENTE_TEMPERATURA_LABELS, ESTADOS_CIVIS, UFS_BRASIL, ClienteTemperatura } from '@/types/clientes.types';
+import { Cliente, CLIENTE_ORIGENS, CLIENTE_TEMPERATURA_LABELS, ESTADOS_CIVIS, UFS_BRASIL, ClienteTemperatura, TipoPessoa } from '@/types/clientes.types';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useCepLookup } from '@/hooks/useCepLookup';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
