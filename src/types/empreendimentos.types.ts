@@ -82,6 +82,7 @@ export interface Empreendimento {
   legenda_status_visiveis: UnidadeStatus[] | null;
   mapa_label_formato: string[] | null;
   auto_vincular_corretor: boolean;
+  texto_rodape_relatorio: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -241,6 +242,7 @@ export interface EmpreendimentoFormData {
   infraestrutura?: string[];
   registro_incorporacao?: string;
   matricula_mae?: string;
+  texto_rodape_relatorio?: string;
   legenda_status_visiveis?: UnidadeStatus[];
   mapa_label_formato?: string[];
 }

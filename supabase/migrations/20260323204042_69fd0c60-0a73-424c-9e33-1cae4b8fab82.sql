@@ -1,0 +1,1 @@
+ALTER TABLE empreendimentos ADD COLUMN texto_rodape_relatorio text;

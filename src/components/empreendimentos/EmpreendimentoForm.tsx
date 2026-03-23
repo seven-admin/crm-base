@@ -48,6 +48,7 @@ const formSchema = z.object({
   endereco_cep: z.string().optional(),
   registro_incorporacao: z.string().optional(),
   matricula_mae: z.string().optional(),
+  texto_rodape_relatorio: z.string().optional(),
   legenda_status_visiveis: z.array(z.enum(['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'])).optional(),
   mapa_label_formato: z.array(z.enum(['bloco', 'tipologia', 'numero', 'posicao', 'andar'])).optional(),
 });
@@ -91,6 +92,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       endereco_cep: '',
       registro_incorporacao: '',
       matricula_mae: '',
+      texto_rodape_relatorio: '',
       legenda_status_visiveis: ['disponivel', 'reservada', 'vendida', 'bloqueada'],
       mapa_label_formato: ['bloco', 'tipologia', 'numero'],
     },
@@ -116,6 +118,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
         endereco_cep: empreendimento.endereco_cep || '',
         registro_incorporacao: empreendimento.registro_incorporacao || '',
         matricula_mae: empreendimento.matricula_mae || '',
+        texto_rodape_relatorio: (empreendimento as any).texto_rodape_relatorio || '',
         legenda_status_visiveis: empreendimento.legenda_status_visiveis || ['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'],
         mapa_label_formato: (empreendimento as any).mapa_label_formato || ['bloco', 'tipologia', 'numero'],
       });
@@ -137,6 +140,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
         endereco_cep: '',
         registro_incorporacao: '',
         matricula_mae: '',
+        texto_rodape_relatorio: '',
         legenda_status_visiveis: ['disponivel', 'reservada', 'vendida', 'bloqueada'],
         mapa_label_formato: ['bloco', 'tipologia', 'numero'],
       });
@@ -178,6 +182,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       endereco_cep: values.endereco_cep || undefined,
       registro_incorporacao: values.registro_incorporacao || undefined,
       matricula_mae: values.matricula_mae || undefined,
+      texto_rodape_relatorio: values.texto_rodape_relatorio || undefined,
       legenda_status_visiveis: values.legenda_status_visiveis as any || undefined,
       mapa_label_formato: values.mapa_label_formato as any || undefined,
     };
@@ -576,6 +581,19 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
                     {...form.register('matricula_mae')}
                     placeholder="Número da matrícula"
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="texto_rodape_relatorio">Observações do Relatório (PDF)</Label>
+                  <Textarea
+                    id="texto_rodape_relatorio"
+                    {...form.register('texto_rodape_relatorio')}
+                    placeholder="Texto que aparecerá no rodapé do relatório de unidades disponíveis. Ex: valores em reais, índice de correção INCC, previsão de entrega..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Este texto será exibido no final do PDF de unidades disponíveis.
+                  </p>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
