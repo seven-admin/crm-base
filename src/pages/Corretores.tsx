@@ -51,7 +51,8 @@ export default function Corretores() {
       return ((data as any[])?.map((c: any) => c.cidade).filter(Boolean) || []) as string[];
     },
   });
-  const { canAccessModule } = usePermissions();
+  const { canAccessModule, isSuperAdmin } = usePermissions();
+  const [statusVinculoFilter, setStatusVinculoFilter] = useState<string>('all');
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -156,7 +157,12 @@ export default function Corretores() {
     }
   };
 
-  const corretores = data?.corretores || [];
+  const corretoresRaw = data?.corretores || [];
+  const corretores = statusVinculoFilter === 'all'
+    ? corretoresRaw
+    : statusVinculoFilter === 'autonomo'
+      ? corretoresRaw.filter(c => !c.imobiliaria_id)
+      : corretoresRaw.filter(c => (c as any).status_vinculo === statusVinculoFilter);
   const totalPages = data?.totalPages || 1;
   const total = data?.total || 0;
 
@@ -219,6 +225,18 @@ export default function Corretores() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusVinculoFilter} onValueChange={(v) => { setStatusVinculoFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Status vínculo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos vínculos</SelectItem>
+            <SelectItem value="pendente">Pendente</SelectItem>
+            <SelectItem value="ativo">Vinculado</SelectItem>
+            <SelectItem value="rejeitado">Rejeitado</SelectItem>
+            <SelectItem value="autonomo">Autônomo</SelectItem>
+          </SelectContent>
+        </Select>
         <Button variant="outline" onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Exportar
@@ -278,15 +296,21 @@ export default function Corretores() {
                           {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
                            (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
                         </Badge>
-                        {(c as any).status_vinculo === 'pendente' && canEdit && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Aprovar" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Rejeitar" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
-                              <XCircle className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
+                        {(isSuperAdmin() || ((c as any).status_vinculo === 'pendente' && canEdit)) && (
+                          <div className="flex gap-1 ml-1">
+                            {(c as any).status_vinculo !== 'ativo' && (
+                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Aprovar
+                              </Button>
+                            )}
+                            {(c as any).status_vinculo !== 'rejeitado' && (
+                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
+                                <XCircle className="h-3.5 w-3.5" />
+                                Rejeitar
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     ) : (
