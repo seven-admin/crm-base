@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import type { Cliente } from '@/types/clientes.types';
 import { ClipboardList, Edit, MessageSquare, MoreVertical, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
 
