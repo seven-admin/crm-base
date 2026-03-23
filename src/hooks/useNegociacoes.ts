@@ -1394,10 +1394,11 @@ export function useUpdateNegociacao() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<NegociacaoFormData> }) => {
       const { unidade_ids, ...negData } = data;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       const { error } = await db
         .from('negociacoes')
-        .update(negData)
+        .update({ ...negData, updated_by: currentUser?.id })
         .eq('id', id);
 
       if (error) throw error;
