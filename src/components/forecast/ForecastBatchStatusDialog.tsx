@@ -142,7 +142,8 @@ export function ForecastBatchStatusDialog({
     }
   };
 
-  const isPending = alterarStatus.isPending || reabrirEmLote.isPending;
+  const isDeleting = deleteEmLote.isPending;
+  const isPending = alterarStatus.isPending || reabrirEmLote.isPending || isDeleting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
