@@ -442,99 +442,156 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                   name="nome"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome *</FormLabel>
+                      <FormLabel>{isPJ ? 'Nome Fantasia *' : 'Nome *'}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome completo" {...field} />
+                        <Input placeholder={isPJ ? 'Nome fantasia' : 'Nome completo'} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="nacionalidade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nacionalidade</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ex: Brasileiro, Paraguaio, Argentino..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* CPF - apenas para brasileiros */}
-                {isBrasileiro && (
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CPF{exigirCpf ? ' *' : ''}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="000.000.000-00" 
-                            value={field.value}
-                            onChange={(e) => field.onChange(formatarCPF(e.target.value))}
-                            maxLength={14}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+                {/* PJ Fields */}
+                {isPJ && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="razao_social"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Razão Social</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Razão social da empresa" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cnpj"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CNPJ *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="00.000.000/0000-00" 
+                              value={field.value}
+                              onChange={(e) => field.onChange(formatarCNPJ(e.target.value))}
+                              maxLength={18}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="inscricao_estadual"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Inscrição Estadual</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Inscrição estadual" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
-                
-                {/* Passaporte - apenas para estrangeiros */}
-                {!isBrasileiro && (
-                  <FormField
-                    control={form.control}
-                    name="passaporte"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Passaporte *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Número do passaporte" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+
+                {/* PF Fields */}
+                {!isPJ && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="nacionalidade"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nacionalidade</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Ex: Brasileiro, Paraguaio, Argentino..." 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* CPF - apenas para brasileiros */}
+                    {isBrasileiro && (
+                      <FormField
+                        control={form.control}
+                        name="cpf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF{exigirCpf ? ' *' : ''}</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="000.000.000-00" 
+                                value={field.value}
+                                onChange={(e) => field.onChange(formatarCPF(e.target.value))}
+                                maxLength={14}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
-                  />
+                    
+                    {/* Passaporte - apenas para estrangeiros */}
+                    {!isBrasileiro && (
+                      <FormField
+                        control={form.control}
+                        name="passaporte"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Passaporte *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Número do passaporte" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    
+                    <FormField
+                      control={form.control}
+                      name="rg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>RG</FormLabel>
+                          <FormControl>
+                            <Input placeholder="RG" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="data_nascimento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
-                
-                <FormField
-                  control={form.control}
-                  name="rg"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>RG</FormLabel>
-                      <FormControl>
-                        <Input placeholder="RG" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="data_nascimento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Nascimento</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <FormField
                   control={form.control}
                   name="profissao"
@@ -548,28 +605,32 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="estado_civil"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado Civil</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {ESTADOS_CIVIS.map((ec) => (
-                            <SelectItem key={ec} value={ec}>{ec}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
+                {!isPJ && (
+                  <FormField
+                    control={form.control}
+                    name="estado_civil"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado Civil</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ESTADOS_CIVIS.map((ec) => (
+                              <SelectItem key={ec} value={ec}>{ec}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="renda_mensal"
