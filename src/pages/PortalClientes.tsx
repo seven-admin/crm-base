@@ -175,6 +175,9 @@ export default function PortalClientes() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold truncate">{cliente.nome}</h3>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                        {cliente.tipo_pessoa === 'juridica' ? 'PJ' : 'PF'}
+                      </Badge>
                     </div>
                     
                     {cliente.telefone && (
