@@ -43,8 +43,26 @@ export function ForecastBatchStatusDialog({
 }: ForecastBatchStatusDialogProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [novoStatus, setNovoStatus] = useState<string>('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const alterarStatus = useAlterarStatusEmLote();
   const reabrirEmLote = useReabrirAtividadesEmLote();
+  const { isSuperAdmin } = usePermissions();
+  const queryClient = useQueryClient();
+
+  const deleteEmLote = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('atividades').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['forecast'] });
+      await queryClient.invalidateQueries({ queryKey: ['forecast-batch'] });
+      await queryClient.invalidateQueries({ queryKey: ['atividades'] });
+      toast.success('Atividades excluídas com sucesso');
+      onOpenChange(false);
+    },
+    onError: () => toast.error('Erro ao excluir atividades'),
+  });
 
   // Build query filters based on statusGroup
   const { data: atividades, isLoading } = useQuery({
