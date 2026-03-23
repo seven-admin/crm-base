@@ -1,29 +1,19 @@
 
 
-# Corrigir RLS violation ao criar negociação
-
-## Problema
-A policy "Gestores can insert own negociacoes" exige `gestor_id = auth.uid()`, mas o INSERT em `useCreateNegociacao` (linha 1086) não inclui `gestor_id`. Quando um gestor_produto tenta criar uma negociação, o RLS bloqueia.
-
-Existe um trigger `auto_set_gestor_id_clientes` para a tabela `clientes`, mas **não existe equivalente para `negociacoes`** — o `gestor_id` precisa ser enviado explicitamente.
+# Adicionar exclusão em lote no Forecast (somente super_admin)
 
 ## Solução
 
-### `src/hooks/useNegociacoes.ts`
-No `useCreateNegociacao`, adicionar `gestor_id` ao objeto de insert, preenchendo com `auth.uid()` do usuário logado:
+### `src/components/forecast/ForecastBatchStatusDialog.tsx`
 
-```typescript
-const { data: { user } } = await supabase.auth.getUser();
-
-.insert({
-  ...campos_existentes,
-  gestor_id: negociacaoData.gestor_id || user?.id,
-  created_by: user?.id,
-})
-```
-
-Isso garante que gestor_produto passe no RLS (`gestor_id = auth.uid()`), e para admins/corretores a policy deles já permite sem essa condição.
+- Importar `usePermissions` e `Trash2` icon
+- Chamar `isSuperAdmin()` para verificar se o usuário logado é super_admin
+- Adicionar botão "Excluir selecionadas" (vermelho, ícone Trash2) na área de ações, visível **apenas para super_admin**
+- Ao clicar, exibir estado de confirmação inline (texto "Confirmar exclusão?" com botões Sim/Não) para evitar exclusões acidentais
+- Na confirmação, executar `supabase.from('atividades').delete().in('id', ids)` via `useMutation`
+- Após sucesso: invalidar queries de forecast, exibir toast, fechar dialog
+- A FK `negociacoes_atividade_origem_id_fkey` já usa `ON DELETE SET NULL`, então não há risco de integridade
 
 ### Arquivo a modificar
-- `src/hooks/useNegociacoes.ts` — adicionar `gestor_id` e `created_by` ao insert de `useCreateNegociacao`
+- `src/components/forecast/ForecastBatchStatusDialog.tsx`
 
