@@ -646,26 +646,28 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                 />
               </div>
 
-              {/* Cônjuge */}
-              <div className="pt-4 border-t">
-                <FormField
-                  control={form.control}
-                  name="conjuge_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cônjuge</FormLabel>
-                      <FormControl>
-                        <ClienteConjugeSelect
-                          value={field.value}
-                          onChange={field.onChange}
-                          excludeId={initialData?.id}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Cônjuge - apenas PF */}
+              {!isPJ && (
+                <div className="pt-4 border-t">
+                  <FormField
+                    control={form.control}
+                    name="conjuge_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cônjuge</FormLabel>
+                        <FormControl>
+                          <ClienteConjugeSelect
+                            value={field.value}
+                            onChange={field.onChange}
+                            excludeId={initialData?.id}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
               {/* Sócios (apenas para clientes existentes) */}
               {initialData?.id && (
