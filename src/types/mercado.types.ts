@@ -60,6 +60,7 @@ export interface Corretor {
   updated_at: string;
   user_id?: string | null;
   user?: { id: string; email: string; full_name: string } | null;
+  status_vinculo?: string | null;
 }
 
 export interface Incorporadora {

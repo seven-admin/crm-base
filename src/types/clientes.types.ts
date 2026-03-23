@@ -190,6 +190,10 @@ export interface ClienteFormData {
   cpf?: string;
   rg?: string;
   passaporte?: string;
+  tipo_pessoa?: TipoPessoa;
+  cnpj?: string;
+  razao_social?: string;
+  inscricao_estadual?: string;
   data_nascimento?: string;
   profissao?: string;
   renda_mensal?: number;
