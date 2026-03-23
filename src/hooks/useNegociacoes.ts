@@ -757,11 +757,13 @@ export function useAceitarProposta() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'aceita',
-          data_aceite: new Date().toISOString().split('T')[0]
+          data_aceite: new Date().toISOString().split('T')[0],
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
