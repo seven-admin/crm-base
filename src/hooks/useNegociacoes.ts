@@ -445,10 +445,11 @@ export function useEnviarProposta() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       // Agora só funciona a partir de aprovada_incorporador -> enviada
       const { error } = await db
         .from('negociacoes')
-        .update({ status_proposta: 'enviada' })
+        .update({ status_proposta: 'enviada', updated_by: currentUser?.id })
         .eq('id', id);
 
       if (error) throw error;
@@ -756,11 +757,13 @@ export function useAceitarProposta() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'aceita',
-          data_aceite: new Date().toISOString().split('T')[0]
+          data_aceite: new Date().toISOString().split('T')[0],
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
@@ -783,11 +786,13 @@ export function useRecusarProposta() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: RecusarPropostaData }) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'recusada',
-          motivo_recusa: data.motivo_recusa
+          motivo_recusa: data.motivo_recusa,
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
@@ -972,13 +977,15 @@ export function useConverterPropostaEmContrato() {
       }
 
       // 7. Update negotiation with conversion data
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error: updateError } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'convertida',
           data_conversao: new Date().toISOString().split('T')[0],
           contrato_id: contrato.id,
-          data_contrato_gerado: new Date().toISOString()
+          data_contrato_gerado: new Date().toISOString(),
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
@@ -1200,7 +1207,8 @@ export function useMoverNegociacao() {
       const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
 
       const updateData: Record<string, unknown> = {
-        funil_etapa_id: data.funil_etapa_id
+        funil_etapa_id: data.funil_etapa_id,
+        updated_by: user?.id
       };
 
       // Auto-set status_proposta when moving to "Análise de Proposta"

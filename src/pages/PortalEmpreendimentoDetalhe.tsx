@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +17,7 @@ import { MidiasReadOnlyList } from '@/components/portal/MidiasReadOnlyList';
 import { formatarMoeda } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UnidadeSimples {
   id: string;
@@ -35,9 +37,25 @@ export default function PortalEmpreendimentoDetalhe() {
   const { data: empreendimentos, isLoading: loadingEmps } = useEmpreendimentos();
   const { data: unidades, isLoading: loadingUnidades } = useUnidades(id);
 
+  // Busca direta por ID como fallback
+  const { data: empreendimentoDireto } = useQuery({
+    queryKey: ['empreendimento-direto', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data } = await supabase
+        .from('empreendimentos')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!id && !loadingEmps && !empreendimentos?.find(e => e.id === id),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const empreendimento = useMemo(() => {
-    return empreendimentos?.find(e => e.id === id);
-  }, [empreendimentos, id]);
+    return empreendimentos?.find(e => e.id === id) || empreendimentoDireto;
+  }, [empreendimentos, empreendimentoDireto, id]);
 
   // Verificar se empreendimento suporta mapa (loteamento ou condomínio)
   const suportaMapa = empreendimento?.tipo === 'loteamento' || empreendimento?.tipo === 'condominio';
