@@ -4,9 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useAlterarStatusEmLote, useReabrirAtividadesEmLote } from '@/hooks/useAtividades';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
@@ -39,8 +43,26 @@ export function ForecastBatchStatusDialog({
 }: ForecastBatchStatusDialogProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [novoStatus, setNovoStatus] = useState<string>('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const alterarStatus = useAlterarStatusEmLote();
   const reabrirEmLote = useReabrirAtividadesEmLote();
+  const { isSuperAdmin } = usePermissions();
+  const queryClient = useQueryClient();
+
+  const deleteEmLote = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('atividades').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['forecast'] });
+      await queryClient.invalidateQueries({ queryKey: ['forecast-batch'] });
+      await queryClient.invalidateQueries({ queryKey: ['atividades'] });
+      toast.success('Atividades excluídas com sucesso');
+      onOpenChange(false);
+    },
+    onError: () => toast.error('Erro ao excluir atividades'),
+  });
 
   // Build query filters based on statusGroup
   const { data: atividades, isLoading } = useQuery({
@@ -85,6 +107,7 @@ export function ForecastBatchStatusDialog({
     if (!open) {
       setSelectedIds(new Set());
       setNovoStatus('');
+      setShowDeleteConfirm(false);
     }
   }, [open]);
 
@@ -119,7 +142,8 @@ export function ForecastBatchStatusDialog({
     }
   };
 
-  const isPending = alterarStatus.isPending || reabrirEmLote.isPending;
+  const isDeleting = deleteEmLote.isPending;
+  const isPending = alterarStatus.isPending || reabrirEmLote.isPending || isDeleting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,16 +213,51 @@ export function ForecastBatchStatusDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={selectedIds.size === 0 || !novoStatus || isPending}
-            >
-              {isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
-            </Button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {isSuperAdmin() && selectedIds.size > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isPending}
+                  className="gap-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir {selectedIds.size}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={selectedIds.size === 0 || !novoStatus || isPending}
+              >
+                {isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir {selectedIds.size} atividade(s)? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteEmLote.mutate(Array.from(selectedIds))}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
