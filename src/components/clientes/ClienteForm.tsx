@@ -412,6 +412,30 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
           {/* Step 1: Dados Pessoais */}
           {currentStep === 1 && (
             <div className="space-y-4">
+              {/* Toggle PF / PJ */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => form.setValue('tipo_pessoa', 'fisica')}
+                  className={cn(
+                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
+                    !isPJ ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  Pessoa Física
+                </button>
+                <button
+                  type="button"
+                  onClick={() => form.setValue('tipo_pessoa', 'juridica')}
+                  className={cn(
+                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
+                    isPJ ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  Pessoa Jurídica
+                </button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
