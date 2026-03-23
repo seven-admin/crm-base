@@ -51,7 +51,8 @@ export default function Corretores() {
       return ((data as any[])?.map((c: any) => c.cidade).filter(Boolean) || []) as string[];
     },
   });
-  const { canAccessModule } = usePermissions();
+  const { canAccessModule, isSuperAdmin } = usePermissions();
+  const [statusVinculoFilter, setStatusVinculoFilter] = useState<string>('all');
 
   const handleSearch = (value: string) => {
     setSearch(value);
