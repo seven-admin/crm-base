@@ -157,7 +157,12 @@ export default function Corretores() {
     }
   };
 
-  const corretores = data?.corretores || [];
+  const corretoresRaw = data?.corretores || [];
+  const corretores = statusVinculoFilter === 'all'
+    ? corretoresRaw
+    : statusVinculoFilter === 'autonomo'
+      ? corretoresRaw.filter(c => !c.imobiliaria_id)
+      : corretoresRaw.filter(c => (c as any).status_vinculo === statusVinculoFilter);
   const totalPages = data?.totalPages || 1;
   const total = data?.total || 0;
 
