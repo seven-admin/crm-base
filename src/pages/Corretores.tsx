@@ -16,7 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { Plus, Search, Pencil, KeyRound, Download, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, KeyRound, Download, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
