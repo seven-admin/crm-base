@@ -296,15 +296,21 @@ export default function Corretores() {
                           {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
                            (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
                         </Badge>
-                        {(c as any).status_vinculo === 'pendente' && canEdit && (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Aprovar" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Rejeitar" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
-                              <XCircle className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </>
+                        {(isSuperAdmin() || ((c as any).status_vinculo === 'pendente' && canEdit)) && (
+                          <div className="flex gap-1 ml-1">
+                            {(c as any).status_vinculo !== 'ativo' && (
+                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Aprovar
+                              </Button>
+                            )}
+                            {(c as any).status_vinculo !== 'rejeitado' && (
+                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
+                                <XCircle className="h-3.5 w-3.5" />
+                                Rejeitar
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     ) : (
