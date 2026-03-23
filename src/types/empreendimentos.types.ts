@@ -242,6 +242,7 @@ export interface EmpreendimentoFormData {
   infraestrutura?: string[];
   registro_incorporacao?: string;
   matricula_mae?: string;
+  texto_rodape_relatorio?: string;
   legenda_status_visiveis?: UnidadeStatus[];
   mapa_label_formato?: string[];
 }
