@@ -18,7 +18,7 @@ interface LoginFormProps {
   onRegisterCorretor?: () => void;
 }
 
-export function LoginForm({ onRegisterImobiliaria }: LoginFormProps) {
+export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
