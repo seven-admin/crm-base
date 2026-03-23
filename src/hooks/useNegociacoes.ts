@@ -485,6 +485,7 @@ export function useAprovarPropostaIncorporador() {
           aprovada_incorporador_por: user?.id,
           funil_etapa_id: ETAPA_GANHO_ID,
           data_fechamento: new Date().toISOString().split('T')[0],
+          updated_by: user?.id,
         })
         .eq('id', negociacao.id);
 
@@ -1393,10 +1394,11 @@ export function useUpdateNegociacao() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<NegociacaoFormData> }) => {
       const { unidade_ids, ...negData } = data;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       const { error } = await db
         .from('negociacoes')
-        .update(negData)
+        .update({ ...negData, updated_by: currentUser?.id })
         .eq('id', id);
 
       if (error) throw error;
