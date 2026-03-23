@@ -263,6 +263,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       setSelectedEmpreendimentoId(initialData.empreendimento_id || undefined);
     } else {
       form.reset({
+        tipo_pessoa: 'fisica',
         nome: '',
         email: '',
         telefone: '',
@@ -270,6 +271,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
         cpf: '',
         rg: '',
         passaporte: '',
+        cnpj: '',
+        razao_social: '',
+        inscricao_estadual: '',
         data_nascimento: '',
         profissao: '',
         renda_mensal: undefined,
