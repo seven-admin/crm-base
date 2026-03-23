@@ -109,6 +109,8 @@ export type InteracaoTipo = typeof INTERACAO_TIPOS[number];
 // Interface Principal: Cliente
 // ============================================================
 
+export type TipoPessoa = 'fisica' | 'juridica';
+
 export interface Cliente {
   id: string;
   nome: string;
@@ -118,6 +120,10 @@ export interface Cliente {
   cpf?: string | null;
   rg?: string | null;
   passaporte?: string | null;
+  tipo_pessoa?: TipoPessoa | null;
+  cnpj?: string | null;
+  razao_social?: string | null;
+  inscricao_estadual?: string | null;
   data_nascimento?: string | null;
   profissao?: string | null;
   renda_mensal?: number | null;
