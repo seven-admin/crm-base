@@ -213,16 +213,51 @@ export function ForecastBatchStatusDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={selectedIds.size === 0 || !novoStatus || isPending}
-            >
-              {isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
-            </Button>
+          <div className="flex justify-between gap-2">
+            <div>
+              {isSuperAdmin() && selectedIds.size > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isPending}
+                  className="gap-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir {selectedIds.size}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={selectedIds.size === 0 || !novoStatus || isPending}
+              >
+                {isPending ? 'Alterando...' : `Alterar ${selectedIds.size} atividade(s)`}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir {selectedIds.size} atividade(s)? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteEmLote.mutate(Array.from(selectedIds))}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
