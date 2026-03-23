@@ -43,6 +43,7 @@ const isBrasileiroNacionality = (nacionalidade: string | undefined): boolean => 
 };
 
 const formSchemaBase = z.object({
+  tipo_pessoa: z.string().default('fisica'),
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefone: z.string().optional(),
@@ -50,6 +51,9 @@ const formSchemaBase = z.object({
   cpf: z.string().optional(),
   rg: z.string().optional(),
   passaporte: z.string().optional(),
+  cnpj: z.string().optional(),
+  razao_social: z.string().optional(),
+  inscricao_estadual: z.string().optional(),
   data_nascimento: z.string().optional(),
   profissao: z.string().optional(),
   renda_mensal: z.coerce.number().optional(),
