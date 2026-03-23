@@ -583,6 +583,19 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
                   />
                 </div>
 
+                <div className="grid gap-2">
+                  <Label htmlFor="texto_rodape_relatorio">Observações do Relatório (PDF)</Label>
+                  <Textarea
+                    id="texto_rodape_relatorio"
+                    {...form.register('texto_rodape_relatorio')}
+                    placeholder="Texto que aparecerá no rodapé do relatório de unidades disponíveis. Ex: valores em reais, índice de correção INCC, previsão de entrega..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Este texto será exibido no final do PDF de unidades disponíveis.
+                  </p>
+                </div>
+
                 <p className="text-sm text-muted-foreground">
                   Upload de documentos estará disponível após criar o empreendimento.
                 </p>
