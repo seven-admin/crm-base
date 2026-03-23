@@ -48,6 +48,7 @@ const formSchema = z.object({
   endereco_cep: z.string().optional(),
   registro_incorporacao: z.string().optional(),
   matricula_mae: z.string().optional(),
+  texto_rodape_relatorio: z.string().optional(),
   legenda_status_visiveis: z.array(z.enum(['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'])).optional(),
   mapa_label_formato: z.array(z.enum(['bloco', 'tipologia', 'numero', 'posicao', 'andar'])).optional(),
 });
