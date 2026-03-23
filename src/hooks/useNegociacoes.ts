@@ -977,13 +977,15 @@ export function useConverterPropostaEmContrato() {
       }
 
       // 7. Update negotiation with conversion data
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error: updateError } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'convertida',
           data_conversao: new Date().toISOString().split('T')[0],
           contrato_id: contrato.id,
-          data_contrato_gerado: new Date().toISOString()
+          data_contrato_gerado: new Date().toISOString(),
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
