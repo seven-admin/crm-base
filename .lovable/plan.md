@@ -1,64 +1,29 @@
 
 
-# Corrigir dois problemas: acesso a empreendimentos + erro ao fechar proposta
+# Texto configurável no rodapé do relatório de unidades disponíveis
 
-## Problema 1 — Corretores antigos não veem empreendimentos novos
-A função `user_has_empreendimento_access` já inclui `has_role('corretor')`, então a RLS deveria permitir acesso. O problema pode estar na policy de UPDATE da tabela `corretores` que usa comparação por email (`profiles.email = corretores.email`), ou no detalhe do portal que depende da lista carregada.
-
-**Ação**: `PortalEmpreendimentoDetalhe.tsx` busca o empreendimento filtrando a lista carregada (`empreendimentos?.find()`). Se a lista falhar silenciosamente, o detalhe não aparece. Adicionar uma query direta por ID como fallback.
-
-## Problema 2 — Erro RLS ao atualizar/fechar proposta
-A policy `"Corretores can update own negociacoes"` usa:
-```sql
-corretor_id IN (
-  SELECT c.id FROM corretores c
-  JOIN profiles p ON p.email = c.email
-  WHERE p.id = auth.uid()
-)
-```
-Isso é frágil — se o email do perfil e do corretor diferirem (case, espaço, etc.), a comparação falha. Deve usar `c.user_id = auth.uid()` diretamente.
-
-Além disso, várias mutations de UPDATE (enviar, aceitar, recusar, converter) não incluem `updated_by`, o que não causa o erro diretamente mas é uma inconsistência.
+## O que será feito
+Adicionar um campo de texto livre na edição do empreendimento para configurar observações que aparecem no final do relatório PDF de unidades disponíveis (ex: condições comerciais, índices de correção, previsão de entrega).
 
 ## Solução
 
-### 1. Migration SQL — Corrigir RLS de UPDATE em `negociacoes`
+### 1. Migration SQL
+- `ALTER TABLE empreendimentos ADD COLUMN texto_rodape_relatorio text`
 
-Recriar a policy de corretores para usar `user_id` em vez de `email`:
+### 2. `src/types/empreendimentos.types.ts`
+- Adicionar `texto_rodape_relatorio: string | null` na interface `Empreendimento`
 
-```sql
-DROP POLICY IF EXISTS "Corretores can update own negociacoes" ON negociacoes;
-CREATE POLICY "Corretores can update own negociacoes"
-ON negociacoes FOR UPDATE TO authenticated
-USING (
-  corretor_id IN (
-    SELECT c.id FROM corretores c
-    WHERE c.user_id = auth.uid()
-  )
-);
-```
+### 3. `src/components/empreendimentos/EmpreendimentoForm.tsx`
+- Adicionar campo `texto_rodape_relatorio` ao schema zod (string optional)
+- Adicionar Textarea no step 3 (Documentação) com label "Observações do Relatório" e placeholder orientativo
+- Incluir no reset do form e no submit
 
-Verificar e corrigir as mesmas policies baseadas em email em tabelas relacionadas (`negociacao_unidades`, `negociacao_condicoes_pagamento`, etc.).
-
-### 2. `src/hooks/useNegociacoes.ts` — Adicionar `updated_by` nas mutations críticas
-
-Em todas as mutations de UPDATE que alteram `status_proposta`, incluir `updated_by: currentUser?.id`:
-- `useEnviarProposta` (linha 449)
-- `useAprovarPropostaIncorporador` (linha 479)
-- `useAceitarProposta` (linha 759)
-- `useRecusarProposta` (linha 786)
-- `useConverterProposta` (linha 975)
-- `useMoverNegociacao` (linha 1246)
-- `useEditarNegociacao` (linha 1389)
-
-Para cada uma, obter o user com `supabase.auth.getUser()` e adicionar ao update.
-
-### 3. `src/pages/PortalEmpreendimentoDetalhe.tsx` — Fallback de busca direta
-
-Adicionar query individual `useQuery` para buscar o empreendimento por ID caso a lista geral não o contenha, evitando tela em branco para corretores com acesso parcial.
+### 4. `src/components/empreendimentos/UnidadesTab.tsx`
+- No `handleExportPDF`, após a tabela e o total, renderizar o `empreendimento.texto_rodape_relatorio` se existir
+- Estilizado como bloco de texto com fonte menor, borda superior, respeitando quebras de linha
 
 ### Arquivos a modificar
-- **Migration SQL** (policies de UPDATE em `negociacoes` e tabelas relacionadas)
-- `src/hooks/useNegociacoes.ts`
-- `src/pages/PortalEmpreendimentoDetalhe.tsx`
-
+- **Migration SQL** (1 coluna)
+- `src/types/empreendimentos.types.ts`
+- `src/components/empreendimentos/EmpreendimentoForm.tsx`
+- `src/components/empreendimentos/UnidadesTab.tsx`
