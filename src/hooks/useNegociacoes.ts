@@ -1082,6 +1082,9 @@ export function useCreateNegociacao() {
 
       const novaOrdem = (maxOrdem?.ordem_kanban || 0) + 1;
 
+      // Get current user for RLS compliance
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       // Create negociacao
       const { data: negociacao, error: negError } = await db
         .from('negociacoes')
@@ -1097,7 +1100,9 @@ export function useCreateNegociacao() {
           observacoes: negociacaoData.observacoes,
           data_previsao_fechamento: negociacaoData.data_previsao_fechamento,
           ordem_kanban: novaOrdem,
-          data_primeiro_atendimento: new Date().toISOString()
+          data_primeiro_atendimento: new Date().toISOString(),
+          gestor_id: currentUser?.id,
+          created_by: currentUser?.id,
         })
         .select()
         .single();
