@@ -6136,6 +6136,10 @@ export type Database = {
           cidade: string
         }[]
       }
+      get_corretor_ids_by_user: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_gestor_empreendimento: { Args: { emp_id: string }; Returns: string }
       get_imobiliarias_ativas: {
         Args: never
