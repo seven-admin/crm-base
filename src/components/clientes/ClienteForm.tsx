@@ -28,7 +28,7 @@ import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useGestorEmpreendimento } from '@/hooks/useGestorEmpreendimento';
 import { User, Phone, MapPin, Building, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { validarCPF, formatarCPF, formatarTelefone } from '@/lib/documentUtils';
+import { validarCPF, formatarCPF, formatarTelefone, validarCNPJ, formatarCNPJ } from '@/lib/documentUtils';
 import { ClienteTelefonesEditor } from './ClienteTelefonesEditor';
 import { ClienteConjugeSelect } from './ClienteConjugeSelect';
 import { ClienteSociosEditor } from './ClienteSociosEditor';
