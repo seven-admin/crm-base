@@ -117,6 +117,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
         endereco_cep: empreendimento.endereco_cep || '',
         registro_incorporacao: empreendimento.registro_incorporacao || '',
         matricula_mae: empreendimento.matricula_mae || '',
+        texto_rodape_relatorio: (empreendimento as any).texto_rodape_relatorio || '',
         legenda_status_visiveis: empreendimento.legenda_status_visiveis || ['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'],
         mapa_label_formato: (empreendimento as any).mapa_label_formato || ['bloco', 'tipologia', 'numero'],
       });
