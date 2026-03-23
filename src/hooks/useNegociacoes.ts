@@ -786,11 +786,13 @@ export function useRecusarProposta() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: RecusarPropostaData }) => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       const { error } = await db
         .from('negociacoes')
         .update({ 
           status_proposta: 'recusada',
-          motivo_recusa: data.motivo_recusa
+          motivo_recusa: data.motivo_recusa,
+          updated_by: currentUser?.id
         })
         .eq('id', id);
 
