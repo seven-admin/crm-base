@@ -92,7 +92,15 @@ export function ClientesTable({
                 />
               </TableCell>
               <TableCell>
-                <p className="text-[13px]">{cliente.nome}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[13px]">{cliente.nome}</p>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {cliente.tipo_pessoa === 'juridica' ? 'PJ' : 'PF'}
+                  </Badge>
+                </div>
+                {cliente.tipo_pessoa === 'juridica' && cliente.cnpj && (
+                  <p className="text-xs text-muted-foreground">{cliente.cnpj}</p>
+                )}
               </TableCell>
               <TableCell>{cliente.telefone || '-'}</TableCell>
               <TableCell>{cliente.whatsapp || '-'}</TableCell>

@@ -28,7 +28,7 @@ export function useGestorCorretores() {
 
       const { data, error } = await supabase
         .from('corretores')
-        .select('id, nome_completo, email, cpf, creci, telefone, is_active, created_at, user_id')
+        .select('id, nome_completo, email, cpf, creci, telefone, is_active, created_at, user_id, status_vinculo')
         .eq('imobiliaria_id', imobiliariaId)
         .order('nome_completo');
 
