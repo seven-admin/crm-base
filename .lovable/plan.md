@@ -1,23 +1,29 @@
 
 
-# Permitir super_admins aprovarem solicitações de vínculo
+# Corrigir RLS violation ao criar negociação
 
-## Situação atual
-- Apenas o **gestor da imobiliária** pode aprovar/rejeitar corretores pendentes (no portal `PortalCorretoresGestao.tsx`)
-- A página admin `/corretores` mostra badges de status (Pendente, Vinculado, Rejeitado, Autônomo) mas **não tem botões de ação**
-- Super admins e usuários do sistema não conseguem aprovar solicitações
+## Problema
+A policy "Gestores can insert own negociacoes" exige `gestor_id = auth.uid()`, mas o INSERT em `useCreateNegociacao` (linha 1086) não inclui `gestor_id`. Quando um gestor_produto tenta criar uma negociação, o RLS bloqueia.
+
+Existe um trigger `auto_set_gestor_id_clientes` para a tabela `clientes`, mas **não existe equivalente para `negociacoes`** — o `gestor_id` precisa ser enviado explicitamente.
 
 ## Solução
 
-### `src/pages/Corretores.tsx`
-Na coluna "Vínculo" da tabela, quando `status_vinculo === 'pendente'`:
-- Adicionar botões **Aprovar** (CheckCircle) e **Rejeitar** (XCircle) ao lado do badge
-- Ao aprovar: `UPDATE corretores SET status_vinculo = 'ativo', is_active = true WHERE id = ?` + ativar profile
-- Ao rejeitar: `UPDATE corretores SET status_vinculo = 'rejeitado' WHERE id = ?`
-- Visível para super_admin e usuários com permissão de edição no módulo corretores (`canAccessModule('corretores', 'edit')`)
+### `src/hooks/useNegociacoes.ts`
+No `useCreateNegociacao`, adicionar `gestor_id` ao objeto de insert, preenchendo com `auth.uid()` do usuário logado:
 
-### Arquivos a modificar
-- `src/pages/Corretores.tsx` — adicionar botões aprovar/rejeitar para pendentes na tabela admin
+```typescript
+const { data: { user } } = await supabase.auth.getUser();
 
-Nenhuma migration necessária — as colunas e permissões já existem.
+.insert({
+  ...campos_existentes,
+  gestor_id: negociacaoData.gestor_id || user?.id,
+  created_by: user?.id,
+})
+```
+
+Isso garante que gestor_produto passe no RLS (`gestor_id = auth.uid()`), e para admins/corretores a policy deles já permite sem essa condição.
+
+### Arquivo a modificar
+- `src/hooks/useNegociacoes.ts` — adicionar `gestor_id` e `created_by` ao insert de `useCreateNegociacao`
 
