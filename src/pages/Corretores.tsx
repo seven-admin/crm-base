@@ -16,7 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { Plus, Search, Pencil, KeyRound, Download, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, KeyRound, Download, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -141,6 +141,21 @@ export default function Corretores() {
     }
   };
 
+  const canEdit = canAccessModule('corretores', 'edit');
+
+  const handleUpdateVinculo = async (corretorId: string, status: 'ativo' | 'rejeitado') => {
+    try {
+      const updateData: any = { status_vinculo: status };
+      if (status === 'ativo') updateData.is_active = true;
+      const { error } = await supabase.from('corretores').update(updateData).eq('id', corretorId);
+      if (error) throw error;
+      toast.success(status === 'ativo' ? 'Vínculo aprovado' : 'Vínculo rejeitado');
+      queryClient.invalidateQueries({ queryKey: ['corretores'] });
+    } catch {
+      toast.error('Erro ao atualizar vínculo');
+    }
+  };
+
   const corretores = data?.corretores || [];
   const totalPages = data?.totalPages || 1;
   const total = data?.total || 0;
@@ -255,15 +270,27 @@ export default function Corretores() {
                   <TableCell>{c.imobiliaria?.nome || <span className="text-xs text-muted-foreground">Autônomo</span>}</TableCell>
                   <TableCell>
                     {c.imobiliaria_id ? (
-                      <Badge variant={
-                        (c as any).status_vinculo === 'pendente' ? 'secondary' :
-                        (c as any).status_vinculo === 'rejeitado' ? 'destructive' : 'outline'
-                      }>
-                        {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
-                         (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant={
+                          (c as any).status_vinculo === 'pendente' ? 'secondary' :
+                          (c as any).status_vinculo === 'rejeitado' ? 'destructive' : 'outline'
+                        }>
+                          {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
+                           (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
+                        </Badge>
+                        {(c as any).status_vinculo === 'pendente' && canEdit && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Aprovar" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Rejeitar" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">Autônomo</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
