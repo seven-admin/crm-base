@@ -107,6 +107,7 @@ export function ForecastBatchStatusDialog({
     if (!open) {
       setSelectedIds(new Set());
       setNovoStatus('');
+      setShowDeleteConfirm(false);
     }
   }, [open]);
 
