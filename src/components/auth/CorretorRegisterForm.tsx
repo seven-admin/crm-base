@@ -116,10 +116,11 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     if (tipoVinculo === 'vinculado') {
       setLoadingImobs(true);
       supabase.rpc('get_imobiliarias_ativas' as any)
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           setImobiliarias((data as any[]) || []);
+          setLoadingImobs(false);
         })
-        .finally(() => setLoadingImobs(false));
+        .catch(() => setLoadingImobs(false));
     }
   }, [tipoVinculo]);
 
