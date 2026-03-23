@@ -14,6 +14,7 @@ export interface CorretorGestao {
   is_active: boolean;
   created_at: string;
   user_id: string | null;
+  status_vinculo: string | null;
 }
 
 export function useGestorCorretores() {
