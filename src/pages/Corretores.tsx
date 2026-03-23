@@ -270,15 +270,27 @@ export default function Corretores() {
                   <TableCell>{c.imobiliaria?.nome || <span className="text-xs text-muted-foreground">Autônomo</span>}</TableCell>
                   <TableCell>
                     {c.imobiliaria_id ? (
-                      <Badge variant={
-                        (c as any).status_vinculo === 'pendente' ? 'secondary' :
-                        (c as any).status_vinculo === 'rejeitado' ? 'destructive' : 'outline'
-                      }>
-                        {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
-                         (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant={
+                          (c as any).status_vinculo === 'pendente' ? 'secondary' :
+                          (c as any).status_vinculo === 'rejeitado' ? 'destructive' : 'outline'
+                        }>
+                          {(c as any).status_vinculo === 'pendente' ? 'Pendente' :
+                           (c as any).status_vinculo === 'rejeitado' ? 'Rejeitado' : 'Vinculado'}
+                        </Badge>
+                        {(c as any).status_vinculo === 'pendente' && canEdit && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Aprovar" onClick={() => handleUpdateVinculo(c.id, 'ativo')}>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Rejeitar" onClick={() => handleUpdateVinculo(c.id, 'rejeitado')}>
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">Autônomo</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
