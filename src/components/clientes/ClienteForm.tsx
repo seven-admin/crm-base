@@ -226,6 +226,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       }
 
       form.reset({
+        tipo_pessoa: initialData.tipo_pessoa || 'fisica',
         nome: initialData.nome || '',
         email: initialData.email || '',
         telefone: initialData.telefone || '',
@@ -233,6 +234,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
         cpf: initialData.cpf || '',
         rg: initialData.rg || '',
         passaporte: initialData.passaporte || '',
+        cnpj: initialData.cnpj || '',
+        razao_social: initialData.razao_social || '',
+        inscricao_estadual: initialData.inscricao_estadual || '',
         data_nascimento: dataNascimento,
         profissao: initialData.profissao || '',
         renda_mensal: initialData.renda_mensal || undefined,
