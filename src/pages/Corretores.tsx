@@ -226,6 +226,7 @@ export default function Corretores() {
               <TableHead>CPF</TableHead>
               <TableHead>CRECI</TableHead>
               <TableHead>Imobiliária</TableHead>
+              <TableHead>Vínculo</TableHead>
               <TableHead>Cidade/UF</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Acesso</TableHead>
