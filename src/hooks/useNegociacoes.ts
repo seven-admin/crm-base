@@ -485,6 +485,7 @@ export function useAprovarPropostaIncorporador() {
           aprovada_incorporador_por: user?.id,
           funil_etapa_id: ETAPA_GANHO_ID,
           data_fechamento: new Date().toISOString().split('T')[0],
+          updated_by: user?.id,
         })
         .eq('id', negociacao.id);
 
