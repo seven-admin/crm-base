@@ -32,14 +32,20 @@ export function useValidacaoFichaProposta(negociacao: Negociacao | null): Valida
       // 1.1 Verificar dados do cliente
       const cliente = negociacao.cliente;
       if (cliente) {
-        const isBrasileiro = !cliente.nacionalidade || cliente.nacionalidade.toLowerCase() === 'brasileira';
-        if (isBrasileiro) {
-          if (!cliente.cpf) pendencias.push('CPF do cliente não preenchido');
+        const tipoPessoa = (cliente as any).tipo_pessoa || 'fisica';
+        
+        if (tipoPessoa === 'juridica') {
+          if (!(cliente as any).cnpj) pendencias.push('CNPJ do cliente não preenchido');
         } else {
-          if (!cliente.passaporte) pendencias.push('Passaporte do cliente não preenchido');
+          const isBrasileiro = !cliente.nacionalidade || cliente.nacionalidade.toLowerCase() === 'brasileira';
+          if (isBrasileiro) {
+            if (!cliente.cpf) pendencias.push('CPF do cliente não preenchido');
+          } else {
+            if (!cliente.passaporte) pendencias.push('Passaporte do cliente não preenchido');
+          }
+          if (!cliente.estado_civil) pendencias.push('Estado civil do cliente não preenchido');
         }
         if (!cliente.email) pendencias.push('E-mail do cliente não preenchido');
-        if (!cliente.estado_civil) pendencias.push('Estado civil do cliente não preenchido');
       }
     }
 

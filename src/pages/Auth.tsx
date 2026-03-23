@@ -4,8 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDefaultRoute } from '@/hooks/useDefaultRoute';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ImobiliariaRegisterForm } from '@/components/auth/ImobiliariaRegisterForm';
+import { CorretorRegisterForm } from '@/components/auth/CorretorRegisterForm';
 
-type AuthView = 'login' | 'register-imobiliaria';
+type AuthView = 'login' | 'register-imobiliaria' | 'register-corretor';
 
 export default function Auth() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -34,5 +35,20 @@ export default function Auth() {
     );
   }
 
-  return <LoginForm onRegisterImobiliaria={() => setView('register-imobiliaria')} />;
+  if (view === 'register-corretor') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="w-full max-w-lg">
+          <CorretorRegisterForm onBack={() => setView('login')} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <LoginForm 
+      onRegisterImobiliaria={() => setView('register-imobiliaria')} 
+      onRegisterCorretor={() => setView('register-corretor')}
+    />
+  );
 }

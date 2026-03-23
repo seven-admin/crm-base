@@ -60,6 +60,7 @@ export interface Corretor {
   updated_at: string;
   user_id?: string | null;
   user?: { id: string; email: string; full_name: string } | null;
+  status_vinculo?: string | null;
 }
 
 export interface Incorporadora {
@@ -107,13 +108,14 @@ export interface ImobiliariaFormData {
 export interface CorretorFormData {
   nome_completo: string;
   cpf?: string;
-  imobiliaria_id: string;
+  imobiliaria_id?: string;
   telefone?: string;
   whatsapp?: string;
   email?: string;
   creci?: string;
   is_active?: boolean;
   user_id?: string | null;
+  status_vinculo?: string;
 }
 
 export interface IncorporadoraFormData {

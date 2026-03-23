@@ -15,9 +15,10 @@ const loginSchema = z.object({
 
 interface LoginFormProps {
   onRegisterImobiliaria?: () => void;
+  onRegisterCorretor?: () => void;
 }
 
-export function LoginForm({ onRegisterImobiliaria }: LoginFormProps) {
+export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
@@ -169,15 +170,26 @@ export function LoginForm({ onRegisterImobiliaria }: LoginFormProps) {
                 {loginLoading ? 'Entrando...' : 'Entrar'}
               </Button>
 
-              {onRegisterImobiliaria && (
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={onRegisterImobiliaria}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Cadastrar Imobiliária ou<br />Corretores Autônomos
-                  </button>
+              {(onRegisterImobiliaria || onRegisterCorretor) && (
+                <div className="text-center pt-2 space-y-1">
+                  {onRegisterImobiliaria && (
+                    <button
+                      type="button"
+                      onClick={onRegisterImobiliaria}
+                      className="text-sm text-primary hover:underline block w-full"
+                    >
+                      Cadastrar Imobiliária
+                    </button>
+                  )}
+                  {onRegisterCorretor && (
+                    <button
+                      type="button"
+                      onClick={onRegisterCorretor}
+                      className="text-sm text-primary hover:underline block w-full"
+                    >
+                      Cadastrar Corretor
+                    </button>
+                  )}
                 </div>
               )}
             </form>

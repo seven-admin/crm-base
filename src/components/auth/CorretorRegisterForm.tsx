@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const UF_OPTIONS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -16,33 +17,23 @@ const UF_OPTIONS = [
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
-// Validação de CPF
 function validarCPF(cpf: string): boolean {
   cpf = cpf.replace(/\D/g, '');
-  
   if (cpf.length !== 11) return false;
   if (/^(\d)\1+$/.test(cpf)) return false;
-  
   let soma = 0;
-  for (let i = 0; i < 9; i++) {
-    soma += parseInt(cpf.charAt(i)) * (10 - i);
-  }
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
   let resto = (soma * 10) % 11;
   if (resto === 10 || resto === 11) resto = 0;
   if (resto !== parseInt(cpf.charAt(9))) return false;
-  
   soma = 0;
-  for (let i = 0; i < 10; i++) {
-    soma += parseInt(cpf.charAt(i)) * (11 - i);
-  }
+  for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
   resto = (soma * 10) % 11;
   if (resto === 10 || resto === 11) resto = 0;
   if (resto !== parseInt(cpf.charAt(10))) return false;
-  
   return true;
 }
 
-// Formatar CPF para exibição
 function formatarCPF(value: string): string {
   const cpf = value.replace(/\D/g, '');
   if (cpf.length <= 3) return cpf;
@@ -51,13 +42,19 @@ function formatarCPF(value: string): string {
   return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
 }
 
-// Formatar telefone
 function formatarTelefone(value: string): string {
   const phone = value.replace(/\D/g, '');
   if (phone.length <= 2) return phone;
   if (phone.length <= 6) return `(${phone.slice(0, 2)}) ${phone.slice(2)}`;
   if (phone.length <= 10) return `(${phone.slice(0, 2)}) ${phone.slice(2, 6)}-${phone.slice(6)}`;
   return `(${phone.slice(0, 2)}) ${phone.slice(2, 7)}-${phone.slice(7, 11)}`;
+}
+
+interface ImobiliariaAtiva {
+  id: string;
+  nome: string;
+  endereco_cidade: string | null;
+  endereco_uf: string | null;
 }
 
 const registerSchema = z.object({
@@ -90,6 +87,11 @@ interface CorretorRegisterFormProps {
 }
 
 export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
+  const [tipoVinculo, setTipoVinculo] = useState<'autonomo' | 'vinculado'>('autonomo');
+  const [selectedImobiliaria, setSelectedImobiliaria] = useState('');
+  const [imobiliarias, setImobiliarias] = useState<ImobiliariaAtiva[]>([]);
+  const [loadingImobs, setLoadingImobs] = useState(false);
+
   const [formData, setFormData] = useState({
     nome_completo: '',
     email: '',
@@ -106,17 +108,26 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [apiError, setApiError] = useState('');
+
+  // Load imobiliárias ativas
+  useEffect(() => {
+    if (tipoVinculo === 'vinculado') {
+      setLoadingImobs(true);
+      supabase.rpc('get_imobiliarias_ativas' as any)
+        .then(({ data }: any) => {
+          setImobiliarias((data as any[]) || []);
+          setLoadingImobs(false);
+        })
+        .catch(() => setLoadingImobs(false));
+    }
+  }, [tipoVinculo]);
 
   const handleChange = (field: string, value: string | boolean) => {
     let formattedValue = value;
-    
-    if (field === 'cpf' && typeof value === 'string') {
-      formattedValue = formatarCPF(value);
-    } else if ((field === 'telefone' || field === 'telefone_contato') && typeof value === 'string') {
-      formattedValue = formatarTelefone(value);
-    }
-    
+    if (field === 'cpf' && typeof value === 'string') formattedValue = formatarCPF(value);
+    else if ((field === 'telefone' || field === 'telefone_contato') && typeof value === 'string') formattedValue = formatarTelefone(value);
     setFormData(prev => ({ ...prev, [field]: formattedValue }));
     setErrors(prev => ({ ...prev, [field]: '' }));
     setApiError('');
@@ -125,14 +136,18 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError('');
-    
+
+    // Validate vinculado requires selection
+    if (tipoVinculo === 'vinculado' && !selectedImobiliaria) {
+      setErrors(prev => ({ ...prev, imobiliaria: 'Selecione uma imobiliária' }));
+      return;
+    }
+
     const validation = registerSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
       validation.error.errors.forEach(err => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as string] = err.message;
-        }
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
       return;
@@ -149,7 +164,8 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
           creci: formData.creci.trim(),
           cidade: formData.cidade.trim(),
           uf: formData.uf,
-          telefone: formData.telefone || null
+          telefone: formData.telefone || null,
+          imobiliaria_id: tipoVinculo === 'vinculado' ? selectedImobiliaria : null,
         }
       });
 
@@ -157,20 +173,21 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
         let errorMsg = 'Erro ao processar cadastro';
         try {
           const errorBody = await response.error.context?.json();
-          if (errorBody?.error) {
-            errorMsg = errorBody.error;
-          }
+          if (errorBody?.error) errorMsg = errorBody.error;
         } catch {
           errorMsg = response.error.message || errorMsg;
         }
         throw new Error(errorMsg);
       }
 
-      if (response.data?.error) {
-        throw new Error(response.data.error);
-      }
+      if (response.data?.error) throw new Error(response.data.error);
 
       setIsSuccess(true);
+      setSuccessMessage(
+        tipoVinculo === 'vinculado'
+          ? 'Seu cadastro foi recebido e está aguardando aprovação do gestor da imobiliária selecionada.'
+          : 'Seu cadastro foi recebido e está aguardando ativação por um administrador do sistema.'
+      );
     } catch (err: any) {
       console.error('Registration error:', err);
       setApiError(err.message || 'Erro ao processar cadastro. Tente novamente.');
@@ -190,7 +207,7 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
           </div>
           <h2 className="text-xl font-bold mb-2">Cadastro Realizado com Sucesso!</h2>
           <p className="text-muted-foreground mb-6">
-            Seu cadastro foi recebido e está aguardando ativação por um administrador do sistema.
+            {successMessage}
             <br /><br />
             Você será notificado quando seu acesso for liberado.
           </p>
@@ -219,107 +236,104 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
             </div>
           )}
 
+          {/* Tipo de vínculo */}
+          <div className="space-y-2">
+            <Label>Tipo de Cadastro</Label>
+            <div className="flex gap-2 p-1 bg-muted rounded-lg">
+              <button
+                type="button"
+                onClick={() => { setTipoVinculo('autonomo'); setSelectedImobiliaria(''); }}
+                className={cn(
+                  'flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors',
+                  tipoVinculo === 'autonomo' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Autônomo
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoVinculo('vinculado')}
+                className={cn(
+                  'flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors',
+                  tipoVinculo === 'vinculado' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Vinculado a Imobiliária
+              </button>
+            </div>
+          </div>
+
+          {/* Seletor de imobiliária */}
+          {tipoVinculo === 'vinculado' && (
+            <div className="space-y-2">
+              <Label>Imobiliária *</Label>
+              {loadingImobs ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Carregando imobiliárias...
+                </div>
+              ) : (
+                <Select value={selectedImobiliaria} onValueChange={setSelectedImobiliaria}>
+                  <SelectTrigger className={errors.imobiliaria ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Selecione a imobiliária" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {imobiliarias.map(imob => (
+                      <SelectItem key={imob.id} value={imob.id}>
+                        {imob.nome}{imob.endereco_cidade ? ` — ${imob.endereco_cidade}/${imob.endereco_uf}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {errors.imobiliaria && <p className="text-xs text-destructive">{errors.imobiliaria}</p>}
+              <p className="text-xs text-muted-foreground">
+                Seu acesso será aprovado pelo gestor da imobiliária selecionada.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="nome_completo">Nome Completo *</Label>
-              <Input
-                id="nome_completo"
-                value={formData.nome_completo}
-                onChange={(e) => handleChange('nome_completo', e.target.value)}
-                placeholder="Seu nome completo"
-                className={errors.nome_completo ? 'border-destructive' : ''}
-              />
-              {errors.nome_completo && (
-                <p className="text-xs text-destructive">{errors.nome_completo}</p>
-              )}
+              <Input id="nome_completo" value={formData.nome_completo} onChange={(e) => handleChange('nome_completo', e.target.value)} placeholder="Seu nome completo" className={errors.nome_completo ? 'border-destructive' : ''} />
+              {errors.nome_completo && <p className="text-xs text-destructive">{errors.nome_completo}</p>}
             </div>
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="seu@email.com"
-                className={errors.email ? 'border-destructive' : ''}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email}</p>
-              )}
+              <Input id="email" type="email" value={formData.email} onChange={(e) => handleChange('email', e.target.value)} placeholder="seu@email.com" className={errors.email ? 'border-destructive' : ''} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Senha *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleChange('password', e.target.value)}
-                placeholder="••••••••"
-                className={errors.password ? 'border-destructive' : ''}
-              />
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password}</p>
-              )}
+              <Input id="password" type="password" value={formData.password} onChange={(e) => handleChange('password', e.target.value)} placeholder="••••••••" className={errors.password ? 'border-destructive' : ''} />
+              {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                placeholder="••••••••"
-                className={errors.confirmPassword ? 'border-destructive' : ''}
-              />
-              {errors.confirmPassword && (
-                <p className="text-xs text-destructive">{errors.confirmPassword}</p>
-              )}
+              <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={(e) => handleChange('confirmPassword', e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? 'border-destructive' : ''} />
+              {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF *</Label>
-              <Input
-                id="cpf"
-                value={formData.cpf}
-                onChange={(e) => handleChange('cpf', e.target.value)}
-                placeholder="000.000.000-00"
-                maxLength={14}
-                className={errors.cpf ? 'border-destructive' : ''}
-              />
-              {errors.cpf && (
-                <p className="text-xs text-destructive">{errors.cpf}</p>
-              )}
+              <Input id="cpf" value={formData.cpf} onChange={(e) => handleChange('cpf', e.target.value)} placeholder="000.000.000-00" maxLength={14} className={errors.cpf ? 'border-destructive' : ''} />
+              {errors.cpf && <p className="text-xs text-destructive">{errors.cpf}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="creci">CRECI *</Label>
-              <Input
-                id="creci"
-                value={formData.creci}
-                onChange={(e) => handleChange('creci', e.target.value)}
-                placeholder="Ex: 123456-F/SP"
-                className={errors.creci ? 'border-destructive' : ''}
-              />
-              {errors.creci && (
-                <p className="text-xs text-destructive">{errors.creci}</p>
-              )}
+              <Input id="creci" value={formData.creci} onChange={(e) => handleChange('creci', e.target.value)} placeholder="Ex: 123456-F/SP" className={errors.creci ? 'border-destructive' : ''} />
+              {errors.creci && <p className="text-xs text-destructive">{errors.creci}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="cidade">Cidade *</Label>
-              <Input
-                id="cidade"
-                value={formData.cidade}
-                onChange={(e) => handleChange('cidade', e.target.value)}
-                placeholder="Sua cidade"
-                className={errors.cidade ? 'border-destructive' : ''}
-              />
-              {errors.cidade && (
-                <p className="text-xs text-destructive">{errors.cidade}</p>
-              )}
+              <Input id="cidade" value={formData.cidade} onChange={(e) => handleChange('cidade', e.target.value)} placeholder="Sua cidade" className={errors.cidade ? 'border-destructive' : ''} />
+              {errors.cidade && <p className="text-xs text-destructive">{errors.cidade}</p>}
             </div>
 
             <div className="space-y-2">
@@ -334,39 +348,19 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.uf && (
-                <p className="text-xs text-destructive">{errors.uf}</p>
-              )}
+              {errors.uf && <p className="text-xs text-destructive">{errors.uf}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="telefone">WhatsApp *</Label>
-              <Input
-                id="telefone"
-                value={formData.telefone}
-                onChange={(e) => handleChange('telefone', e.target.value)}
-                placeholder="(00) 00000-0000"
-                maxLength={15}
-                className={errors.telefone ? 'border-destructive' : ''}
-              />
-              {errors.telefone && (
-                <p className="text-xs text-destructive">{errors.telefone}</p>
-              )}
+              <Input id="telefone" value={formData.telefone} onChange={(e) => handleChange('telefone', e.target.value)} placeholder="(00) 00000-0000" maxLength={15} className={errors.telefone ? 'border-destructive' : ''} />
+              {errors.telefone && <p className="text-xs text-destructive">{errors.telefone}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="telefone_contato">Telefone de Contato</Label>
-              <Input
-                id="telefone_contato"
-                value={formData.telefone_contato}
-                onChange={(e) => handleChange('telefone_contato', e.target.value)}
-                placeholder="(00) 0000-0000"
-                maxLength={15}
-                className={errors.telefone_contato ? 'border-destructive' : ''}
-              />
-              {errors.telefone_contato && (
-                <p className="text-xs text-destructive">{errors.telefone_contato}</p>
-              )}
+              <Input id="telefone_contato" value={formData.telefone_contato} onChange={(e) => handleChange('telefone_contato', e.target.value)} placeholder="(00) 0000-0000" maxLength={15} className={errors.telefone_contato ? 'border-destructive' : ''} />
+              {errors.telefone_contato && <p className="text-xs text-destructive">{errors.telefone_contato}</p>}
             </div>
           </div>
 
@@ -378,46 +372,21 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
               className={errors.aceite_termos ? 'border-destructive' : ''}
             />
             <div className="grid gap-1.5 leading-none">
-              <label
-                htmlFor="aceite_termos"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
+              <label htmlFor="aceite_termos" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Li e aceito os{' '}
-                <Link to="/termos" target="_blank" className="text-primary hover:underline">
-                  Termos de Uso
-                </Link>
+                <Link to="/termos" target="_blank" className="text-primary hover:underline">Termos de Uso</Link>
                 {' '}e a{' '}
-                <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">
-                  Política de Privacidade
-                </Link>
+                <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">Política de Privacidade</Link>
               </label>
-              {errors.aceite_termos && (
-                <p className="text-xs text-destructive">{errors.aceite_termos}</p>
-              )}
+              {errors.aceite_termos && <p className="text-xs text-destructive">{errors.aceite_termos}</p>}
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-11 text-sm font-semibold" 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              'Criar Conta'
-            )}
+          <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={isLoading}>
+            {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>) : 'Criar Conta'}
           </Button>
 
-          <Button 
-            type="button" 
-            variant="ghost" 
-            className="w-full" 
-            onClick={onBack}
-          >
+          <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar ao Login
           </Button>

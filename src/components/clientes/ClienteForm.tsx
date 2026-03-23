@@ -21,14 +21,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCorretores } from '@/hooks/useCorretores';
-import { Cliente, CLIENTE_ORIGENS, CLIENTE_TEMPERATURA_LABELS, ESTADOS_CIVIS, UFS_BRASIL, ClienteTemperatura } from '@/types/clientes.types';
+import { Cliente, CLIENTE_ORIGENS, CLIENTE_TEMPERATURA_LABELS, ESTADOS_CIVIS, UFS_BRASIL, ClienteTemperatura, TipoPessoa } from '@/types/clientes.types';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useCepLookup } from '@/hooks/useCepLookup';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useGestorEmpreendimento } from '@/hooks/useGestorEmpreendimento';
 import { User, Phone, MapPin, Building, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { validarCPF, formatarCPF, formatarTelefone } from '@/lib/documentUtils';
+import { validarCPF, formatarCPF, formatarTelefone, validarCNPJ, formatarCNPJ } from '@/lib/documentUtils';
 import { ClienteTelefonesEditor } from './ClienteTelefonesEditor';
 import { ClienteConjugeSelect } from './ClienteConjugeSelect';
 import { ClienteSociosEditor } from './ClienteSociosEditor';
@@ -43,6 +43,7 @@ const isBrasileiroNacionality = (nacionalidade: string | undefined): boolean => 
 };
 
 const formSchemaBase = z.object({
+  tipo_pessoa: z.string().default('fisica'),
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefone: z.string().optional(),
@@ -50,6 +51,9 @@ const formSchemaBase = z.object({
   cpf: z.string().optional(),
   rg: z.string().optional(),
   passaporte: z.string().optional(),
+  cnpj: z.string().optional(),
+  razao_social: z.string().optional(),
+  inscricao_estadual: z.string().optional(),
   data_nascimento: z.string().optional(),
   profissao: z.string().optional(),
   renda_mensal: z.coerce.number().optional(),
@@ -77,37 +81,54 @@ const formSchemaBase = z.object({
 // Schema with conditional CPF requirement + always-on format validation
 function createClienteSchema(exigirCpf: boolean) {
   return formSchemaBase.superRefine((data, ctx) => {
-    const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
+    const tipoPessoa = data.tipo_pessoa || 'fisica';
     
-    if (isBrasileiro) {
-      const cpfDigits = data.cpf?.replace(/\D/g, '') || '';
-
-      // Se exigir CPF, campo obrigatório
-      if (exigirCpf && cpfDigits.length === 0) {
+    if (tipoPessoa === 'juridica') {
+      // PJ: exigir CNPJ válido
+      const cnpjDigits = data.cnpj?.replace(/\D/g, '') || '';
+      if (cnpjDigits.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'CPF é obrigatório',
-          path: ['cpf'],
+          message: 'CNPJ é obrigatório para Pessoa Jurídica',
+          path: ['cnpj'],
+        });
+      } else if (!validarCNPJ(data.cnpj!)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'CNPJ inválido',
+          path: ['cnpj'],
         });
       }
-
-      // Sempre validar formato quando preenchido
-      if (cpfDigits.length > 0 && !validarCPF(data.cpf!)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'CPF inválido',
-          path: ['cpf'],
-        });
+    } else {
+      // PF
+      const isBrasileiro = isBrasileiroNacionality(data.nacionalidade);
+      
+      if (isBrasileiro) {
+        const cpfDigits = data.cpf?.replace(/\D/g, '') || '';
+        if (exigirCpf && cpfDigits.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'CPF é obrigatório',
+            path: ['cpf'],
+          });
+        }
+        if (cpfDigits.length > 0 && !validarCPF(data.cpf!)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'CPF inválido',
+            path: ['cpf'],
+          });
+        }
       }
-    }
 
-    if (!isBrasileiro) {
-      if (!data.passaporte || data.passaporte.trim() === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Passaporte é obrigatório para estrangeiros',
-          path: ['passaporte'],
-        });
+      if (!isBrasileiro) {
+        if (!data.passaporte || data.passaporte.trim() === '') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Passaporte é obrigatório para estrangeiros',
+            path: ['passaporte'],
+          });
+        }
       }
     }
   });
@@ -154,6 +175,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      tipo_pessoa: 'fisica',
       nome: '',
       email: '',
       telefone: '',
@@ -161,6 +183,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       cpf: '',
       rg: '',
       passaporte: '',
+      cnpj: '',
+      razao_social: '',
+      inscricao_estadual: '',
       data_nascimento: '',
       profissao: '',
       renda_mensal: undefined,
@@ -186,9 +211,11 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     },
   });
 
-  // Watch nacionalidade para mostrar/esconder campos condicionalmente
+  // Watch fields for conditional rendering
   const watchNacionalidade = form.watch('nacionalidade');
+  const watchTipoPessoa = form.watch('tipo_pessoa') || 'fisica';
   const isBrasileiro = isBrasileiroNacionality(watchNacionalidade);
+  const isPJ = watchTipoPessoa === 'juridica';
 
   useEffect(() => {
     if (initialData) {
@@ -199,6 +226,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       }
 
       form.reset({
+        tipo_pessoa: initialData.tipo_pessoa || 'fisica',
         nome: initialData.nome || '',
         email: initialData.email || '',
         telefone: initialData.telefone || '',
@@ -206,6 +234,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
         cpf: initialData.cpf || '',
         rg: initialData.rg || '',
         passaporte: initialData.passaporte || '',
+        cnpj: initialData.cnpj || '',
+        razao_social: initialData.razao_social || '',
+        inscricao_estadual: initialData.inscricao_estadual || '',
         data_nascimento: dataNascimento,
         profissao: initialData.profissao || '',
         renda_mensal: initialData.renda_mensal || undefined,
@@ -232,6 +263,7 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
       setSelectedEmpreendimentoId(initialData.empreendimento_id || undefined);
     } else {
       form.reset({
+        tipo_pessoa: 'fisica',
         nome: '',
         email: '',
         telefone: '',
@@ -239,6 +271,9 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
         cpf: '',
         rg: '',
         passaporte: '',
+        cnpj: '',
+        razao_social: '',
+        inscricao_estadual: '',
         data_nascimento: '',
         profissao: '',
         renda_mensal: undefined,
@@ -377,105 +412,186 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
           {/* Step 1: Dados Pessoais */}
           {currentStep === 1 && (
             <div className="space-y-4">
+              {/* Toggle PF / PJ */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => form.setValue('tipo_pessoa', 'fisica')}
+                  className={cn(
+                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
+                    !isPJ ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  Pessoa Física
+                </button>
+                <button
+                  type="button"
+                  onClick={() => form.setValue('tipo_pessoa', 'juridica')}
+                  className={cn(
+                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
+                    isPJ ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  Pessoa Jurídica
+                </button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="nome"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome *</FormLabel>
+                      <FormLabel>{isPJ ? 'Nome Fantasia *' : 'Nome *'}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome completo" {...field} />
+                        <Input placeholder={isPJ ? 'Nome fantasia' : 'Nome completo'} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="nacionalidade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nacionalidade</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ex: Brasileiro, Paraguaio, Argentino..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* CPF - apenas para brasileiros */}
-                {isBrasileiro && (
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CPF{exigirCpf ? ' *' : ''}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="000.000.000-00" 
-                            value={field.value}
-                            onChange={(e) => field.onChange(formatarCPF(e.target.value))}
-                            maxLength={14}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+                {/* PJ Fields */}
+                {isPJ && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="razao_social"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Razão Social</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Razão social da empresa" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cnpj"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CNPJ *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="00.000.000/0000-00" 
+                              value={field.value}
+                              onChange={(e) => field.onChange(formatarCNPJ(e.target.value))}
+                              maxLength={18}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="inscricao_estadual"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Inscrição Estadual</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Inscrição estadual" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
-                
-                {/* Passaporte - apenas para estrangeiros */}
-                {!isBrasileiro && (
-                  <FormField
-                    control={form.control}
-                    name="passaporte"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Passaporte *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Número do passaporte" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+
+                {/* PF Fields */}
+                {!isPJ && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="nacionalidade"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nacionalidade</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Ex: Brasileiro, Paraguaio, Argentino..." 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* CPF - apenas para brasileiros */}
+                    {isBrasileiro && (
+                      <FormField
+                        control={form.control}
+                        name="cpf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF{exigirCpf ? ' *' : ''}</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="000.000.000-00" 
+                                value={field.value}
+                                onChange={(e) => field.onChange(formatarCPF(e.target.value))}
+                                maxLength={14}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
-                  />
+                    
+                    {/* Passaporte - apenas para estrangeiros */}
+                    {!isBrasileiro && (
+                      <FormField
+                        control={form.control}
+                        name="passaporte"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Passaporte *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Número do passaporte" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    
+                    <FormField
+                      control={form.control}
+                      name="rg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>RG</FormLabel>
+                          <FormControl>
+                            <Input placeholder="RG" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="data_nascimento"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
-                
-                <FormField
-                  control={form.control}
-                  name="rg"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>RG</FormLabel>
-                      <FormControl>
-                        <Input placeholder="RG" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="data_nascimento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Nascimento</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <FormField
                   control={form.control}
                   name="profissao"
@@ -489,28 +605,32 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="estado_civil"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado Civil</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {ESTADOS_CIVIS.map((ec) => (
-                            <SelectItem key={ec} value={ec}>{ec}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
+                {!isPJ && (
+                  <FormField
+                    control={form.control}
+                    name="estado_civil"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado Civil</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ESTADOS_CIVIS.map((ec) => (
+                              <SelectItem key={ec} value={ec}>{ec}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <FormField
                   control={form.control}
                   name="renda_mensal"
@@ -526,26 +646,28 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
                 />
               </div>
 
-              {/* Cônjuge */}
-              <div className="pt-4 border-t">
-                <FormField
-                  control={form.control}
-                  name="conjuge_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cônjuge</FormLabel>
-                      <FormControl>
-                        <ClienteConjugeSelect
-                          value={field.value}
-                          onChange={field.onChange}
-                          excludeId={initialData?.id}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Cônjuge - apenas PF */}
+              {!isPJ && (
+                <div className="pt-4 border-t">
+                  <FormField
+                    control={form.control}
+                    name="conjuge_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cônjuge</FormLabel>
+                        <FormControl>
+                          <ClienteConjugeSelect
+                            value={field.value}
+                            onChange={field.onChange}
+                            excludeId={initialData?.id}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
               {/* Sócios (apenas para clientes existentes) */}
               {initialData?.id && (

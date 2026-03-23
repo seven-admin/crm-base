@@ -909,6 +909,7 @@ export type Database = {
       }
       clientes: {
         Row: {
+          cnpj: string | null
           conjuge_id: string | null
           corretor_id: string | null
           cpf: string | null
@@ -932,6 +933,7 @@ export type Database = {
           gestor_id: string | null
           id: string
           imobiliaria_id: string | null
+          inscricao_estadual: string | null
           interesse: string[] | null
           is_active: boolean
           lead_id: string | null
@@ -944,14 +946,17 @@ export type Database = {
           origem: string | null
           passaporte: string | null
           profissao: string | null
+          razao_social: string | null
           renda_mensal: number | null
           rg: string | null
           telefone: string | null
           temperatura: string | null
+          tipo_pessoa: string | null
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
+          cnpj?: string | null
           conjuge_id?: string | null
           corretor_id?: string | null
           cpf?: string | null
@@ -975,6 +980,7 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           imobiliaria_id?: string | null
+          inscricao_estadual?: string | null
           interesse?: string[] | null
           is_active?: boolean
           lead_id?: string | null
@@ -987,14 +993,17 @@ export type Database = {
           origem?: string | null
           passaporte?: string | null
           profissao?: string | null
+          razao_social?: string | null
           renda_mensal?: number | null
           rg?: string | null
           telefone?: string | null
           temperatura?: string | null
+          tipo_pessoa?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
+          cnpj?: string | null
           conjuge_id?: string | null
           corretor_id?: string | null
           cpf?: string | null
@@ -1018,6 +1027,7 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           imobiliaria_id?: string | null
+          inscricao_estadual?: string | null
           interesse?: string[] | null
           is_active?: boolean
           lead_id?: string | null
@@ -1030,10 +1040,12 @@ export type Database = {
           origem?: string | null
           passaporte?: string | null
           profissao?: string | null
+          razao_social?: string | null
           renda_mensal?: number | null
           rg?: string | null
           telefone?: string | null
           temperatura?: string | null
+          tipo_pessoa?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -2169,10 +2181,11 @@ export type Database = {
           creci: string | null
           email: string | null
           id: string
-          imobiliaria_id: string
+          imobiliaria_id: string | null
           is_active: boolean
           nome_completo: string
           send_campanha: string | null
+          status_vinculo: string | null
           telefone: string | null
           uf: string | null
           updated_at: string
@@ -2187,10 +2200,11 @@ export type Database = {
           creci?: string | null
           email?: string | null
           id?: string
-          imobiliaria_id: string
+          imobiliaria_id?: string | null
           is_active?: boolean
           nome_completo: string
           send_campanha?: string | null
+          status_vinculo?: string | null
           telefone?: string | null
           uf?: string | null
           updated_at?: string
@@ -2205,10 +2219,11 @@ export type Database = {
           creci?: string | null
           email?: string | null
           id?: string
-          imobiliaria_id?: string
+          imobiliaria_id?: string | null
           is_active?: boolean
           nome_completo?: string
           send_campanha?: string | null
+          status_vinculo?: string | null
           telefone?: string | null
           uf?: string | null
           updated_at?: string
@@ -6122,6 +6137,15 @@ export type Database = {
         }[]
       }
       get_gestor_empreendimento: { Args: { emp_id: string }; Returns: string }
+      get_imobiliarias_ativas: {
+        Args: never
+        Returns: {
+          endereco_cidade: string
+          endereco_uf: string
+          id: string
+          nome: string
+        }[]
+      }
       get_module_scope: {
         Args: { _module_name: string; _user_id: string }
         Returns: string

@@ -20,7 +20,7 @@ const formSchema = z.object({
     .refine((val) => !val || val.replace(/\D/g, '').length === 0 || validarCPF(val), {
       message: 'CPF inválido',
     }),
-  imobiliaria_id: z.string().min(1, 'Imobiliária é obrigatória'),
+  imobiliaria_id: z.string().optional(),
   telefone: z.string().min(1, 'Celular é obrigatório'),
   whatsapp: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
@@ -200,20 +200,22 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
         {currentStep === 2 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Imobiliária *</Label>
+              <Label>Imobiliária</Label>
               <Select 
-                value={selectedImobiliaria || ''} 
-                onValueChange={(value) => setValue('imobiliaria_id', value)}
+                value={selectedImobiliaria || '__autonomo__'} 
+                onValueChange={(value) => setValue('imobiliaria_id', value === '__autonomo__' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma imobiliária" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__autonomo__">Autônomo (sem vínculo)</SelectItem>
                   {imobiliarias.map(imob => (
                     <SelectItem key={imob.id} value={imob.id}>{imob.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">Deixe como "Autônomo" se o corretor não é vinculado a nenhuma imobiliária.</p>
               {errors.imobiliaria_id && <p className="text-sm text-destructive">{errors.imobiliaria_id.message}</p>}
             </div>
           </div>
