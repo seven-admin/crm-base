@@ -220,6 +220,18 @@ export default function Corretores() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusVinculoFilter} onValueChange={(v) => { setStatusVinculoFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Status vínculo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos vínculos</SelectItem>
+            <SelectItem value="pendente">Pendente</SelectItem>
+            <SelectItem value="ativo">Vinculado</SelectItem>
+            <SelectItem value="rejeitado">Rejeitado</SelectItem>
+            <SelectItem value="autonomo">Autônomo</SelectItem>
+          </SelectContent>
+        </Select>
         <Button variant="outline" onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Exportar
