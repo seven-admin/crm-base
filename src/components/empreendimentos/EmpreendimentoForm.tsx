@@ -182,6 +182,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       endereco_cep: values.endereco_cep || undefined,
       registro_incorporacao: values.registro_incorporacao || undefined,
       matricula_mae: values.matricula_mae || undefined,
+      texto_rodape_relatorio: values.texto_rodape_relatorio || undefined,
       legenda_status_visiveis: values.legenda_status_visiveis as any || undefined,
       mapa_label_formato: values.mapa_label_formato as any || undefined,
     };
