@@ -20,7 +20,7 @@ const formSchema = z.object({
     .refine((val) => !val || val.replace(/\D/g, '').length === 0 || validarCPF(val), {
       message: 'CPF inválido',
     }),
-  imobiliaria_id: z.string().min(1, 'Imobiliária é obrigatória'),
+  imobiliaria_id: z.string().optional(),
   telefone: z.string().min(1, 'Celular é obrigatório'),
   whatsapp: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
