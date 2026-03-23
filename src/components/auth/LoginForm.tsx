@@ -15,6 +15,7 @@ const loginSchema = z.object({
 
 interface LoginFormProps {
   onRegisterImobiliaria?: () => void;
+  onRegisterCorretor?: () => void;
 }
 
 export function LoginForm({ onRegisterImobiliaria }: LoginFormProps) {
