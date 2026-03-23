@@ -211,9 +211,11 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     },
   });
 
-  // Watch nacionalidade para mostrar/esconder campos condicionalmente
+  // Watch fields for conditional rendering
   const watchNacionalidade = form.watch('nacionalidade');
+  const watchTipoPessoa = form.watch('tipo_pessoa') || 'fisica';
   const isBrasileiro = isBrasileiroNacionality(watchNacionalidade);
+  const isPJ = watchTipoPessoa === 'juridica';
 
   useEffect(() => {
     if (initialData) {
