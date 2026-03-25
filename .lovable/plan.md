@@ -1,29 +1,44 @@
 
 
-# Texto configurável no rodapé do relatório de unidades disponíveis
+# Filtro por Empreendimento no Portal do Incorporador
 
-## O que será feito
-Adicionar um campo de texto livre na edição do empreendimento para configurar observações que aparecem no final do relatório PDF de unidades disponíveis (ex: condições comerciais, índices de correção, previsão de entrega).
+## O que sera feito
+Adicionar um select/combobox de empreendimento no header do layout do portal, permitindo filtrar todas as paginas (Dashboard, Executivo, Forecast, Propostas, Disponibilidade, Marketing, Planejamento) por um empreendimento especifico ou ver todos.
 
-## Solução
+## Abordagem
 
-### 1. Migration SQL
-- `ALTER TABLE empreendimentos ADD COLUMN texto_rodape_relatorio text`
+Criar um contexto React (`PortalIncorporadorFilterContext`) no layout para compartilhar o filtro entre todas as paginas filhas, evitando prop drilling e alteracao massiva de assinaturas.
 
-### 2. `src/types/empreendimentos.types.ts`
-- Adicionar `texto_rodape_relatorio: string | null` na interface `Empreendimento`
+## Arquivos a modificar
 
-### 3. `src/components/empreendimentos/EmpreendimentoForm.tsx`
-- Adicionar campo `texto_rodape_relatorio` ao schema zod (string optional)
-- Adicionar Textarea no step 3 (Documentação) com label "Observações do Relatório" e placeholder orientativo
-- Incluir no reset do form e no submit
+### 1. Novo: `src/contexts/PortalIncorporadorFilterContext.tsx`
+- Context com `empreendimentoIdFiltro` (string | null) e setter
+- Hook `usePortalIncorporadorFilter()` para consumo nas paginas
+- Provider que encapsula o Outlet no layout
 
-### 4. `src/components/empreendimentos/UnidadesTab.tsx`
-- No `handleExportPDF`, após a tabela e o total, renderizar o `empreendimento.texto_rodape_relatorio` se existir
-- Estilizado como bloco de texto com fonte menor, borda superior, respeitando quebras de linha
+### 2. `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
+- Importar o provider e o hook `useIncorporadorEmpreendimentos`
+- Renderizar um `Select` no header (ao lado do nome do usuario) com opcoes: "Todos os empreendimentos" + lista dos empreendimentos vinculados
+- Envolver o `<Outlet />` com o `PortalIncorporadorFilterProvider`
 
-### Arquivos a modificar
-- **Migration SQL** (1 coluna)
-- `src/types/empreendimentos.types.ts`
-- `src/components/empreendimentos/EmpreendimentoForm.tsx`
-- `src/components/empreendimentos/UnidadesTab.tsx`
+### 3. Novo hook: `src/hooks/useFilteredEmpreendimentoIds.ts`
+- Consome `useIncorporadorEmpreendimentos` + `usePortalIncorporadorFilter`
+- Retorna `empreendimentoIds` filtrado (1 ID se selecionado, todos se "todos")
+- Centraliza a logica de filtragem para todas as paginas
+
+### 4. Paginas que precisam atualizar (trocar `useIncorporadorEmpreendimentos` por `useFilteredEmpreendimentoIds`):
+- `PortalIncorporadorDashboard.tsx`
+- `PortalIncorporadorExecutivo.tsx`
+- `PortalIncorporadorForecast.tsx`
+- `PortalIncorporadorPropostas.tsx`
+- `PortalIncorporadorDisponibilidade.tsx`
+- `PortalIncorporadorMarketing.tsx`
+- `PortalIncorporadorPlanejamento.tsx`
+
+Em cada pagina, a unica mudanca e substituir a chamada de `useIncorporadorEmpreendimentos()` por `useFilteredEmpreendimentoIds()` para obter os IDs ja filtrados.
+
+## UX
+- Select compacto no header, alinhado a direita antes do botao de logout
+- Opcao default: "Todos os empreendimentos"
+- Persistencia apenas em memoria (reseta ao sair do portal)
+
