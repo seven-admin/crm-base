@@ -124,7 +124,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
 
       let unidadesQ = supabase
         .from('unidades')
-        .select('id, status, valor, empreendimento_id')
+        .select('id, status, valor, empreendimento_id, updated_at')
         .eq('is_active', true);
       unidadesQ = applyEmpFilter(unidadesQ, empreendimentoId, empreendimentoIds);
 
