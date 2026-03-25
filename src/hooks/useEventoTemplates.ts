@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export interface EventoTemplateTarefa {
   id: string;
@@ -85,7 +86,7 @@ export function useEventoTemplates() {
       toast.success('Template criado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar template: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar template'));
     },
   });
 
@@ -106,7 +107,7 @@ export function useEventoTemplates() {
       toast.success('Template atualizado!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar'));
     },
   });
 
@@ -124,7 +125,7 @@ export function useEventoTemplates() {
       toast.success('Template removido!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao remover: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover'));
     },
   });
 

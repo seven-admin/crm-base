@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { invalidateDashboards } from '@/lib/invalidateDashboards';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -245,7 +246,7 @@ export function useVendaHistorica() {
       );
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao registrar venda histórica: ${error.message}`);
+      toast.error(sanitizeErrorMessage(error, 'registrar venda histórica'));
     },
   });
 }

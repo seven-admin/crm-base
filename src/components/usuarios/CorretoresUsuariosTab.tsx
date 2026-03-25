@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { 
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
   Search, 
   Edit, 
   Loader2, 
@@ -207,7 +208,7 @@ export function CorretoresUsuariosTab() {
 
       toast.success('Senha resetada com sucesso! Nova senha: Seven@1234');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao resetar senha');
+      toast.error(sanitizeErrorMessage(error, 'resetar senha'));
     } finally {
       setIsResettingPassword(false);
     }

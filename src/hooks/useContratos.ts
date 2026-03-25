@@ -5,6 +5,7 @@ import { gerarTextoCondicoesPagamento } from '@/lib/gerarTextoCondicoes';
 import { invalidateDashboards } from '@/lib/invalidateDashboards';
 import type { Contrato, ContratoFormData, ContratoFilters, ContratoTemplate, ContratoVersao, ContratoDocumento, ContratoPendencia, DocumentoContratoStatus, PendenciaStatus } from '@/types/contratos.types';
 import type { ContratoCondicaoPagamento } from '@/types/condicoesPagamento.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // Fetch contratos
 export function useContratos(filters?: ContratoFilters) {
@@ -962,7 +963,7 @@ export function useFinalizarContrato() {
     },
     onError: (error: Error) => {
       console.error('Erro ao finalizar contrato:', error);
-      toast.error(error.message || 'Erro ao finalizar contrato');
+      toast.error(sanitizeErrorMessage(error, 'finalizar contrato'));
     },
   });
 }

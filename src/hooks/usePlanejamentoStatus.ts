@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { PlanejamentoStatus } from '@/types/planejamento.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export function usePlanejamentoStatus() {
   const queryClient = useQueryClient();
@@ -36,7 +37,7 @@ export function usePlanejamentoStatus() {
       toast.success('Status criado com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao criar status: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar status'));
     }
   });
 
@@ -57,7 +58,7 @@ export function usePlanejamentoStatus() {
       toast.success('Status atualizado com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao atualizar status: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar status'));
     }
   });
 
@@ -75,7 +76,7 @@ export function usePlanejamentoStatus() {
       toast.success('Status removido com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao remover status: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover status'));
     }
   });
 

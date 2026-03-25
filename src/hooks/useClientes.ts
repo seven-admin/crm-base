@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { invalidateDashboards } from '@/lib/invalidateDashboards';
 import { perf } from '@/lib/perf';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // Interface for bulk update data
 export interface ClienteUpdateEmLoteData {
@@ -338,7 +339,7 @@ export function useCreateCliente() {
       toast.success('Cliente cadastrado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao cadastrar cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'cadastrar cliente'));
     }
   });
 }
@@ -368,7 +369,7 @@ export function useUpdateCliente() {
       toast.success('Cliente atualizado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar cliente'));
     }
   });
 }
@@ -393,7 +394,7 @@ export function useDeleteCliente() {
       toast.success('Cliente removido com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao remover cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover cliente'));
     }
   });
 }
@@ -425,7 +426,7 @@ export function useQualificarCliente() {
       toast.success('Cliente qualificado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao qualificar cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'qualificar cliente'));
     }
   });
 }
@@ -458,7 +459,7 @@ export function useMarcarPerdido() {
       toast.success('Cliente marcado como perdido');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar cliente'));
     }
   });
 }
@@ -486,7 +487,7 @@ export function useAtualizarTemperatura() {
       toast.success('Temperatura atualizada!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar temperatura: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar temperatura'));
     }
   });
 }
@@ -519,7 +520,7 @@ export function useReativarCliente() {
       toast.success('Cliente reativado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao reativar cliente: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'reativar cliente'));
     }
   });
 }
@@ -568,7 +569,7 @@ export function useUpdateClientesEmLote() {
       toast.success(`${result.updated} cliente(s) atualizado(s) com sucesso!`);
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar clientes: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar clientes'));
     }
   });
 }

@@ -21,6 +21,7 @@ import { Search, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface VincularUsuarioDialogProps {
   open: boolean;
@@ -100,7 +101,7 @@ export function VincularUsuarioDialog({
       setSelectedUserId('');
       setSearchTerm('');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao vincular usuário');
+      toast.error(sanitizeErrorMessage(error, 'vincular usuário'));
     } finally {
       setIsLinking(false);
     }

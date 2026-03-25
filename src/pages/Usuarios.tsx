@@ -38,6 +38,7 @@ import { RolesManager } from '@/components/configuracoes/RolesManager';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActivateCorretor, useBulkActivateCorretores } from '@/hooks/useActivateCorretor';
 import { Checkbox } from '@/components/ui/checkbox';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface UserWithRole extends Profile {
   role?: AppRole | null;
@@ -271,7 +272,7 @@ export default function Usuarios() {
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
-      toast.error(error.message || 'Erro ao criar usuário');
+      toast.error(sanitizeErrorMessage(error, 'criar usuário'));
     } finally {
       setIsSaving(false);
     }
@@ -299,7 +300,7 @@ export default function Usuarios() {
       toast.success('Senha resetada com sucesso! Nova senha: Seven@1234');
     } catch (error: any) {
       console.error('Error resetting password:', error);
-      toast.error(error.message || 'Erro ao resetar senha');
+      toast.error(sanitizeErrorMessage(error, 'resetar senha'));
     } finally {
       setIsResettingPassword(false);
     }
@@ -329,7 +330,7 @@ export default function Usuarios() {
       fetchUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error(error.message || 'Erro ao excluir usuário');
+      toast.error(sanitizeErrorMessage(error, 'excluir usuário'));
     } finally {
       setIsDeletingUser(false);
     }

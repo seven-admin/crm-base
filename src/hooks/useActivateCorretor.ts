@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispararWebhook, getUsuarioLogado } from '@/lib/webhookUtils';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface ActivateResult {
   empreendimentosVinculados: number;
@@ -133,7 +134,7 @@ export function useActivateCorretor() {
     },
     onError: (error: Error) => {
       console.error('Error activating corretor:', error);
-      toast.error('Erro ao ativar corretor: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'ativar corretor'));
     }
   });
 }
@@ -268,7 +269,7 @@ export function useBulkActivateCorretores() {
     },
     onError: (error: Error) => {
       console.error('Error bulk activating corretores:', error);
-      toast.error('Erro ao ativar corretores: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'ativar corretores'));
     }
   });
 }

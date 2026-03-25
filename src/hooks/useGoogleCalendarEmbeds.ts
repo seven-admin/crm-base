@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface GoogleCalendarEmbed {
   id: string;
@@ -45,7 +46,7 @@ export function useGoogleCalendarEmbeds() {
       toast.success('Google Calendar adicionado');
     },
     onError: (error) => {
-      toast.error('Erro ao adicionar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'adicionar'));
     }
   });
 
@@ -63,7 +64,7 @@ export function useGoogleCalendarEmbeds() {
       toast.success('Google Calendar removido');
     },
     onError: (error) => {
-      toast.error('Erro ao remover: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover'));
     }
   });
 

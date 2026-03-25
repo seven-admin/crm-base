@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { 
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
   PlanejamentoItem, 
   PlanejamentoItemWithRelations, 
   PlanejamentoItemCreate, 
@@ -89,7 +90,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       toast.success('Item criado com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao criar item: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar item'));
     }
   });
 
@@ -115,7 +116,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       queryClient.invalidateQueries({ queryKey: ['planejamento-global'] });
     },
     onError: (error) => {
-      toast.error('Erro ao atualizar item: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar item'));
     }
   });
 
@@ -134,7 +135,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       toast.success('Item removido com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao remover item: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover item'));
     }
   });
 
@@ -172,7 +173,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       toast.success('Item duplicado com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao duplicar item: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'duplicar item'));
     }
   });
 
@@ -200,7 +201,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       toast.success(`${data.length} itens importados com sucesso`);
     },
     onError: (error) => {
-      toast.error('Erro ao importar itens: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'importar itens'));
     }
   });
 
@@ -237,7 +238,7 @@ export function usePlanejamentoItens(filters?: PlanejamentoFilters) {
       toast.success(`${count} item(ns) removido(s) com sucesso`);
     },
     onError: (error) => {
-      toast.error('Erro ao remover itens: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover itens'));
     }
   });
 

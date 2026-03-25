@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { 
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
   Ticket as ProjetoMarketing, 
   TarefaTicket as TarefaProjeto, 
   TicketComentario as ProjetoComentario, 
@@ -176,7 +177,7 @@ export function useProjetosMarketing(filters?: ProjetoFilters) {
       toast.success('Atividade de produção criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar atividade de produção: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar atividade de produção'));
     }
   });
 
@@ -201,7 +202,7 @@ export function useProjetosMarketing(filters?: ProjetoFilters) {
       toast.success('Atividade de produção atualizada!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar'));
     }
   });
 
@@ -301,7 +302,7 @@ export function useProjetosMarketing(filters?: ProjetoFilters) {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      toast.error('Erro ao mover ticket: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'mover ticket'));
     },
     onSuccess: () => {
       // Refetch após optimistic update para sincronizar com o banco
@@ -345,7 +346,7 @@ export function useProjetosMarketing(filters?: ProjetoFilters) {
       toast.success('Atividade de produção excluída!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao excluir atividade de produção: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'excluir atividade de produção'));
     }
   });
 

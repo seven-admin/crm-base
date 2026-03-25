@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { PlanejamentoFase } from '@/types/planejamento.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export function usePlanejamentoFases(empreendimentoId?: string) {
   const queryClient = useQueryClient();
@@ -46,7 +47,7 @@ export function usePlanejamentoFases(empreendimentoId?: string) {
       toast.success('Fase criada com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao criar fase: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar fase'));
     }
   });
 
@@ -67,7 +68,7 @@ export function usePlanejamentoFases(empreendimentoId?: string) {
       toast.success('Fase atualizada com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao atualizar fase: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar fase'));
     }
   });
 
@@ -85,7 +86,7 @@ export function usePlanejamentoFases(empreendimentoId?: string) {
       toast.success('Fase removida com sucesso');
     },
     onError: (error) => {
-      toast.error('Erro ao remover fase: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover fase'));
     }
   });
 
