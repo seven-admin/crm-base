@@ -1705,7 +1705,7 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
         .from('negociacoes')
         .select(`
           *,
-          cliente:clientes!inner(id, nome, email, telefone),
+          cliente:clientes(id, nome, email, telefone, temperatura),
           empreendimento:empreendimentos(id, nome),
           corretor:corretores(id, nome_completo),
           gestor:profiles!gestor_id(id, full_name),
