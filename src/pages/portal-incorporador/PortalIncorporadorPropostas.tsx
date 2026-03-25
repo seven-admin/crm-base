@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNegociacoes, useAprovarPropostaIncorporador, useNegarPropostaIncorporador } from '@/hooks/useNegociacoes';
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { useNegociacaoComentarios, useAddNegociacaoComentario } from '@/hooks/useNegociacaoComentarios';
 import { useNegociacaoCondicoesPagamento } from '@/hooks/useNegociacaoCondicoesPagamento';
 import { Negociacao } from '@/types/negociacoes.types';
@@ -134,7 +134,7 @@ function CollapsibleSection({
 
 // ─── Página principal ───────────────────────────────────────────
 export default function PortalIncorporadorPropostas() {
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
   const { data: todasNegociacoes = [], isLoading: loadingNegs } = useNegociacoes(undefined, { enabled: empreendimentoIds.length > 0, refetchInterval: 30000 });
 
   const aprovarMutation = useAprovarPropostaIncorporador();

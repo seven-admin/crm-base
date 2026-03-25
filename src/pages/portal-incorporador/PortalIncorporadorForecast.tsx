@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -111,7 +111,7 @@ export default function PortalIncorporadorForecast() {
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [detalheAtividadeId, setDetalheAtividadeId] = useState<string | null>(null);
   const [competencia, setCompetencia] = useState(new Date());
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
 
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
   const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);

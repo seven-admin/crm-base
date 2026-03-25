@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { useUnidades } from '@/hooks/useUnidades';
 import { formatarMoeda } from '@/lib/formatters';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
@@ -39,7 +39,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const PortalIncorporadorDisponibilidade = () => {
-  const { empreendimentos, isLoading } = useIncorporadorEmpreendimentos();
+  const { empreendimentos, isLoading } = useFilteredEmpreendimentoIds();
   const [selectedEmpId, setSelectedEmpId] = useState<string>('');
   const [selectedBlocoId, setSelectedBlocoId] = useState<string>('todos');
 

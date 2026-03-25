@@ -1,4 +1,4 @@
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { useDashboardExecutivo } from '@/hooks/useDashboardExecutivo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function PortalIncorporadorExecutivo() {
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
   const { data, isLoading: loadingDash } = useDashboardExecutivo(undefined, empreendimentoIds);
 
   const isLoading = loadingEmps || loadingDash;

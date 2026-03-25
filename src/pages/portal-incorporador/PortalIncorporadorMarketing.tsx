@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,7 +70,7 @@ export default function PortalIncorporadorMarketing() {
   const [statusFiltro, setStatusFiltro] = useState<string>('todos');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
   const [detalheTicketId, setDetalheTicketId] = useState<string | null>(null);
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
 
   // Query para detalhe do ticket selecionado
   const { data: ticketDetalhe, isLoading: loadingDetalhe } = useQuery({
