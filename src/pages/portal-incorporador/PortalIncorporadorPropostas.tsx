@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock, Handshake, ChevronDown } from 'lucide-react';
+import { Check, Loader2, DollarSign, AlertCircle, MessageSquare, Send, Clock, Handshake, ChevronDown, Headphones } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import PropostaCard from '@/components/portal-incorporador/PropostaCard';
@@ -170,6 +170,14 @@ export default function PortalIncorporadorPropostas() {
       !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
   );
 
+  const atendimentosEmAndamento = negociacoesEmAndamento.filter(
+    (n) => n.funil_etapa?.is_inicial === true
+  );
+
+  const negociacoesEfetivas = negociacoesEmAndamento.filter(
+    (n) => n.funil_etapa?.is_inicial !== true
+  );
+
   const propostasEmAnalise = todasNegociacoes.filter(
     (n) =>
       empreendimentoIds.includes(n.empreendimento_id) &&
@@ -259,9 +267,27 @@ export default function PortalIncorporadorPropostas() {
         </CollapsibleSection>
       )}
 
+      {/* Atendimentos em Andamento */}
+      <CollapsibleSection title="Atendimentos em Andamento" icon={Headphones} count={atendimentosEmAndamento.length}>
+        {atendimentosEmAndamento.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Headphones className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Nenhum atendimento em andamento no momento</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {atendimentosEmAndamento.map((neg) => (
+              <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions={false} onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
+
       {/* Negociações em Andamento */}
-      <CollapsibleSection title="Atendimentos e Negociações em Andamento" icon={Handshake} count={negociacoesEmAndamento.length}>
-        {negociacoesEmAndamento.length === 0 ? (
+      <CollapsibleSection title="Negociações em Andamento" icon={Handshake} count={negociacoesEfetivas.length}>
+        {negociacoesEfetivas.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <Handshake className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -270,7 +296,7 @@ export default function PortalIncorporadorPropostas() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {negociacoesEmAndamento.map((neg) => (
+            {negociacoesEfetivas.map((neg) => (
               <PropostaCardWithCondicoes key={neg.id} neg={neg} showActions={false} onAprovar={setAprovarDialog} onContraProposta={(n) => { setNegarDialog(n); setMotivoContra(''); }} />
             ))}
           </div>
