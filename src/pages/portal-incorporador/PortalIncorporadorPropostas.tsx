@@ -170,6 +170,14 @@ export default function PortalIncorporadorPropostas() {
       !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
   );
 
+  const atendimentosEmAndamento = negociacoesEmAndamento.filter(
+    (n) => n.funil_etapa?.is_inicial === true
+  );
+
+  const negociacoesEfetivas = negociacoesEmAndamento.filter(
+    (n) => n.funil_etapa?.is_inicial !== true
+  );
+
   const propostasEmAnalise = todasNegociacoes.filter(
     (n) =>
       empreendimentoIds.includes(n.empreendimento_id) &&
