@@ -1,87 +1,70 @@
 
 
-# Correção: RLS INSERT na tabela clientes para Corretores e Gestores de Imobiliária
+# Tratamento de Erros Seguro -- Ocultar Dados Sensíveis do Banco
 
-## Diagnóstico
+## Problema
 
-O corretor **Marcelo Teixeira Galvão** (user `d6cc2f1a`, corretor `25839574`, role `corretor`) e gestores de imobiliária estão recebendo erro de RLS ao cadastrar clientes no Portal.
+Atualmente, **27+ arquivos** expõem `error.message` diretamente em `toast.error()`, o que pode mostrar ao usuário mensagens como:
+- `"new row violates row-level security policy for table 'clientes'"`
+- `"duplicate key value violates unique constraint 'corretores_email_key'"`
+- `"null value in column 'imobiliaria_id' of relation 'clientes'"`
 
-**Dados confirmados no banco:**
-- Marcelo tem `user_id` corretamente vinculado ao corretor
-- Sua role é `corretor` (via `user_roles`)
-- Sua imobiliária é PANTANAL NEGÓCIOS (user_id da imobiliária: `35df4259`, diferente do user_id do Marcelo)
+Isso vaza nomes de tabelas, colunas e detalhes internos do banco.
 
-**Policies de INSERT atuais na tabela `clientes`:**
+## Solução
 
-| Policy | WITH CHECK |
-|--------|-----------|
-| Admins can manage | `is_admin()` |
-| Authenticated users can create | `corretor_id IS NULL OR corretor_id IN (subquery por user_id/email) OR is_admin() OR has_role('gestor_produto')` |
-| Gestores can insert | `has_role('gestor_produto') AND gestor_id = auth.uid()` |
-| Gestores produto direto | `has_role('gestor_produto')` |
+### 1. Criar utilitário `src/lib/errorHandler.ts`
 
-**Problema identificado**: A policy "Authenticated users can create clientes" deveria cobrir o cenário do corretor, MAS o `.insert().select().single()` do Supabase faz um SELECT implícito após o INSERT. O SELECT para imobiliárias usa join por `email` (`imobiliarias.email = profiles.email`), e **todas as imobiliárias têm `email = NULL`**. Isso significa que mesmo que o INSERT passe, o SELECT falha para gestores de imobiliária. Para corretores, o SELECT policy (`corretor_id IN get_corretor_ids_by_user()`) deveria funcionar, mas pode haver edge cases.
+Função `sanitizeErrorMessage(error, contexto)` que:
+- Recebe o erro bruto e um contexto amigável (ex: `"cadastrar cliente"`)
+- Gera um código de erro curto (timestamp + hash parcial, ex: `ERR-1711234567-a3f2`)
+- Faz `console.error` com todos os detalhes técnicos (tabela, mensagem original, stack)
+- Retorna uma mensagem amigável: `"Não foi possível cadastrar cliente. (Código: ERR-1711234567-a3f2)"`
+- Detecta padrões conhecidos para mensagens um pouco mais úteis:
+  - `"row-level security"` → `"Você não tem permissão para esta ação"`
+  - `"duplicate key"` / `"unique constraint"` → `"Registro duplicado. Verifique os dados informados"`
+  - `"foreign key"` → `"Registro vinculado não encontrado"`
+  - `"not null"` → `"Campos obrigatórios não preenchidos"`
+  - Qualquer outro → `"Não foi possível {contexto}"`
 
-**Solução**: Tornar as policies mais robustas, adicionando cobertura explícita para `corretor` e `gestor_imobiliaria` no INSERT, e corrigindo o SELECT/UPDATE de imobiliárias para usar `user_id` em vez de `email`.
+### 2. Atualizar todos os hooks e componentes
 
-## Plano -- Migration SQL
+Substituir todos os padrões:
 
-### 1. Corrigir INSERT policy para cobrir explicitamente corretor e gestor_imobiliaria
+```typescript
+// ANTES (expõe dados internos)
+toast.error('Erro ao cadastrar cliente: ' + error.message);
+toast.error(error.message || 'Erro ao salvar');
 
-```sql
-DROP POLICY IF EXISTS "Authenticated users can create clientes" ON public.clientes;
-
-CREATE POLICY "Authenticated users can create clientes"
-ON public.clientes FOR INSERT TO authenticated
-WITH CHECK (
-  corretor_id IS NULL
-  OR corretor_id IN (
-    SELECT c.id FROM public.corretores c
-    WHERE c.user_id = auth.uid()
-  )
-  OR public.is_admin(auth.uid())
-  OR public.has_role(auth.uid(), 'gestor_produto')
-  OR public.is_gestor_imobiliaria(auth.uid())
-  OR public.has_role(auth.uid(), 'corretor')
-);
+// DEPOIS (seguro)
+toast.error(sanitizeErrorMessage(error, 'cadastrar cliente'));
 ```
 
-### 2. Corrigir SELECT policy de imobiliárias (email → user_id)
+**Arquivos afetados** (lista dos principais):
+- `src/hooks/useClientes.ts` (8 ocorrências)
+- `src/hooks/useProjetosMarketing.ts` (4)
+- `src/hooks/useCorretoresUsuarios.ts` (2)
+- `src/hooks/useContratos.ts` (1)
+- `src/hooks/useUnidades.ts` (1)
+- `src/hooks/useActivateCorretor.ts` (1)
+- `src/hooks/useClienteSocios.ts` (3)
+- `src/hooks/usePlanejamentoStatus.ts` (3)
+- `src/hooks/useEventos.ts` (2)
+- `src/hooks/useVendaHistorica.ts` (1)
+- `src/pages/Usuarios.tsx` (3)
+- `src/pages/PortalClientes.tsx` (2)
+- `src/components/eventos/EventoInscritosTab.tsx` (4)
+- `src/components/planejamento/ConverterTarefaDialog.tsx` (2)
+- `src/components/corretores/VincularUsuarioDialog.tsx` (1)
+- `src/components/usuarios/CorretoresUsuariosTab.tsx` (1)
 
-```sql
-DROP POLICY IF EXISTS "Imobiliárias can view linked clientes" ON public.clientes;
+### 3. Sem alterações no banco
 
-CREATE POLICY "Imobiliárias can view linked clientes"
-ON public.clientes FOR SELECT TO authenticated
-USING (
-  imobiliaria_id IN (
-    SELECT i.id FROM public.imobiliarias i
-    WHERE i.user_id = auth.uid()
-  )
-);
-```
+O fix é 100% no frontend. Os logs detalhados ficam no `console.error` do navegador, acessíveis apenas por quem tem acesso ao DevTools.
 
-### 3. Corrigir UPDATE policy de imobiliárias (email → user_id)
+### Resultado
 
-```sql
-DROP POLICY IF EXISTS "Imobiliárias can update linked clientes" ON public.clientes;
-
-CREATE POLICY "Imobiliárias can update linked clientes"
-ON public.clientes FOR UPDATE TO authenticated
-USING (
-  imobiliaria_id IN (
-    SELECT i.id FROM public.imobiliarias i
-    WHERE i.user_id = auth.uid()
-  )
-);
-```
-
-### Sem alterações no frontend
-
-O código de `useClientes.ts` e `PortalClientes.tsx` já está correto. A normalização de FKs já funciona. O fix é 100% no banco.
-
-### Resultado esperado
-- Corretores podem cadastrar clientes vinculando seu `corretor_id` sem erro
-- Gestores de imobiliária podem cadastrar e visualizar clientes sem erro (SELECT agora usa `user_id`)
-- Admins e gestores de produto continuam funcionando normalmente
+- Usuários veem: `"Não foi possível cadastrar cliente. (Código: ERR-1711234567-a3f2)"`
+- Admins/devs consultam o console do navegador pelo código para ver o erro original
+- Nenhum nome de tabela, coluna ou policy vaza na interface
 
