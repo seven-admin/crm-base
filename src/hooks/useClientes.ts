@@ -24,7 +24,14 @@ export interface ClienteUpdateEmLoteData {
  * Mantemos apenas um pass-through para não quebrar chamadas existentes.
  */
 function normalizeClienteForSave<T extends Partial<ClienteFormData>>(data: T): T {
-  return data;
+  const result = { ...data };
+  const fkFields = ['corretor_id', 'imobiliaria_id', 'gestor_id', 'empreendimento_id', 'conjuge_id'];
+  for (const field of fkFields) {
+    if (field in result && !(result as any)[field]) {
+      (result as any)[field] = null;
+    }
+  }
+  return result;
 }
 
 // Helper para aplicar filtros
