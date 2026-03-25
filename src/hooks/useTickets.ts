@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispararWebhook, getUsuarioLogado } from '@/lib/webhookUtils';
-import type { 
 import { sanitizeErrorMessage } from '@/lib/errorHandler';
+import type { 
   Ticket, 
   TarefaTicket, 
   TicketComentario, 
