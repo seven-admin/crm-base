@@ -1,44 +1,31 @@
 
 
-# Filtro por Empreendimento no Portal do Incorporador
+# Correção dos filtros e contadores de Negociações
 
-## O que sera feito
-Adicionar um select/combobox de empreendimento no header do layout do portal, permitindo filtrar todas as paginas (Dashboard, Executivo, Forecast, Propostas, Disponibilidade, Marketing, Planejamento) por um empreendimento especifico ou ver todos.
+## Problemas identificados
 
-## Abordagem
+### 1. `!inner` join excluindo negociações sem cliente (causa do NEG-00192 sumir)
+Na query paginada (lista/tabela), a linha `clientes!inner(...)` usa um **INNER JOIN**, o que significa que qualquer negociação **sem cliente vinculado** simplesmente desaparece dos resultados. O Kanban usa join normal (sem `!inner`), por isso a mesma negociação pode aparecer no Kanban mas não na lista.
 
-Criar um contexto React (`PortalIncorporadorFilterContext`) no layout para compartilhar o filtro entre todas as paginas filhas, evitando prop drilling e alteracao massiva de assinaturas.
+### 2. Count query não faz join com clientes
+A query de contagem (`countQuery`) não faz join com a tabela `clientes`, mas tenta filtrar por `cliente.nome` e `cliente.temperatura`. Isso falha silenciosamente no PostgREST, resultando em contadores incorretos quando os filtros de busca ou temperatura estão ativos.
 
-## Arquivos a modificar
+### 3. Inconsistência count vs data
+Por causa dos problemas acima, o total exibido nos cards de métricas pode divergir do número real de registros na tabela.
 
-### 1. Novo: `src/contexts/PortalIncorporadorFilterContext.tsx`
-- Context com `empreendimentoIdFiltro` (string | null) e setter
-- Hook `usePortalIncorporadorFilter()` para consumo nas paginas
-- Provider que encapsula o Outlet no layout
+## Solução
 
-### 2. `src/components/portal-incorporador/PortalIncorporadorLayout.tsx`
-- Importar o provider e o hook `useIncorporadorEmpreendimentos`
-- Renderizar um `Select` no header (ao lado do nome do usuario) com opcoes: "Todos os empreendimentos" + lista dos empreendimentos vinculados
-- Envolver o `<Outlet />` com o `PortalIncorporadorFilterProvider`
+### Arquivo: `src/hooks/useNegociacoes.ts`
 
-### 3. Novo hook: `src/hooks/useFilteredEmpreendimentoIds.ts`
-- Consome `useIncorporadorEmpreendimentos` + `usePortalIncorporadorFilter`
-- Retorna `empreendimentoIds` filtrado (1 ID se selecionado, todos se "todos")
-- Centraliza a logica de filtragem para todas as paginas
+**Query de dados paginada (dataQuery):**
+- Trocar `clientes!inner(...)` por `clientes(...)` (LEFT JOIN), garantindo que negociações sem cliente apareçam normalmente
 
-### 4. Paginas que precisam atualizar (trocar `useIncorporadorEmpreendimentos` por `useFilteredEmpreendimentoIds`):
-- `PortalIncorporadorDashboard.tsx`
-- `PortalIncorporadorExecutivo.tsx`
-- `PortalIncorporadorForecast.tsx`
-- `PortalIncorporadorPropostas.tsx`
-- `PortalIncorporadorDisponibilidade.tsx`
-- `PortalIncorporadorMarketing.tsx`
-- `PortalIncorporadorPlanejamento.tsx`
+**Query de contagem (countQuery):**
+- Adicionar join com clientes na select: `select('id, cliente:clientes(nome, temperatura)', { count: 'exact', head: true })`
+- Isso permite que os filtros `search` (ilike cliente.nome) e `temperatura` funcionem corretamente na contagem
 
-Em cada pagina, a unica mudanca e substituir a chamada de `useIncorporadorEmpreendimentos()` por `useFilteredEmpreendimentoIds()` para obter os IDs ja filtrados.
-
-## UX
-- Select compacto no header, alinhado a direita antes do botao de logout
-- Opcao default: "Todos os empreendimentos"
-- Persistencia apenas em memoria (reseta ao sair do portal)
+**Resultado esperado:**
+- NEG-00192 e qualquer negociação sem cliente passará a aparecer na lista
+- Contadores ficarão consistentes com os dados exibidos
+- Filtros de busca por nome e temperatura funcionarão corretamente em ambas as views
 
