@@ -448,7 +448,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           vendasMesAnterior,
           variacaoMensal,
           ticketMedio,
-          unidadesVendidas: contratosValidos.length,
+          unidadesVendidas: unidadesVendidasMesCount,
           tendencia: tendenciaVendas
         },
         negociacoes: {
