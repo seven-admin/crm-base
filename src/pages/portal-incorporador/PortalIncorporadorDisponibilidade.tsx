@@ -39,7 +39,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const PortalIncorporadorDisponibilidade = () => {
-  const { empreendimentos, isLoading } = useIncorporadorEmpreendimentos();
+  const { empreendimentos, isLoading } = useFilteredEmpreendimentoIds();
   const [selectedEmpId, setSelectedEmpId] = useState<string>('');
   const [selectedBlocoId, setSelectedBlocoId] = useState<string>('todos');
 

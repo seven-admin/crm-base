@@ -11,7 +11,7 @@ import { PlanejamentoCalendarioEmpreendimento } from '@/components/planejamento/
 export default function PortalIncorporadorPlanejamento() {
   const [empreendimentoId, setEmpreendimentoId] = useState<string>('');
   const [activeTab, setActiveTab] = useState('calendario');
-  const { empreendimentos, isLoading } = useIncorporadorEmpreendimentos();
+  const { empreendimentos, isLoading } = useFilteredEmpreendimentoIds();
 
   // Auto-select first empreendimento if only one
   if (!empreendimentoId && empreendimentos.length === 1) {

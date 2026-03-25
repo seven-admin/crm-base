@@ -134,7 +134,7 @@ function CollapsibleSection({
 
 // ─── Página principal ───────────────────────────────────────────
 export default function PortalIncorporadorPropostas() {
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
   const { data: todasNegociacoes = [], isLoading: loadingNegs } = useNegociacoes(undefined, { enabled: empreendimentoIds.length > 0, refetchInterval: 30000 });
 
   const aprovarMutation = useAprovarPropostaIncorporador();

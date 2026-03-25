@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function PortalIncorporadorExecutivo() {
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
   const { data, isLoading: loadingDash } = useDashboardExecutivo(undefined, empreendimentoIds);
 
   const isLoading = loadingEmps || loadingDash;

@@ -70,7 +70,7 @@ export default function PortalIncorporadorMarketing() {
   const [statusFiltro, setStatusFiltro] = useState<string>('todos');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
   const [detalheTicketId, setDetalheTicketId] = useState<string | null>(null);
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
 
   // Query para detalhe do ticket selecionado
   const { data: ticketDetalhe, isLoading: loadingDetalhe } = useQuery({

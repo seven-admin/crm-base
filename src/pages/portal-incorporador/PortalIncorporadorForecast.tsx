@@ -111,7 +111,7 @@ export default function PortalIncorporadorForecast() {
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
   const [detalheAtividadeId, setDetalheAtividadeId] = useState<string | null>(null);
   const [competencia, setCompetencia] = useState(new Date());
-  const { empreendimentoIds, isLoading: loadingEmps } = useIncorporadorEmpreendimentos();
+  const { empreendimentoIds, isLoading: loadingEmps } = useFilteredEmpreendimentoIds();
 
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
   const dataFim = useMemo(() => endOfMonth(competencia), [competencia]);
