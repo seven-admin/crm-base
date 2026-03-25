@@ -241,11 +241,16 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
         const vendasMesUnidades = (unidades || []).filter(u => {
-          if (u.status !== 'vendida') return false;
-          const data = new Date(u.updated_at);
+          if (u.status !== 'vendida' || !u.data_venda) return false;
+          const data = new Date(u.data_venda);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, u) => acc + (u.valor || 0), 0);
-        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades) });
+        const vendasMesNegs = (negociacoes || []).filter(n => {
+          if (!etapasFinaisIds.includes(n.funil_etapa_id)) return false;
+          const data = new Date(n.data_fechamento || n.created_at);
+          return data >= inicioMes && data <= fimMes;
+        }).reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
+        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades, vendasMesNegs) });
       }
 
       // ============ NEGOCIAÇÕES ============
