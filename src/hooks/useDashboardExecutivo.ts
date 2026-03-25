@@ -187,8 +187,29 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       });
 
       const totalVendido = contratosValidos.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
-      const vendasMesAtual = contratosMesAtual.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
-      const vendasMesAnterior = contratosMesAnterior.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
+      const vendasMesAtualContratos = contratosMesAtual.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
+      const vendasMesAnteriorContratos = contratosMesAnterior.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
+
+      // Fonte complementar: unidades que mudaram para "vendida" no mês
+      const unidadesVendidasMesAtual = (unidades || []).filter(u => {
+        if (u.status !== 'vendida') return false;
+        const data = new Date(u.updated_at);
+        return data >= inicioMesAtual && data <= fimMesAtual;
+      });
+      const valorUnidadesVendidasMesAtual = unidadesVendidasMesAtual.reduce((acc, u) => acc + (u.valor || 0), 0);
+
+      const unidadesVendidasMesAnterior = (unidades || []).filter(u => {
+        if (u.status !== 'vendida') return false;
+        const data = new Date(u.updated_at);
+        return data >= inicioMesAnterior && data <= fimMesAnterior;
+      });
+      const valorUnidadesVendidasMesAnterior = unidadesVendidasMesAnterior.reduce((acc, u) => acc + (u.valor || 0), 0);
+
+      // Usar o maior valor entre contratos e unidades vendidas (evita dupla contagem)
+      const vendasMesAtual = Math.max(vendasMesAtualContratos, valorUnidadesVendidasMesAtual);
+      const vendasMesAnterior = Math.max(vendasMesAnteriorContratos, valorUnidadesVendidasMesAnterior);
+      const unidadesVendidasMesCount = Math.max(contratosMesAtual.length, unidadesVendidasMesAtual.length);
+
       const variacaoMensal = vendasMesAnterior > 0 
         ? ((vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100 
         : 0;
@@ -199,11 +220,16 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
         const mesRef = subMonths(hoje, i);
         const inicioMes = startOfMonth(mesRef);
         const fimMes = endOfMonth(mesRef);
-        const vendasMes = contratosValidos.filter(c => {
+        const vendasMesContratos = contratosValidos.filter(c => {
           const data = new Date(c.data_assinatura || c.created_at);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
-        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: vendasMes });
+        const vendasMesUnidades = (unidades || []).filter(u => {
+          if (u.status !== 'vendida') return false;
+          const data = new Date(u.updated_at);
+          return data >= inicioMes && data <= fimMes;
+        }).reduce((acc, u) => acc + (u.valor || 0), 0);
+        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades) });
       }
 
       // ============ NEGOCIAÇÕES ============
