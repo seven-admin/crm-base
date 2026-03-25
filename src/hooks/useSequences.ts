@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export interface SequenceInfo {
   seq_name: string;
@@ -55,7 +56,7 @@ export function useResetSequence() {
       queryClient.invalidateQueries({ queryKey: ['sequence-values'] });
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao reiniciar contador: ${error.message}`);
+      toast.error(sanitizeErrorMessage(error, 'reiniciar contador'));
     },
   });
 }

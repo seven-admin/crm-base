@@ -12,6 +12,7 @@ import { Plus, Search, User, Phone, Mail, AlertCircle, Loader2 } from 'lucide-re
 import { useMeuCorretor } from '@/hooks/useMeuCorretor';
 import { useUserImobiliaria } from '@/hooks/useUserImobiliaria';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 
 export default function PortalClientes() {
@@ -61,7 +62,7 @@ export default function PortalClientes() {
         setEditingCliente(null);
       } catch (error: any) {
         console.error('Erro ao salvar cliente:', error);
-        toast.error(error.message || 'Erro ao salvar cliente');
+        toast.error(sanitizeErrorMessage(error, 'salvar cliente'));
       }
     } else {
       // Corretor
@@ -84,7 +85,7 @@ export default function PortalClientes() {
         setEditingCliente(null);
       } catch (error: any) {
         console.error('Erro ao salvar cliente:', error);
-        toast.error(error.message || 'Erro ao salvar cliente');
+        toast.error(sanitizeErrorMessage(error, 'salvar cliente'));
       }
     }
   };

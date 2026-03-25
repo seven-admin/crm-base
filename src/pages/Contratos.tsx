@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import type { ContratoStatus, ContratoTemplate, CONTRATO_STATUS_LABELS } from '@/types/contratos.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export default function Contratos() {
   const [searchParams] = useSearchParams();
@@ -154,7 +155,7 @@ export default function Contratos() {
           setEditingTemplate(createdTemplate);
         },
         onError: (error) => {
-          toast.error(`Erro ao criar template: ${error.message}`);
+          toast.error(sanitizeErrorMessage(error, 'criar template'));
         },
       });
     }

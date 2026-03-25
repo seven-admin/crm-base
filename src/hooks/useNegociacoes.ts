@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { invalidateDashboards } from '@/lib/invalidateDashboards';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // Tables exist in DB but not yet in generated types — cast only the query builder
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -397,7 +398,7 @@ export function useGerarProposta() {
       toast.success(`Proposta ${result.numero_proposta} gerada com sucesso!`);
     },
     onError: (error: Error) => {
-      toast.error('Erro ao gerar proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'gerar proposta'));
     }
   });
 }
@@ -435,7 +436,7 @@ export function useEnviarParaAnalise() {
       toast.success('Proposta enviada para análise do incorporador!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao enviar para análise: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'enviar para análise'));
     }
   });
 }
@@ -462,7 +463,7 @@ export function useEnviarProposta() {
       toast.success('Proposta enviada ao cliente!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao enviar proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'enviar proposta'));
     }
   });
 }
@@ -592,7 +593,7 @@ export function useAprovarPropostaIncorporador() {
       toast.success('Proposta aprovada pelo incorporador!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao aprovar proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'aprovar proposta'));
     }
   });
 }
@@ -709,7 +710,7 @@ export function useNegarPropostaIncorporador() {
       toast.success('Contra proposta registrada');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao registrar contra proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'registrar contra proposta'));
     }
   });
 }
@@ -748,7 +749,7 @@ export function useReenviarParaAnalise() {
       toast.success('Proposta reenviada para análise!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao reenviar para análise: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'reenviar para análise'));
     }
   });
 }
@@ -777,7 +778,7 @@ export function useAceitarProposta() {
       toast.success('Proposta aceita!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao aceitar proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'aceitar proposta'));
     }
   });
 }
@@ -807,7 +808,7 @@ export function useRecusarProposta() {
       toast.success('Proposta recusada');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao recusar proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'recusar proposta'));
     }
   });
 }
@@ -1005,7 +1006,7 @@ export function useConverterPropostaEmContrato() {
       return result;
     },
     onError: (error: Error) => {
-      toast.error('Erro ao gerar contrato: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'gerar contrato'));
     }
   });
 }
@@ -1040,7 +1041,7 @@ export function useExcluirProposta() {
       toast.success('Proposta excluída com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao excluir proposta: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'excluir proposta'));
     }
   });
 }
@@ -1184,7 +1185,7 @@ export function useCreateNegociacao() {
       toast.success('Negociação criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar negociação: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar negociação'));
     }
   });
 }
@@ -1364,7 +1365,7 @@ export function useMoverNegociacao() {
       toast.success('Negociação movida com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao mover negociação: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'mover negociação'));
     }
   });
 }
@@ -1453,7 +1454,7 @@ export function useUpdateNegociacao() {
       toast.success('Negociação atualizada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar negociação: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar negociação'));
     }
   });
 }
@@ -1491,7 +1492,7 @@ export function useDeleteNegociacao() {
       toast.success('Ficha removida com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao remover ficha: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover ficha'));
     }
   });
 }
@@ -1543,7 +1544,7 @@ export function useSolicitarReserva() {
       toast.success('Reserva solicitada com sucesso! Aguardando aprovação.');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao solicitar reserva: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'solicitar reserva'));
     }
   });
 }
@@ -1587,7 +1588,7 @@ export function useAprovarReserva() {
       toast.success('Reserva aprovada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao aprovar reserva: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'aprovar reserva'));
     }
   });
 }
@@ -1639,7 +1640,7 @@ export function useRejeitarReserva() {
       toast.success('Reserva rejeitada');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao rejeitar reserva: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'rejeitar reserva'));
     }
   });
 }

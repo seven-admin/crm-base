@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { dispararWebhook, getUsuarioLogado } from '@/lib/webhookUtils';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -111,7 +112,7 @@ export function useAddNegociacaoComentario() {
       })();
     },
     onError: (error: Error) => {
-      toast.error('Erro ao adicionar comentário: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'adicionar comentário'));
     },
   });
 }

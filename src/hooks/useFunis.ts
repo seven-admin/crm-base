@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Funil, FunilEtapa, FunilFormData, FunilEtapaFormData } from '@/types/funis.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // ============ FUNIS ============
 
@@ -90,7 +91,7 @@ export function useCreateFunil() {
       toast.success('Funil criado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar funil: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar funil'));
     },
   });
 }
@@ -124,7 +125,7 @@ export function useUpdateFunil() {
       toast.success('Funil atualizado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar funil: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar funil'));
     },
   });
 }
@@ -146,7 +147,7 @@ export function useDeleteFunil() {
       toast.success('Funil excluído com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao excluir funil: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'excluir funil'));
     },
   });
 }
@@ -217,7 +218,7 @@ export function useDuplicarFunil() {
       toast.success('Funil duplicado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao duplicar funil: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'duplicar funil'));
     },
   });
 }
@@ -282,7 +283,7 @@ export function useCreateEtapa() {
       toast.success('Etapa criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar etapa: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar etapa'));
     },
   });
 }
@@ -307,7 +308,7 @@ export function useUpdateEtapa() {
       toast.success('Etapa atualizada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar etapa: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar etapa'));
     },
   });
 }
@@ -329,7 +330,7 @@ export function useDeleteEtapa() {
       toast.success('Etapa excluída com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao excluir etapa: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'excluir etapa'));
     },
   });
 }
@@ -354,7 +355,7 @@ export function useReordenarEtapas(funilId?: string) {
       queryClient.invalidateQueries({ queryKey: ['funil_etapas', 'padrao'] });
     },
     onError: (error: Error) => {
-      toast.error('Erro ao reordenar etapas: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'reordenar etapas'));
     },
   });
 }

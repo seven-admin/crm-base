@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
   useTiposParcelaAll,
   useCreateTipoParcela,
   useUpdateTipoParcela,
@@ -110,7 +111,7 @@ export default function TiposParcela() {
           setTipoToDelete(null);
         },
         onError: (error: any) => {
-          toast.error(`Erro ao excluir: ${error.message}`);
+          toast.error(sanitizeErrorMessage(error, 'excluir'));
         },
       });
     }
@@ -137,7 +138,7 @@ export default function TiposParcela() {
             setFormOpen(false);
           },
           onError: (error: any) => {
-            toast.error(`Erro ao atualizar: ${error.message}`);
+            toast.error(sanitizeErrorMessage(error, 'atualizar'));
           },
         }
       );
@@ -155,7 +156,7 @@ export default function TiposParcela() {
             setFormOpen(false);
           },
           onError: (error: any) => {
-            toast.error(`Erro ao criar: ${error.message}`);
+            toast.error(sanitizeErrorMessage(error, 'criar'));
           },
         }
       );

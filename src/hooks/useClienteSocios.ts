@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ClienteSocio, ClienteSocioFormData } from '@/types/clientes.types';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export function useClienteSocios(clienteId: string | undefined) {
   return useQuery({
@@ -59,7 +60,7 @@ export function useAddClienteSocio() {
       } else if (error.message.includes('check')) {
         toast.error('Não é possível adicionar o próprio cliente como sócio.');
       } else {
-        toast.error('Erro ao adicionar sócio: ' + error.message);
+        toast.error(sanitizeErrorMessage(error, 'adicionar sócio'));
       }
     }
   });
@@ -93,7 +94,7 @@ export function useUpdateClienteSocio() {
       toast.success('Sócio atualizado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar sócio: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar sócio'));
     }
   });
 }
@@ -115,7 +116,7 @@ export function useRemoveClienteSocio() {
       toast.success('Sócio removido com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao remover sócio: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover sócio'));
     }
   });
 }

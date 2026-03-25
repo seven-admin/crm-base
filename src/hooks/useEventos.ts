@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Evento, EventoTarefa } from '@/types/marketing.types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export function useEventos() {
   const queryClient = useQueryClient();
@@ -75,7 +76,7 @@ export function useEventos() {
       toast.success('Evento criado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar evento: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar evento'));
     }
   });
 
@@ -93,7 +94,7 @@ export function useEventos() {
       toast.success('Evento atualizado!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar'));
     }
   });
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface GestorProduto {
   id: string;
@@ -128,7 +129,7 @@ export function useUpdatePercentualGestor() {
       toast.success('Percentual de comissão atualizado com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar percentual: ${error.message}`);
+      toast.error(sanitizeErrorMessage(error, 'atualizar percentual'));
     },
   });
 }

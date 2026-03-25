@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import type { Unidade, UnidadeFormData, UnidadeStatus } from '@/types/empreendimentos.types';
 import type { PolygonCoords } from '@/types/mapa.types';
 import type { Json } from '@/integrations/supabase/types';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 interface UnidadeFilters {
   blocoId?: string;
@@ -117,7 +118,7 @@ export function useCreateUnidadesBulk() {
       if (error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
         toast.error('Erro: Há unidades duplicadas (mesmo número e bloco). Verifique o arquivo.');
       } else {
-        toast.error('Erro ao criar unidades: ' + error.message);
+        toast.error(sanitizeErrorMessage(error, 'criar unidades'));
       }
     },
   });

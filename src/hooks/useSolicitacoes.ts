@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Negociacao } from '@/types/negociacoes.types';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 // Type assertion helper for tables not yet in generated types
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,7 +180,7 @@ export function useAprovarSolicitacao() {
       toast.success(message);
     },
     onError: (error: Error) => {
-      toast.error('Erro ao aprovar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'aprovar'));
     }
   });
 }
@@ -213,7 +214,7 @@ export function useRejeitarSolicitacao() {
       toast.success('Solicitação rejeitada');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao rejeitar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'rejeitar'));
     }
   });
 }
@@ -244,7 +245,7 @@ export function useRemoverItemSolicitacao() {
       toast.success('Item removido da solicitação');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao remover item: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'remover item'));
     }
   });
 }
@@ -373,7 +374,7 @@ export function useCriarSolicitacao() {
       toast.success('Solicitação de reserva enviada! Aguarde aprovação.');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao enviar solicitação: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'enviar solicitação'));
     }
   });
 }

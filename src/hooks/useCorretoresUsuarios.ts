@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
 export interface CorretorUsuario {
   // profile data
@@ -167,7 +168,7 @@ export function useDeleteCorretorUsuario() {
     },
     onError: (error: Error) => {
       console.error('Error deleting corretor:', error);
-      toast.error(error.message || 'Erro ao excluir corretor');
+      toast.error(sanitizeErrorMessage(error, 'excluir corretor'));
     }
   });
 }
@@ -210,7 +211,7 @@ export function useCreateCorretorVinculo() {
     },
     onError: (error: Error) => {
       console.error('Error creating corretor vinculo:', error);
-      toast.error('Erro ao criar vínculo: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar vínculo'));
     }
   });
 }

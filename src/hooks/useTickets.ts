@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dispararWebhook, getUsuarioLogado } from '@/lib/webhookUtils';
 import type { 
+import { sanitizeErrorMessage } from '@/lib/errorHandler';
   Ticket, 
   TarefaTicket, 
   TicketComentario, 
@@ -155,7 +156,7 @@ export function useTickets(filters?: TicketFilters) {
       toast.success('Atividade de produção criada com sucesso!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao criar atividade de produção: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'criar atividade de produção'));
     }
   });
 
@@ -180,7 +181,7 @@ export function useTickets(filters?: TicketFilters) {
       toast.success('Atividade de produção atualizada!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'atualizar'));
     }
   });
 
@@ -267,7 +268,7 @@ export function useTickets(filters?: TicketFilters) {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      toast.error('Erro ao mover atividade de produção: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'mover atividade de produção'));
     },
     onSuccess: () => {
       setTimeout(() => {
@@ -323,7 +324,7 @@ export function useTickets(filters?: TicketFilters) {
       toast.success('Etapa alterada!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao alterar etapa: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'alterar etapa'));
     }
   });
 
@@ -356,7 +357,7 @@ export function useTickets(filters?: TicketFilters) {
       toast.success('Tickets atualizados!');
     },
     onError: (error: Error) => {
-      toast.error('Erro ao alterar etapas: ' + error.message);
+      toast.error(sanitizeErrorMessage(error, 'alterar etapas'));
     }
   });
 
