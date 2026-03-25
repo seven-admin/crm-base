@@ -6122,6 +6122,10 @@ export type Database = {
         Args: { _action: string; _module_name: string; _user_id: string }
         Returns: boolean
       }
+      can_view_negociacao_condicoes: {
+        Args: { _neg_id: string }
+        Returns: boolean
+      }
       generate_cod_sorteio: { Args: never; Returns: string }
       generate_negociacao_proposta_numero: { Args: never; Returns: string }
       generate_signature_token: { Args: never; Returns: string }
