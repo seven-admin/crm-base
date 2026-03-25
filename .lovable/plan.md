@@ -1,94 +1,40 @@
 
 
-# Correção: Vendas do Mês + Abas no Portal
+# Correção: RLS no INSERT de Clientes + Esclarecimento data_venda
 
-## Problema do Contador
+## 1. Esclarecimento sobre `data_venda`
 
-**Dados reais do BELVEDERE em março:**
+A coluna `data_venda` foi criada e **retroativamente preenchida com `updated_at`** para todas as unidades já marcadas como `vendida`. Isso significa que unidades 18 e 20 do BELVEDERE (que foram apenas editadas em março) ganharam `data_venda` em março erroneamente.
 
-| Fonte | O que mostra | Problema |
-|-------|-------------|----------|
-| Contratos assinados | 0 em março | Contratos são de fev, e "COMPRADOR HISTORICO" |
-| Unidades vendida + updated_at | 3 unidades (~R$ 3,4M) | Foram apenas editadas em março, não vendidas agora |
-| NEG-00192 (etapa GANHO) | R$ 1.187.957,94 | Unica venda real -- unidade ainda em status "reservada" |
+A unidade da NEG-00192 (unidade 17, BELVEDERE) está com status `reservada`, então `data_venda` é NULL. Como a venda ainda não foi efetivada no status da unidade (apenas no funil como GANHO), ela não tem `data_venda`.
 
-**Causa raiz**: Usar `updated_at` da unidade como proxy de data de venda é incorreto. Qualquer edição muda o `updated_at`.
+**Ação manual recomendada**: Corrigir via SQL as datas das unidades 18 e 20 do BELVEDERE se não foram vendidas em março (setar `data_venda = NULL` ou para a data real). A lógica de negociações GANHO no hook já cobre a venda da NEG-00192 independentemente.
 
-**Solução correta**: Contar vendas baseado em **negociações que chegaram na etapa GANHO** (`is_final_sucesso = true`). A tabela `funil_etapas` já tem o campo `is_final_sucesso`.
+## 2. Bug de RLS no cadastro de clientes
 
-## Plano
+**Causa raiz**: O `ClienteForm` inicializa `corretor_id: ''` (string vazia). Quando o gestor de imobiliária salva, o payload vai com `corretor_id: ''` que no PostgreSQL **não é NULL**. A policy de INSERT verifica `corretor_id IS NULL`, que retorna FALSE para string vazia, causando a violação de RLS.
 
-### 1. Migration: campo `data_venda` na tabela `unidades`
+Para corretores, o `PortalClientes` sobrescreve o `corretor_id` com `meuCorretor.id`, mas outros contextos (como `NovoClienteRapidoDialog` ou cenários onde o corretor não é encontrado) podem ter o mesmo problema.
 
-Adicionar `data_venda timestamptz` para registro preciso, com trigger que só preenche quando status muda para `vendida`. Retroativamente preencher com `updated_at` das já vendidas (melhor aproximação). Isso resolve o problema a longo prazo.
+### Correção
 
-### 2. Alteração no `useDashboardExecutivo.ts`
+**Arquivo: `src/hooks/useClientes.ts`** -- Atualizar `normalizeClienteForSave` para converter strings vazias em `null` nos campos de FK (corretor_id, imobiliaria_id, gestor_id, empreendimento_id, conjuge_id):
 
-Adicionar uma **terceira fonte de vendas**: negociações em etapa `is_final_sucesso = true`, agrupadas por mês usando `created_at` ou um campo de data de fechamento. Buscar etapas finais e negociações ganhas com seus valores.
-
-Lógica de vendas do mês:
-```
-vendasMes = Math.max(
-  vendasContratos,           // contratos assinados no mês
-  vendasUnidadesDataVenda,   // unidades com data_venda no mês (novo campo)
-  vendasNegociacoesGanhas    // negociações GANHO criadas/fechadas no mês
-)
-```
-
-A query de negociações precisa incluir a etapa do funil para filtrar por `is_final_sucesso`. Isso já é feito parcialmente no hook, mas precisa do join com `funil_etapas`.
-
-### 3. Abas no `PortalIncorporadorPropostas.tsx`
-
-Substituir as 5 `CollapsibleSection` por componente `Tabs` com as abas:
-
-1. **Aguardando Aprovação** -- propostas `em_analise` (com badge count)
-2. **Em Preparação** -- propostas `rascunho`/`enviada` com numero_proposta
-3. **Atendimentos** -- negociações em etapa `is_inicial = true`
-4. **Negociações** -- negociações em etapas não-iniciais
-5. **Resolvidas** -- `aprovada_incorporador`/`contra_proposta`
-
-Aba default: "Aguardando Aprovação" se houver items, senão "Atendimentos".
-
-Remover o componente `CollapsibleSection` local e o import de `Collapsible`.
-
-### Detalhes Técnicos
-
-**Migration SQL:**
-```sql
-ALTER TABLE unidades ADD COLUMN data_venda timestamptz;
-UPDATE unidades SET data_venda = updated_at WHERE status = 'vendida';
-
-CREATE OR REPLACE FUNCTION set_data_venda()
-RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF NEW.status = 'vendida' AND (OLD.status IS DISTINCT FROM 'vendida') THEN
-    NEW.data_venda = now();
-  ELSIF NEW.status != 'vendida' THEN
-    NEW.data_venda = NULL;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_set_data_venda
-BEFORE UPDATE ON unidades FOR EACH ROW EXECUTE FUNCTION set_data_venda();
-```
-
-**Hook - nova query paralela:**
 ```typescript
-// Buscar negociações ganhas com valor
-const negociacoesGanhasQ = supabase
-  .from('negociacoes')
-  .select('id, valor_negociacao, created_at, funil_etapa_id')
-  .eq('is_active', true)
-  .in('funil_etapa_id', etapasFinais); // etapas com is_final_sucesso
+function normalizeClienteForSave<T extends Partial<ClienteFormData>>(data: T): T {
+  const result = { ...data };
+  const fkFields = ['corretor_id', 'imobiliaria_id', 'gestor_id', 'empreendimento_id', 'conjuge_id'];
+  for (const field of fkFields) {
+    if (field in result && !(result as any)[field]) {
+      (result as any)[field] = null;
+    }
+  }
+  return result;
+}
 ```
 
-Filtrar por mês e somar `valor_negociacao` como fonte complementar.
+Isso garante que campos UUID vazios sejam enviados como `null`, satisfazendo a policy `corretor_id IS NULL`.
 
-**Arquivos alterados:**
-- `supabase/migrations/` -- novo migration (data_venda + trigger)
-- `src/hooks/useDashboardExecutivo.ts` -- adicionar fonte negociações ganhas + usar data_venda
-- `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx` -- collapsibles para tabs
-- `src/integrations/supabase/types.ts` -- atualizado automaticamente
+### Arquivos alterados
+- `src/hooks/useClientes.ts` -- normalizeClienteForSave
 
