@@ -1,60 +1,54 @@
 
 
-# Correção: Condições de Pagamento Invisíveis para Incorporador
+# Correção: Contador "Vendas do Mês" no Portal do Incorporador
 
 ## Diagnóstico
 
-Confirmado via queries diretas:
-- Os dados **estão salvos** no banco (4 condições para NEG-00192, incluindo a parcela de financiamento de R$ 870.179,19)
-- O INSERT funciona (policy `WITH CHECK (true)`)
-- O SELECT retorna `[]` para o incorporador (todas as queries de condições voltam vazias)
-- O usuário `cerro@sevengroup360.com.br` tem role `incorporador` e acesso ao empreendimento BELVEDERE
+O KPI "Vendas do Mês" usa exclusivamente a tabela `contratos` com `status = 'assinado'`, filtrando registros de "COMPRADOR HISTÓRICO". Para o BELVEDERE em março/2026:
 
-**Causa raiz**: A policy SELECT de `negociacao_condicoes_pagamento` faz um subquery na tabela `negociacoes`, que por sua vez tem RLS própria. O PostgreSQL avalia o RLS da tabela `negociacoes` dentro do subquery, criando uma avaliação nested que falha silenciosamente para o incorporador.
+- **0 contratos** criados em março
+- **3 unidades** marcadas como `vendida` em março (updated_at em março), totalizando ~R$ 3,4M
+- Todos os contratos existentes são "COMPRADOR HISTÓRICO" (filtrados) ou de meses anteriores
+
+**Causa raiz**: As vendas reais estão refletidas na mudança de status das unidades para `vendida`, mas o dashboard só conta contratos assinados. Quando a venda acontece via proposta/negociação (que muda o status da unidade), sem criar um contrato formal, o contador fica zerado.
 
 ## Solução
 
-Criar uma função `SECURITY DEFINER` que verifica o acesso à negociação **sem depender do RLS** da tabela `negociacoes`, e usá-la em uma policy única e consolidada.
+Alterar o hook `useDashboardExecutivo.ts` para incluir uma fonte complementar de vendas: **unidades que mudaram para status `vendida` no mês atual** (baseado em `updated_at`).
 
-### Migration SQL
+### Arquivo: `src/hooks/useDashboardExecutivo.ts`
 
-```sql
--- Função SECURITY DEFINER para verificar acesso
-CREATE OR REPLACE FUNCTION public.can_view_negociacao_condicoes(_neg_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM negociacoes n
-    WHERE n.id = _neg_id
-    AND (
-      is_admin(auth.uid())
-      OR has_role(auth.uid(), 'gestor_produto')
-      OR is_seven_team(auth.uid())
-      OR n.corretor_id IN (SELECT get_corretor_ids_by_user(auth.uid()))
-      OR (is_incorporador(auth.uid()) 
-          AND user_has_empreendimento_access(auth.uid(), n.empreendimento_id))
-    )
-  )
-$$;
+**Lógica atual (linhas 178-206):**
+- Filtra contratos assinados no mês atual
+- Soma `valor_contrato` dos que não são "COMPRADOR HISTÓRICO"
 
--- Consolidar todas as SELECT policies em uma única
-DROP POLICY IF EXISTS "Users can view negociacao_condicoes_pagamento" 
-  ON negociacao_condicoes_pagamento;
-DROP POLICY IF EXISTS "Incorporadores can view negociacao_condicoes_pagamento" 
-  ON negociacao_condicoes_pagamento;
+**Nova lógica:**
+1. Manter a lógica de contratos como está
+2. Adicionar cálculo complementar: somar o `valor` de unidades com `status = 'vendida'` e `updated_at` dentro do mês atual
+3. Usar o **maior valor** entre as duas fontes (contratos vs unidades vendidas no mês), para evitar dupla contagem
+4. Aplicar a mesma lógica para `unidadesVendidas` (count) e `vendasMesAnterior` (para variação %)
+5. Aplicar a mesma lógica na tendência de vendas (últimos 6 meses)
 
-CREATE POLICY "Users can view negociacao_condicoes_pagamento"
-ON negociacao_condicoes_pagamento FOR SELECT TO authenticated
-USING (can_view_negociacao_condicoes(negociacao_id));
+**Mudança concreta:**
+```typescript
+// Vendas via unidades vendidas no mês
+const unidadesVendidasMesAtual = (unidades || []).filter(u => {
+  if (u.status !== 'vendida') return false;
+  const data = new Date(u.updated_at);
+  return data >= inicioMesAtual && data <= fimMesAtual;
+});
+const valorUnidadesVendidasMes = unidadesVendidasMesAtual.reduce(
+  (acc, u) => acc + (u.valor || 0), 0
+);
+
+// Usar o maior entre contratos e unidades como fonte de vendas do mês
+const vendasMesAtualFinal = Math.max(vendasMesAtual, valorUnidadesVendidasMes);
 ```
 
-### Sem alterações no código frontend
-O hook `useNegociacaoCondicoesPagamento` e os componentes continuam funcionando como estão -- o fix é 100% no banco.
+Isso requer adicionar `updated_at` ao select de unidades (atualmente: `id, status, valor, empreendimento_id`).
 
-## Resultado esperado
-- Incorporador verá as condições de pagamento salvas (incluindo a parcela de financiamento)
-- Admins, gestores, corretores e equipe seven continuam com acesso normal
-- INSERTs e UPDATEs não são afetados (policies separadas já permissivas)
+### Impacto
+- `PortalIncorporadorDashboard.tsx` - KPI "Vendas do Mês" passará a refletir vendas reais
+- `PortalIncorporadorExecutivo.tsx` - Mesmos KPIs corrigidos
+- `DashboardExecutivo.tsx` - Dashboard admin também se beneficia
 
