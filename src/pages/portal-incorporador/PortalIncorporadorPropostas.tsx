@@ -260,7 +260,7 @@ export default function PortalIncorporadorPropostas() {
       )}
 
       {/* Negociações em Andamento */}
-      <CollapsibleSection title="Negociações em Andamento" icon={Handshake} count={negociacoesEmAndamento.length}>
+      <CollapsibleSection title="Atendimentos e Negociações em Andamento" icon={Handshake} count={negociacoesEmAndamento.length}>
         {negociacoesEmAndamento.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">

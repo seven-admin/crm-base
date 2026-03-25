@@ -33,7 +33,7 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
     subtitle: 'Visualize a disponibilidade de unidades por empreendimento' 
   },
   '/portal-incorporador/propostas': { 
-    title: 'Aprovação de Propostas e Negociações',
+    title: 'Atendimentos, Propostas e Negociações',
     subtitle: 'Analise e aprove propostas comerciais'
   },
 };
