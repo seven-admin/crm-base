@@ -1,40 +1,87 @@
 
 
-# Correção: RLS no INSERT de Clientes + Esclarecimento data_venda
+# Correção: RLS INSERT na tabela clientes para Corretores e Gestores de Imobiliária
 
-## 1. Esclarecimento sobre `data_venda`
+## Diagnóstico
 
-A coluna `data_venda` foi criada e **retroativamente preenchida com `updated_at`** para todas as unidades já marcadas como `vendida`. Isso significa que unidades 18 e 20 do BELVEDERE (que foram apenas editadas em março) ganharam `data_venda` em março erroneamente.
+O corretor **Marcelo Teixeira Galvão** (user `d6cc2f1a`, corretor `25839574`, role `corretor`) e gestores de imobiliária estão recebendo erro de RLS ao cadastrar clientes no Portal.
 
-A unidade da NEG-00192 (unidade 17, BELVEDERE) está com status `reservada`, então `data_venda` é NULL. Como a venda ainda não foi efetivada no status da unidade (apenas no funil como GANHO), ela não tem `data_venda`.
+**Dados confirmados no banco:**
+- Marcelo tem `user_id` corretamente vinculado ao corretor
+- Sua role é `corretor` (via `user_roles`)
+- Sua imobiliária é PANTANAL NEGÓCIOS (user_id da imobiliária: `35df4259`, diferente do user_id do Marcelo)
 
-**Ação manual recomendada**: Corrigir via SQL as datas das unidades 18 e 20 do BELVEDERE se não foram vendidas em março (setar `data_venda = NULL` ou para a data real). A lógica de negociações GANHO no hook já cobre a venda da NEG-00192 independentemente.
+**Policies de INSERT atuais na tabela `clientes`:**
 
-## 2. Bug de RLS no cadastro de clientes
+| Policy | WITH CHECK |
+|--------|-----------|
+| Admins can manage | `is_admin()` |
+| Authenticated users can create | `corretor_id IS NULL OR corretor_id IN (subquery por user_id/email) OR is_admin() OR has_role('gestor_produto')` |
+| Gestores can insert | `has_role('gestor_produto') AND gestor_id = auth.uid()` |
+| Gestores produto direto | `has_role('gestor_produto')` |
 
-**Causa raiz**: O `ClienteForm` inicializa `corretor_id: ''` (string vazia). Quando o gestor de imobiliária salva, o payload vai com `corretor_id: ''` que no PostgreSQL **não é NULL**. A policy de INSERT verifica `corretor_id IS NULL`, que retorna FALSE para string vazia, causando a violação de RLS.
+**Problema identificado**: A policy "Authenticated users can create clientes" deveria cobrir o cenário do corretor, MAS o `.insert().select().single()` do Supabase faz um SELECT implícito após o INSERT. O SELECT para imobiliárias usa join por `email` (`imobiliarias.email = profiles.email`), e **todas as imobiliárias têm `email = NULL`**. Isso significa que mesmo que o INSERT passe, o SELECT falha para gestores de imobiliária. Para corretores, o SELECT policy (`corretor_id IN get_corretor_ids_by_user()`) deveria funcionar, mas pode haver edge cases.
 
-Para corretores, o `PortalClientes` sobrescreve o `corretor_id` com `meuCorretor.id`, mas outros contextos (como `NovoClienteRapidoDialog` ou cenários onde o corretor não é encontrado) podem ter o mesmo problema.
+**Solução**: Tornar as policies mais robustas, adicionando cobertura explícita para `corretor` e `gestor_imobiliaria` no INSERT, e corrigindo o SELECT/UPDATE de imobiliárias para usar `user_id` em vez de `email`.
 
-### Correção
+## Plano -- Migration SQL
 
-**Arquivo: `src/hooks/useClientes.ts`** -- Atualizar `normalizeClienteForSave` para converter strings vazias em `null` nos campos de FK (corretor_id, imobiliaria_id, gestor_id, empreendimento_id, conjuge_id):
+### 1. Corrigir INSERT policy para cobrir explicitamente corretor e gestor_imobiliaria
 
-```typescript
-function normalizeClienteForSave<T extends Partial<ClienteFormData>>(data: T): T {
-  const result = { ...data };
-  const fkFields = ['corretor_id', 'imobiliaria_id', 'gestor_id', 'empreendimento_id', 'conjuge_id'];
-  for (const field of fkFields) {
-    if (field in result && !(result as any)[field]) {
-      (result as any)[field] = null;
-    }
-  }
-  return result;
-}
+```sql
+DROP POLICY IF EXISTS "Authenticated users can create clientes" ON public.clientes;
+
+CREATE POLICY "Authenticated users can create clientes"
+ON public.clientes FOR INSERT TO authenticated
+WITH CHECK (
+  corretor_id IS NULL
+  OR corretor_id IN (
+    SELECT c.id FROM public.corretores c
+    WHERE c.user_id = auth.uid()
+  )
+  OR public.is_admin(auth.uid())
+  OR public.has_role(auth.uid(), 'gestor_produto')
+  OR public.is_gestor_imobiliaria(auth.uid())
+  OR public.has_role(auth.uid(), 'corretor')
+);
 ```
 
-Isso garante que campos UUID vazios sejam enviados como `null`, satisfazendo a policy `corretor_id IS NULL`.
+### 2. Corrigir SELECT policy de imobiliárias (email → user_id)
 
-### Arquivos alterados
-- `src/hooks/useClientes.ts` -- normalizeClienteForSave
+```sql
+DROP POLICY IF EXISTS "Imobiliárias can view linked clientes" ON public.clientes;
+
+CREATE POLICY "Imobiliárias can view linked clientes"
+ON public.clientes FOR SELECT TO authenticated
+USING (
+  imobiliaria_id IN (
+    SELECT i.id FROM public.imobiliarias i
+    WHERE i.user_id = auth.uid()
+  )
+);
+```
+
+### 3. Corrigir UPDATE policy de imobiliárias (email → user_id)
+
+```sql
+DROP POLICY IF EXISTS "Imobiliárias can update linked clientes" ON public.clientes;
+
+CREATE POLICY "Imobiliárias can update linked clientes"
+ON public.clientes FOR UPDATE TO authenticated
+USING (
+  imobiliaria_id IN (
+    SELECT i.id FROM public.imobiliarias i
+    WHERE i.user_id = auth.uid()
+  )
+);
+```
+
+### Sem alterações no frontend
+
+O código de `useClientes.ts` e `PortalClientes.tsx` já está correto. A normalização de FKs já funciona. O fix é 100% no banco.
+
+### Resultado esperado
+- Corretores podem cadastrar clientes vinculando seu `corretor_id` sem erro
+- Gestores de imobiliária podem cadastrar e visualizar clientes sem erro (SELECT agora usa `user_id`)
+- Admins e gestores de produto continuam funcionando normalmente
 
