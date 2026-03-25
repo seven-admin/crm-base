@@ -124,7 +124,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
 
       let unidadesQ = supabase
         .from('unidades')
-        .select('id, status, valor, empreendimento_id, updated_at')
+        .select('id, status, valor, empreendimento_id, updated_at, data_venda')
         .eq('is_active', true);
       unidadesQ = applyEmpFilter(unidadesQ, empreendimentoId, empreendimentoIds);
 
@@ -156,7 +156,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       ] = await Promise.all([
         contratosQ,
         negociacoesQ,
-        supabase.from('funil_etapas').select('id, nome, ordem').eq('is_active', true).order('ordem'),
+        supabase.from('funil_etapas').select('id, nome, ordem, is_final_sucesso').eq('is_active', true).order('ordem'),
         lancamentosQ,
         comissoesQ,
         supabase.from('comissao_parcelas').select('id, valor, status, data_vencimento, comissao_id'),
@@ -190,25 +190,41 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       const vendasMesAtualContratos = contratosMesAtual.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
       const vendasMesAnteriorContratos = contratosMesAnterior.reduce((acc, c) => acc + (c.valor_contrato || 0), 0);
 
-      // Fonte complementar: unidades que mudaram para "vendida" no mês
+      // Fonte complementar: unidades com data_venda no mês
       const unidadesVendidasMesAtual = (unidades || []).filter(u => {
-        if (u.status !== 'vendida') return false;
-        const data = new Date(u.updated_at);
+        if (u.status !== 'vendida' || !u.data_venda) return false;
+        const data = new Date(u.data_venda);
         return data >= inicioMesAtual && data <= fimMesAtual;
       });
       const valorUnidadesVendidasMesAtual = unidadesVendidasMesAtual.reduce((acc, u) => acc + (u.valor || 0), 0);
 
       const unidadesVendidasMesAnterior = (unidades || []).filter(u => {
-        if (u.status !== 'vendida') return false;
-        const data = new Date(u.updated_at);
+        if (u.status !== 'vendida' || !u.data_venda) return false;
+        const data = new Date(u.data_venda);
         return data >= inicioMesAnterior && data <= fimMesAnterior;
       });
       const valorUnidadesVendidasMesAnterior = unidadesVendidasMesAnterior.reduce((acc, u) => acc + (u.valor || 0), 0);
 
-      // Usar o maior valor entre contratos e unidades vendidas (evita dupla contagem)
-      const vendasMesAtual = Math.max(vendasMesAtualContratos, valorUnidadesVendidasMesAtual);
-      const vendasMesAnterior = Math.max(vendasMesAnteriorContratos, valorUnidadesVendidasMesAnterior);
-      const unidadesVendidasMesCount = Math.max(contratosMesAtual.length, unidadesVendidasMesAtual.length);
+      // Fonte 3: negociações ganhas (etapa is_final_sucesso)
+      const etapasFinaisIds = (etapasFunil || []).filter((e: any) => e.is_final_sucesso === true).map((e: any) => e.id);
+      const negociacoesGanhasMesAtual = (negociacoes || []).filter(n => {
+        if (!etapasFinaisIds.includes(n.funil_etapa_id)) return false;
+        const data = new Date(n.data_fechamento || n.created_at);
+        return data >= inicioMesAtual && data <= fimMesAtual;
+      });
+      const valorNegociacoesGanhasMesAtual = negociacoesGanhasMesAtual.reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
+
+      const negociacoesGanhasMesAnterior = (negociacoes || []).filter(n => {
+        if (!etapasFinaisIds.includes(n.funil_etapa_id)) return false;
+        const data = new Date(n.data_fechamento || n.created_at);
+        return data >= inicioMesAnterior && data <= fimMesAnterior;
+      });
+      const valorNegociacoesGanhasMesAnterior = negociacoesGanhasMesAnterior.reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
+
+      // Usar o maior valor entre as 3 fontes (evita dupla contagem)
+      const vendasMesAtual = Math.max(vendasMesAtualContratos, valorUnidadesVendidasMesAtual, valorNegociacoesGanhasMesAtual);
+      const vendasMesAnterior = Math.max(vendasMesAnteriorContratos, valorUnidadesVendidasMesAnterior, valorNegociacoesGanhasMesAnterior);
+      const unidadesVendidasMesCount = Math.max(contratosMesAtual.length, unidadesVendidasMesAtual.length, negociacoesGanhasMesAtual.length);
 
       const variacaoMensal = vendasMesAnterior > 0 
         ? ((vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100 
@@ -225,11 +241,16 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, c) => acc + (c.valor_contrato || 0), 0) || 0;
         const vendasMesUnidades = (unidades || []).filter(u => {
-          if (u.status !== 'vendida') return false;
-          const data = new Date(u.updated_at);
+          if (u.status !== 'vendida' || !u.data_venda) return false;
+          const data = new Date(u.data_venda);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, u) => acc + (u.valor || 0), 0);
-        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades) });
+        const vendasMesNegs = (negociacoes || []).filter(n => {
+          if (!etapasFinaisIds.includes(n.funil_etapa_id)) return false;
+          const data = new Date(n.data_fechamento || n.created_at);
+          return data >= inicioMes && data <= fimMes;
+        }).reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
+        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades, vendasMesNegs) });
       }
 
       // ============ NEGOCIAÇÕES ============

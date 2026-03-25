@@ -5745,6 +5745,7 @@ export type Database = {
           area_privativa: number | null
           bloco_id: string | null
           created_at: string
+          data_venda: string | null
           descricao: string | null
           empreendimento_id: string
           fachada_id: string | null
@@ -5764,6 +5765,7 @@ export type Database = {
           area_privativa?: number | null
           bloco_id?: string | null
           created_at?: string
+          data_venda?: string | null
           descricao?: string | null
           empreendimento_id: string
           fachada_id?: string | null
@@ -5783,6 +5785,7 @@ export type Database = {
           area_privativa?: number | null
           bloco_id?: string | null
           created_at?: string
+          data_venda?: string | null
           descricao?: string | null
           empreendimento_id?: string
           fachada_id?: string | null
