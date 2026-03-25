@@ -1670,7 +1670,7 @@ export function useNegociacoesPaginated(filters: NegociacoesPaginatedFilters = {
     queryFn: async () => {
       let query = db
         .from('negociacoes')
-        .select('id', { count: 'exact', head: true })
+        .select('id, cliente:clientes(nome, temperatura)', { count: 'exact', head: true })
         .eq('is_active', true);
 
       if (filters.empreendimento_id) query = query.eq('empreendimento_id', filters.empreendimento_id);
