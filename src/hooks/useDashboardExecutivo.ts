@@ -156,7 +156,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       ] = await Promise.all([
         contratosQ,
         negociacoesQ,
-        supabase.from('funil_etapas').select('id, nome, ordem').eq('is_active', true).order('ordem'),
+        supabase.from('funil_etapas').select('id, nome, ordem, is_final_sucesso').eq('is_active', true).order('ordem'),
         lancamentosQ,
         comissoesQ,
         supabase.from('comissao_parcelas').select('id, valor, status, data_vencimento, comissao_id'),
