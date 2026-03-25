@@ -1,31 +1,60 @@
 
 
-# Correção dos filtros e contadores de Negociações
+# Correção: Condições de Pagamento Invisíveis para Incorporador
 
-## Problemas identificados
+## Diagnóstico
 
-### 1. `!inner` join excluindo negociações sem cliente (causa do NEG-00192 sumir)
-Na query paginada (lista/tabela), a linha `clientes!inner(...)` usa um **INNER JOIN**, o que significa que qualquer negociação **sem cliente vinculado** simplesmente desaparece dos resultados. O Kanban usa join normal (sem `!inner`), por isso a mesma negociação pode aparecer no Kanban mas não na lista.
+Confirmado via queries diretas:
+- Os dados **estão salvos** no banco (4 condições para NEG-00192, incluindo a parcela de financiamento de R$ 870.179,19)
+- O INSERT funciona (policy `WITH CHECK (true)`)
+- O SELECT retorna `[]` para o incorporador (todas as queries de condições voltam vazias)
+- O usuário `cerro@sevengroup360.com.br` tem role `incorporador` e acesso ao empreendimento BELVEDERE
 
-### 2. Count query não faz join com clientes
-A query de contagem (`countQuery`) não faz join com a tabela `clientes`, mas tenta filtrar por `cliente.nome` e `cliente.temperatura`. Isso falha silenciosamente no PostgREST, resultando em contadores incorretos quando os filtros de busca ou temperatura estão ativos.
-
-### 3. Inconsistência count vs data
-Por causa dos problemas acima, o total exibido nos cards de métricas pode divergir do número real de registros na tabela.
+**Causa raiz**: A policy SELECT de `negociacao_condicoes_pagamento` faz um subquery na tabela `negociacoes`, que por sua vez tem RLS própria. O PostgreSQL avalia o RLS da tabela `negociacoes` dentro do subquery, criando uma avaliação nested que falha silenciosamente para o incorporador.
 
 ## Solução
 
-### Arquivo: `src/hooks/useNegociacoes.ts`
+Criar uma função `SECURITY DEFINER` que verifica o acesso à negociação **sem depender do RLS** da tabela `negociacoes`, e usá-la em uma policy única e consolidada.
 
-**Query de dados paginada (dataQuery):**
-- Trocar `clientes!inner(...)` por `clientes(...)` (LEFT JOIN), garantindo que negociações sem cliente apareçam normalmente
+### Migration SQL
 
-**Query de contagem (countQuery):**
-- Adicionar join com clientes na select: `select('id, cliente:clientes(nome, temperatura)', { count: 'exact', head: true })`
-- Isso permite que os filtros `search` (ilike cliente.nome) e `temperatura` funcionem corretamente na contagem
+```sql
+-- Função SECURITY DEFINER para verificar acesso
+CREATE OR REPLACE FUNCTION public.can_view_negociacao_condicoes(_neg_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM negociacoes n
+    WHERE n.id = _neg_id
+    AND (
+      is_admin(auth.uid())
+      OR has_role(auth.uid(), 'gestor_produto')
+      OR is_seven_team(auth.uid())
+      OR n.corretor_id IN (SELECT get_corretor_ids_by_user(auth.uid()))
+      OR (is_incorporador(auth.uid()) 
+          AND user_has_empreendimento_access(auth.uid(), n.empreendimento_id))
+    )
+  )
+$$;
 
-**Resultado esperado:**
-- NEG-00192 e qualquer negociação sem cliente passará a aparecer na lista
-- Contadores ficarão consistentes com os dados exibidos
-- Filtros de busca por nome e temperatura funcionarão corretamente em ambas as views
+-- Consolidar todas as SELECT policies em uma única
+DROP POLICY IF EXISTS "Users can view negociacao_condicoes_pagamento" 
+  ON negociacao_condicoes_pagamento;
+DROP POLICY IF EXISTS "Incorporadores can view negociacao_condicoes_pagamento" 
+  ON negociacao_condicoes_pagamento;
+
+CREATE POLICY "Users can view negociacao_condicoes_pagamento"
+ON negociacao_condicoes_pagamento FOR SELECT TO authenticated
+USING (can_view_negociacao_condicoes(negociacao_id));
+```
+
+### Sem alterações no código frontend
+O hook `useNegociacaoCondicoesPagamento` e os componentes continuam funcionando como estão -- o fix é 100% no banco.
+
+## Resultado esperado
+- Incorporador verá as condições de pagamento salvas (incluindo a parcela de financiamento)
+- Admins, gestores, corretores e equipe seven continuam com acesso normal
+- INSERTs e UPDATEs não são afetados (policies separadas já permissivas)
 
