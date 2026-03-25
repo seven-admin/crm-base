@@ -1,4 +1,4 @@
-import { useIncorporadorEmpreendimentos } from '@/hooks/useIncorporadorEmpreendimentos';
+import { useFilteredEmpreendimentoIds } from '@/hooks/useFilteredEmpreendimentoIds';
 import { useDashboardExecutivo } from '@/hooks/useDashboardExecutivo';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
