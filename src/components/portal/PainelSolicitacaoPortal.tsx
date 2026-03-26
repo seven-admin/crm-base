@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Send, Loader2, ShoppingCart, User, Phone, Mail } from 'lucide-react';
 import { useCriarSolicitacao } from '@/hooks/useSolicitacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
+import { useMeuCorretor } from '@/hooks/useMeuCorretor';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
