@@ -173,7 +173,7 @@ export function SolicitarReservaDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleEnviar} disabled={isPending || !clienteNome.trim()}>
+          <Button onClick={handleEnviar} disabled={isPending || !clienteNome.trim() || corretorNaoVinculado || isLoadingCorretor}>
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

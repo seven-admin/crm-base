@@ -46,8 +46,11 @@ export function PainelSolicitacaoPortal({
   const [observacoes, setObservacoes] = useState('');
 
   const { user, profile } = useAuth();
+  const { data: meuCorretor, isLoading: isLoadingCorretor } = useMeuCorretor();
   const criarSolicitacao = useCriarSolicitacao();
   const { data: etapas = [] } = useEtapasPadraoAtivas();
+
+  const corretorNaoVinculado = !isLoadingCorretor && !meuCorretor;
 
   const valorTotal = unidades.reduce((sum, u) => sum + (u.valor || 0), 0);
 
