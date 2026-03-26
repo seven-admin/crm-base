@@ -117,6 +117,12 @@ export function SolicitarReservaDialog({
             </div>
           </div>
 
+          {corretorNaoVinculado && (
+            <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3">
+              Seu usuário não está vinculado a um cadastro de corretor. Contate o administrador.
+            </div>
+          )}
+
           {/* Formulário do cliente */}
           <div className="space-y-3">
             <div>
