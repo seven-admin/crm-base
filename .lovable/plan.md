@@ -1,70 +1,76 @@
 
 
-# Tratamento de Erros Seguro -- Ocultar Dados Sensíveis do Banco
+# Correção: Submissão Prematura do Formulário + Contador de Clientes no Portal
 
-## Problema
+## Problema 1: Formulário de cliente pula a última etapa
 
-Atualmente, **27+ arquivos** expõem `error.message` diretamente em `toast.error()`, o que pode mostrar ao usuário mensagens como:
-- `"new row violates row-level security policy for table 'clientes'"`
-- `"duplicate key value violates unique constraint 'corretores_email_key'"`
-- `"null value in column 'imobiliaria_id' of relation 'clientes'"`
+O formulário em `ClienteForm.tsx` tem 4 etapas. Ao clicar "Próximo" na etapa 3, o `currentStep` muda para 4 e o botão muda de `type="button"` para `type="submit"`. Um duplo-clique (ou clique rápido) aciona o submit antes do usuário ver a etapa 4.
 
-Isso vaza nomes de tabelas, colunas e detalhes internos do banco.
+A proteção `if (currentStep < STEPS.length)` no `onSubmit` não funciona porque `currentStep` já é 4 após o primeiro clique.
 
-## Solução
+### Correção em `src/components/clientes/ClienteForm.tsx`
 
-### 1. Criar utilitário `src/lib/errorHandler.ts`
-
-Função `sanitizeErrorMessage(error, contexto)` que:
-- Recebe o erro bruto e um contexto amigável (ex: `"cadastrar cliente"`)
-- Gera um código de erro curto (timestamp + hash parcial, ex: `ERR-1711234567-a3f2`)
-- Faz `console.error` com todos os detalhes técnicos (tabela, mensagem original, stack)
-- Retorna uma mensagem amigável: `"Não foi possível cadastrar cliente. (Código: ERR-1711234567-a3f2)"`
-- Detecta padrões conhecidos para mensagens um pouco mais úteis:
-  - `"row-level security"` → `"Você não tem permissão para esta ação"`
-  - `"duplicate key"` / `"unique constraint"` → `"Registro duplicado. Verifique os dados informados"`
-  - `"foreign key"` → `"Registro vinculado não encontrado"`
-  - `"not null"` → `"Campos obrigatórios não preenchidos"`
-  - Qualquer outro → `"Não foi possível {contexto}"`
-
-### 2. Atualizar todos os hooks e componentes
-
-Substituir todos os padrões:
+Adicionar um `useRef` (`justNavigatedRef`) que é ativado ao avançar de etapa e desativado após 300ms. O `onSubmit` verifica essa flag e bloqueia submissões imediatas:
 
 ```typescript
-// ANTES (expõe dados internos)
-toast.error('Erro ao cadastrar cliente: ' + error.message);
-toast.error(error.message || 'Erro ao salvar');
+const justNavigatedRef = useRef(false);
 
-// DEPOIS (seguro)
-toast.error(sanitizeErrorMessage(error, 'cadastrar cliente'));
+const nextStep = () => {
+  if (currentStep < STEPS.length) {
+    justNavigatedRef.current = true;
+    setCurrentStep(currentStep + 1);
+    setTimeout(() => { justNavigatedRef.current = false; }, 300);
+  }
+};
+
+// No onSubmit do form:
+onSubmit={(e) => {
+  if (currentStep < STEPS.length || justNavigatedRef.current) {
+    e.preventDefault();
+    return;
+  }
+  form.handleSubmit(handleSubmit)(e);
+}}
 ```
 
-**Arquivos afetados** (lista dos principais):
-- `src/hooks/useClientes.ts` (8 ocorrências)
-- `src/hooks/useProjetosMarketing.ts` (4)
-- `src/hooks/useCorretoresUsuarios.ts` (2)
-- `src/hooks/useContratos.ts` (1)
-- `src/hooks/useUnidades.ts` (1)
-- `src/hooks/useActivateCorretor.ts` (1)
-- `src/hooks/useClienteSocios.ts` (3)
-- `src/hooks/usePlanejamentoStatus.ts` (3)
-- `src/hooks/useEventos.ts` (2)
-- `src/hooks/useVendaHistorica.ts` (1)
-- `src/pages/Usuarios.tsx` (3)
-- `src/pages/PortalClientes.tsx` (2)
-- `src/components/eventos/EventoInscritosTab.tsx` (4)
-- `src/components/planejamento/ConverterTarefaDialog.tsx` (2)
-- `src/components/corretores/VincularUsuarioDialog.tsx` (1)
-- `src/components/usuarios/CorretoresUsuariosTab.tsx` (1)
+---
 
-### 3. Sem alterações no banco
+## Problema 2: Contador de clientes no dashboard mostra total do sistema
 
-O fix é 100% no frontend. Os logs detalhados ficam no `console.error` do navegador, acessíveis apenas por quem tem acesso ao DevTools.
+O `PortalDashboard.tsx` (linha 69) exibe `{clientes.length}` usando `useClientes()` sem filtros. Esse hook depende da RLS para filtrar, mas se a RLS estiver retornando clientes de outras origens (ex: políticas amplas para admins), o contador pode estar inflado.
 
-### Resultado
+**Análise da RLS:** A policy SELECT para corretores filtra por `corretor_id IN (get_corretor_ids_by_user(auth.uid()))`. Isso deveria funcionar corretamente. Se o corretor está vendo clientes de outros, o problema pode ser:
+- Clientes cadastrados sem `corretor_id` (ficam `NULL`) e alguma outra policy os inclui
+- O usuário tem múltiplas roles
 
-- Usuários veem: `"Não foi possível cadastrar cliente. (Código: ERR-1711234567-a3f2)"`
-- Admins/devs consultam o console do navegador pelo código para ver o erro original
-- Nenhum nome de tabela, coluna ou policy vaza na interface
+### Verificação necessária
+
+O hook `useClientes()` já depende de RLS. Se a RLS está correta, o contador já deveria estar correto. Mas para garantir segurança adicional no frontend (caso o usuário tenha role dupla), podemos filtrar explicitamente no dashboard:
+
+### Correção em `src/pages/PortalDashboard.tsx`
+
+Importar `useMeuCorretor` e filtrar clientes pelo `corretor_id` do corretor logado (ou `imobiliaria_id` para gestores de imobiliária):
+
+```typescript
+const { data: meuCorretor } = useMeuCorretor();
+const { imobiliariaId } = useUserImobiliaria();
+const { role } = useAuth();
+
+// Filtrar clientes que pertencem ao corretor/imobiliária
+const meusClientes = useMemo(() => {
+  if (role === 'gestor_imobiliaria' && imobiliariaId) {
+    return clientes.filter(c => c.imobiliaria_id === imobiliariaId);
+  }
+  if (meuCorretor?.id) {
+    return clientes.filter(c => c.corretor_id === meuCorretor.id);
+  }
+  return clientes;
+}, [clientes, meuCorretor, imobiliariaId, role]);
+```
+
+E usar `meusClientes.length` no contador em vez de `clientes.length`.
+
+### Arquivos alterados
+1. `src/components/clientes/ClienteForm.tsx` -- adicionar `justNavigatedRef` para impedir submissão prematura
+2. `src/pages/PortalDashboard.tsx` -- filtrar contador de clientes pelo corretor/imobiliária logado
 
