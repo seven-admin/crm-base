@@ -222,9 +222,9 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       const valorNegociacoesGanhasMesAnterior = negociacoesGanhasMesAnterior.reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
 
       // Usar o maior valor entre as 3 fontes (evita dupla contagem)
-      const vendasMesAtual = Math.max(vendasMesAtualContratos, valorUnidadesVendidasMesAtual, valorNegociacoesGanhasMesAtual);
-      const vendasMesAnterior = Math.max(vendasMesAnteriorContratos, valorUnidadesVendidasMesAnterior, valorNegociacoesGanhasMesAnterior);
-      const unidadesVendidasMesCount = Math.max(contratosMesAtual.length, unidadesVendidasMesAtual.length, negociacoesGanhasMesAtual.length);
+      const vendasMesAtual = valorNegociacoesGanhasMesAtual;
+      const vendasMesAnterior = valorNegociacoesGanhasMesAnterior;
+      const unidadesVendidasMesCount = negociacoesGanhasMesAtual.length;
 
       const variacaoMensal = vendasMesAnterior > 0 
         ? ((vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100 
