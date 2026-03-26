@@ -20,7 +20,7 @@ import { useResumoAtividades } from '@/hooks/useForecast';
 import { useAtividade } from '@/hooks/useAtividades';
 import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
