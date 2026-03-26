@@ -410,7 +410,13 @@ export default function PortalIncorporadorForecast() {
                 <ScrollArea className="h-[320px]">
                   <div className="space-y-2 pr-3">
                     {(negociacoes as any[]).map((neg: any) => {
-                      const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
+                      const isGanha = neg.funil_etapa?.is_final_sucesso === true;
+                      const isPerdida = ['perdido', 'lost'].includes((neg.etapa || '').toLowerCase());
+                      const statusCfg = isGanha
+                        ? { label: 'Ganha', variant: 'secondary' as const }
+                        : isPerdida
+                        ? { label: 'Perdida', variant: 'destructive' as const }
+                        : STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
                       return (
                         <div key={neg.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                           <div className="flex-1 min-w-0">
