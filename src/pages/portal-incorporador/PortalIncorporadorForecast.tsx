@@ -171,8 +171,10 @@ export default function PortalIncorporadorForecast() {
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
     undefined, dataInicio, dataFim, empsFilter, TIPOS_FORECAST
   );
-  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds, dataInicio, dataFim);
+  const { data: negociacoesKPI, isLoading: loadingNegKPI } = useNegociacoesKPIs(empreendimentoIds, dataInicio, dataFim);
+  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesLista(empreendimentoIds, dataInicio, dataFim);
   const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds, dataInicio, dataFim);
+  const { data: atendimentosCount } = useAtendimentosCount(empreendimentoIds, dataInicio, dataFim);
   const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
 
   const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
@@ -184,13 +186,18 @@ export default function PortalIncorporadorForecast() {
 
   const isLoading = loadingEmps || loadingCategorias;
 
-  // KPIs de negociações
-  const negKPIs = {
-    total: negociacoes?.length || 0,
-    pendentes: negociacoes?.filter((n: any) => n.status_aprovacao === 'pendente' || n.status_aprovacao === null).length || 0,
-    aprovadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'aprovada').length || 0,
-    rejeitadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'rejeitada').length || 0,
-  };
+  // KPIs de negociações baseados em funil_etapa (regra comercial real)
+  const negKPIs = useMemo(() => {
+    const items = negociacoesKPI || [];
+    const total = items.length;
+    const ganhas = items.filter((n: any) => n.funil_etapa?.is_final_sucesso === true).length;
+    const perdidas = items.filter((n: any) => {
+      const etapa = (n.etapa || '').toLowerCase();
+      return etapa === 'perdido' || etapa === 'lost';
+    }).length;
+    const pendentes = total - ganhas - perdidas;
+    return { total, pendentes, aprovadas: ganhas, rejeitadas: perdidas };
+  }, [negociacoesKPI]);
 
   // Ao clicar em uma atividade nas Próximas Atividades → vai para aba Calendário com data
   function handleProximaAtividadeClick(atividadeId: string, dataAtividade: string) {
