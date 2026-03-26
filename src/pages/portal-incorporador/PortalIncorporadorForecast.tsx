@@ -20,7 +20,7 @@ import { useResumoAtividades } from '@/hooks/useForecast';
 import { useAtividade } from '@/hooks/useAtividades';
 import { AtividadeDetalheDialog } from '@/components/atividades/AtividadeDetalheDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_FORECAST, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -169,7 +169,7 @@ export default function PortalIncorporadorForecast() {
 
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
-    undefined, dataInicio, dataFim, empsFilter, TIPOS_FORECAST
+    undefined, dataInicio, dataFim, empsFilter
   );
   const { data: negociacoesKPI, isLoading: loadingNegKPI } = useNegociacoesKPIs(empreendimentoIds, dataInicio, dataFim);
   const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesLista(empreendimentoIds, dataInicio, dataFim);
