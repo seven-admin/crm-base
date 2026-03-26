@@ -94,7 +94,29 @@ function useNegociacoesLista(empreendimentoIds: string[], dataInicio?: Date, dat
   });
 }
 
-// Hook inline para lista de atendimentos
+// Hook para contagem total de atendimentos (sem limite)
+function useAtendimentosCount(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+  return useQuery({
+    queryKey: ['incorporador-atendimentos-count', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryFn: async () => {
+      if (!empreendimentoIds.length) return 0;
+      let query = supabase
+        .from('atividades' as any)
+        .select('id', { count: 'exact', head: true })
+        .in('empreendimento_id', empreendimentoIds)
+        .eq('tipo', 'atendimento')
+        .neq('status', 'cancelada');
+      if (dataInicio) query = query.gte('data_inicio', format(dataInicio, 'yyyy-MM-dd'));
+      if (dataFim) query = query.lte('data_inicio', format(dataFim, 'yyyy-MM-dd'));
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: empreendimentoIds.length > 0,
+  });
+}
+
+// Hook para lista de atendimentos (com limite)
 function useAtendimentosLista(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
     queryKey: ['incorporador-atendimentos-lista', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
