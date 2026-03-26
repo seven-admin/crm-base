@@ -34,9 +34,11 @@ export function SolicitarReservaDialog({
   unidades,
   onSuccess
 }: SolicitarReservaDialogProps) {
-  const { data: meuCorretor } = useMeuCorretor();
+  const { data: meuCorretor, isLoading: isLoadingCorretor } = useMeuCorretor();
   const { mutate: criarSolicitacao, isPending } = useCriarSolicitacao();
   const { data: etapasPadrao } = useEtapasPadraoAtivas();
+
+  const corretorNaoVinculado = !isLoadingCorretor && !meuCorretor;
 
   const [clienteNome, setClienteNome] = useState('');
   const [clienteTelefone, setClienteTelefone] = useState('');
