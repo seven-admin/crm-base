@@ -169,7 +169,7 @@ export default function PortalIncorporadorForecast() {
 
   const empsFilter = empreendimentoIds.length > 0 ? empreendimentoIds : undefined;
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
-    undefined, dataInicio, dataFim, empsFilter, TIPOS_FORECAST
+    undefined, dataInicio, dataFim, empsFilter
   );
   const { data: negociacoesKPI, isLoading: loadingNegKPI } = useNegociacoesKPIs(empreendimentoIds, dataInicio, dataFim);
   const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesLista(empreendimentoIds, dataInicio, dataFim);
