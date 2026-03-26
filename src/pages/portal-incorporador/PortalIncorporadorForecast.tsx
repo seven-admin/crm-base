@@ -38,25 +38,54 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Hook inline para negociações do incorporador
-function useNegociacoesIncorporador(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+// Hook para KPIs de negociações (sem limite, contagem real)
+function useNegociacoesKPIs(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
-    queryKey: ['incorporador-negociacoes', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryKey: ['incorporador-negociacoes-kpis', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
     queryFn: async () => {
       if (!empreendimentoIds.length) return [];
+      const inicioStr = dataInicio ? format(dataInicio, 'yyyy-MM-dd') : undefined;
+      const fimStr = dataFim ? format(addMonths(startOfMonth(dataFim), 1), 'yyyy-MM-dd') : undefined;
       let query = supabase
         .from('negociacoes' as any)
         .select(`
-          id, codigo, status_aprovacao, valor_negociacao, created_at,
+          id, status_aprovacao, etapa,
+          funil_etapa:funil_etapas(nome, is_final_sucesso)
+        `)
+        .in('empreendimento_id', empreendimentoIds)
+        .eq('is_active', true);
+      if (inicioStr) query = query.gte('created_at', inicioStr);
+      if (fimStr) query = query.lt('created_at', fimStr);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: empreendimentoIds.length > 0,
+  });
+}
+
+// Hook para lista de negociações (com limite, para exibição)
+function useNegociacoesLista(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+  return useQuery({
+    queryKey: ['incorporador-negociacoes-lista', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryFn: async () => {
+      if (!empreendimentoIds.length) return [];
+      const inicioStr = dataInicio ? format(dataInicio, 'yyyy-MM-dd') : undefined;
+      const fimStr = dataFim ? format(addMonths(startOfMonth(dataFim), 1), 'yyyy-MM-dd') : undefined;
+      let query = supabase
+        .from('negociacoes' as any)
+        .select(`
+          id, codigo, status_aprovacao, valor_negociacao, created_at, etapa,
           cliente:clientes(nome),
-          empreendimento:empreendimentos(nome)
+          empreendimento:empreendimentos(nome),
+          funil_etapa:funil_etapas(nome, is_final_sucesso)
         `)
         .in('empreendimento_id', empreendimentoIds)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(50);
-      if (dataInicio) query = query.gte('created_at', format(dataInicio, 'yyyy-MM-dd'));
-      if (dataFim) query = query.lte('created_at', format(dataFim, 'yyyy-MM-dd'));
+      if (inicioStr) query = query.gte('created_at', inicioStr);
+      if (fimStr) query = query.lt('created_at', fimStr);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as any[];
