@@ -278,6 +278,11 @@ export function useCriarSolicitacao() {
       funilEtapaId: string;
       observacoes?: string;
     }) => {
+      // Validação: corretor deve estar vinculado
+      if (!corretorId) {
+        throw new Error('Seu usuário não está vinculado a um cadastro de corretor. Contate o administrador.');
+      }
+
       let finalClienteId = clienteId;
 
       // Create cliente if not exists

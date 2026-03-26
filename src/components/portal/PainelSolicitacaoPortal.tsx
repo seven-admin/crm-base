@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Send, Loader2, ShoppingCart, User, Phone, Mail } from 'lucide-react';
 import { useCriarSolicitacao } from '@/hooks/useSolicitacoes';
 import { useEtapasPadraoAtivas } from '@/hooks/useFunis';
+import { useMeuCorretor } from '@/hooks/useMeuCorretor';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
@@ -46,8 +47,11 @@ export function PainelSolicitacaoPortal({
   const [observacoes, setObservacoes] = useState('');
 
   const { user, profile } = useAuth();
+  const { data: meuCorretor, isLoading: isLoadingCorretor } = useMeuCorretor();
   const criarSolicitacao = useCriarSolicitacao();
   const { data: etapas = [] } = useEtapasPadraoAtivas();
+
+  const corretorNaoVinculado = !isLoadingCorretor && !meuCorretor;
 
   const valorTotal = unidades.reduce((sum, u) => sum + (u.valor || 0), 0);
 
@@ -76,6 +80,8 @@ export function PainelSolicitacaoPortal({
         clienteNome,
         clienteEmail: clienteEmail || undefined,
         clienteTelefone: clienteTelefone || undefined,
+        corretorId: meuCorretor?.id,
+        imobiliariaId: meuCorretor?.imobiliaria_id || undefined,
         unidadeIds: unidades.map(u => u.id),
         funilEtapaId: etapaInicial.id,
         observacoes: observacoes || undefined,

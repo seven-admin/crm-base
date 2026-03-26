@@ -34,9 +34,11 @@ export function SolicitarReservaDialog({
   unidades,
   onSuccess
 }: SolicitarReservaDialogProps) {
-  const { data: meuCorretor } = useMeuCorretor();
+  const { data: meuCorretor, isLoading: isLoadingCorretor } = useMeuCorretor();
   const { mutate: criarSolicitacao, isPending } = useCriarSolicitacao();
   const { data: etapasPadrao } = useEtapasPadraoAtivas();
+
+  const corretorNaoVinculado = !isLoadingCorretor && !meuCorretor;
 
   const [clienteNome, setClienteNome] = useState('');
   const [clienteTelefone, setClienteTelefone] = useState('');
@@ -115,6 +117,12 @@ export function SolicitarReservaDialog({
             </div>
           </div>
 
+          {corretorNaoVinculado && (
+            <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3">
+              Seu usuário não está vinculado a um cadastro de corretor. Contate o administrador.
+            </div>
+          )}
+
           {/* Formulário do cliente */}
           <div className="space-y-3">
             <div>
@@ -165,7 +173,7 @@ export function SolicitarReservaDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleEnviar} disabled={isPending || !clienteNome.trim()}>
+          <Button onClick={handleEnviar} disabled={isPending || !clienteNome.trim() || corretorNaoVinculado || isLoadingCorretor}>
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
