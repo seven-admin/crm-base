@@ -468,7 +468,7 @@ export default function PortalIncorporadorForecast() {
                   <Headphones className="h-4 w-4 text-primary" />
                   Lista de Atendimentos
                 </CardTitle>
-                <Badge variant="secondary">{atendimentos?.length || 0}</Badge>
+                <Badge variant="secondary">{atendimentosCount ?? atendimentos?.length ?? 0}</Badge>
               </div>
             </CardHeader>
             <CardContent>
