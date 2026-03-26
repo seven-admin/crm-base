@@ -80,6 +80,8 @@ export function PainelSolicitacaoPortal({
         clienteNome,
         clienteEmail: clienteEmail || undefined,
         clienteTelefone: clienteTelefone || undefined,
+        corretorId: meuCorretor?.id,
+        imobiliariaId: meuCorretor?.imobiliaria_id || undefined,
         unidadeIds: unidades.map(u => u.id),
         funilEtapaId: etapaInicial.id,
         observacoes: observacoes || undefined,
