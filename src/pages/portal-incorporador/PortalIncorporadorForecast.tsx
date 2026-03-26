@@ -38,25 +38,24 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Hook inline para negociações do incorporador
-function useNegociacoesIncorporador(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+// Hook para KPIs de negociações (sem limite, contagem real)
+function useNegociacoesKPIs(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
-    queryKey: ['incorporador-negociacoes', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryKey: ['incorporador-negociacoes-kpis', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
     queryFn: async () => {
       if (!empreendimentoIds.length) return [];
+      const inicioStr = dataInicio ? format(dataInicio, 'yyyy-MM-dd') : undefined;
+      const fimStr = dataFim ? format(addMonths(startOfMonth(dataFim), 1), 'yyyy-MM-dd') : undefined;
       let query = supabase
         .from('negociacoes' as any)
         .select(`
-          id, codigo, status_aprovacao, valor_negociacao, created_at,
-          cliente:clientes(nome),
-          empreendimento:empreendimentos(nome)
+          id, status_aprovacao, etapa,
+          funil_etapa:funil_etapas(nome, is_final_sucesso)
         `)
         .in('empreendimento_id', empreendimentoIds)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (dataInicio) query = query.gte('created_at', format(dataInicio, 'yyyy-MM-dd'));
-      if (dataFim) query = query.lte('created_at', format(dataFim, 'yyyy-MM-dd'));
+        .eq('is_active', true);
+      if (inicioStr) query = query.gte('created_at', inicioStr);
+      if (fimStr) query = query.lt('created_at', fimStr);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as any[];
@@ -65,7 +64,59 @@ function useNegociacoesIncorporador(empreendimentoIds: string[], dataInicio?: Da
   });
 }
 
-// Hook inline para lista de atendimentos
+// Hook para lista de negociações (com limite, para exibição)
+function useNegociacoesLista(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+  return useQuery({
+    queryKey: ['incorporador-negociacoes-lista', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryFn: async () => {
+      if (!empreendimentoIds.length) return [];
+      const inicioStr = dataInicio ? format(dataInicio, 'yyyy-MM-dd') : undefined;
+      const fimStr = dataFim ? format(addMonths(startOfMonth(dataFim), 1), 'yyyy-MM-dd') : undefined;
+      let query = supabase
+        .from('negociacoes' as any)
+        .select(`
+          id, codigo, status_aprovacao, valor_negociacao, created_at, etapa,
+          cliente:clientes(nome),
+          empreendimento:empreendimentos(nome),
+          funil_etapa:funil_etapas(nome, is_final_sucesso)
+        `)
+        .in('empreendimento_id', empreendimentoIds)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (inicioStr) query = query.gte('created_at', inicioStr);
+      if (fimStr) query = query.lt('created_at', fimStr);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: empreendimentoIds.length > 0,
+  });
+}
+
+// Hook para contagem total de atendimentos (sem limite)
+function useAtendimentosCount(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
+  return useQuery({
+    queryKey: ['incorporador-atendimentos-count', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
+    queryFn: async () => {
+      if (!empreendimentoIds.length) return 0;
+      let query = supabase
+        .from('atividades' as any)
+        .select('id', { count: 'exact', head: true })
+        .in('empreendimento_id', empreendimentoIds)
+        .eq('tipo', 'atendimento')
+        .neq('status', 'cancelada');
+      if (dataInicio) query = query.gte('data_inicio', format(dataInicio, 'yyyy-MM-dd'));
+      if (dataFim) query = query.lte('data_inicio', format(dataFim, 'yyyy-MM-dd'));
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: empreendimentoIds.length > 0,
+  });
+}
+
+// Hook para lista de atendimentos (com limite)
 function useAtendimentosLista(empreendimentoIds: string[], dataInicio?: Date, dataFim?: Date) {
   return useQuery({
     queryKey: ['incorporador-atendimentos-lista', empreendimentoIds, dataInicio?.toISOString(), dataFim?.toISOString()],
@@ -120,8 +171,10 @@ export default function PortalIncorporadorForecast() {
   const { data: resumoCategorias, isLoading: loadingCategorias } = useResumoAtividadesPorCategoria(
     undefined, dataInicio, dataFim, empsFilter, TIPOS_FORECAST
   );
-  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesIncorporador(empreendimentoIds, dataInicio, dataFim);
+  const { data: negociacoesKPI, isLoading: loadingNegKPI } = useNegociacoesKPIs(empreendimentoIds, dataInicio, dataFim);
+  const { data: negociacoes, isLoading: loadingNeg } = useNegociacoesLista(empreendimentoIds, dataInicio, dataFim);
   const { data: atendimentos, isLoading: loadingAtend } = useAtendimentosLista(empreendimentoIds, dataInicio, dataFim);
+  const { data: atendimentosCount } = useAtendimentosCount(empreendimentoIds, dataInicio, dataFim);
   const { data: atividadeSelecionada, isLoading: loadingDetalhe } = useAtividade(detalheAtividadeId || undefined);
 
   const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
@@ -133,13 +186,18 @@ export default function PortalIncorporadorForecast() {
 
   const isLoading = loadingEmps || loadingCategorias;
 
-  // KPIs de negociações
-  const negKPIs = {
-    total: negociacoes?.length || 0,
-    pendentes: negociacoes?.filter((n: any) => n.status_aprovacao === 'pendente' || n.status_aprovacao === null).length || 0,
-    aprovadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'aprovada').length || 0,
-    rejeitadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'rejeitada').length || 0,
-  };
+  // KPIs de negociações baseados em funil_etapa (regra comercial real)
+  const negKPIs = useMemo(() => {
+    const items = negociacoesKPI || [];
+    const total = items.length;
+    const ganhas = items.filter((n: any) => n.funil_etapa?.is_final_sucesso === true).length;
+    const perdidas = items.filter((n: any) => {
+      const etapa = (n.etapa || '').toLowerCase();
+      return etapa === 'perdido' || etapa === 'lost';
+    }).length;
+    const pendentes = total - ganhas - perdidas;
+    return { total, pendentes, aprovadas: ganhas, rejeitadas: perdidas };
+  }, [negociacoesKPI]);
 
   // Ao clicar em uma atividade nas Próximas Atividades → vai para aba Calendário com data
   function handleProximaAtividadeClick(atividadeId: string, dataAtividade: string) {
@@ -352,7 +410,13 @@ export default function PortalIncorporadorForecast() {
                 <ScrollArea className="h-[320px]">
                   <div className="space-y-2 pr-3">
                     {(negociacoes as any[]).map((neg: any) => {
-                      const statusCfg = STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
+                      const isGanha = neg.funil_etapa?.is_final_sucesso === true;
+                      const isPerdida = ['perdido', 'lost'].includes((neg.etapa || '').toLowerCase());
+                      const statusCfg = isGanha
+                        ? { label: 'Ganha', variant: 'secondary' as const }
+                        : isPerdida
+                        ? { label: 'Perdida', variant: 'destructive' as const }
+                        : STATUS_APROVACAO_LABELS[neg.status_aprovacao] || STATUS_APROVACAO_LABELS.pendente;
                       return (
                         <div key={neg.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                           <div className="flex-1 min-w-0">
@@ -410,7 +474,7 @@ export default function PortalIncorporadorForecast() {
                   <Headphones className="h-4 w-4 text-primary" />
                   Lista de Atendimentos
                 </CardTitle>
-                <Badge variant="secondary">{atendimentos?.length || 0}</Badge>
+                <Badge variant="secondary">{atendimentosCount ?? atendimentos?.length ?? 0}</Badge>
               </div>
             </CardHeader>
             <CardContent>

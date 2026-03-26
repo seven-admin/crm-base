@@ -32,7 +32,12 @@ export function useResumoAtividadesPorCategoria(
 
       const inicioStr = format(inicioMes, 'yyyy-MM-dd');
       const fimStr = format(fimMes, 'yyyy-MM-dd');
-      const hojeStr = format(new Date(), 'yyyy-MM-dd');
+      // Usar data de referência da competência: se o mês selecionado é o atual, usar hoje;
+      // senão, usar o último dia do mês selecionado (para meses passados/futuros)
+      const agora = new Date();
+      const mesAtual = agora.getFullYear() === inicioMes.getFullYear() && agora.getMonth() === inicioMes.getMonth();
+      const dataRef = mesAtual ? agora : fimMes;
+      const hojeStr = format(dataRef, 'yyyy-MM-dd');
 
       let query = supabase
         .from('atividades' as any)
