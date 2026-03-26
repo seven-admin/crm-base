@@ -332,9 +332,13 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     onSubmit(cleanData);
   };
 
+  const justNavigatedRef = useRef(false);
+
   const nextStep = () => {
     if (currentStep < STEPS.length) {
+      justNavigatedRef.current = true;
       setCurrentStep(currentStep + 1);
+      setTimeout(() => { justNavigatedRef.current = false; }, 300);
     }
   };
 
