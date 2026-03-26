@@ -250,7 +250,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           const data = new Date(n.data_fechamento || n.created_at);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
-        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades, vendasMesNegs) });
+        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: vendasMesNegs });
       }
 
       // ============ NEGOCIAÇÕES ============
