@@ -356,14 +356,14 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     <Form {...form}>
       <form 
         onSubmit={(e) => {
-          // Prevenir submissão prematura nas etapas intermediárias
-          if (currentStep < STEPS.length) {
+          // Prevenir submissão prematura nas etapas intermediárias ou logo após navegação
+          if (currentStep < STEPS.length || justNavigatedRef.current) {
             e.preventDefault();
             return;
           }
           // Na última etapa, processar normalmente
           form.handleSubmit(handleSubmit)(e);
-        }} 
+        }}
         className="flex flex-col h-full"
       >
         {/* Step Indicator */}
