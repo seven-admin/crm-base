@@ -136,7 +136,7 @@ export default function PortalIncorporadorForecast() {
   // KPIs de negociações
   const negKPIs = {
     total: negociacoes?.length || 0,
-    pendentes: negociacoes?.filter((n: any) => n.status_aprovacao === 'pendente').length || 0,
+    pendentes: negociacoes?.filter((n: any) => n.status_aprovacao === 'pendente' || n.status_aprovacao === null).length || 0,
     aprovadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'aprovada').length || 0,
     rejeitadas: negociacoes?.filter((n: any) => n.status_aprovacao === 'rejeitada').length || 0,
   };

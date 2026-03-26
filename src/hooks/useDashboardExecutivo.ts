@@ -222,9 +222,9 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
       const valorNegociacoesGanhasMesAnterior = negociacoesGanhasMesAnterior.reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
 
       // Usar o maior valor entre as 3 fontes (evita dupla contagem)
-      const vendasMesAtual = Math.max(vendasMesAtualContratos, valorUnidadesVendidasMesAtual, valorNegociacoesGanhasMesAtual);
-      const vendasMesAnterior = Math.max(vendasMesAnteriorContratos, valorUnidadesVendidasMesAnterior, valorNegociacoesGanhasMesAnterior);
-      const unidadesVendidasMesCount = Math.max(contratosMesAtual.length, unidadesVendidasMesAtual.length, negociacoesGanhasMesAtual.length);
+      const vendasMesAtual = valorNegociacoesGanhasMesAtual;
+      const vendasMesAnterior = valorNegociacoesGanhasMesAnterior;
+      const unidadesVendidasMesCount = negociacoesGanhasMesAtual.length;
 
       const variacaoMensal = vendasMesAnterior > 0 
         ? ((vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100 
@@ -250,7 +250,7 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
           const data = new Date(n.data_fechamento || n.created_at);
           return data >= inicioMes && data <= fimMes;
         }).reduce((acc, n) => acc + (Number(n.valor_negociacao) || 0), 0);
-        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: Math.max(vendasMesContratos, vendasMesUnidades, vendasMesNegs) });
+        tendenciaVendas.push({ mes: format(mesRef, 'MMM'), valor: vendasMesNegs });
       }
 
       // ============ NEGOCIAÇÕES ============
