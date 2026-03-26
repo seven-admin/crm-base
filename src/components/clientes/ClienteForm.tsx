@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -332,9 +332,13 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     onSubmit(cleanData);
   };
 
+  const justNavigatedRef = useRef(false);
+
   const nextStep = () => {
     if (currentStep < STEPS.length) {
+      justNavigatedRef.current = true;
       setCurrentStep(currentStep + 1);
+      setTimeout(() => { justNavigatedRef.current = false; }, 300);
     }
   };
 
@@ -352,14 +356,14 @@ export function ClienteForm({ initialData, onSubmit, isLoading }: ClienteFormPro
     <Form {...form}>
       <form 
         onSubmit={(e) => {
-          // Prevenir submissão prematura nas etapas intermediárias
-          if (currentStep < STEPS.length) {
+          // Prevenir submissão prematura nas etapas intermediárias ou logo após navegação
+          if (currentStep < STEPS.length || justNavigatedRef.current) {
             e.preventDefault();
             return;
           }
           // Na última etapa, processar normalmente
           form.handleSubmit(handleSubmit)(e);
-        }} 
+        }}
         className="flex flex-col h-full"
       >
         {/* Step Indicator */}

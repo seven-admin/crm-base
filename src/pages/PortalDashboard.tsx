@@ -4,6 +4,9 @@ import { Building2, FileText, Users, Clock } from 'lucide-react';
 import { useClientes } from '@/hooks/useClientes';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { useSolicitacoesDoCorretor } from '@/hooks/useSolicitacoesCorretor';
+import { useMeuCorretor } from '@/hooks/useMeuCorretor';
+import { useUserImobiliaria } from '@/hooks/useUserImobiliaria';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -25,6 +28,20 @@ export default function PortalDashboard() {
   const { data: solicitacoes = [] } = useSolicitacoesDoCorretor();
   const { data: clientes = [] } = useClientes();
   const { data: empreendimentos = [] } = useEmpreendimentos();
+  const { data: meuCorretor } = useMeuCorretor();
+  const { imobiliariaId } = useUserImobiliaria();
+  const { role } = useAuth();
+
+  // Filtrar clientes vinculados ao corretor/imobiliária logado
+  const meusClientes = useMemo(() => {
+    if (role === 'gestor_imobiliaria' && imobiliariaId) {
+      return clientes.filter(c => c.imobiliaria_id === imobiliariaId);
+    }
+    if (meuCorretor?.id) {
+      return clientes.filter(c => c.corretor_id === meuCorretor.id);
+    }
+    return clientes;
+  }, [clientes, meuCorretor, imobiliariaId, role]);
 
   // Aplicar mesmo filtro de PortalEmpreendimentos para consistência
   const empreendimentosDisponiveis = useMemo(() => 
@@ -66,7 +83,7 @@ export default function PortalDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clientes.length}</div>
+            <div className="text-2xl font-bold">{meusClientes.length}</div>
             <p className="text-xs text-muted-foreground">cadastrados</p>
           </CardContent>
         </Card>
