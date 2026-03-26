@@ -28,6 +28,20 @@ export default function PortalDashboard() {
   const { data: solicitacoes = [] } = useSolicitacoesDoCorretor();
   const { data: clientes = [] } = useClientes();
   const { data: empreendimentos = [] } = useEmpreendimentos();
+  const { data: meuCorretor } = useMeuCorretor();
+  const { imobiliariaId } = useUserImobiliaria();
+  const { role } = useAuth();
+
+  // Filtrar clientes vinculados ao corretor/imobiliária logado
+  const meusClientes = useMemo(() => {
+    if (role === 'gestor_imobiliaria' && imobiliariaId) {
+      return clientes.filter(c => c.imobiliaria_id === imobiliariaId);
+    }
+    if (meuCorretor?.id) {
+      return clientes.filter(c => c.corretor_id === meuCorretor.id);
+    }
+    return clientes;
+  }, [clientes, meuCorretor, imobiliariaId, role]);
 
   // Aplicar mesmo filtro de PortalEmpreendimentos para consistência
   const empreendimentosDisponiveis = useMemo(() => 
