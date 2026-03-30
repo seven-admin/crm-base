@@ -80,6 +80,7 @@ export default function Atividades() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tiposPermitidos = undefined; // listagem unificada - todos os tipos
+  useAtividadesRealtime(); // Atualização automática via realtime
 
   const pageTitle = 'Atividades';
   const pageSubtitle = 'Gerencie todas as atividades';
