@@ -94,8 +94,9 @@ export function useAtividades(options: UseAtividadesOptions = {}) {
       if (countError) throw countError;
 
       dataQuery = dataQuery
-        // Lista em /atividades: sempre mais recentes primeiro
+        // Lista em /atividades: sempre mais recentes primeiro, desempate por created_at
         .order('data_inicio', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(from, to);
 
       const { data, error } = await dataQuery;

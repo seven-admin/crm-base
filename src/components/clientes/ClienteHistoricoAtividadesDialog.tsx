@@ -70,10 +70,15 @@ export function ClienteHistoricoAtividadesDialog({
   }, [atividades]);
 
   const handleCreate = async (payload: AtividadeFormSubmitData) => {
+    // Garantir vínculo com o cliente ao criar atividade pelo histórico
+    const formDataComCliente = {
+      ...payload.formData,
+      cliente_id: cliente?.id || payload.formData.cliente_id,
+    };
     if (payload.gestorIds && payload.gestorIds.length > 0) {
-      await createBatch.mutateAsync({ formData: payload.formData, gestorIds: payload.gestorIds });
+      await createBatch.mutateAsync({ formData: formDataComCliente, gestorIds: payload.gestorIds });
     } else {
-      await createOne.mutateAsync(payload.formData);
+      await createOne.mutateAsync(formDataComCliente);
     }
     setCreateOpen(false);
   };
