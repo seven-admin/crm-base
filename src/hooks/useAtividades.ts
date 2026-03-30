@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -94,8 +95,9 @@ export function useAtividades(options: UseAtividadesOptions = {}) {
       if (countError) throw countError;
 
       dataQuery = dataQuery
-        // Lista em /atividades: sempre mais recentes primeiro
+        // Lista em /atividades: sempre mais recentes primeiro, desempate por created_at
         .order('data_inicio', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(from, to);
 
       const { data, error } = await dataQuery;
@@ -875,4 +877,35 @@ export function useAlterarStatusAtividade() {
     },
     onError: () => toast.error('Erro ao alterar status'),
   });
+}
+
+/**
+ * Hook de Realtime para atividades.
+ * Escuta INSERT/UPDATE/DELETE na tabela e invalida as queries relevantes.
+ */
+export function useAtividadesRealtime() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('atividades-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'atividades' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['atividades'] });
+          queryClient.invalidateQueries({ queryKey: ['atividade'] });
+          queryClient.invalidateQueries({ queryKey: ['agenda'] });
+          queryClient.invalidateQueries({ queryKey: ['forecast'] });
+          queryClient.invalidateQueries({ queryKey: ['atividades-resumo-status'] });
+          queryClient.invalidateQueries({ queryKey: ['atividades-resumo-categoria'] });
+          queryClient.invalidateQueries({ queryKey: ['atividades-vencidas'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 }

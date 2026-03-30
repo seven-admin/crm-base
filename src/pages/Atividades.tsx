@@ -24,7 +24,7 @@ import { PendenciasTab } from '@/components/atividades/PendenciasTab';
 import { AgendaCalendario } from '@/components/agenda/AgendaCalendario';
 import { AgendaDia } from '@/components/agenda/AgendaDia';
 import { AtividadeKanbanBoard } from '@/components/atividades/AtividadeKanbanBoard';
-import { useAtividade, useAtividades, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesVencidas, useConcluirAtividadesEmLote, useReabrirAtividadesEmLote, useCreateAtividadesParaGestores } from '@/hooks/useAtividades';
+import { useAtividade, useAtividades, useDeleteAtividade, useCancelarAtividade, useCreateAtividade, useUpdateAtividade, useAgendaMensal, useAgendaDia, useAtividadesVencidas, useConcluirAtividadesEmLote, useReabrirAtividadesEmLote, useCreateAtividadesParaGestores, useAtividadesRealtime } from '@/hooks/useAtividades';
 import { useSuperAdminIds } from '@/hooks/useSuperAdminIds';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
@@ -80,6 +80,7 @@ export default function Atividades() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tiposPermitidos = undefined; // listagem unificada - todos os tipos
+  useAtividadesRealtime(); // Atualização automática via realtime
 
   const pageTitle = 'Atividades';
   const pageSubtitle = 'Gerencie todas as atividades';

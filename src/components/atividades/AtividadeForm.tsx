@@ -234,7 +234,7 @@ export function AtividadeForm(props: AtividadeFormProps) {
       subtipo: TIPOS_COM_SUBTIPO.includes(values.tipo) ? values.subtipo as AtividadeSubtipo : undefined,
       categoria: values.categoria as AtividadeCategoria,
       titulo: values.titulo,
-      cliente_id: values.cliente_id || undefined,
+      cliente_id: (lockCliente && defaultClienteId) ? defaultClienteId : (values.cliente_id || undefined),
       corretor_id: values.corretor_id || undefined,
       imobiliaria_id: values.imobiliaria_id || undefined,
       empreendimento_id: values.empreendimento_id || undefined,
