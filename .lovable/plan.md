@@ -1,32 +1,72 @@
 
 
-# Correção: Erro RLS ao Salvar Solicitação de Reserva (Corretor)
+# Correção: Atividades criadas por Pedro não aparecem
 
 ## Diagnóstico
 
-O erro "Você não tem permissão para esta ação" (RLS) ocorre no fluxo de criação de solicitação de reserva. A causa raiz:
+O INSERT na tabela `atividades` tem política permissiva (`WITH CHECK (true)`), então a criação sempre funciona. Porém a política de **SELECT** exige:
 
-1. O hook `useCriarSolicitacao` insere um **cliente** e uma **negociação** usando `.select().single()` (INSERT + SELECT na mesma operação)
-2. A política de SELECT da tabela `clientes` exige `corretor_id IN (get_corretor_ids_by_user(auth.uid()))` -- se `corretor_id` for NULL, o SELECT falha
-3. Mesma lógica na tabela `negociacoes` -- o SELECT exige que `corretor_id` corresponda ao corretor do usuário logado
-4. O `SolicitarReservaDialog` passa `corretorId: meuCorretor?.id` -- se o hook `useMeuCorretor()` ainda não carregou ou o corretor não tem `user_id` vinculado, o valor é `undefined`, gerando `NULL` no banco
+```
+gestor_id = auth.uid() 
+OR corretor_id IN (get_corretor_ids_by_user(auth.uid()))
+```
 
-Evidência: existem corretores ativos com `user_id = NULL` na tabela `corretores` (ex: TANIA MORAES), o que faz `useMeuCorretor()` não encontrar o registro.
+Se Pedro cria uma atividade **sem se definir como gestor** (campo `gestor_id` vazio ou apontando para outro usuário) e não é corretor vinculado, o registro é inserido mas ele **não consegue lê-lo de volta**. O `.select().single()` no INSERT falha silenciosamente pelo RLS, e a atividade não aparece na listagem.
+
+Além disso, não existe trigger `auto_set_gestor_id` para a tabela `atividades` (só existe para `clientes`).
 
 ## Correções
 
-### 1. `src/components/portal/SolicitarReservaDialog.tsx`
-- Desabilitar botão "Enviar" enquanto `meuCorretor` não estiver carregado
-- Exibir mensagem de erro clara se `meuCorretor` for null (corretor não vinculado ao usuário)
+### 1. Migration SQL — Duas mudanças
 
-### 2. `src/hooks/useSolicitacoes.ts`
-- Adicionar validação no `mutationFn`: se `corretorId` estiver ausente, lançar erro amigável ("Seu usuário não está vinculado a um cadastro de corretor") em vez de deixar o RLS bloquear silenciosamente
-- Remover `.select().single()` do INSERT de `negociacao_unidades` e `negociacao_historico` (não precisam retornar dados)
+**a) Adicionar `created_by` na política de SELECT e UPDATE de atividades:**
 
-### 3. `src/components/portal/PainelSolicitacaoPortal.tsx`
-- Arquivo não está sendo importado em nenhum lugar (componente órfão), mas por segurança: adicionar `corretorId` e `imobiliariaId` via `useMeuCorretor` caso volte a ser utilizado
+```sql
+DROP POLICY IF EXISTS "Users can view own atividades" ON atividades;
+CREATE POLICY "Users can view own atividades"
+ON atividades FOR SELECT TO authenticated
+USING (
+  gestor_id = auth.uid() 
+  OR created_by = auth.uid()
+  OR corretor_id IN (SELECT get_corretor_ids_by_user(auth.uid()))
+);
 
-### Resultado
-- Corretor com cadastro vinculado: fluxo funciona normalmente
-- Corretor sem cadastro vinculado: mensagem clara "Seu cadastro de corretor não está vinculado. Contate o administrador." em vez de erro genérico de permissão
+DROP POLICY IF EXISTS "Users can update own atividades" ON atividades;
+CREATE POLICY "Users can update own atividades"
+ON atividades FOR UPDATE TO authenticated
+USING (
+  gestor_id = auth.uid() 
+  OR created_by = auth.uid()
+  OR corretor_id IN (SELECT get_corretor_ids_by_user(auth.uid()))
+);
+```
+
+Isso garante que quem criou a atividade sempre pode vê-la e editá-la.
+
+**b) Criar trigger para auto-preencher `gestor_id` quando o criador é gestor_produto:**
+
+```sql
+CREATE OR REPLACE FUNCTION public.auto_set_gestor_id_atividades()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+BEGIN
+  IF NEW.gestor_id IS NULL AND public.has_role(auth.uid(), 'gestor_produto') THEN
+    NEW.gestor_id := auth.uid();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_auto_set_gestor_id_atividades
+BEFORE INSERT ON public.atividades
+FOR EACH ROW EXECUTE FUNCTION public.auto_set_gestor_id_atividades();
+```
+
+### 2. Sem alteração de código frontend
+
+As políticas e o trigger resolvem o problema na camada do banco. O hook `useCreateAtividade` já usa `.select().single()` após o INSERT, que passará a funcionar corretamente com o `created_by` na política de SELECT.
+
+### Resultado esperado
+- Atividades criadas por Pedro (ou qualquer usuário) ficam visíveis imediatamente
+- Se Pedro é `gestor_produto`, o `gestor_id` é preenchido automaticamente quando omitido
+- Não há impacto em outros fluxos (a política é aditiva com OR)
 
