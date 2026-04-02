@@ -236,8 +236,13 @@ export function FunilKanbanBoard({ filters, negociacoes: negociacoesProp, isLoad
 
     // Bloqueio: só exige proposta para Análise de Proposta
     const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
+    const ETAPA_RETORNO_INCORPORADOR = '0ce3c47e-b603-4f62-8205-8ff9931452c1';
 
-    if (destinationColumn === ETAPA_ANALISE_PROPOSTA && !negociacao.numero_proposta) {
+    if (
+      destinationColumn === ETAPA_ANALISE_PROPOSTA &&
+      !negociacao.numero_proposta &&
+      sourceColumn !== ETAPA_RETORNO_INCORPORADOR
+    ) {
       toast.info('Gere uma proposta para enviar para análise.');
       navigate(`/negociacoes/editar/${negociacao.id}`);
       return;
