@@ -370,7 +370,7 @@ export function PropostaCondicoesEditor({
             indice_correcao: editingCondicao.indice_correcao || 'INCC',
             parcelas_sem_correcao: editingCondicao.parcelas_sem_correcao || 0,
             forma_quitacao: (editingCondicao.forma_quitacao as any) || 'dinheiro',
-            forma_pagamento: (editingCondicao.forma_pagamento as any) || 'boleto',
+            forma_pagamento: (editingCondicao.forma_quitacao && editingCondicao.forma_quitacao !== 'dinheiro') ? undefined : ((editingCondicao.forma_pagamento as any) || 'boleto'),
             observacao_texto: editingCondicao.observacao_texto || undefined,
           } : undefined}
           isSaving={createCondicao.isPending || updateCondicao.isPending}

@@ -437,22 +437,28 @@ export function LocalCondicoesPagamentoEditor({
                       
                       {/* Forma */}
                       <TableCell>
-                        <Select
-                          value={condition.forma_pagamento}
-                          onValueChange={(v) => handleFieldChange(index, 'forma_pagamento', v as FormaPagamento)}
-                          disabled={readonly}
-                        >
-                          <SelectTrigger className="h-8 text-xs border-transparent bg-transparent hover:bg-muted/50 focus:border-input">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {FORMAS_PAGAMENTO.map(forma => (
-                              <SelectItem key={forma} value={forma}>
-                                {FORMA_PAGAMENTO_LABELS[forma]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {(condition.forma_quitacao && condition.forma_quitacao !== 'dinheiro') ? (
+                          <Badge variant="outline" className="text-xs">
+                            {FORMA_QUITACAO_LABELS[condition.forma_quitacao as FormaQuitacao] || condition.forma_quitacao}
+                          </Badge>
+                        ) : (
+                          <Select
+                            value={condition.forma_pagamento}
+                            onValueChange={(v) => handleFieldChange(index, 'forma_pagamento', v as FormaPagamento)}
+                            disabled={readonly}
+                          >
+                            <SelectTrigger className="h-8 text-xs border-transparent bg-transparent hover:bg-muted/50 focus:border-input">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {FORMAS_PAGAMENTO.map(forma => (
+                                <SelectItem key={forma} value={forma}>
+                                  {FORMA_PAGAMENTO_LABELS[forma]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </TableCell>
                       
                       {/* Total */}
