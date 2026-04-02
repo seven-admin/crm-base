@@ -101,7 +101,7 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
     }
   };
 
-
+  return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
