@@ -1,56 +1,27 @@
 
 
-# Correção: NEG-00206 não move para "Proposta completa"
+# Correção: NEG-00206 duplicada em duas abas do Portal Incorporador
 
-## Diagnóstico
-
-No `FunilKanbanBoard.tsx` (linha 238-244), existe uma validação de drag-and-drop:
-
-```typescript
-const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
-
-if (destinationColumn === ETAPA_ANALISE_PROPOSTA && !negociacao.numero_proposta) {
-  toast.info('Gere uma proposta para enviar para análise.');
-  navigate(`/negociacoes/editar/${negociacao.id}`);
-  return; // ← BLOQUEIA a movimentação
-}
-```
-
-A etapa `ed1b1eb4-...` é a **"Proposta completa"** (ordem 3). A NEG-00206 tem `numero_proposta = null`, então o código **bloqueia** a movimentação e redireciona para a edição, sem erro visível — apenas um toast sutil.
-
-O problema é que esta validação faz sentido para o fluxo normal (gestor movendo para análise), mas **não faz sentido** quando:
-- O incorporador está aprovando/movendo após "Retorno do incorporador"
-- Ou o gestor quer registrar a aprovação do incorporador manualmente
+## Problema
+O filtro de `negociacoesEmAndamento` (que alimenta as abas "Atendimentos" e "Negociações") exclui apenas `aprovada_incorporador` e `contra_proposta`, mas **não exclui** `em_analise`. Como a NEG-00206 tem `status_proposta = 'em_analise'`, ela aparece simultaneamente em "Aguardando Aprovação" e "Negociações".
 
 ## Solução
 
-### 1. `src/components/negociacoes/FunilKanbanBoard.tsx`
-Ajustar a validação para permitir a movimentação quando a negociação **já passou** pela etapa "Retorno do incorporador" (ou seja, já foi analisada):
+### `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`
+Adicionar `em_analise` à lista de exclusão no filtro `negociacoesEmAndamento` (linha 180):
 
 ```typescript
-const ETAPA_ANALISE_PROPOSTA = 'ed1b1eb4-2cf1-4cf3-ac62-2a8897a52f35';
-const ETAPA_RETORNO_INCORPORADOR = '0ce3c47e-b603-4f62-8205-8ff9931452c1';
+// Antes
+!['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
 
-if (
-  destinationColumn === ETAPA_ANALISE_PROPOSTA && 
-  !negociacao.numero_proposta &&
-  sourceColumn !== ETAPA_RETORNO_INCORPORADOR  // ← permite se vem do retorno
-) {
-  toast.info('Gere uma proposta para enviar para análise.');
-  navigate(`/negociacoes/editar/${negociacao.id}`);
-  return;
-}
+// Depois
+!['aprovada_incorporador', 'contra_proposta', 'em_analise'].includes(n.status_proposta || '')
 ```
 
-Isso resolve o caso imediato. Negociações vindas de "Retorno do incorporador" (como a NEG-00206) poderão ser movidas para "Proposta completa" sem bloqueio.
+Isso garante que negociações aguardando aprovação apareçam **apenas** na aba dedicada, sem duplicação nas abas "Atendimentos" ou "Negociações".
 
-### Detalhes técnicos
-- Apenas 1 arquivo alterado: `src/components/negociacoes/FunilKanbanBoard.tsx`
-- Mudança de ~2 linhas na condição do `if`
-- Sem alteração de banco de dados
-- A validação continua ativa para o fluxo normal (etapas iniciais → Proposta completa sem proposta gerada)
-
-### Validação
-- Arrastar NEG-00206 de "Retorno do incorporador" para "Proposta completa" — deve funcionar
-- Arrastar uma negociação de "Atendimento" para "Proposta completa" sem proposta — deve continuar bloqueando
+### Impacto
+- 1 linha alterada
+- Sem alteração de banco
+- Negociações com `em_analise` ficam exclusivamente na aba "Aguardando Aprovação"
 
