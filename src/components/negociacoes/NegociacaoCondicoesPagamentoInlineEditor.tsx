@@ -681,7 +681,7 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
                                 ))}
                               </SelectContent>
                             </Select>
-                          )
+                          )}
                         </TableCell>
                         <TableCell>
                           {!readonly && (
