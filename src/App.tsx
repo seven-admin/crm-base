@@ -64,6 +64,7 @@ const NovaPropostaComercial = lazy(() => import("./pages/NovaPropostaComercial")
 const SemAcesso = lazy(() => import("./pages/SemAcesso"));
 const Planejamento = lazy(() => import("./pages/Planejamento"));
 const PlanejamentoConfiguracoes = lazy(() => import("./pages/PlanejamentoConfiguracoes"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const DesignTest = lazy(() => import("./pages/DesignTest"));
 const PortalCorretoresGestao = lazy(() => import("./pages/portal/PortalCorretoresGestao"));
 const PortalMinhaImobiliaria = lazy(() => import("./pages/portal/PortalMinhaImobiliaria"));
