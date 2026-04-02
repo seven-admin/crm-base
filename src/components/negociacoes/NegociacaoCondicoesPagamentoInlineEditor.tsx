@@ -659,7 +659,11 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
                           {formatCurrency(total)}
                         </TableCell>
                         <TableCell>
-                          {readonly ? (
+                          {(condicao.forma_quitacao && condicao.forma_quitacao !== 'dinheiro') ? (
+                            <Badge variant="outline" className="text-xs">
+                              {FORMA_QUITACAO_LABELS[condicao.forma_quitacao as FormaQuitacao] || condicao.forma_quitacao}
+                            </Badge>
+                          ) : readonly ? (
                             <Badge variant="outline" className="text-xs">
                               {FORMA_PAGAMENTO_LABELS[(condicao.forma_pagamento as FormaPagamento) || 'boleto']}
                             </Badge>
@@ -677,7 +681,7 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
                                 ))}
                               </SelectContent>
                             </Select>
-                          )}
+                          )
                         </TableCell>
                         <TableCell>
                           {!readonly && (
