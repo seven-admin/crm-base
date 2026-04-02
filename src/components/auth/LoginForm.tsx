@@ -75,7 +75,33 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
     }
   };
 
-  return (
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    setLoginError('');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        setLoginError(error.message);
+      } else {
+        toast({
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        });
+        setShowForgotPassword(false);
+        setForgotEmail('');
+      }
+    } catch {
+      setLoginError('Erro ao enviar email de recuperação.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
