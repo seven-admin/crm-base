@@ -42,10 +42,12 @@ import { CondicaoPagamentoForm } from '@/components/contratos/CondicaoPagamentoF
 import {
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
+  FORMA_QUITACAO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
   type CondicaoPagamentoFormData,
   type TipoParcelaCodigo,
   type FormaPagamento,
+  type FormaQuitacao,
 } from '@/types/condicoesPagamento.types';
 import { useTiposParcela } from '@/hooks/useCondicoesPagamento';
 import { cn } from '@/lib/utils';
