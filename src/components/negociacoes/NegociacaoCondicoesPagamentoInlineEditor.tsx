@@ -49,6 +49,7 @@ import {
 import {
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
+  FORMA_QUITACAO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
   type CondicaoPagamentoFormData,
   type TipoParcelaCodigo,
