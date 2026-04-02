@@ -111,6 +111,7 @@ const App = () => (
             <Route path="/termos" element={<TermosUso />} />
             <Route path="/privacidade" element={<PoliticaPrivacidade />} />
             <Route path="/sem-acesso" element={<SemAcesso />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/design-test" element={<DesignTest />} />
             
             {/* Protected routes */}
