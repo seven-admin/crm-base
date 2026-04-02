@@ -49,6 +49,7 @@ import {
 import {
   FORMAS_PAGAMENTO,
   FORMA_PAGAMENTO_LABELS,
+  FORMA_QUITACAO_LABELS,
   DEFAULT_CONDICAO_PAGAMENTO,
   type CondicaoPagamentoFormData,
   type TipoParcelaCodigo,
@@ -286,8 +287,8 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
           quantidade: 1,
           valor: fromCents(novoValorUltimaCents),
           valor_tipo: 'fixo',
-          forma_quitacao: 'dinheiro',
-          forma_pagamento: (ultimaCondicao.forma_pagamento as FormaPagamento) || 'boleto',
+          forma_quitacao: (ultimaCondicao.forma_quitacao as FormaQuitacao) || 'dinheiro',
+          forma_pagamento: (ultimaCondicao.forma_quitacao && ultimaCondicao.forma_quitacao !== 'dinheiro') ? undefined as any : ((ultimaCondicao.forma_pagamento as FormaPagamento) || 'boleto'),
           descricao: 'Ajuste de centavos',
           intervalo_dias: ultimaCondicao.intervalo_dias || 30,
           com_correcao: ultimaCondicao.com_correcao || false,
@@ -658,7 +659,11 @@ export function NegociacaoCondicoesPagamentoInlineEditor({
                           {formatCurrency(total)}
                         </TableCell>
                         <TableCell>
-                          {readonly ? (
+                          {(condicao.forma_quitacao && condicao.forma_quitacao !== 'dinheiro') ? (
+                            <Badge variant="outline" className="text-xs">
+                              {FORMA_QUITACAO_LABELS[condicao.forma_quitacao as FormaQuitacao] || condicao.forma_quitacao}
+                            </Badge>
+                          ) : readonly ? (
                             <Badge variant="outline" className="text-xs">
                               {FORMA_PAGAMENTO_LABELS[(condicao.forma_pagamento as FormaPagamento) || 'boleto']}
                             </Badge>
