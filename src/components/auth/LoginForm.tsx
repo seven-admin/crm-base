@@ -181,7 +181,20 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setForgotEmail(loginEmail);
+                      setLoginError('');
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
                 <Input
                   id="login-password"
                   type="password"
@@ -192,6 +205,38 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
                   required
                 />
               </div>
+
+              {showForgotPassword && (
+                <div className="p-4 border border-border rounded-lg bg-muted/50 space-y-3">
+                  <p className="text-sm text-foreground font-medium">Recuperar senha</p>
+                  <p className="text-xs text-muted-foreground">
+                    Informe seu email para receber o link de recuperação.
+                  </p>
+                  <form onSubmit={handleForgotPassword} className="space-y-3">
+                    <Input
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="h-10"
+                      required
+                    />
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" disabled={forgotLoading} className="flex-1">
+                        {forgotLoading ? 'Enviando...' : 'Enviar Link'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowForgotPassword(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               <Button 
                 type="submit" 
