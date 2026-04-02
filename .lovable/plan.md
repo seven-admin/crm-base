@@ -1,27 +1,37 @@
 
 
-# Correção: NEG-00206 duplicada em duas abas do Portal Incorporador
+# Implementar Recuperação de Senha pelo Usuário ("Esqueci minha senha")
 
-## Problema
-O filtro de `negociacoesEmAndamento` (que alimenta as abas "Atendimentos" e "Negociações") exclui apenas `aprovada_incorporador` e `contra_proposta`, mas **não exclui** `em_analise`. Como a NEG-00206 tem `status_proposta = 'em_analise'`, ela aparece simultaneamente em "Aguardando Aprovação" e "Negociações".
+## Situação atual
+- Existe apenas reset administrativo (admin reseta para `Seven@1234`)
+- Não há link "Esqueci minha senha" na tela de login
+- Não há página `/reset-password` para o usuário definir nova senha
 
-## Solução
+## O que implementar
 
-### `src/pages/portal-incorporador/PortalIncorporadorPropostas.tsx`
-Adicionar `em_analise` à lista de exclusão no filtro `negociacoesEmAndamento` (linha 180):
+### 1. Link "Esqueci minha senha" na tela de login
+- Adicionar link abaixo do campo de senha em `src/components/auth/LoginForm.tsx`
+- Ao clicar, exibir um campo para digitar o email e enviar o link de recuperação
+- Usar `supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/reset-password' })`
 
-```typescript
-// Antes
-!['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
+### 2. Página `/reset-password`
+- Criar `src/pages/ResetPassword.tsx`
+- Detectar token de recuperação na URL (`type=recovery` no hash)
+- Formulário com "Nova senha" e "Confirmar senha"
+- Chamar `supabase.auth.updateUser({ password })` para salvar
+- Redirecionar para login após sucesso
 
-// Depois
-!['aprovada_incorporador', 'contra_proposta', 'em_analise'].includes(n.status_proposta || '')
-```
+### 3. Rota pública
+- Adicionar rota `/reset-password` em `App.tsx` (fora de rotas protegidas)
 
-Isso garante que negociações aguardando aprovação apareçam **apenas** na aba dedicada, sem duplicação nas abas "Atendimentos" ou "Negociações".
+### Arquivos alterados
+- `src/components/auth/LoginForm.tsx` — adicionar link e modal/estado para solicitar recuperação
+- `src/pages/ResetPassword.tsx` — nova página
+- `src/App.tsx` — nova rota pública
 
-### Impacto
-- 1 linha alterada
-- Sem alteração de banco
-- Negociações com `em_analise` ficam exclusivamente na aba "Aguardando Aprovação"
+### Detalhes técnicos
+- Supabase Auth já suporta `resetPasswordForEmail` nativamente — envia email com link de recuperação
+- O email é enviado pelo próprio Supabase (ou templates customizados se configurados)
+- A página `/reset-password` deve ser pública (sem autenticação) pois o usuário não está logado
+- Toda comunicação é em português (pt-BR)
 
