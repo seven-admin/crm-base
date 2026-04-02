@@ -177,7 +177,7 @@ export default function PortalIncorporadorPropostas() {
       (temEtapasConfiguradas
         ? etapasVisiveisIds.includes(n.funil_etapa_id || '')
         : true) &&
-      !['aprovada_incorporador', 'contra_proposta'].includes(n.status_proposta || '')
+      !['aprovada_incorporador', 'contra_proposta', 'em_analise'].includes(n.status_proposta || '')
   );
 
   const atendimentosEmAndamento = negociacoesEmAndamento.filter(
