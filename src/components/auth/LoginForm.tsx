@@ -30,6 +30,10 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const getConfig = (chave: string, fallback: string) => {
     if (isError || !configs) return fallback;
