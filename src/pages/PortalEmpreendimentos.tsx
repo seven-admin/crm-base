@@ -13,7 +13,7 @@ export default function PortalEmpreendimentos() {
   const { data: empreendimentos, isLoading } = useEmpreendimentos();
 
   const empreendimentosFiltrados = useMemo(() => {
-    return empreendimentos?.filter(e => ['lancamento', 'obra'].includes(e.status)) || [];
+    return empreendimentos || [];
   }, [empreendimentos]);
 
   if (isLoading) {
