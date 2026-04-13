@@ -98,7 +98,7 @@ export function useUpdateSignatarioStatus() {
       status: SignatarioStatus;
       extras?: Record<string, unknown>;
     }) => {
-      const updateData: Record<string, unknown> = { status, ...extras };
+      const updateData: { status: SignatarioStatus; data_envio?: string; data_visualizacao?: string; data_assinatura?: string; [key: string]: string | undefined } = { status, ...(extras as any) };
 
       // Set appropriate timestamp based on status
       if (status === 'enviado') updateData.data_envio = new Date().toISOString();

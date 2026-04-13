@@ -148,7 +148,13 @@ export function useTriarBriefing() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Usuário não autenticado');
 
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        status: BriefingStatus;
+        triado_por: string;
+        data_triagem: string;
+        data_entrega?: string;
+        observacoes?: string;
+      } = {
         status,
         triado_por: userData.user.id,
         data_triagem: new Date().toISOString(),

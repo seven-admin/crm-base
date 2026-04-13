@@ -95,9 +95,10 @@ export function useEventoTemplates() {
       id,
       ...data
     }: Partial<EventoTemplate> & { id: string }) => {
+      const { tarefas, ...updateData } = data;
       const { error } = await supabase
         .from('evento_templates')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

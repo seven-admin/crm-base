@@ -82,9 +82,10 @@ export function useEventos() {
 
   const updateEvento = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Evento> & { id: string }) => {
+      const { empreendimento, responsavel, ...updateData } = data as any;
       const { error } = await supabase
         .from('eventos')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

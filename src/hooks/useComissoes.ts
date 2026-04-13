@@ -154,9 +154,10 @@ export function useUpdateComissao() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<Comissao> & { id: string }) => {
+      const { contrato, corretor, empreendimento, gestor, imobiliaria, ...updateData } = data as any;
       const { error } = await supabase
         .from('comissoes')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
       if (error) throw error;
     },
@@ -178,7 +179,11 @@ export function useRegistrarPagamento() {
 
   return useMutation({
     mutationFn: async (data: PagamentoData) => {
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        status: ComissaoStatus;
+        data_pagamento: string;
+        nf_numero?: string;
+      } = {
         status: 'pago' as ComissaoStatus,
         data_pagamento: data.data_pagamento,
       };
