@@ -154,9 +154,10 @@ export function useUpdateComissao() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<Comissao> & { id: string }) => {
+      const { contrato, corretor, empreendimento, gestor, imobiliaria, ...updateData } = data as any;
       const { error } = await supabase
         .from('comissoes')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
       if (error) throw error;
     },
@@ -178,7 +179,11 @@ export function useRegistrarPagamento() {
 
   return useMutation({
     mutationFn: async (data: PagamentoData) => {
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        status: ComissaoStatus;
+        data_pagamento: string;
+        nf_numero?: string;
+      } = {
         status: 'pago' as ComissaoStatus,
         data_pagamento: data.data_pagamento,
       };
@@ -250,13 +255,13 @@ export function useRegistrarPagamentoComissao() {
         const { error: updateLancError } = await supabase
           .from('lancamentos_financeiros')
           .update({
-            status: 'pago',
+            status: 'pago' as any,
             data_pagamento: data.data_pagamento,
             centro_custo_id: data.centro_custo_id,
             categoria_fluxo_id: data.categoria_fluxo_id || null,
             nf_numero: data.nf_numero || null,
             observacoes: data.observacoes || null,
-          })
+          } as any)
           .eq('id', lancamentoExistente.id);
 
         if (updateLancError) throw updateLancError;
@@ -279,7 +284,7 @@ export function useRegistrarPagamentoComissao() {
             empreendimento_id: comissao.empreendimento_id,
             nf_numero: data.nf_numero || null,
             observacoes: data.observacoes || null,
-          });
+          } as any);
 
         if (insertError) throw insertError;
       }

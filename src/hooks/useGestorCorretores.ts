@@ -82,10 +82,12 @@ export function useGestorCorretores() {
   });
 
   const updateCorretor = useMutation({
-    mutationFn: async ({ id, ...dados }: { id: string; nome?: string; telefone?: string; creci?: string }) => {
+    mutationFn: async ({ id, nome, ...dados }: { id: string; nome?: string; telefone?: string; creci?: string }) => {
+      const updateData: { nome_completo?: string; telefone?: string; creci?: string } = { ...dados };
+      if (nome !== undefined) updateData.nome_completo = nome;
       const { error } = await supabase
         .from('corretores')
-        .update(dados)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

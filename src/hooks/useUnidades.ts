@@ -61,14 +61,15 @@ export function useCreateUnidade() {
 
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: UnidadeFormData }) => {
+      const { polygon_coords, ...rest } = data;
       const insertData = {
-        ...data,
+        ...rest,
         empreendimento_id: empreendimentoId,
-        polygon_coords: data.polygon_coords as unknown as Json,
+        polygon_coords: polygon_coords as unknown as Json,
       };
       const { data: result, error } = await supabase
         .from('unidades')
-        .insert(insertData)
+        .insert(insertData as any)
         .select()
         .single();
 
@@ -101,7 +102,7 @@ export function useCreateUnidadesBulk() {
       
       const { data: result, error } = await supabase
         .from('unidades')
-        .insert(unidadesWithEmp)
+        .insert(unidadesWithEmp as any)
         .select();
 
       if (error) throw error;
@@ -135,7 +136,7 @@ export function useUpdateUnidade() {
       };
       const { data: result, error } = await supabase
         .from('unidades')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id)
         .select()
         .single();
@@ -276,7 +277,7 @@ export function useUpdateUnidadesMemorial() {
     }) => {
       // Update each unit
       for (const update of updates) {
-        const updateData: Record<string, string | number | null | undefined> = {};
+        const updateData: any = {};
         if (update.descricao !== undefined) updateData.descricao = update.descricao;
         if (update.observacoes !== undefined) updateData.observacoes = update.observacoes;
         if (update.fachada_id !== undefined) updateData.fachada_id = update.fachada_id;
@@ -335,7 +336,7 @@ export function useUpdateUnidadesTipologiaBatch() {
 
   return useMutation({
     mutationFn: async ({ ids, empreendimentoId, tipologiaId, areaPrivativa }: { ids: string[]; empreendimentoId: string; tipologiaId: string; areaPrivativa?: number }) => {
-      const updateData: Record<string, string | number> = { tipologia_id: tipologiaId };
+      const updateData: any = { tipologia_id: tipologiaId };
       if (areaPrivativa !== undefined) {
         updateData.area_privativa = areaPrivativa;
       }

@@ -261,9 +261,10 @@ export function useUpdateContrato() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Contrato> }) => {
+      const { cliente, corretor, empreendimento, gestor, imobiliaria, template, unidades, ...updateData } = data as any;
       const { error } = await supabase
         .from('contratos')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
@@ -288,9 +289,8 @@ export function useUpdateContratoStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status, motivo_reprovacao }: { id: string; status: string; motivo_reprovacao?: string }) => {
-      const updateData: Record<string, unknown> = { status };
+      const updateData: Record<string, string> = { status };
       
-      // Set appropriate date based on status
       if (status === 'enviado_assinatura') {
         updateData.data_envio_assinatura = new Date().toISOString().split('T')[0];
       } else if (status === 'assinado') {
@@ -305,7 +305,7 @@ export function useUpdateContratoStatus() {
 
       const { error } = await supabase
         .from('contratos')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id);
 
       if (error) throw error;
@@ -390,9 +390,10 @@ export function useCreateContratoTemplate() {
 
   return useMutation({
     mutationFn: async (data: Omit<ContratoTemplate, 'id' | 'created_at' | 'updated_at'>) => {
+      const { empreendimento, ...insertData } = data as any;
       const { data: created, error } = await supabase
         .from('contrato_templates')
-        .insert(data)
+        .insert(insertData)
         .select(`*, empreendimento:empreendimentos(id, nome)`)
         .single();
 
@@ -415,9 +416,10 @@ export function useUpdateContratoTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ContratoTemplate> }) => {
+      const { empreendimento, ...updateData } = data as any;
       const { error } = await supabase
         .from('contrato_templates')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
@@ -651,9 +653,10 @@ export function useUpdateContratoPendencia() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ContratoPendencia> }) => {
+      const { responsavel, ...updateData } = data as any;
       const { error } = await supabase
         .from('contrato_pendencias')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

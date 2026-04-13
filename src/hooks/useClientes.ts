@@ -536,7 +536,7 @@ export function useUpdateClientesEmLote() {
       }
 
       // Build update object only with provided fields
-      const updateData: Record<string, any> = {};
+      const updateData: { gestor_id?: string | null; fase?: string | null; temperatura?: string | null } = {};
       
       if ('gestor_id' in data) {
         updateData.gestor_id = data.gestor_id;

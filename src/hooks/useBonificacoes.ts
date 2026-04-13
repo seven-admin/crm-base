@@ -80,9 +80,10 @@ export function useUpdateBonificacao() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Bonificacao> }) => {
+      const { empreendimento, user, ...updateData } = data as any;
       const { error } = await supabase
         .from('bonificacoes')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

@@ -184,7 +184,8 @@ export function useProjetosMarketing(filters?: ProjetoFilters) {
   // Atualizar projeto
   const updateProjeto = useMutation({
     mutationFn: async ({ id, ...data }: Partial<ProjetoMarketing> & { id: string }) => {
-      const dbData: Record<string, unknown> = { ...data };
+      const { responsavel, empreendimento, criador, ...cleanData } = data as any;
+      const dbData: any = { ...cleanData };
       if (data.status) {
         dbData.status = toDBStatus(data.status as StatusTicket);
       }
@@ -410,9 +411,10 @@ export function useTarefasProjeto(projetoId: string) {
 
   const updateTarefa = useMutation({
     mutationFn: async ({ id, ...data }: Partial<TarefaProjeto> & { id: string }) => {
+      const { responsavel, ...updateData } = data as any;
       const { error } = await supabase
         .from('tarefas_projeto')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
