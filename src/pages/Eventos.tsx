@@ -154,7 +154,7 @@ export default function Eventos() {
             data_inicio: dataTarefa.toISOString(),
             data_fim: addDays(dataTarefa, Math.ceil(tarefaTemplate.duracao_horas / 24)).toISOString(),
             status: 'pendente',
-          });
+          } as any);
         }
         
         toast.success(`Evento criado com ${selectedTemplate.tarefas.length} tarefas do template!`);

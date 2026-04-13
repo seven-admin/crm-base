@@ -102,7 +102,7 @@ export function useCreateUnidadesBulk() {
       
       const { data: result, error } = await supabase
         .from('unidades')
-        .insert(unidadesWithEmp)
+        .insert(unidadesWithEmp as any)
         .select();
 
       if (error) throw error;
@@ -136,7 +136,7 @@ export function useUpdateUnidade() {
       };
       const { data: result, error } = await supabase
         .from('unidades')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id)
         .select()
         .single();
@@ -277,7 +277,7 @@ export function useUpdateUnidadesMemorial() {
     }) => {
       // Update each unit
       for (const update of updates) {
-        const updateData: Record<string, string | number | null | undefined> = {};
+        const updateData: any = {};
         if (update.descricao !== undefined) updateData.descricao = update.descricao;
         if (update.observacoes !== undefined) updateData.observacoes = update.observacoes;
         if (update.fachada_id !== undefined) updateData.fachada_id = update.fachada_id;
@@ -336,7 +336,7 @@ export function useUpdateUnidadesTipologiaBatch() {
 
   return useMutation({
     mutationFn: async ({ ids, empreendimentoId, tipologiaId, areaPrivativa }: { ids: string[]; empreendimentoId: string; tipologiaId: string; areaPrivativa?: number }) => {
-      const updateData: Record<string, string | number> = { tipologia_id: tipologiaId };
+      const updateData: any = { tipologia_id: tipologiaId };
       if (areaPrivativa !== undefined) {
         updateData.area_privativa = areaPrivativa;
       }
