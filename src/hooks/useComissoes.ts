@@ -255,13 +255,13 @@ export function useRegistrarPagamentoComissao() {
         const { error: updateLancError } = await supabase
           .from('lancamentos_financeiros')
           .update({
-            status: 'pago',
+            status: 'pago' as any,
             data_pagamento: data.data_pagamento,
             centro_custo_id: data.centro_custo_id,
             categoria_fluxo_id: data.categoria_fluxo_id || null,
             nf_numero: data.nf_numero || null,
             observacoes: data.observacoes || null,
-          })
+          } as any)
           .eq('id', lancamentoExistente.id);
 
         if (updateLancError) throw updateLancError;
@@ -284,7 +284,7 @@ export function useRegistrarPagamentoComissao() {
             empreendimento_id: comissao.empreendimento_id,
             nf_numero: data.nf_numero || null,
             observacoes: data.observacoes || null,
-          });
+          } as any);
 
         if (insertError) throw insertError;
       }

@@ -317,7 +317,7 @@ export function useUpdateRecurringSeries() {
       valor?: number; 
       descricao?: string;
     }) => {
-      const updateData: Record<string, unknown> = {};
+      const updateData: any = {};
       if (valor !== undefined) updateData.valor = valor;
       if (descricao !== undefined) updateData.descricao = descricao;
 
@@ -393,7 +393,8 @@ export function useUpdateLancamento() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<LancamentoFinanceiro> }) => {
-      const payload = normalizeLancamentoForSave(data);
+      const { beneficiario, categoria, centro_custo, contrato, empreendimento, ...cleanData } = data as any;
+      const payload = normalizeLancamentoForSave(cleanData);
       const { error } = await supabase
         .from('lancamentos_financeiros')
         .update(payload)

@@ -289,16 +289,8 @@ export function useUpdateContratoStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status, motivo_reprovacao }: { id: string; status: string; motivo_reprovacao?: string }) => {
-      const updateData: {
-        status: string;
-        data_envio_assinatura?: string;
-        data_assinatura?: string;
-        data_envio_incorporador?: string;
-        data_aprovacao?: string;
-        motivo_reprovacao?: string;
-      } = { status };
+      const updateData: Record<string, string> = { status };
       
-      // Set appropriate date based on status
       if (status === 'enviado_assinatura') {
         updateData.data_envio_assinatura = new Date().toISOString().split('T')[0];
       } else if (status === 'assinado') {
@@ -313,7 +305,7 @@ export function useUpdateContratoStatus() {
 
       const { error } = await supabase
         .from('contratos')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id);
 
       if (error) throw error;

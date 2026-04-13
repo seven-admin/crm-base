@@ -61,14 +61,15 @@ export function useCreateUnidade() {
 
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: UnidadeFormData }) => {
+      const { polygon_coords, ...rest } = data;
       const insertData = {
-        ...data,
+        ...rest,
         empreendimento_id: empreendimentoId,
-        polygon_coords: data.polygon_coords as unknown as Json,
+        polygon_coords: polygon_coords as unknown as Json,
       };
       const { data: result, error } = await supabase
         .from('unidades')
-        .insert(insertData)
+        .insert(insertData as any)
         .select()
         .single();
 

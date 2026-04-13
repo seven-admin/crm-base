@@ -173,9 +173,10 @@ export function useTarefasEvento(eventoId: string) {
 
   const updateTarefa = useMutation({
     mutationFn: async ({ id, ...data }: Partial<EventoTarefa> & { id: string }) => {
+      const { responsavel, ...updateData } = data as any;
       const { error } = await supabase
         .from('evento_tarefas')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

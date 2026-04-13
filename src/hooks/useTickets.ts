@@ -163,7 +163,8 @@ export function useTickets(filters?: TicketFilters) {
   // Atualizar ticket
   const updateTicket = useMutation({
     mutationFn: async ({ id, ...data }: Partial<Ticket> & { id: string }) => {
-      const dbData: Record<string, unknown> = { ...data };
+      const { responsavel, empreendimento, criador, ...cleanData } = data as any;
+      const dbData: any = { ...cleanData };
       if (data.status) {
         dbData.status = toDBStatus(data.status as StatusTicket);
       }
@@ -429,9 +430,10 @@ export function useTarefasTicket(ticketId: string) {
 
   const updateTarefa = useMutation({
     mutationFn: async ({ id, ...data }: Partial<TarefaTicket> & { id: string }) => {
+      const { responsavel, ...updateData } = data as any;
       const { error } = await supabase
         .from('tarefas_projeto')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
