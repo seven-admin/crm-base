@@ -249,7 +249,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if user already has this role before inserting
+    // Garantir que o usuário tenha exatamente 1 role: remover quaisquer roles antigos
+    // que sejam diferentes do novo. Isso torna o recadastro idempotente e evita
+    // múltiplos roles acumulados (que causavam inconsistências de exibição).
+    const { error: deleteOldRolesError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', newUserId)
+      .neq('role_id', roleData.id)
+
+    if (deleteOldRolesError) {
+      console.error('Error removing previous roles:', deleteOldRolesError)
+    }
+
+    // Verificar se já tem o role pretendido (idempotência)
     const { data: existingRole } = await supabaseAdmin
       .from('user_roles')
       .select('id')
