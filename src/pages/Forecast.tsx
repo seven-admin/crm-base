@@ -1,14 +1,11 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Handshake, ClipboardList } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
 import { usePessoasTreinadas } from '@/hooks/usePessoasTreinadas';
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
@@ -22,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatarMoeda } from '@/lib/formatters';
 
 const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
   seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
