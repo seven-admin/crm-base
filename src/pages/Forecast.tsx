@@ -199,7 +199,7 @@ export default function Forecast() {
           <TabsList>
           <TabsTrigger value="negociacoes" className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
               <Handshake className="h-4 w-4" />
-              Negociações
+              Atendimentos
             </TabsTrigger>
             <TabsTrigger value="atividades" className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
               <ClipboardList className="h-4 w-4" />
