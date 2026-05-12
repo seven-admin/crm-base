@@ -1,14 +1,11 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, DollarSign, TrendingUp, Handshake, FileCheck, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Handshake, ClipboardList } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CategoriaCard } from '@/components/forecast/CategoriaCard';
 import { ForecastBatchStatusDialog } from '@/components/forecast/ForecastBatchStatusDialog';
 import { useResumoAtividadesPorCategoria } from '@/hooks/useResumoAtividadesPorCategoria';
-import { useForecastFinanceiro } from '@/hooks/useForecastFinanceiro';
 import { usePessoasTreinadas } from '@/hooks/usePessoasTreinadas';
 import { ATIVIDADE_CATEGORIA_LABELS, TIPOS_NEGOCIACAO, TIPOS_DIARIO, type AtividadeCategoria } from '@/types/atividades.types';
 import { Building2, Users, Briefcase, UserCheck } from 'lucide-react';
@@ -22,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatarMoeda } from '@/lib/formatters';
 
 const CATEGORIA_CONFIG: Record<AtividadeCategoria, { icon: typeof Building2; iconColor: string; bgColor: string }> = {
   seven: { icon: Briefcase, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
@@ -44,7 +40,7 @@ export default function Forecast() {
 
   const { data: resumoNegociacoes, isLoading: loadingNegociacoes } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_NEGOCIACAO);
   const { data: resumoAtividades, isLoading: loadingAtividades } = useResumoAtividadesPorCategoria(gestorId, dataInicio, dataFim, undefined, TIPOS_DIARIO);
-  const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
+  
   const { data: treinamento, isLoading: loadingTreinamento } = usePessoasTreinadas(gestorId, dataInicio, dataFim);
 
   const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, tipos: typeof TIPOS_NEGOCIACAO, showTreinamento = false) => (
@@ -67,78 +63,6 @@ export default function Forecast() {
             />
           );
         })
-      )}
-    </div>
-  );
-
-  const renderFinanceiroKPIs = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {loadingFinanceiro ? (
-        [...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)
-      ) : (
-        <>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-chart-2/10">
-                  <DollarSign className="h-5 w-5 text-chart-2" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Valor em Vendas</p>
-                  <p className="text-lg font-bold text-foreground truncate">{formatarMoeda(financeiro?.valorVendas || 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Total Comissões</p>
-                  <p className="text-lg font-bold text-foreground truncate">{formatarMoeda(financeiro?.totalComissoes || 0)}</p>
-                  {(financeiro?.comissoesPorGestor?.length || 0) > 0 && (
-                    <div className="mt-1 space-y-0.5">
-                      {financeiro!.comissoesPorGestor.slice(0, 3).map((g) => (
-                        <p key={g.gestor_id} className="text-[11px] text-muted-foreground truncate">
-                          {g.gestor_nome}: {formatarMoeda(g.valor)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-chart-3/10">
-                  <Handshake className="h-5 w-5 text-chart-3" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Negociações Ativas</p>
-                  <p className="text-lg font-bold text-foreground truncate">{formatarMoeda(financeiro?.valorNegociacoes || 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-chart-4/10">
-                  <FileCheck className="h-5 w-5 text-chart-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Propostas Aceitas</p>
-                  <p className="text-lg font-bold text-foreground truncate">{formatarMoeda(financeiro?.valorPropostasAceitas || 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </>
       )}
     </div>
   );
@@ -194,28 +118,23 @@ export default function Forecast() {
           </div>
         </div>
 
-        {/* Tabs: Negociações / Atividades */}
-        <Tabs defaultValue="negociacoes">
-          <TabsList>
-          <TabsTrigger value="negociacoes" className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
-              <Handshake className="h-4 w-4" />
-              Atendimentos
-            </TabsTrigger>
-            <TabsTrigger value="atividades" className="gap-2 data-[state=active]:text-[#F5941E] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#F5941E]">
-              <ClipboardList className="h-4 w-4" />
-              Atividades
-            </TabsTrigger>
-          </TabsList>
+        {/* Atendimentos */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Handshake className="h-5 w-5 text-[#F5941E]" />
+            <h2 className="text-xl font-semibold text-foreground">Atendimentos</h2>
+          </div>
+          {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes, TIPOS_NEGOCIACAO)}
+        </section>
 
-          <TabsContent value="negociacoes" className="space-y-6">
-            {renderFinanceiroKPIs()}
-            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes, TIPOS_NEGOCIACAO)}
-          </TabsContent>
-
-          <TabsContent value="atividades" className="space-y-6">
-            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, TIPOS_DIARIO, true)}
-          </TabsContent>
-        </Tabs>
+        {/* Atividades */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-[#F5941E]" />
+            <h2 className="text-xl font-semibold text-foreground">Atividades</h2>
+          </div>
+          {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, TIPOS_DIARIO, true)}
+        </section>
       </div>
 
       <ForecastBatchStatusDialog
