@@ -27,48 +27,79 @@ export function useForecastFinanceiro(
       const inicioStr = format(inicioMes, 'yyyy-MM-dd');
       const fimStr = format(fimMes, 'yyyy-MM-dd');
 
-      // 1. Comissões (vendas + comissões por gestor)
+      // 1. Comissões (mantido — usa created_at)
       let comissoesQuery = supabase
         .from('comissoes')
         .select('valor_venda, valor_comissao, gestor_id, gestor:profiles!comissoes_gestor_id_fkey(full_name)')
         .eq('is_active', true)
         .gte('created_at', `${inicioStr}T00:00:00`)
         .lte('created_at', `${fimStr}T23:59:59`);
-      
+
       if (gestorId) {
         comissoesQuery = comissoesQuery.eq('gestor_id', gestorId);
       }
 
-      // 2. Negociações ativas
+      // 2. Negociações ativas — filtrar pelo created_at do período
       let negQuery = supabase
         .from('negociacoes')
         .select('valor_proposta')
-        .eq('is_active', true);
-      
+        .eq('is_active', true)
+        .gte('created_at', `${inicioStr}T00:00:00`)
+        .lte('created_at', `${fimStr}T23:59:59`);
+
       if (gestorId) {
         negQuery = negQuery.eq('gestor_id', gestorId);
       }
 
-      // 3. Propostas aceitas ou convertidas no período
-      let propQuery = supabase
-        .from('propostas')
-        .select('valor_proposta, status')
-        .in('status', ['aceita', 'convertida'])
-        .gte('created_at', `${inicioStr}T00:00:00`)
-        .lte('created_at', `${fimStr}T23:59:59`);
+      // 3. Vendas (negociações convertidas no período por data_conversao)
+      let vendasQuery = supabase
+        .from('negociacoes')
+        .select('valor_proposta')
+        .eq('is_active', true)
+        .eq('status_proposta', 'convertida')
+        .gte('data_conversao', inicioStr)
+        .lte('data_conversao', fimStr);
 
-      const [comissoesRes, negRes, propRes] = await Promise.all([
+      if (gestorId) {
+        vendasQuery = vendasQuery.eq('gestor_id', gestorId);
+      }
+
+      // 4. Propostas aceitas (negociações com status aceita por data_aceite)
+      let propAceitasQuery = supabase
+        .from('negociacoes')
+        .select('valor_proposta')
+        .eq('is_active', true)
+        .in('status_proposta', ['aceita', 'convertida'])
+        .gte('data_aceite', inicioStr)
+        .lte('data_aceite', fimStr);
+
+      if (gestorId) {
+        propAceitasQuery = propAceitasQuery.eq('gestor_id', gestorId);
+      }
+
+      const [comissoesRes, negRes, vendasRes, propRes] = await Promise.all([
         comissoesQuery,
         negQuery,
-        propQuery,
+        vendasQuery,
+        propAceitasQuery,
       ]);
 
       if (comissoesRes.error) throw comissoesRes.error;
       if (negRes.error) throw negRes.error;
+      if (vendasRes.error) throw vendasRes.error;
       if (propRes.error) throw propRes.error;
 
-      // Valor de vendas apenas via comissões (exclui vendas históricas)
-      const valorVendas = (comissoesRes.data || []).reduce((sum, c: any) => sum + (c.valor_venda || 0), 0);
+      // Valor de vendas: soma das negociações convertidas no período.
+      // Fallback: se não houver negociações convertidas, soma valor_venda das comissões.
+      const valorVendasNegociacoes = (vendasRes.data || []).reduce(
+        (sum, n: any) => sum + (n.valor_proposta || 0),
+        0,
+      );
+      const valorVendasComissoes = (comissoesRes.data || []).reduce(
+        (sum, c: any) => sum + (c.valor_venda || 0),
+        0,
+      );
+      const valorVendas = valorVendasNegociacoes || valorVendasComissoes;
 
       // Agrupar comissões por gestor
       const gestorMap = new Map<string, { gestor_id: string; gestor_nome: string; valor: number }>();
@@ -90,11 +121,11 @@ export function useForecastFinanceiro(
         }
       });
 
-      // Valor de negociações em andamento
+      // Valor de negociações criadas no período
       const valorNegociacoes = (negRes.data || []).reduce((sum, n: any) => sum + (n.valor_proposta || 0), 0);
 
-      // Valor de propostas aceitas/convertidas
-      const valorPropostasAceitas = (propRes.data || []).reduce((sum, p: any) => sum + (p.valor_proposta || 0), 0);
+      // Valor de propostas aceitas/convertidas (data_aceite no período)
+      const valorPropostasAceitas = (propRes.data || []).reduce((sum, n: any) => sum + (n.valor_proposta || 0), 0);
 
       return {
         valorVendas,
