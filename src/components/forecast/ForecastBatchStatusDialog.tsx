@@ -42,6 +42,7 @@ export function ForecastBatchStatusDialog({
   gestorId,
   dataInicio,
   dataFim,
+  tiposFilter,
 }: ForecastBatchStatusDialogProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [novoStatus, setNovoStatus] = useState<string>('');
@@ -68,31 +69,40 @@ export function ForecastBatchStatusDialog({
 
   // Build query filters based on statusGroup
   const { data: atividades, isLoading } = useQuery({
-    queryKey: ['forecast-batch', categoria, statusGroup, gestorId, dataInicio.toISOString(), dataFim.toISOString()],
+    queryKey: ['forecast-batch', categoria, statusGroup, gestorId, dataInicio.toISOString(), dataFim.toISOString(), tiposFilter?.join(',') || 'all'],
     queryFn: async () => {
       let q = supabase
         .from('atividades')
         .select('id, titulo, data_inicio, data_fim, status, gestor:profiles(full_name)')
         .eq('categoria', categoria)
+        .neq('status', 'cancelada')
         .gte('data_inicio', format(dataInicio, 'yyyy-MM-dd'))
         .lte('data_inicio', format(dataFim, 'yyyy-MM-dd'));
 
       if (gestorId) q = q.eq('gestor_id', gestorId);
+      if (tiposFilter?.length) q = q.in('tipo', tiposFilter);
 
-      const hoje = format(new Date(), 'yyyy-MM-dd');
+      // Mesma data de referência usada nos cards (useResumoAtividadesPorCategoria):
+      // mês atual = hoje; outros meses = último dia da competência selecionada
+      const agora = new Date();
+      const mesAtual =
+        agora.getFullYear() === dataInicio.getFullYear() &&
+        agora.getMonth() === dataInicio.getMonth();
+      const ref = format(mesAtual ? agora : dataFim, 'yyyy-MM-dd');
 
       switch (statusGroup) {
         case 'abertas':
-          q = q.eq('status', 'pendente').gte('data_fim', hoje);
+          // pendente AND data_inicio <= ref AND data_fim >= ref
+          q = q.eq('status', 'pendente').lte('data_inicio', ref).gte('data_fim', ref);
           break;
         case 'atrasadas':
-          q = q.eq('status', 'pendente').lt('data_fim', hoje);
+          q = q.eq('status', 'pendente').lt('data_fim', ref);
           break;
         case 'fechadas':
           q = q.eq('status', 'concluida');
           break;
         case 'futuras':
-          q = q.eq('status', 'pendente').gt('data_inicio', hoje);
+          q = q.eq('status', 'pendente').gt('data_inicio', ref);
           break;
       }
 
