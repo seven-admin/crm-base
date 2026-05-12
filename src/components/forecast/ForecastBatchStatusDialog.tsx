@@ -13,7 +13,7 @@ import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria } from '@/types/atividades.types';
+import { ATIVIDADE_CATEGORIA_LABELS, type AtividadeCategoria, type AtividadeTipo } from '@/types/atividades.types';
 
 interface ForecastBatchStatusDialogProps {
   open: boolean;
@@ -23,6 +23,8 @@ interface ForecastBatchStatusDialogProps {
   gestorId?: string;
   dataInicio: Date;
   dataFim: Date;
+  /** Conjunto de tipos para filtrar (deve refletir a aba ativa: TIPOS_NEGOCIACAO ou TIPOS_DIARIO) */
+  tiposFilter?: AtividadeTipo[];
 }
 
 const STATUS_GROUP_LABELS: Record<string, string> = {
