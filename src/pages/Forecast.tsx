@@ -48,7 +48,7 @@ export default function Forecast() {
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
   const { data: treinamento, isLoading: loadingTreinamento } = usePessoasTreinadas(gestorId, dataInicio, dataFim);
 
-  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, showTreinamento = false) => (
+  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, tipos: typeof TIPOS_NEGOCIACAO, showTreinamento = false) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {loading ? (
         [...Array(4)].map((_, i) => <Skeleton key={i} className="h-40" />)
@@ -63,7 +63,7 @@ export default function Forecast() {
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
               dados={dados?.[cat]}
-              onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup })}
+              onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup, tipos })}
               pessoasTreinadas={showTreinamento ? treinamento?.[cat]?.totalPessoas : undefined}
             />
           );
