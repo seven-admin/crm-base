@@ -1,84 +1,57 @@
-# Diagnóstico: usuários funcionários da Seven que não aparecem corretamente
+# Atribuição em massa de empreendimento às atividades órfãs do Pedro
 
-## Causa raiz encontrada
+## Contexto
 
-Investiguei o caso da **Aline Daloso (aline@sevengroup360.com.br)** e descobri:
+O gestor de produto **Pedro** (`comercial_ribas@sevengroup360.com.br`) já está vinculado aos empreendimentos **Belvedere**, **Jd. Iguatemi**, **Reserva do Lago** e **Vivendas do Bosque** (confirmado na tela "Editar Usuário").
 
-1. A Aline **existe** no sistema (`profiles`) com `is_active = true` e `tipo_vinculo = funcionario_seven`.
-2. O problema é que ela tem **2 roles atribuídos** simultaneamente em `user_roles`:
-   - `corretor` (criado em 13:49, no autoregistro original)
-   - `gestor_produto` (criado em 14:36, quando o admin tentou recadastrá-la)
+Apesar disso, **759 atividades dele têm `empreendimento_id IS NULL`** e por isso ficam invisíveis no Forecast, no Resumo Comercial e no Portal do Incorporador (todos filtram por empreendimento).
 
-3. Quando o sistema lê o role do usuário, ele faz `.limit(1).maybeSingle()` (em `AuthContext`, `usePermissions`, `Usuarios.tsx`, etc.) — ou seja, pega **apenas o primeiro role** retornado, sem critério determinístico. Isso explica por que ela aparece como "corretor" em algumas telas, e por que filtros que esperam `gestor_produto`/`funcionario_seven` (como o `useFuncionariosSeven`, `useGestores`, seletores de responsáveis) podem ocultá-la.
+Distribuição atual das atividades **com** empreendimento preenchido (já vinculadas) mostra que **Reserva do Lago concentra ~90%** delas — é o empreendimento principal do Pedro.
 
-### Por que isso aconteceu
+## Estratégia (em duas etapas, executadas em sequência)
 
-A edge function `create-user` tem este fluxo quando o e-mail já existe:
+### Etapa 1 — 39 órfãs com `cliente_id`: inferir empreendimento via negociação do cliente
 
-```text
-1. Detecta email duplicado → recupera user_id existente
-2. Atualiza profile (OK)
-3. Verifica se já tem o role pretendido → NÃO TEM (ela só tinha corretor)
-4. INSERE o novo role (gestor_produto)  ← BUG: não remove os roles antigos
-```
-
-Resultado: usuário fica com 2 roles, e o sistema fica inconsistente.
-
-Confirmei que **apenas a Aline** está nessa situação hoje (1 caso), mas o bug afetará qualquer próximo recadastro com troca de role.
-
----
-
-## Plano de correção
-
-### 1. Corrigir os dados da Aline (migration SQL)
-
-Remover o role antigo `corretor`, mantendo apenas `gestor_produto` (que é o role correto solicitado pelo admin):
+Para cada órfã com cliente, pegar o `empreendimento_id` da negociação mais recente daquele cliente. Resultado esperado:
+- ~37 atividades → **Reserva do Lago**
+- ~5 atividades → **Belvedere**
+- ~2 atividades permanecerão NULL (cliente sem negociação) → tratadas na Etapa 2
 
 ```sql
-DELETE FROM user_roles
-WHERE user_id = 'ff846b8c-c5b5-47c2-8350-4b136680f356'
-  AND role_id = (SELECT id FROM roles WHERE name = 'corretor');
+UPDATE atividades a
+SET empreendimento_id = sub.emp_id
+FROM (
+  SELECT DISTINCT ON (a2.id) a2.id, n.empreendimento_id AS emp_id
+  FROM atividades a2
+  JOIN negociacoes n ON n.cliente_id = a2.cliente_id
+  WHERE a2.gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'
+    AND a2.empreendimento_id IS NULL
+    AND a2.cliente_id IS NOT NULL
+    AND n.empreendimento_id IS NOT NULL
+  ORDER BY a2.id, n.created_at DESC
+) sub
+WHERE a.id = sub.id;
 ```
 
-### 2. Corrigir a edge function `create-user`
+### Etapa 2 — Demais órfãs (≈720, sem cliente): atribuir ao Reserva do Lago
 
-Antes de inserir o novo role para um usuário existente, **remover todos os roles anteriores** desse usuário, garantindo que cada usuário tenha exatamente 1 role ativo:
-
-```ts
-// Antes do insert do novo role:
-await supabaseAdmin
-  .from('user_roles')
-  .delete()
-  .eq('user_id', newUserId)
-  .neq('role_id', roleData.id);  // remove todos exceto o novo
-```
-
-Isso torna o recadastro idempotente: chamar `create-user` com um role diferente passa a **substituir** o role antigo em vez de acumular.
-
-### 3. (Opcional, mas recomendado) Constraint única no banco
-
-Adicionar constraint para impedir múltiplos roles por usuário no futuro:
+São ligações em massa (campanhas), administrativas e prospecção. Critério: empreendimento principal do Pedro, onde a esmagadora maioria das atividades dele já vinculadas reside.
 
 ```sql
--- Antes: garantir que não há duplicatas
--- Depois:
-ALTER TABLE user_roles
-ADD CONSTRAINT user_roles_user_id_unique UNIQUE (user_id);
+UPDATE atividades
+SET empreendimento_id = '13fc62b0-c926-48de-8a53-2c63efcdfdc0' -- RESERVA DO LAGO
+WHERE gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'
+  AND empreendimento_id IS NULL;
 ```
 
-> **Atenção**: o sistema atual assume "1 role por usuário" em vários hooks (`AuthContext`, `usePermissions`, `Usuarios.tsx` — todos usam `.limit(1)`). A constraint apenas formaliza essa regra.
-> 
-> Vou verificar se existe alguma migration ou tela que dependa de múltiplos roles antes de aplicar a constraint. Se houver, pulo este passo 3.
+## Validação após execução
 
----
+1. `SELECT COUNT(*) FROM atividades WHERE gestor_id = 'f5beb78c-…' AND empreendimento_id IS NULL` deve retornar **0**.
+2. Conferir o aumento dos números no Portal do Incorporador → Forecast (Reserva do Lago e Belvedere) para os meses de março/2026 em diante.
+3. Distribuição final esperada: ~700 a mais em Reserva do Lago e ~5 a mais em Belvedere.
 
-## Resultado esperado
+## Escopo
 
-- A Aline passa a aparecer corretamente como **gestor_produto** em todo o sistema (seletores de gestor, lista de funcionários Seven, permissões de menu, etc.).
-- Próximos recadastros via tela de Usuários não criarão mais roles duplicados.
-- A tela de Usuários (`/usuarios`) continua exibindo todos os usuários — ela já lista todos os profiles independentemente do role.
-
-## Sem alterações necessárias
-
-- `Usuarios.tsx`, `AuthContext`, `usePermissions`: a lógica de `.limit(1)` continua válida pois passa a refletir a regra "1 role por usuário".
-- `useFuncionariosSeven`: o filtro `tipo_vinculo = 'funcionario_seven'` está correto.
+- **Apenas atividades do Pedro** (`gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'`).
+- Apenas operações `UPDATE` em `public.atividades` — sem alterações de schema, RLS ou código frontend.
+- Caso queira, posso adicionar em rodada futura uma trigger de validação para impedir novos cadastros de atividade sem empreendimento (não incluso aqui).
