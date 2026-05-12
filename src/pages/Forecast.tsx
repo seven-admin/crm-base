@@ -36,7 +36,8 @@ const CATEGORIAS: AtividadeCategoria[] = ['seven', 'incorporadora', 'imobiliaria
 export default function Forecast() {
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
-  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
+  const [abaAtiva, setAbaAtiva] = useState<'negociacoes' | 'atividades'>('negociacoes');
+  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string; tipos: typeof TIPOS_NEGOCIACAO }>({ open: false, categoria: 'seven', statusGroup: 'abertas', tipos: TIPOS_NEGOCIACAO });
   const { data: gestores } = useGestoresProduto();
 
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
