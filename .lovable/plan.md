@@ -1,57 +1,77 @@
-# Atribuição em massa de empreendimento às atividades órfãs do Pedro
+# Documento: `SISTEMA_PROMPTS.md` para recriação modular
 
-## Contexto
+## Objetivo
 
-O gestor de produto **Pedro** (`comercial_ribas@sevengroup360.com.br`) já está vinculado aos empreendimentos **Belvedere**, **Jd. Iguatemi**, **Reserva do Lago** e **Vivendas do Bosque** (confirmado na tela "Editar Usuário").
+Criar um único arquivo `SISTEMA_PROMPTS.md` na raiz do projeto contendo uma sequência de prompts otimizados para o Lovable, que permitam recriar este sistema (CRM imobiliário multi-empreendimento) de forma incremental e modular, do zero.
 
-Apesar disso, **759 atividades dele têm `empreendimento_id IS NULL`** e por isso ficam invisíveis no Forecast, no Resumo Comercial e no Portal do Incorporador (todos filtram por empreendimento).
+## Por que prompts em sequência
 
-Distribuição atual das atividades **com** empreendimento preenchido (já vinculadas) mostra que **Reserva do Lago concentra ~90%** delas — é o empreendimento principal do Pedro.
+O sistema atual tem ~60 páginas, ~109 hooks, ~95 tabelas Postgres e 12 edge functions. Construir tudo em um único prompt é inviável. O documento divide o sistema em **módulos independentes**, cada um entregável em 1 prompt do Lovable, respeitando dependências (auth → profiles → empreendimentos → unidades → clientes → negociações → ...).
 
-## Estratégia (em duas etapas, executadas em sequência)
+## Estrutura do documento
 
-### Etapa 1 — 39 órfãs com `cliente_id`: inferir empreendimento via negociação do cliente
+O arquivo terá ~12 seções:
 
-Para cada órfã com cliente, pegar o `empreendimento_id` da negociação mais recente daquele cliente. Resultado esperado:
-- ~37 atividades → **Reserva do Lago**
-- ~5 atividades → **Belvedere**
-- ~2 atividades permanecerão NULL (cliente sem negociação) → tratadas na Etapa 2
+### 1. Visão geral do sistema
+- O que é (CRM imobiliário B2B para incorporadoras)
+- Stack: React 18 + Vite + TS + Tailwind + shadcn/ui + Lovable Cloud (Supabase) + React Query
+- Multi-tenant lógico via `empreendimento_id` em quase todas as tabelas
+- Convenções: PT-BR, datas `yyyy-MM-dd`, FK para `public.profiles`, RLS sempre, hard-delete em unidades
 
-```sql
-UPDATE atividades a
-SET empreendimento_id = sub.emp_id
-FROM (
-  SELECT DISTINCT ON (a2.id) a2.id, n.empreendimento_id AS emp_id
-  FROM atividades a2
-  JOIN negociacoes n ON n.cliente_id = a2.cliente_id
-  WHERE a2.gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'
-    AND a2.empreendimento_id IS NULL
-    AND a2.cliente_id IS NOT NULL
-    AND n.empreendimento_id IS NOT NULL
-  ORDER BY a2.id, n.created_at DESC
-) sub
-WHERE a.id = sub.id;
+### 2. Módulos (ordem de execução)
+
+Cada módulo segue o template:
+```
+### Prompt N — <Nome do módulo>
+**Depende de:** <módulos anteriores>
+**Entrega:** <páginas, tabelas, hooks, edge functions>
+**Prompt para o Lovable:**
+> <texto pronto para colar>
+**Critério de aceite:** <validação visual/funcional>
 ```
 
-### Etapa 2 — Demais órfãs (≈720, sem cliente): atribuir ao Reserva do Lago
+Sequência planejada:
 
-São ligações em massa (campanhas), administrativas e prospecção. Critério: empreendimento principal do Pedro, onde a esmagadora maioria das atividades dele já vinculadas reside.
+| # | Módulo | Tabelas principais | Páginas |
+|---|--------|--------------------|---------|
+| 1 | Fundação (Cloud + design system + sidebar + roles) | `profiles`, `roles`, `user_roles`, `role_permissions`, `modules` | Auth, Index, SemAcesso |
+| 2 | Cadastros básicos | `incorporadoras`, `imobiliarias`, `corretores` | Incorporadoras, Imobiliarias, Corretores |
+| 3 | Empreendimentos e estrutura física | `empreendimentos`, `blocos`, `tipologias`, `unidades`, `boxes`, `fachadas`, `mapa_empreendimento`, `unidade_historico_precos`, `empreendimento_corretores/imobiliarias/midias/documentos` | Empreendimentos, EmpreendimentoDetalhe, MapaUnidadesPage |
+| 4 | Usuários e vínculos | `user_empreendimentos`, `user_module_permissions`, edge `create-user`/`delete-user`/`reset-user-password` | Usuarios |
+| 5 | Clientes (PF/PJ) | `clientes`, `cliente_telefones`, `cliente_socios`, `cliente_interacoes` | Clientes |
+| 6 | Atividades / Forecast / Diário | `atividades`, `atividade_etapas`, `atividade_responsaveis`, `atividade_comentarios`, `atividade_historico`, `funis`, `funil_etapas`, `tipos_atendimento_config` | Atividades, Forecast, DiarioBordo |
+| 7 | Negociações + Propostas + Contratos | `negociacoes`, `negociacao_*`, `propostas`, `proposta_*`, `modalidades_pagamento`, `modalidade_componentes`, `tipos_parcela`, `template_condicoes_pagamento`, `contratos`, `contrato_*` | Negociacoes, NovaPropostaComercial, Propostas, Contratos, AssinarContrato, ConfiguracaoNegociacoes |
+| 8 | Comissões e Bonificações | `configuracao_comissoes`, `comissoes`, `comissao_parcelas`, `bonificacoes`, `usuario_empreendimento_bonus`, `metas_comerciais` | Comissoes, Bonificacoes, MetasComerciais |
+| 9 | Financeiro / DRE | `plano_contas`, `categorias_fluxo`, `centros_custo`, `centro_custo_empreendimentos`, `lancamentos_financeiros`, `saldos_mensais` | Financeiro, DRE |
+| 10 | Marketing + Briefings + Eventos | `projetos_marketing`, `tarefas_projeto`, `projeto_*`, `ticket_etapas`, `ticket_criativos`, `briefings`, `briefing_referencias`, `eventos`, `evento_*` | Marketing, MarketingCalendario, MarketingDetalhe, EquipeMarketing, DashboardMarketing, EtapasTickets, Briefings, Eventos, EventoDetalhe, EventoTemplates, EventosCalendario |
+| 11 | Planejamento global | `planejamento_itens`, `planejamento_fases`, `planejamento_status`, `planejamento_*`, `google_calendar_embeds`, edge `fetch-google-calendar` | Planejamento, PlanejamentoConfiguracoes |
+| 12 | Portal do Corretor (Imobiliária) | reaproveita; rotas `/portal/*`, edges `register-corretor`/`register-imobiliaria` | PortalDashboard, PortalEmpreendimentos, PortalEmpreendimentoDetalhe, PortalSolicitacoes, PortalClientes, PortalCorretoresGestao, PortalMinhaImobiliaria, PortalEventos |
+| 13 | Portal do Incorporador (read-only executivo) | views/queries; contexto de filtro global | PortalIncorporador* (Dashboard, Executivo, Forecast, Marketing, Planejamento, Disponibilidade, Propostas) |
+| 14 | Dashboards executivos + Relatórios + Auditoria | `audit_logs`, `notificacoes` | DashboardExecutivo, Relatorios, Auditoria, Solicitacoes |
+| 15 | Webhooks / integrações n8n | `webhooks`, `webhook_logs`, `webhook_variaveis_disponiveis`, edges `webhook-dispatcher`, `webhook-assinatura`, `cleanup-webhook-logs` | Configuracoes (aba) |
+| 16 | Configurações gerais + Termos | `configuracoes_sistema`, `configuracao_comercial`, `termos_versoes`, `termos_aceites`, `fluxo_aprovacao_config` | Configuracoes, TermosUso, PoliticaPrivacidade |
 
-```sql
-UPDATE atividades
-SET empreendimento_id = '13fc62b0-c926-48de-8a53-2c63efcdfdc0' -- RESERVA DO LAGO
-WHERE gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'
-  AND empreendimento_id IS NULL;
-```
+### 3. Convenções globais (anexo)
+Inclui todas as regras do `mem://index.md` que devem ser passadas em **todo** prompt:
+- PT-BR
+- `parseDateLocal` + `yyyy-MM-dd`
+- FKs apontam para `public.profiles(id)`
+- Roles em tabela separada + função `has_role` SECURITY DEFINER
+- Sem objetos aninhados em update/insert do Supabase
+- Hard-delete em unidades
+- Nomenclatura "Resumo" vs "Forecast"
 
-## Validação após execução
+### 4. Glossário de termos de negócio
+Atividade, Negociação, Proposta, Contrato, Forecast, Diário de Bordo, Empreendimento, Unidade, Bloco, Tipologia, Box, Fachada, Bonificação, Comissão (RT), Gestor, Corretor autônomo vs vinculado.
 
-1. `SELECT COUNT(*) FROM atividades WHERE gestor_id = 'f5beb78c-…' AND empreendimento_id IS NULL` deve retornar **0**.
-2. Conferir o aumento dos números no Portal do Incorporador → Forecast (Reserva do Lago e Belvedere) para os meses de março/2026 em diante.
-3. Distribuição final esperada: ~700 a mais em Reserva do Lago e ~5 a mais em Belvedere.
+### 5. Checklist de migração de dados (opcional)
+Ordem segura de seed se importar dados de outro sistema.
 
-## Escopo
+## Entrega
 
-- **Apenas atividades do Pedro** (`gestor_id = 'f5beb78c-1981-4605-8947-72b11d52cb1e'`).
-- Apenas operações `UPDATE` em `public.atividades` — sem alterações de schema, RLS ou código frontend.
-- Caso queira, posso adicionar em rodada futura uma trigger de validação para impedir novos cadastros de atividade sem empreendimento (não incluso aqui).
+Único arquivo: `SISTEMA_PROMPTS.md` na raiz do projeto. Sem alterações de código.
+
+## Próximos passos após aprovação
+
+1. Gerar o arquivo conforme estrutura acima.
+2. (Opcional, em prompt seguinte) gerar 1 arquivo por módulo em `docs/prompts/NN-modulo.md` para facilitar o uso individual.
