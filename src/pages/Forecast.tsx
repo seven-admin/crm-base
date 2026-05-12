@@ -36,7 +36,7 @@ const CATEGORIAS: AtividadeCategoria[] = ['seven', 'incorporadora', 'imobiliaria
 export default function Forecast() {
   const [gestorId, setGestorId] = useState<string | undefined>(undefined);
   const [competencia, setCompetencia] = useState(new Date());
-  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string }>({ open: false, categoria: 'seven', statusGroup: 'abertas' });
+  const [batchDialog, setBatchDialog] = useState<{ open: boolean; categoria: AtividadeCategoria; statusGroup: string; tipos: typeof TIPOS_NEGOCIACAO }>({ open: false, categoria: 'seven', statusGroup: 'abertas', tipos: TIPOS_NEGOCIACAO });
   const { data: gestores } = useGestoresProduto();
 
   const dataInicio = useMemo(() => startOfMonth(competencia), [competencia]);
@@ -47,7 +47,7 @@ export default function Forecast() {
   const { data: financeiro, isLoading: loadingFinanceiro } = useForecastFinanceiro(gestorId, dataInicio, dataFim);
   const { data: treinamento, isLoading: loadingTreinamento } = usePessoasTreinadas(gestorId, dataInicio, dataFim);
 
-  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, showTreinamento = false) => (
+  const renderCategoriaCards = (dados: typeof resumoNegociacoes, loading: boolean, tipos: typeof TIPOS_NEGOCIACAO, showTreinamento = false) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {loading ? (
         [...Array(4)].map((_, i) => <Skeleton key={i} className="h-40" />)
@@ -62,7 +62,7 @@ export default function Forecast() {
               iconColor={cfg.iconColor}
               bgColor={cfg.bgColor}
               dados={dados?.[cat]}
-              onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup })}
+              onBadgeClick={(statusGroup) => setBatchDialog({ open: true, categoria: cat, statusGroup, tipos })}
               pessoasTreinadas={showTreinamento ? treinamento?.[cat]?.totalPessoas : undefined}
             />
           );
@@ -209,11 +209,11 @@ export default function Forecast() {
 
           <TabsContent value="negociacoes" className="space-y-6">
             {renderFinanceiroKPIs()}
-            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes)}
+            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes, TIPOS_NEGOCIACAO)}
           </TabsContent>
 
           <TabsContent value="atividades" className="space-y-6">
-            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, true)}
+            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, TIPOS_DIARIO, true)}
           </TabsContent>
         </Tabs>
       </div>
@@ -223,6 +223,7 @@ export default function Forecast() {
         onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
         categoria={batchDialog.categoria}
         statusGroup={batchDialog.statusGroup}
+        tiposFilter={batchDialog.tipos}
         gestorId={gestorId}
         dataInicio={dataInicio}
         dataFim={dataFim}

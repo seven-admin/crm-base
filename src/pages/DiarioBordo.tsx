@@ -215,6 +215,7 @@ export default function DiarioBordo() {
         onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
         categoria={batchDialog.categoria}
         statusGroup={batchDialog.statusGroup}
+        tiposFilter={TIPOS_DIARIO}
         gestorId={gestorId}
         dataInicio={dataInicio}
         dataFim={dataFim}
