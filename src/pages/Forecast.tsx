@@ -210,11 +210,11 @@ export default function Forecast() {
 
           <TabsContent value="negociacoes" className="space-y-6">
             {renderFinanceiroKPIs()}
-            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes)}
+            {renderCategoriaCards(resumoNegociacoes, loadingNegociacoes, TIPOS_NEGOCIACAO)}
           </TabsContent>
 
           <TabsContent value="atividades" className="space-y-6">
-            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, true)}
+            {renderCategoriaCards(resumoAtividades, loadingAtividades || loadingTreinamento, TIPOS_DIARIO, true)}
           </TabsContent>
         </Tabs>
       </div>
@@ -224,6 +224,7 @@ export default function Forecast() {
         onOpenChange={(open) => setBatchDialog(prev => ({ ...prev, open }))}
         categoria={batchDialog.categoria}
         statusGroup={batchDialog.statusGroup}
+        tiposFilter={batchDialog.tipos}
         gestorId={gestorId}
         dataInicio={dataInicio}
         dataFim={dataFim}
