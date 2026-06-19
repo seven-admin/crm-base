@@ -13,7 +13,6 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   empreendimento_id: z.string().uuid(),
-  telefone_corretor: z.string().min(8).max(20),
   status: z.enum(["disponivel", "reservada", "vendida", "bloqueada", "negociacao", "contrato"]).optional(),
   bloco_id: z.string().uuid().optional(),
   quartos: z.number().int().min(0).max(20).optional(),
