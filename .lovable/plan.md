@@ -1,48 +1,91 @@
+
 ## Objetivo
+Criar uma Edge Function simples que recebe filtros estruturados (principalmente `empreendimento_id`) e devolve um PDF com a tabela de unidades. Sem IA, sem n8n — basta um POST.
 
-Gerar um único arquivo de migration consolidado contendo todo o schema atual do banco de dados Supabase do projeto (tabelas, enums, funções, triggers, policies, grants, sequences e buckets de storage), servindo como snapshot/baseline.
+## Como vai funcionar
 
-## Abordagem
+```
+Quem chamar (n8n, Postman, outro sistema)
+   POST /functions/v1/export-unidades-pdf
+   Headers: x-api-token: <token compartilhado>
+   Body: { "empreendimento_id": "uuid", "telefone_corretor": "5599...", ...filtros opcionais }
+   ↓
+Edge Function:
+   1. Valida x-api-token
+   2. Valida que o telefone pertence a um corretor ativo
+   3. Consulta unidades do empreendimento (filtros opcionais)
+   4. Gera PDF
+   5. Faz upload no Storage e devolve URL assinada (1h)
+   ↓
+Resposta: { "url": "https://...pdf", "total": 42, "empreendimento": "AXIS" }
+```
 
-1. **Extrair o schema completo** do banco Supabase atual (project ref `pizerpoxuqopekmbvohh`) via `supabase--read_query` consultando `pg_catalog` / `information_schema`:
-   - Enums (`pg_type` + `pg_enum`)
-   - Sequences
-   - Tabelas do schema `public` (colunas, defaults, nullables, PKs, FKs, uniques, checks)
-   - Funções (`pg_proc`) — já temos a lista em contexto
-   - Triggers (`pg_trigger`)
-   - Policies RLS (`pg_policies`)
-   - Grants (`information_schema.role_table_grants`)
-   - Buckets de storage (`storage.buckets`)
+## Entrada (JSON)
 
-2. **Montar SQL consolidado** na ordem correta para ser idempotente/executável do zero:
-   ```
-   1) CREATE TYPE (enums)
-   2) CREATE SEQUENCE
-   3) CREATE TABLE  (~100 tabelas em public)
-   4) GRANT por tabela
-   5) ALTER TABLE ... ENABLE ROW LEVEL SECURITY
-   6) CREATE FUNCTION  (todas as ~70 funções)
-   7) CREATE TRIGGER
-   8) CREATE POLICY
-   9) INSERT em storage.buckets (buckets existentes)
-   ```
+Obrigatório:
+- `empreendimento_id` (uuid)
+- `telefone_corretor` (string, só dígitos)
 
-3. **Gravar o arquivo** em `supabase/migrations/<timestamp>_baseline_full_schema.sql` via `supabase--migration` (o tool cria o arquivo). Como é apenas snapshot do que já existe, o SQL usará `CREATE ... IF NOT EXISTS` / `CREATE OR REPLACE` onde aplicável para não quebrar em ambiente que já tem o schema aplicado.
+Opcionais (filtros adicionais):
+- `status`: `disponivel` | `reservada` | `vendida` (default: `disponivel`)
+- `bloco_id` (uuid)
+- `quartos` (number)
+- `valor_min`, `valor_max` (number)
+
+## Saída do PDF
+
+Cabeçalho com nome do empreendimento + data de geração.
+Tabela com colunas: **Bloco · Andar · Unidade · Tipologia · Quartos · Suítes · Vagas · Área (m²) · Valor (R$) · Status**
+Rodapé com total de unidades e o texto configurado em `empreendimentos.relatorio_rodape` (já existe).
+
+## Segurança
+
+1. **`N8N_API_TOKEN`** (novo secret) — token compartilhado obrigatório no header `x-api-token`. Sem ele, 401.
+2. **Validação do corretor** — função busca em `corretores` por `telefone` (normalizado) e `is_active = true`. Se não achar, 403.
+3. **Empreendimento acessível** — verifica se o corretor tem acesso (via `user_has_empreendimento_access` ou regra equivalente — corretor padrão vê todos ativos, conforme política já existente).
+4. **`verify_jwt = false`** — autenticação é pelo token compartilhado, não por JWT (chamada server-to-server).
+
+## Storage
+
+- Reusar bucket existente ou criar bucket privado `relatorios-exportacao` (TTL manual; arquivos com nome `unidades/{empreendimento_id}/{timestamp}.pdf`).
+- Resposta usa `createSignedUrl(path, 3600)`.
 
 ## Detalhes técnicos
 
-- O arquivo será grande (estimativa 4–8k linhas SQL) dado o volume: ~100 tabelas, ~70 funções, centenas de policies.
-- Não rodaremos `DROP` de nada — somente criação idempotente.
-- Triggers e policies referenciam funções, então virão depois das funções.
-- Não incluiremos dados (apenas metadados de buckets), pois o pedido é "banco de dados" estrutural.
-- Edge functions, secrets e arquivos do `supabase/config.toml` ficam fora do escopo (não são SQL).
+**Arquivo único:** `supabase/functions/export-unidades-pdf/index.ts`
 
-## Pontos a confirmar antes de executar
+Stack:
+- `npm:@supabase/supabase-js@2` — cliente com service role para consultas e storage
+- `npm:pdf-lib` — geração do PDF (sem dependência nativa, roda em Deno)
+- Zod para validar o body
 
-Antes de gerar o arquivo gostaria de confirmar:
+Query base (reaproveita a lógica de `get_unidades_disponiveis_bk`, adaptada com filtro por empreendimento):
+```sql
+SELECT u.*, b.nome bloco, t.nome tipologia, t.quartos, t.suites, t.vagas
+FROM unidades u
+JOIN empreendimentos e ON e.id = u.empreendimento_id
+LEFT JOIN blocos b ON b.id = u.bloco_id
+LEFT JOIN tipologias t ON t.id = u.tipologia_id
+WHERE u.empreendimento_id = $1
+  AND u.is_active = true
+  AND (filtros opcionais...)
+ORDER BY b.nome, u.andar, u.numero
+```
 
-1. **Finalidade**: é para servir como baseline/backup do schema (rodar em um projeto Supabase novo e recriar tudo), ou apenas documentação?
-2. **Dados**: incluir apenas estrutura (DDL), ou também seeds de tabelas de configuração como `roles`, `modules`, `role_permissions`, `planejamento_status`, `funis`, `funil_etapas`, `tipos_parcela`, etc.?
-3. **Idempotência**: usar `CREATE ... IF NOT EXISTS` (seguro de rodar em DB existente) ou `DROP ... CASCADE` antes (recria do zero, destrutivo)?
+`supabase/config.toml`:
+```toml
+[functions.export-unidades-pdf]
+verify_jwt = false
+```
 
-Com essas respostas eu gero o arquivo na sequência.
+## O que NÃO entra agora
+- Integração com Evolution API (envio do PDF pelo WhatsApp) — fica para depois.
+- Interpretação de texto livre por IA — vai-se mandar `empreendimento_id` direto.
+- Formato Excel/JSON — só PDF nesta primeira versão.
+
+## Passos para implementação (após aprovação)
+1. Pedir o secret `N8N_API_TOKEN` via `add_secret`.
+2. Criar bucket `relatorios-exportacao` (privado) se ainda não existir.
+3. Escrever `supabase/functions/export-unidades-pdf/index.ts`.
+4. Atualizar `supabase/config.toml` com `verify_jwt = false`.
+5. Testar via `curl_edge_functions` passando um `empreendimento_id` e telefone real de corretor.
