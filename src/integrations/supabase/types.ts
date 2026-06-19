@@ -6165,6 +6165,23 @@ export type Database = {
         Returns: string
       }
       get_role_id: { Args: { _role_name: string }; Returns: string }
+      get_unidades_disponiveis_bk: {
+        Args: never
+        Returns: {
+          andar: number
+          area_privativa: number
+          bloco: string
+          empreendimento: string
+          quartos: number
+          status: string
+          suites: number
+          tipologia: string
+          unidade: string
+          unidade_id: string
+          vagas: number
+          valor: number
+        }[]
+      }
       get_user_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       get_user_module_permission: {
         Args: { _module_name: string; _user_id: string }
