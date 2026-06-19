@@ -1,8 +1,9 @@
 // Edge Function: export-unidades-pdf
-// Recebe filtros (principalmente empreendimento_id + telefone_corretor), gera PDF
-// com tabela de unidades e devolve URL assinada.
+// Recebe { empreendimento_id } + token compartilhado e gera PDF replicando
+// o layout do botão "Exportar Disponíveis (PDF)" da tela de Empreendimentos.
+// Sempre filtra unidades com status='disponivel'.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { z } from "npm:zod@3.23.8";
 
 const corsHeaders = {
@@ -13,22 +14,82 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   empreendimento_id: z.string().uuid(),
-  status: z.enum(["disponivel", "reservada", "vendida", "bloqueada", "negociacao", "contrato"]).optional(),
-  bloco_id: z.string().uuid().optional(),
-  quartos: z.number().int().min(0).max(20).optional(),
-  valor_min: z.number().nonnegative().optional(),
-  valor_max: z.number().nonnegative().optional(),
-});
+}).passthrough(); // ignora campos extras
 
-const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
+const json = (status: number, data: unknown) =>
+  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const fmtBRL = (v: number | null | undefined) => {
   if (v == null) return "-";
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 };
 
-const json = (status: number, data: unknown) =>
-  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+const fmtArea = (v: number | null | undefined) => {
+  if (v == null) return "-";
+  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const fmtDataHora = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  // America/Sao_Paulo
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? "";
+  return `${get("day")}/${get("month")}/${get("year")} ${get("hour")}:${get("minute")}:${get("second")}`;
+};
+
+const fmtDataArquivo = (d: Date) => {
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric",
+  }).formatToParts(d);
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? "";
+  return `${get("day")}-${get("month")}-${get("year")}`;
+};
+
+// Trunca um texto para caber em maxWidth, adicionando "…" se preciso.
+function truncate(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
+  const ell = "…";
+  let lo = 0, hi = text.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi + 1) / 2);
+    const slice = text.slice(0, mid) + ell;
+    if (font.widthOfTextAtSize(slice, size) <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return text.slice(0, lo) + ell;
+}
+
+// Quebra texto em múltiplas linhas respeitando maxWidth (por palavras).
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const out: string[] = [];
+  const paragraphs = text.split(/\r?\n/);
+  for (const para of paragraphs) {
+    if (para.trim() === "") { out.push(""); continue; }
+    const words = para.split(/\s+/);
+    let line = "";
+    for (const w of words) {
+      const trial = line ? line + " " + w : w;
+      if (font.widthOfTextAtSize(trial, size) <= maxWidth) {
+        line = trial;
+      } else {
+        if (line) out.push(line);
+        // palavra individual maior que largura: trunca
+        if (font.widthOfTextAtSize(w, size) > maxWidth) {
+          out.push(truncate(w, font, size, maxWidth));
+          line = "";
+        } else {
+          line = w;
+        }
+      }
+    }
+    if (line) out.push(line);
+  }
+  return out;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -52,8 +113,7 @@ Deno.serve(async (req) => {
   if (!parsed.success) {
     return json(400, { error: "Parâmetros inválidos", details: parsed.error.flatten().fieldErrors });
   }
-  const input = parsed.data;
-  const statusFiltro = input.status ?? "disponivel";
+  const { empreendimento_id } = parsed.data;
 
   // 3. Cliente service role
   const supabase = createClient(
@@ -61,134 +121,255 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // 4. (Validação por corretor removida — autenticação via x-api-token é suficiente)
-
-
-
-  // 5. Buscar empreendimento
+  // 4. Empreendimento
   const { data: emp, error: empErr } = await supabase
     .from("empreendimentos")
-    .select("id, nome, endereco_cidade, endereco_uf, texto_rodape_relatorio, is_active")
-    .eq("id", input.empreendimento_id)
+    .select("id, nome, tipo, texto_rodape_relatorio, is_active")
+    .eq("id", empreendimento_id)
     .maybeSingle();
 
   if (empErr || !emp) return json(404, { error: "Empreendimento não encontrado" });
   if (!emp.is_active) return json(403, { error: "Empreendimento inativo" });
 
-  // 6. Buscar unidades
-  let q = supabase
+  const isLoteamento = emp.tipo === "loteamento";
+  const blocoLabel = isLoteamento ? "Quadra" : "Bloco";
+  const unidLabel = isLoteamento ? "Lote" : "Número";
+
+  // 5. Unidades disponíveis
+  const { data: unidadesRaw, error: unErr } = await supabase
     .from("unidades")
     .select(`
-      id, numero, andar, area_privativa, valor, status,
+      id, numero, andar, area_privativa, valor,
       bloco:blocos(nome),
-      tipologia:tipologias(nome, quartos, suites, vagas)
+      tipologia:tipologias(nome)
     `)
-    .eq("empreendimento_id", input.empreendimento_id)
+    .eq("empreendimento_id", empreendimento_id)
     .eq("is_active", true)
-    .eq("status", statusFiltro);
+    .eq("status", "disponivel")
+    .limit(2000);
 
-  if (input.bloco_id) q = q.eq("bloco_id", input.bloco_id);
-  if (input.valor_min != null) q = q.gte("valor", input.valor_min);
-  if (input.valor_max != null) q = q.lte("valor", input.valor_max);
-
-  const { data: unidadesRaw, error: unErr } = await q.limit(2000);
   if (unErr) {
     console.error("Erro consultando unidades:", unErr);
     return json(500, { error: "Erro ao buscar unidades" });
   }
 
-  let unidades = (unidadesRaw ?? []) as any[];
-  if (input.quartos != null) {
-    unidades = unidades.filter((u) => u.tipologia?.quartos === input.quartos);
+  const unidades = (unidadesRaw ?? []) as any[];
+
+  // 6. Boxes vinculadas (para coluna "Box")
+  const unidadeIds = unidades.map(u => u.id);
+  const boxesPorUnidade = new Map<string, string>();
+  if (unidadeIds.length > 0) {
+    const { data: boxesRaw } = await supabase
+      .from("boxes")
+      .select("numero, tipo, unidade_id")
+      .in("unidade_id", unidadeIds)
+      .eq("is_active", true);
+    for (const b of (boxesRaw ?? []) as any[]) {
+      const lbl = `${b.numero} (${b.tipo})`;
+      const cur = boxesPorUnidade.get(b.unidade_id);
+      boxesPorUnidade.set(b.unidade_id, cur ? `${cur}, ${lbl}` : lbl);
+    }
   }
 
-  // ordenar bloco / andar / numero
+  // 7. Ordenação Bloco → Andar → Número (numérico pt-BR)
+  const cmpNat = (a: string, b: string) =>
+    a.localeCompare(b, "pt-BR", { numeric: true, sensitivity: "base" });
   unidades.sort((a, b) => {
-    const ba = (a.bloco?.nome ?? "").localeCompare(b.bloco?.nome ?? "");
+    const ba = cmpNat(a.bloco?.nome ?? "", b.bloco?.nome ?? "");
     if (ba !== 0) return ba;
     const aa = (a.andar ?? 0) - (b.andar ?? 0);
     if (aa !== 0) return aa;
-    return String(a.numero ?? "").localeCompare(String(b.numero ?? ""));
+    return cmpNat(String(a.numero ?? ""), String(b.numero ?? ""));
   });
 
-  // 7. Gerar PDF
+  // 8. PDF — A4 retrato
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const pageWidth = 842; // A4 paisagem
-  const pageHeight = 595;
-  const margin = 30;
+  const pageWidth = 595.28;  // A4 portrait pt
+  const pageHeight = 841.89;
+  const margin = 36;
+  const contentW = pageWidth - margin * 2;
 
-  const headers = ["Bloco", "Andar", "Unidade", "Tipologia", "Q", "Sui", "Vg", "Área m²", "Valor", "Status"];
-  const colWidths = [70, 45, 60, 130, 30, 35, 35, 60, 110, 80];
+  // Cores
+  const cBorder = rgb(0.67, 0.67, 0.67);    // #aaaaaa
+  const cHeadBg = rgb(0.898, 0.898, 0.898); // #e5e5e5
+  const cHeadBottom = rgb(0.333, 0.333, 0.333); // #555555
+  const cRowSep = rgb(0.8, 0.8, 0.8);       // #cccccc
+  const cText = rgb(0.2, 0.2, 0.2);         // #333
+  const cMuted = rgb(0.47, 0.47, 0.47);     // #777
+  const cSub = rgb(0.33, 0.33, 0.33);       // #555
 
-  const drawHeader = (page: any, y: number) => {
-    page.drawText(`Tabela de Unidades — ${emp.nome}`, {
-      x: margin, y: pageHeight - margin, size: 14, font: fontBold, color: rgb(0, 0, 0),
+  // Larguras (somam contentW)
+  // Número, Bloco, Andar, Tipologia, Box, Área, Valor
+  const colWidths = [55, 70, 45, 110, 100, 60, 83.28];
+  const aligns: ("center"|"left"|"right")[] = ["center","left","center","left","center","center","right"];
+  const headers = [unidLabel, blocoLabel, "Andar", "Tipologia", "Box", "Área (m²)", "Valor (R$)"];
+
+  const headerTitleSize = 12;
+  const headerSubSize = 8;
+  const headerNameSize = 10;
+  const headerGenSize = 8;
+  const tableHeadSize = 8;
+  const tableCellSize = 7.5;
+  const rowPaddingV = 4;
+  const rowMinH = 16;
+  const tableHeadH = 18;
+
+  const dataGeracao = fmtDataHora(new Date());
+
+  type Ctx = { page: PDFPage; y: number };
+
+  const drawTopHeader = (ctx: Ctx) => {
+    const { page } = ctx;
+    const topY = pageHeight - margin;
+    // Esquerda
+    page.drawText("CRM 360 – Seven Group 360", {
+      x: margin, y: topY - headerTitleSize, size: headerTitleSize, font: fontBold, color: rgb(0,0,0),
     });
-    const sub = `${emp.endereco_cidade ?? ""}${emp.endereco_uf ? "/" + emp.endereco_uf : ""}  ·  Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
-    page.drawText(sub, { x: margin, y: pageHeight - margin - 16, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
-
-    // table header
-    let x = margin;
-    page.drawRectangle({ x: margin, y: y - 4, width: pageWidth - margin * 2, height: 18, color: rgb(0.92, 0.92, 0.92) });
-    headers.forEach((h, i) => {
-      page.drawText(h, { x: x + 4, y: y, size: 9, font: fontBold, color: rgb(0, 0, 0) });
-      x += colWidths[i];
+    page.drawText("Plataforma de Gestão Integrada", {
+      x: margin, y: topY - headerTitleSize - 12, size: headerSubSize, font, color: cMuted,
     });
-    return y - 18;
+    // Direita
+    const right = (txt: string, size: number, f: PDFFont, color: any, yLine: number) => {
+      const w = f.widthOfTextAtSize(txt, size);
+      page.drawText(txt, { x: pageWidth - margin - w, y: yLine, size, font: f, color });
+    };
+    right("Unidades Disponíveis", headerTitleSize, fontBold, rgb(0,0,0), topY - headerTitleSize);
+    right(emp.nome, headerNameSize, font, cSub, topY - headerTitleSize - 13);
+    right(`Gerado em ${dataGeracao}`, headerGenSize, font, cMuted, topY - headerTitleSize - 25);
+
+    // Linha divisória
+    const lineY = topY - headerTitleSize - 33;
+    page.drawRectangle({ x: margin, y: lineY, width: contentW, height: 1.2, color: cBorder });
+
+    ctx.y = lineY - 10;
   };
 
-  let page = pdfDoc.addPage([pageWidth, pageHeight]);
-  let y = pageHeight - margin - 40;
-  y = drawHeader(page, y);
+  const drawTableHead = (ctx: Ctx) => {
+    const { page } = ctx;
+    const y = ctx.y - tableHeadH;
+    // Fundo
+    page.drawRectangle({ x: margin, y, width: contentW, height: tableHeadH, color: cHeadBg });
+    // Linha inferior
+    page.drawRectangle({ x: margin, y: y - 0.5, width: contentW, height: 1, color: cHeadBottom });
 
-  const rowHeight = 14;
-  for (const u of unidades) {
-    if (y < margin + 40) {
-      page = pdfDoc.addPage([pageWidth, pageHeight]);
-      y = pageHeight - margin - 40;
-      y = drawHeader(page, y);
-    }
-    const row = [
-      u.bloco?.nome ?? "-",
-      u.andar != null ? String(u.andar) : "-",
-      u.numero ?? "-",
-      u.tipologia?.nome ?? "-",
-      u.tipologia?.quartos != null ? String(u.tipologia.quartos) : "-",
-      u.tipologia?.suites != null ? String(u.tipologia.suites) : "-",
-      u.tipologia?.vagas != null ? String(u.tipologia.vagas) : "-",
-      u.area_privativa != null ? Number(u.area_privativa).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "-",
-      fmtBRL(u.valor != null ? Number(u.valor) : null),
-      String(u.status ?? "-"),
-    ];
     let x = margin;
-    row.forEach((cell, i) => {
-      const maxChars = Math.floor(colWidths[i] / 5);
-      const text = cell.length > maxChars ? cell.slice(0, maxChars - 1) + "…" : cell;
-      page.drawText(text, { x: x + 4, y, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
-      x += colWidths[i];
+    const textY = y + (tableHeadH - tableHeadSize) / 2 + 1;
+    headers.forEach((h, i) => {
+      const w = colWidths[i];
+      const tw = fontBold.widthOfTextAtSize(h, tableHeadSize);
+      let tx = x + 4;
+      if (aligns[i] === "center") tx = x + (w - tw) / 2;
+      else if (aligns[i] === "right") tx = x + w - tw - 4;
+      page.drawText(h, { x: tx, y: textY, size: tableHeadSize, font: fontBold, color: rgb(0,0,0) });
+      x += w;
     });
-    y -= rowHeight;
+    ctx.y = y - 1;
+  };
+
+  const newPage = (): Ctx => {
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+    const ctx: Ctx = { page, y: pageHeight - margin };
+    drawTopHeader(ctx);
+    drawTableHead(ctx);
+    return ctx;
+  };
+
+  let ctx = newPage();
+
+  // Linhas
+  for (const u of unidades) {
+    const cells = [
+      u.numero ?? "-",
+      u.bloco?.nome ?? "-",
+      u.andar != null ? `${u.andar}º` : "-",
+      u.tipologia?.nome ?? "-",
+      boxesPorUnidade.get(u.id) ?? "-",
+      fmtArea(u.area_privativa),
+      fmtBRL(u.valor != null ? Number(u.valor) : null),
+    ].map(c => String(c));
+
+    // Quebra de página
+    if (ctx.y - rowMinH < margin + 40) {
+      ctx = newPage();
+    }
+
+    const rowH = rowMinH;
+    const rowTop = ctx.y;
+    const rowBottom = rowTop - rowH;
+
+    let x = margin;
+    const textY = rowBottom + (rowH - tableCellSize) / 2 + 1;
+    cells.forEach((cell, i) => {
+      const w = colWidths[i];
+      const text = truncate(cell, font, tableCellSize, w - 8);
+      const tw = font.widthOfTextAtSize(text, tableCellSize);
+      let tx = x + 4;
+      if (aligns[i] === "center") tx = x + (w - tw) / 2;
+      else if (aligns[i] === "right") tx = x + w - tw - 4;
+      page: {
+        ctx.page.drawText(text, { x: tx, y: textY, size: tableCellSize, font, color: cText });
+      }
+      x += w;
+    });
+
+    // separador
+    ctx.page.drawRectangle({ x: margin, y: rowBottom, width: contentW, height: 0.5, color: cRowSep });
+
+    ctx.y = rowBottom - rowPaddingV;
   }
 
-  // rodapé
-  const footerLines = [
-    `Total: ${unidades.length} unidade(s) — Status filtrado: ${statusFiltro}`,
-  ];
-  if (emp.texto_rodape_relatorio) footerLines.push(emp.texto_rodape_relatorio);
+  // Rodapé — Total
+  const totalTxt = `Total de unidades disponíveis: ${unidades.length}`;
+  const reservaRodape = 30 + (emp.texto_rodape_relatorio ? 80 : 0);
+  if (ctx.y < margin + reservaRodape) {
+    ctx = newPage();
+  }
+  {
+    const size = 9;
+    const w = font.widthOfTextAtSize(totalTxt, size);
+    // "Total..." com número em negrito — desenha em duas partes
+    const label = "Total de unidades disponíveis: ";
+    const numero = String(unidades.length);
+    const lw = font.widthOfTextAtSize(label, size);
+    const nw = fontBold.widthOfTextAtSize(numero, size);
+    const totalW = lw + nw;
+    const tx = pageWidth - margin - totalW;
+    const y = ctx.y - 14;
+    ctx.page.drawText(label, { x: tx, y, size, font, color: cSub });
+    ctx.page.drawText(numero, { x: tx + lw, y, size, font: fontBold, color: cSub });
+    ctx.y = y - 8;
+  }
 
-  let fy = margin + (footerLines.length - 1) * 10;
-  for (const line of footerLines) {
-    page.drawText(line, { x: margin, y: fy, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
-    fy -= 10;
+  // Texto do rodapé customizado
+  if (emp.texto_rodape_relatorio) {
+    const sepY = ctx.y - 6;
+    ctx.page.drawRectangle({ x: margin, y: sepY, width: contentW, height: 0.5, color: cRowSep });
+    let y = sepY - 12;
+    const size = 7.5;
+    const lineH = size * 1.6;
+    const lines = wrapText(String(emp.texto_rodape_relatorio), font, size, contentW);
+    for (const ln of lines) {
+      if (y < margin + 10) {
+        ctx = newPage();
+        y = ctx.y - 12;
+      }
+      ctx.page.drawText(ln, { x: margin, y, size, font, color: cSub });
+      y -= lineH;
+    }
+    ctx.y = y;
   }
 
   const pdfBytes = await pdfDoc.save();
 
-  // 8. Upload no storage
-  const path = `relatorios-ia/${emp.id}/${Date.now()}-${crypto.randomUUID()}.pdf`;
+  // 9. Upload
+  const nomeArquivoBase = String(emp.nome).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "_");
+  const fileName = `Unidades_Disponiveis_${nomeArquivoBase}_${fmtDataArquivo(new Date())}.pdf`;
+  const path = `relatorios-ia/${emp.id}/${Date.now()}-${crypto.randomUUID()}-${fileName}`;
+
   const { error: upErr } = await supabase.storage
     .from("empreendimentos-documentos")
     .upload(path, pdfBytes, { contentType: "application/pdf", upsert: false });
@@ -212,7 +393,7 @@ Deno.serve(async (req) => {
     path,
     total: unidades.length,
     empreendimento: emp.nome,
-    status: statusFiltro,
+    status: "disponivel",
     expira_em: new Date(Date.now() + 3600 * 1000).toISOString(),
   });
 });
