@@ -309,9 +309,7 @@ Deno.serve(async (req) => {
       let tx = x + 4;
       if (aligns[i] === "center") tx = x + (w - tw) / 2;
       else if (aligns[i] === "right") tx = x + w - tw - 4;
-      page: {
-        ctx.page.drawText(text, { x: tx, y: textY, size: tableCellSize, font, color: cText });
-      }
+      ctx.page.drawText(text, { x: tx, y: textY, size: tableCellSize, font, color: cText });
       x += w;
     });
 
