@@ -12,46 +12,62 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { useCreateBox } from '@/hooks/useBoxes';
+import { useCreateBox, useUpdateBox } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
-import { BOX_TIPO_LABELS, BoxTipo } from '@/types/empreendimentos.types';
+import { BOX_TIPO_LABELS, BOX_STATUS_LABELS, BoxTipo, BoxStatus, Box } from '@/types/empreendimentos.types';
 
 interface BoxFormProps {
   empreendimentoId: string;
   onSuccess: () => void;
+  box?: Box;
 }
 
-export function BoxForm({ empreendimentoId, onSuccess }: BoxFormProps) {
+export function BoxForm({ empreendimentoId, onSuccess, box }: BoxFormProps) {
+  const isEdit = !!box;
   const [formData, setFormData] = useState({
-    numero: '',
-    bloco_id: '',
-    tipo: 'simples' as BoxTipo,
-    coberto: false,
-    valor: '',
-    observacoes: '',
+    numero: box?.numero ?? '',
+    bloco_id: box?.bloco_id ?? '',
+    tipo: (box?.tipo ?? 'simples') as BoxTipo,
+    coberto: box?.coberto ?? false,
+    status: (box?.status ?? 'disponivel') as BoxStatus,
+    valor: box?.valor != null ? String(box.valor).replace('.', ',') : '',
+    observacoes: box?.observacoes ?? '',
   });
 
   const { data: blocos = [] } = useBlocos(empreendimentoId);
   const createBox = useCreateBox();
+  const updateBox = useUpdateBox();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    createBox.mutate(
-      {
-        empreendimentoId,
-        data: {
-          numero: formData.numero,
-          bloco_id: formData.bloco_id || undefined,
-          tipo: formData.tipo,
-          coberto: formData.coberto,
-          valor: formData.valor ? parseFloat(formData.valor.replace(',', '.')) : undefined,
-          observacoes: formData.observacoes || undefined,
+    const payload = {
+      numero: formData.numero,
+      bloco_id: formData.bloco_id || undefined,
+      tipo: formData.tipo,
+      coberto: formData.coberto,
+      valor: formData.valor ? parseFloat(formData.valor.replace(',', '.')) : undefined,
+      observacoes: formData.observacoes || undefined,
+    };
+
+    if (isEdit && box) {
+      updateBox.mutate(
+        {
+          id: box.id,
+          empreendimentoId,
+          data: { ...payload, status: formData.status } as any,
         },
-      },
-      { onSuccess }
-    );
+        { onSuccess }
+      );
+    } else {
+      createBox.mutate(
+        { empreendimentoId, data: payload },
+        { onSuccess }
+      );
+    }
   };
+
+  const isPending = createBox.isPending || updateBox.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -69,7 +85,7 @@ export function BoxForm({ empreendimentoId, onSuccess }: BoxFormProps) {
       <div className="space-y-2">
         <Label>Bloco (opcional)</Label>
         <Select
-          value={formData.bloco_id}
+          value={formData.bloco_id || 'none'}
           onValueChange={(v) => setFormData({ ...formData, bloco_id: v === 'none' ? '' : v })}
         >
           <SelectTrigger>
@@ -104,6 +120,27 @@ export function BoxForm({ empreendimentoId, onSuccess }: BoxFormProps) {
           </SelectContent>
         </Select>
       </div>
+
+      {isEdit && (
+        <div className="space-y-2">
+          <Label>Status</Label>
+          <Select
+            value={formData.status}
+            onValueChange={(v) => setFormData({ ...formData, status: v as BoxStatus })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(BOX_STATUS_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="flex items-center justify-between p-3 border rounded-lg">
         <div>
@@ -145,9 +182,9 @@ export function BoxForm({ empreendimentoId, onSuccess }: BoxFormProps) {
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="submit" disabled={createBox.isPending || !formData.numero.trim()}>
-          {createBox.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Criar Box
+        <Button type="submit" disabled={isPending || !formData.numero.trim()}>
+          {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {isEdit ? 'Salvar Alterações' : 'Criar Box'}
         </Button>
       </div>
     </form>

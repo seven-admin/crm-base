@@ -35,13 +35,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X, Pencil } from 'lucide-react';
 import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch, useVincularBoxesBatch } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useUnidades } from '@/hooks/useUnidades';
 import { BoxBulkForm } from './BoxBulkForm';
 import { BoxForm } from './BoxForm';
-import { BOX_STATUS_LABELS, BOX_TIPO_LABELS, BoxStatus } from '@/types/empreendimentos.types';
+import { BOX_STATUS_LABELS, BOX_TIPO_LABELS, BoxStatus, Box } from '@/types/empreendimentos.types';
 import { cn } from '@/lib/utils';
 
 interface BoxesTabProps {
@@ -59,6 +59,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [formIndividualOpen, setFormIndividualOpen] = useState(false);
+  const [editBox, setEditBox] = useState<Box | null>(null);
   const [vincularOpen, setVincularOpen] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
   const [selectedUnidadeId, setSelectedUnidadeId] = useState<string>('');
@@ -461,6 +462,14 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
                     {!selectionMode && (
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditBox(box)}
+                            title="Editar box"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           {box.unidade_id ? (
                             <Button
                               variant="ghost"
@@ -524,6 +533,22 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
             empreendimentoId={empreendimentoId}
             onSuccess={() => setFormIndividualOpen(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Editar Box */}
+      <Dialog open={!!editBox} onOpenChange={(open) => !open && setEditBox(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar Box {editBox?.numero}</DialogTitle>
+          </DialogHeader>
+          {editBox && (
+            <BoxForm
+              empreendimentoId={empreendimentoId}
+              box={editBox}
+              onSuccess={() => setEditBox(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
