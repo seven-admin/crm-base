@@ -1,1 +1,4 @@
 project_id = "pizerpoxuqopekmbvohh"
+
+[functions.export-unidades-pdf]
+verify_jwt = false
