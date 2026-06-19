@@ -66,6 +66,18 @@ Deno.serve(async (req) => {
   const telDigits = onlyDigits(input.telefone_corretor);
   if (telDigits.length < 8) return json(400, { error: "Telefone inválido" });
 
+  // Normaliza: remove código país BR (55) e possível 9º dígito para gerar variantes
+  const variants = new Set<string>();
+  variants.add(telDigits);
+  if (telDigits.startsWith("55") && telDigits.length >= 12) variants.add(telDigits.slice(2));
+  // últimos 10 e 11 dígitos
+  if (telDigits.length >= 11) variants.add(telDigits.slice(-11));
+  if (telDigits.length >= 10) variants.add(telDigits.slice(-10));
+  if (telDigits.length >= 9) variants.add(telDigits.slice(-9));
+  if (telDigits.length >= 8) variants.add(telDigits.slice(-8));
+
+  console.log("[validar-corretor] telefone recebido:", input.telefone_corretor, "digitos:", telDigits, "variantes:", [...variants]);
+
   const { data: corretores, error: corretorErr } = await supabase
     .from("corretores")
     .select("id, nome_completo, telefone, whatsapp, is_active")
@@ -76,19 +88,24 @@ Deno.serve(async (req) => {
     return json(500, { error: "Erro ao validar corretor" });
   }
 
-  const corretor = (corretores ?? []).find((c) => {
-    const t1 = onlyDigits(c.telefone ?? "");
-    const t2 = onlyDigits(c.whatsapp ?? "");
-    return (
-      t1 === telDigits || t2 === telDigits ||
-      (t1 && t1.endsWith(telDigits)) || (t2 && t2.endsWith(telDigits)) ||
-      (t1 && telDigits.endsWith(t1)) || (t2 && telDigits.endsWith(t2))
-    );
-  });
+  const matches = (raw: string | null | undefined) => {
+    const d = onlyDigits(raw ?? "");
+    if (!d) return false;
+    if (variants.has(d)) return true;
+    for (const v of variants) {
+      if (v.length >= 8 && (d.endsWith(v) || v.endsWith(d))) return true;
+    }
+    return false;
+  };
+
+  const corretor = (corretores ?? []).find((c) => matches(c.telefone) || matches(c.whatsapp));
 
   if (!corretor) {
-    return json(403, { error: "Corretor não encontrado ou inativo" });
+    console.warn("[validar-corretor] NÃO encontrado. Total corretores ativos:", corretores?.length, "primeiros telefones:", corretores?.slice(0, 3).map((c) => ({ t: c.telefone, w: c.whatsapp })));
+    return json(403, { error: "Corretor não encontrado ou inativo", telefone_recebido: telDigits });
   }
+
+  console.log("[validar-corretor] OK:", corretor.nome_completo, "id:", corretor.id);
 
   // 5. Buscar empreendimento
   const { data: emp, error: empErr } = await supabase
