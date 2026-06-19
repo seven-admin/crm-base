@@ -462,6 +462,14 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
                     {!selectionMode && (
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditBox(box)}
+                            title="Editar box"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           {box.unidade_id ? (
                             <Button
                               variant="ghost"
