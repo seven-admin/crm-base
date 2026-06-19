@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     page.drawText(`Tabela de Unidades — ${emp.nome}`, {
       x: margin, y: pageHeight - margin, size: 14, font: fontBold, color: rgb(0, 0, 0),
     });
-    const sub = `${emp.endereco_cidade ?? ""}${emp.endereco_uf ? "/" + emp.endereco_uf : ""}  ·  Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}  ·  Corretor: ${corretor.nome_completo}`;
+    const sub = `${emp.endereco_cidade ?? ""}${emp.endereco_uf ? "/" + emp.endereco_uf : ""}  ·  Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
     page.drawText(sub, { x: margin, y: pageHeight - margin - 16, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
 
     // table header
