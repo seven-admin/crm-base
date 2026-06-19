@@ -13,7 +13,6 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   empreendimento_id: z.string().uuid(),
-  telefone_corretor: z.string().min(8).max(20),
   status: z.enum(["disponivel", "reservada", "vendida", "bloqueada", "negociacao", "contrato"]).optional(),
   bloco_id: z.string().uuid().optional(),
   quartos: z.number().int().min(0).max(20).optional(),
@@ -62,50 +61,9 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // 4. Validar corretor pelo telefone (compara só dígitos)
-  const telDigits = onlyDigits(input.telefone_corretor);
-  if (telDigits.length < 8) return json(400, { error: "Telefone inválido" });
+  // 4. (Validação por corretor removida — autenticação via x-api-token é suficiente)
 
-  // Normaliza: remove código país BR (55) e possível 9º dígito para gerar variantes
-  const variants = new Set<string>();
-  variants.add(telDigits);
-  if (telDigits.startsWith("55") && telDigits.length >= 12) variants.add(telDigits.slice(2));
-  // últimos 10 e 11 dígitos
-  if (telDigits.length >= 11) variants.add(telDigits.slice(-11));
-  if (telDigits.length >= 10) variants.add(telDigits.slice(-10));
-  if (telDigits.length >= 9) variants.add(telDigits.slice(-9));
-  if (telDigits.length >= 8) variants.add(telDigits.slice(-8));
 
-  console.log("[validar-corretor] telefone recebido:", input.telefone_corretor, "digitos:", telDigits, "variantes:", [...variants]);
-
-  const { data: corretores, error: corretorErr } = await supabase
-    .from("corretores")
-    .select("id, nome_completo, telefone, whatsapp, is_active")
-    .eq("is_active", true);
-
-  if (corretorErr) {
-    console.error("Erro consultando corretores:", corretorErr);
-    return json(500, { error: "Erro ao validar corretor" });
-  }
-
-  const matches = (raw: string | null | undefined) => {
-    const d = onlyDigits(raw ?? "");
-    if (!d) return false;
-    if (variants.has(d)) return true;
-    for (const v of variants) {
-      if (v.length >= 8 && (d.endsWith(v) || v.endsWith(d))) return true;
-    }
-    return false;
-  };
-
-  const corretor = (corretores ?? []).find((c) => matches(c.telefone) || matches(c.whatsapp));
-
-  if (!corretor) {
-    console.warn("[validar-corretor] NÃO encontrado. Total corretores ativos:", corretores?.length, "primeiros telefones:", corretores?.slice(0, 3).map((c) => ({ t: c.telefone, w: c.whatsapp })));
-    return json(403, { error: "Corretor não encontrado ou inativo", telefone_recebido: telDigits });
-  }
-
-  console.log("[validar-corretor] OK:", corretor.nome_completo, "id:", corretor.id);
 
   // 5. Buscar empreendimento
   const { data: emp, error: empErr } = await supabase
@@ -169,7 +127,7 @@ Deno.serve(async (req) => {
     page.drawText(`Tabela de Unidades — ${emp.nome}`, {
       x: margin, y: pageHeight - margin, size: 14, font: fontBold, color: rgb(0, 0, 0),
     });
-    const sub = `${emp.endereco_cidade ?? ""}${emp.endereco_uf ? "/" + emp.endereco_uf : ""}  ·  Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}  ·  Corretor: ${corretor.nome_completo}`;
+    const sub = `${emp.endereco_cidade ?? ""}${emp.endereco_uf ? "/" + emp.endereco_uf : ""}  ·  Gerado em ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`;
     page.drawText(sub, { x: margin, y: pageHeight - margin - 16, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
 
     // table header
