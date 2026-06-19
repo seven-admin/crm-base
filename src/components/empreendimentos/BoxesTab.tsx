@@ -35,13 +35,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X, Pencil } from 'lucide-react';
 import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch, useVincularBoxesBatch } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useUnidades } from '@/hooks/useUnidades';
 import { BoxBulkForm } from './BoxBulkForm';
 import { BoxForm } from './BoxForm';
-import { BOX_STATUS_LABELS, BOX_TIPO_LABELS, BoxStatus } from '@/types/empreendimentos.types';
+import { BOX_STATUS_LABELS, BOX_TIPO_LABELS, BoxStatus, Box } from '@/types/empreendimentos.types';
 import { cn } from '@/lib/utils';
 
 interface BoxesTabProps {
