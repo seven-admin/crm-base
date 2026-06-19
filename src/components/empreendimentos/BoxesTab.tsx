@@ -536,6 +536,22 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Editar Box */}
+      <Dialog open={!!editBox} onOpenChange={(open) => !open && setEditBox(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar Box {editBox?.numero}</DialogTitle>
+          </DialogHeader>
+          {editBox && (
+            <BoxForm
+              empreendimentoId={empreendimentoId}
+              box={editBox}
+              onSuccess={() => setEditBox(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Criar em Lote */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-lg">
