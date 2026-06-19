@@ -59,6 +59,7 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [formIndividualOpen, setFormIndividualOpen] = useState(false);
+  const [editBox, setEditBox] = useState<Box | null>(null);
   const [vincularOpen, setVincularOpen] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
   const [selectedUnidadeId, setSelectedUnidadeId] = useState<string>('');
