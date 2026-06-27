@@ -1,51 +1,46 @@
-## Objetivo
+# Documentação: Módulo de Empreendimentos
 
-Fazer o PDF gerado pela edge function `export-unidades-pdf` (usada na automação n8n) sair **idêntico** ao gerado pelo botão "Exportar Disponíveis (PDF)" da tela de Empreendimentos → aba Unidades.
+Criar arquivo `DOCUMENTACAO_EMPREENDIMENTOS.md` na raiz do projeto descrevendo de forma funcional (não técnica) as três áreas solicitadas.
 
-## Por que não dá para reusar literalmente o mesmo código
+## Estrutura do documento
 
-O botão da tela usa `html2pdf.js` (HTML + `html2canvas` rodando no navegador). A edge function roda em Deno, sem DOM nem Chromium, então não é possível executar `html2pdf`. A solução é **replicar o mesmo layout** usando `pdf-lib` (que já é a lib instalada na função).
+### 1. Visão Geral
+- O que é o módulo e onde fica na navegação
+- Tipos suportados: Loteamento, Condomínio, Prédio, Comercial
+- Status do ciclo de vida: Lançamento, Em Obra, Entregue
 
-## O que vai mudar
+### 2. Listagem de Empreendimentos (`/empreendimentos`)
+- **Busca e filtros**: campo de busca textual, filtro por Tipo e por Status
+- **Agrupamento por UF**: cards agrupados por estado (collapsible), ordem alfabética pelo nome do estado, "Sem estado definido" no final
+- **Card do empreendimento**: nome, tipo, status, foto de capa, contadores de unidades (disponíveis/reservadas/vendidas), valor total e vendido
+- **Criação**: botão "Novo Empreendimento" abre formulário
+- **Inativação**: switch para ocultar das listagens globais (sem exclusão física)
+- **Detalhe**: abas internas (Unidades, Blocos, Tipologias, Boxes, Mídias, Documentos, Equipe, Mapa)
+- **Exportar Disponíveis (PDF)**: gera relatório das unidades em status `disponivel` em A4 retrato (Número, Bloco, Andar, Tipologia, Box, Área, Valor) + rodapé customizado por empreendimento (`texto_rodape_relatorio`)
 
-Arquivo: `supabase/functions/export-unidades-pdf/index.ts`
+### 3. Disponibilidade
+Cobre duas vertentes:
 
-1. **Filtro fixo de disponíveis** — ignora qualquer `status/bloco_id/quartos/valor_min/valor_max` do payload; força `status = 'disponivel'`. O `BodySchema` fica só com `empreendimento_id`.
-2. **Ordenação igual ao botão** — Bloco/Quadra → Andar → Número, usando `localeCompare` numérico (pt-BR).
-3. **Layout A4 retrato** com as mesmas 7 colunas, na mesma ordem:
-   - `Número` (ou `Lote` se o empreendimento for loteamento)
-   - `Bloco` (ou `Quadra` se loteamento)
-   - `Andar` (com sufixo "º")
-   - `Tipologia`
-   - `Box` (lista `numero (tipo)` separada por vírgula)
-   - `Área (m²)` formatada pt-BR
-   - `Valor (R$)` em BRL
-4. **Cabeçalho idêntico ao botão**:
-   - Esquerda: "CRM 360 – Seven Group 360" + "Plataforma de Gestão Integrada"
-   - Direita: "Unidades Disponíveis" + nome do empreendimento + "Gerado em dd/MM/yyyy HH:mm:ss"
-   - Linha divisória cinza abaixo
-5. **Rodapé idêntico**:
-   - "Total de unidades disponíveis: N" alinhado à direita
-   - Bloco de `texto_rodape_relatorio` (quando existir no empreendimento), separado por linha cinza, com quebras de linha preservadas
-6. **Tipografia e cores** próximas ao HTML:
-   - Helvetica para textos
-   - Cabeçalho da tabela em fundo cinza claro, com linha inferior mais escura
-   - Linhas separadas por filete cinza claro (1px), sem zebra
-7. **Paginação automática** — cabeçalho da tabela repetido em cada página; rodapé só na última página.
-8. **Query** — incluir join de `boxes` para preencher a coluna Box (hoje a função não traz boxes).
-9. **Nome do arquivo no Storage** — manter o padrão atual do upload, mas mudar o sufixo lógico para `Unidades_Disponiveis_<NomeEmpreendimento>_<dd-MM-yyyy>.pdf` (apenas dentro do path; a URL assinada continua igual).
-10. **Resposta JSON** — sem mudança de contrato: `{ url, path, total, empreendimento, status: 'disponivel', expira_em }`.
+**3.1 Mapa Interativo (interno – aba "Mapa" / `MapaUnidadesPage`)**
+- Disponível para tipos `loteamento` e `condominio`
+- Visualização gráfica com polígonos por unidade, cores por status
+- Legenda configurável (`legenda_status_visiveis`)
+- Formato de label configurável (`mapa_label_formato`)
+- Edição reservada à equipe interna; clientes/corretores em modo leitura
 
-## Contrato de entrada simplificado
+**3.2 Portal Incorporador – Disponibilidade (`/portal-incorporador/disponibilidade`)**
+- Seletor de empreendimento (apenas os vinculados ao usuário, via filtro global do portal)
+- Para Loteamento/Condomínio: abas **Mapa** (read-only) e **Unidades** (tabela)
+- Para Prédio/Comercial: apenas tabela de unidades (UI adaptativa)
+- Tabela: Quadra/Bloco, Unidade, Status (badge colorido), Valor; filtro por bloco quando houver mais de um; contador "X disponíveis de Y"
+- Ordenação natural por Bloco → Andar → Número
+- Status exibidos: Disponível, Reservada, Vendida, Bloqueada
 
-```json
-{ "empreendimento_id": "uuid" }
-```
+### 4. Automação (Webhook / n8n)
+- Edge function `export-unidades-pdf`: gera o mesmo PDF de disponíveis sob demanda
+- Recebe apenas `empreendimento_id`; força status `disponivel`
+- Retorna URL assinada (TTL 1h) + path + total + nome do empreendimento
 
-Qualquer campo extra é ignorado silenciosamente (compatibilidade com chamadas atuais).
-
-## Fora de escopo
-
-- Não mexer no botão da tela (`UnidadesTab.tsx`).
-- Não alterar autenticação (continua só `x-api-token`).
-- Não alterar bucket nem política de URL assinada (1h).
+## Escopo
+- Apenas criação de 1 arquivo `.md` em português
+- Não altera código, componentes ou edge functions
