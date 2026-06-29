@@ -1,4 +1,4 @@
-// Edge Function: export-unidades-pdf
+// Edge Function: exportar-tabela-disponiveis
 // Recebe { empreendimento_id } + token compartilhado e gera PDF replicando
 // o layout do botão "Exportar Disponíveis (PDF)" da tela de Empreendimentos.
 // Sempre filtra unidades com status='disponivel'.
@@ -14,7 +14,7 @@ const corsHeaders = {
 
 const BodySchema = z.object({
   empreendimento_id: z.string().uuid(),
-}).passthrough(); // ignora campos extras
+}).passthrough();
 
 const json = (status: number, data: unknown) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -30,8 +30,6 @@ const fmtArea = (v: number | null | undefined) => {
 };
 
 const fmtDataHora = (d: Date) => {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  // America/Sao_Paulo
   const parts = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     day: "2-digit", month: "2-digit", year: "numeric",
@@ -49,7 +47,6 @@ const fmtDataArquivo = (d: Date) => {
   return `${get("day")}-${get("month")}-${get("year")}`;
 };
 
-// Trunca um texto para caber em maxWidth, adicionando "…" se preciso.
 function truncate(text: string, font: PDFFont, size: number, maxWidth: number): string {
   if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
   const ell = "…";
@@ -63,7 +60,6 @@ function truncate(text: string, font: PDFFont, size: number, maxWidth: number): 
   return text.slice(0, lo) + ell;
 }
 
-// Quebra texto em múltiplas linhas respeitando maxWidth (por palavras).
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const out: string[] = [];
   const paragraphs = text.split(/\r?\n/);
@@ -77,7 +73,6 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): 
         line = trial;
       } else {
         if (line) out.push(line);
-        // palavra individual maior que largura: trunca
         if (font.widthOfTextAtSize(w, size) > maxWidth) {
           out.push(truncate(w, font, size, maxWidth));
           line = "";
@@ -95,14 +90,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
-  // 1. Token compartilhado
   const apiToken = Deno.env.get("N8N_API_TOKEN");
   const provided = req.headers.get("x-api-token");
   if (!apiToken || provided !== apiToken) {
     return json(401, { error: "Token inválido" });
   }
 
-  // 2. Body
   let body: unknown;
   try {
     body = await req.json();
@@ -115,27 +108,27 @@ Deno.serve(async (req) => {
   }
   const { empreendimento_id } = parsed.data;
 
-  // 3. Cliente service role
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // 4. Empreendimento
   const { data: emp, error: empErr } = await supabase
     .from("empreendimentos")
-    .select("id, nome, tipo, texto_rodape_relatorio, is_active")
+    .select("id, nome, tipo, texto_rodape_relatorio, is_active, incorporadora:incorporadoras(nome)")
     .eq("id", empreendimento_id)
     .maybeSingle();
 
   if (empErr || !emp) return json(404, { error: "Empreendimento não encontrado" });
   if (!emp.is_active) return json(403, { error: "Empreendimento inativo" });
 
+  const incorporadoraNome = (emp as any).incorporadora?.nome ?? null;
+  const headerTitulo = incorporadoraNome ? `CRM - ${incorporadoraNome}` : "CRM";
+
   const isLoteamento = emp.tipo === "loteamento";
   const blocoLabel = isLoteamento ? "Quadra" : "Bloco";
   const unidLabel = isLoteamento ? "Lote" : "Número";
 
-  // 5. Unidades disponíveis
   const { data: unidadesRaw, error: unErr } = await supabase
     .from("unidades")
     .select(`
@@ -155,7 +148,6 @@ Deno.serve(async (req) => {
 
   const unidades = (unidadesRaw ?? []) as any[];
 
-  // 6. Boxes vinculadas (para coluna "Box")
   const unidadeIds = unidades.map(u => u.id);
   const boxesPorUnidade = new Map<string, string>();
   if (unidadeIds.length > 0) {
@@ -171,7 +163,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 7. Ordenação Bloco → Andar → Número (numérico pt-BR)
   const cmpNat = (a: string, b: string) =>
     a.localeCompare(b, "pt-BR", { numeric: true, sensitivity: "base" });
   unidades.sort((a, b) => {
@@ -182,27 +173,23 @@ Deno.serve(async (req) => {
     return cmpNat(String(a.numero ?? ""), String(b.numero ?? ""));
   });
 
-  // 8. PDF — A4 retrato
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const pageWidth = 595.28;  // A4 portrait pt
+  const pageWidth = 595.28;
   const pageHeight = 841.89;
   const margin = 36;
   const contentW = pageWidth - margin * 2;
 
-  // Cores
-  const cBorder = rgb(0.67, 0.67, 0.67);    // #aaaaaa
-  const cHeadBg = rgb(0.898, 0.898, 0.898); // #e5e5e5
-  const cHeadBottom = rgb(0.333, 0.333, 0.333); // #555555
-  const cRowSep = rgb(0.8, 0.8, 0.8);       // #cccccc
-  const cText = rgb(0.2, 0.2, 0.2);         // #333
-  const cMuted = rgb(0.47, 0.47, 0.47);     // #777
-  const cSub = rgb(0.33, 0.33, 0.33);       // #555
+  const cBorder = rgb(0.67, 0.67, 0.67);
+  const cHeadBg = rgb(0.898, 0.898, 0.898);
+  const cHeadBottom = rgb(0.333, 0.333, 0.333);
+  const cRowSep = rgb(0.8, 0.8, 0.8);
+  const cText = rgb(0.2, 0.2, 0.2);
+  const cMuted = rgb(0.47, 0.47, 0.47);
+  const cSub = rgb(0.33, 0.33, 0.33);
 
-  // Larguras (somam contentW)
-  // Número, Bloco, Andar, Tipologia, Box, Área, Valor
   const colWidths = [55, 70, 45, 110, 100, 60, 83.28];
   const aligns: ("center"|"left"|"right")[] = ["center","left","center","left","center","center","right"];
   const headers = [unidLabel, blocoLabel, "Andar", "Tipologia", "Box", "Área (m²)", "Valor (R$)"];
@@ -224,14 +211,12 @@ Deno.serve(async (req) => {
   const drawTopHeader = (ctx: Ctx) => {
     const { page } = ctx;
     const topY = pageHeight - margin;
-    // Esquerda
-    page.drawText("CRM 360 – Seven Group 360", {
+    page.drawText(headerTitulo, {
       x: margin, y: topY - headerTitleSize, size: headerTitleSize, font: fontBold, color: rgb(0,0,0),
     });
     page.drawText("Plataforma de Gestão Integrada", {
       x: margin, y: topY - headerTitleSize - 12, size: headerSubSize, font, color: cMuted,
     });
-    // Direita
     const right = (txt: string, size: number, f: PDFFont, color: any, yLine: number) => {
       const w = f.widthOfTextAtSize(txt, size);
       page.drawText(txt, { x: pageWidth - margin - w, y: yLine, size, font: f, color });
@@ -240,7 +225,6 @@ Deno.serve(async (req) => {
     right(emp.nome, headerNameSize, font, cSub, topY - headerTitleSize - 13);
     right(`Gerado em ${dataGeracao}`, headerGenSize, font, cMuted, topY - headerTitleSize - 25);
 
-    // Linha divisória
     const lineY = topY - headerTitleSize - 33;
     page.drawRectangle({ x: margin, y: lineY, width: contentW, height: 1.2, color: cBorder });
 
@@ -250,9 +234,7 @@ Deno.serve(async (req) => {
   const drawTableHead = (ctx: Ctx) => {
     const { page } = ctx;
     const y = ctx.y - tableHeadH;
-    // Fundo
     page.drawRectangle({ x: margin, y, width: contentW, height: tableHeadH, color: cHeadBg });
-    // Linha inferior
     page.drawRectangle({ x: margin, y: y - 0.5, width: contentW, height: 1, color: cHeadBottom });
 
     let x = margin;
@@ -279,7 +261,6 @@ Deno.serve(async (req) => {
 
   let ctx = newPage();
 
-  // Linhas
   for (const u of unidades) {
     const cells = [
       u.numero ?? "-",
@@ -291,7 +272,6 @@ Deno.serve(async (req) => {
       fmtBRL(u.valor != null ? Number(u.valor) : null),
     ].map(c => String(c));
 
-    // Quebra de página
     if (ctx.y - rowMinH < margin + 40) {
       ctx = newPage();
     }
@@ -313,22 +293,17 @@ Deno.serve(async (req) => {
       x += w;
     });
 
-    // separador
     ctx.page.drawRectangle({ x: margin, y: rowBottom, width: contentW, height: 0.5, color: cRowSep });
 
     ctx.y = rowBottom - rowPaddingV;
   }
 
-  // Rodapé — Total
-  const totalTxt = `Total de unidades disponíveis: ${unidades.length}`;
   const reservaRodape = 30 + (emp.texto_rodape_relatorio ? 80 : 0);
   if (ctx.y < margin + reservaRodape) {
     ctx = newPage();
   }
   {
     const size = 9;
-    const w = font.widthOfTextAtSize(totalTxt, size);
-    // "Total..." com número em negrito — desenha em duas partes
     const label = "Total de unidades disponíveis: ";
     const numero = String(unidades.length);
     const lw = font.widthOfTextAtSize(label, size);
@@ -341,7 +316,6 @@ Deno.serve(async (req) => {
     ctx.y = y - 8;
   }
 
-  // Texto do rodapé customizado
   if (emp.texto_rodape_relatorio) {
     const sepY = ctx.y - 6;
     ctx.page.drawRectangle({ x: margin, y: sepY, width: contentW, height: 0.5, color: cRowSep });
@@ -362,7 +336,6 @@ Deno.serve(async (req) => {
 
   const pdfBytes = await pdfDoc.save();
 
-  // 9. Upload
   const nomeArquivoBase = String(emp.nome).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "_");
   const fileName = `Unidades_Disponiveis_${nomeArquivoBase}_${fmtDataArquivo(new Date())}.pdf`;
@@ -391,6 +364,7 @@ Deno.serve(async (req) => {
     path,
     total: unidades.length,
     empreendimento: emp.nome,
+    incorporadora: incorporadoraNome,
     status: "disponivel",
     expira_em: new Date(Date.now() + 3600 * 1000).toISOString(),
   });
