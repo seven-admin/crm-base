@@ -1,4 +1,4 @@
 project_id = "pizerpoxuqopekmbvohh"
 
-[functions.export-unidades-pdf]
+[functions.exportar-tabela-disponiveis]
 verify_jwt = false
