@@ -6166,7 +6166,7 @@ export type Database = {
       }
       get_role_id: { Args: { _role_name: string }; Returns: string }
       get_unidades_disponiveis: {
-        Args: { p_incorporadora_id: string }
+        Args: { p_empreendimento_id?: string; p_incorporadora_id?: string }
         Returns: {
           andar: number
           area_privativa: number
