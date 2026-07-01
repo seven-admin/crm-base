@@ -6165,6 +6165,25 @@ export type Database = {
         Returns: string
       }
       get_role_id: { Args: { _role_name: string }; Returns: string }
+      get_unidades_disponiveis: {
+        Args: { p_incorporadora_id: string }
+        Returns: {
+          andar: number
+          area_privativa: number
+          bloco: string
+          empreendimento: string
+          empreendimento_id: string
+          incorporadora: string
+          quartos: number
+          status: string
+          suites: number
+          tipologia: string
+          unidade: string
+          unidade_id: string
+          vagas: number
+          valor: number
+        }[]
+      }
       get_unidades_disponiveis_bk: {
         Args: never
         Returns: {
