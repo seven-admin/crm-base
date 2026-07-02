@@ -215,13 +215,13 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     };
 
     // Separadores de linha via div (evita artefatos de border-bottom/border-top no html2canvas)
-    const rowSep = `<tr><td colspan="7" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
+    const rowSep = `<tr style="page-break-inside: avoid; break-inside: avoid;"><td colspan="7" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
 
     const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
 
     const linhasHtml = ordenadas.map((u) => {
       const boxNumeros = (u as any).boxes?.map((b: any) => `${b.numero} (${b.tipo})`).join(', ') || '-';
-      return `${rowSep}<tr style="background:#ffffff;">` +
+      return `${rowSep}<tr style="background:#ffffff; page-break-inside: avoid; break-inside: avoid;">` +
         `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
         `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
         `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
@@ -236,15 +236,15 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
         <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #aaaaaa;">
           <div>
-            <div style="font-size: 12pt; font-weight: bold; line-height: 1.3;">CRM 360 – Seven Group 360</div>
+            <div style="font-size: 12pt; font-weight: bold; line-height: 1.3;">CRM 360 – ${empreendimento.nome}</div>
             <div style="font-size: 8pt; color: #777;">Plataforma de Gestão Integrada</div>
           </div>
           <div style="text-align: right;">
             <div style="font-size: 12pt; font-weight: bold;">Unidades Disponíveis</div>
-            <div style="font-size: 10pt; color: #555;">${empreendimento.nome}</div>
             <div style="font-size: 8pt; color: #777;">Gerado em ${dataGeracao}</div>
           </div>
         </div>
+
         <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
           <thead>
             <tr style="background: #e5e5e5;">
