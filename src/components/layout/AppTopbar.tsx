@@ -106,7 +106,7 @@ function isPathActive(item: MenuItem, pathname: string, search: string) {
 export function AppTopbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, role, signOut, isAuthenticated } = useAuth();
+  const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
