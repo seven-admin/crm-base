@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp,
+  Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
+  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
