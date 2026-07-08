@@ -14,7 +14,7 @@ export default function ArqoConfig() {
   const { data: regua = [] } = useArqoRegua();
 
   const etapaOptions = etapas.map(e => ({ value: e.id, label: e.nome }));
-  const tempOptions = [{ value: '', label: '— Todas —' }, ...temps.map(t => ({ value: t.id, label: t.nome }))];
+  const tempOptions = [{ value: '__none__', label: '— Todas —' }, ...temps.map(t => ({ value: t.id, label: t.nome }))];
 
   const sourceFields: ConfigField[] = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
