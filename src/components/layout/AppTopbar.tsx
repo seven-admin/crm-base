@@ -87,9 +87,12 @@ export function AppTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
+  const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
+
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
       if (item.adminOnly) return isAdmin();
+      if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
       return canAccessModule(item.moduleName);
     });
 
