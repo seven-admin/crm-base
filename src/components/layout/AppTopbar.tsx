@@ -1,18 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Building, UserCheck, TrendingUp, Handshake, Kanban,
-  ClipboardList, FileSignature, DollarSign, GitBranch, Shield, Palette,
-  CalendarDays, BookOpen, Gift, Wallet, User, Target, FileCheck, FilePlus,
-  Variable, ClipboardCheck, BarChart2, Calendar, Search, Bell, ChevronDown,
+  Building2, Users, Map, Settings, LogOut, Menu, X,
+  UserCog, Building, UserCheck, TrendingUp, Handshake,
+  FileSignature, DollarSign, GitBranch, Shield,
+  BookOpen, Gift, Wallet, User, Target, FileCheck, FilePlus,
+  Variable, ClipboardCheck, BarChart2, ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROLE_LABELS } from '@/types/auth.types';
-import { NotificacaoBell } from './NotificacaoBell';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -32,26 +31,25 @@ interface MenuItem {
 interface MenuGroup {
   label: string;
   icon: LucideIcon;
-  colorVar: string;
   items: MenuItem[];
 }
 
 const menuGroups: MenuGroup[] = [
   {
-    label: 'Empreendimentos', icon: Building2, colorVar: '--nav-empreendimentos',
+    label: 'Empreendimentos', icon: Building2,
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
       { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
     ],
   },
   {
-    label: 'Clientes', icon: Users, colorVar: '--nav-clientes',
+    label: 'Clientes', icon: Users,
     items: [
       { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
     ],
   },
   {
-    label: 'Comercial', icon: Target, colorVar: '--nav-comercial',
+    label: 'Comercial', icon: Target,
     items: [
       { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
       { icon: TrendingUp, label: 'Resumo', path: '/forecast', moduleName: 'forecast' },
@@ -62,7 +60,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Contratos', icon: FileSignature, colorVar: '--nav-contratos',
+    label: 'Contratos', icon: FileSignature,
     items: [
       { icon: FileCheck, label: 'Gestão de Contratos', path: '/contratos', moduleName: 'contratos' },
       { icon: FilePlus, label: 'Templates', path: '/contratos?tab=templates', moduleName: 'contratos_templates' },
@@ -71,7 +69,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Financeiro', icon: DollarSign, colorVar: '--nav-financeiro',
+    label: 'Financeiro', icon: DollarSign,
     items: [
       { icon: Wallet, label: 'Fluxo de Caixa', path: '/financeiro', moduleName: 'financeiro_fluxo' },
       { icon: BarChart2, label: 'DRE', path: '/dre', moduleName: 'financeiro_dre' },
@@ -80,7 +78,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Parceiros', icon: Handshake, colorVar: '--nav-parceiros',
+    label: 'Parceiros', icon: Handshake,
     items: [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
       { icon: Building, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias' },
@@ -88,7 +86,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Sistema', icon: Settings, colorVar: '--nav-sistema',
+    label: 'Sistema', icon: Settings,
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
@@ -108,7 +106,7 @@ function isPathActive(item: MenuItem, pathname: string, search: string) {
 export function AppTopbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, role, signOut, isAuthenticated } = useAuth();
+  const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
@@ -157,7 +155,6 @@ export function AppTopbar() {
         <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center overflow-x-auto">
           {visibleGroups.map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
-            const color = `hsl(var(${group.colorVar}))`;
             return (
               <DropdownMenu key={group.label}>
                 <DropdownMenuTrigger asChild>
@@ -166,7 +163,7 @@ export function AppTopbar() {
                       'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap',
                       hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
                     )}
-                    style={hasActive ? { boxShadow: `inset 0 -2px 0 0 ${color}` } : undefined}
+                    style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
                   >
                     <span className="flex items-center gap-1.5">
                       {group.label}
@@ -190,7 +187,7 @@ export function AppTopbar() {
                             active && 'bg-primary-soft text-primary font-medium'
                           )}
                         >
-                          <item.icon className="h-4 w-4" style={{ color }} />
+                          <item.icon className="h-4 w-4 text-muted-foreground" />
                           <span>{item.label}</span>
                         </Link>
                       </DropdownMenuItem>
@@ -204,16 +201,6 @@ export function AppTopbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative hidden md:block">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              placeholder="Buscar..."
-              className="w-52 lg:w-64 h-9 rounded-lg border border-border bg-input-bg pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors"
-            />
-          </div>
-
-          {isAuthenticated && <NotificacaoBell />}
-
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -262,12 +249,11 @@ export function AppTopbar() {
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
                 {visibleGroups.map((group) => {
                   const isOpen = mobileGroups.includes(group.label);
-                  const color = `hsl(var(${group.colorVar}))`;
                   return (
                     <Collapsible key={group.label} open={isOpen} onOpenChange={() => toggleMobileGroup(group.label)}>
                       <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
                         <span className="flex items-center gap-2.5">
-                          <group.icon className="h-4 w-4" style={{ color }} />
+                          <group.icon className="h-4 w-4 text-muted-foreground" />
                           {group.label}
                         </span>
                         <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
@@ -286,7 +272,7 @@ export function AppTopbar() {
                                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                               )}
                             >
-                              <item.icon className="h-4 w-4" style={{ color }} />
+                              <item.icon className="h-4 w-4 text-muted-foreground" />
                               {item.label}
                             </Link>
                           );
