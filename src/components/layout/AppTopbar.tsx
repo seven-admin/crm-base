@@ -32,26 +32,25 @@ interface MenuItem {
 interface MenuGroup {
   label: string;
   icon: LucideIcon;
-  colorVar: string;
   items: MenuItem[];
 }
 
 const menuGroups: MenuGroup[] = [
   {
-    label: 'Empreendimentos', icon: Building2, colorVar: '--nav-empreendimentos',
+    label: 'Empreendimentos', icon: Building2,
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
       { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
     ],
   },
   {
-    label: 'Clientes', icon: Users, colorVar: '--nav-clientes',
+    label: 'Clientes', icon: Users,
     items: [
       { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
     ],
   },
   {
-    label: 'Comercial', icon: Target, colorVar: '--nav-comercial',
+    label: 'Comercial', icon: Target,
     items: [
       { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
       { icon: TrendingUp, label: 'Resumo', path: '/forecast', moduleName: 'forecast' },
@@ -62,7 +61,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Contratos', icon: FileSignature, colorVar: '--nav-contratos',
+    label: 'Contratos', icon: FileSignature,
     items: [
       { icon: FileCheck, label: 'Gestão de Contratos', path: '/contratos', moduleName: 'contratos' },
       { icon: FilePlus, label: 'Templates', path: '/contratos?tab=templates', moduleName: 'contratos_templates' },
@@ -71,7 +70,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Financeiro', icon: DollarSign, colorVar: '--nav-financeiro',
+    label: 'Financeiro', icon: DollarSign,
     items: [
       { icon: Wallet, label: 'Fluxo de Caixa', path: '/financeiro', moduleName: 'financeiro_fluxo' },
       { icon: BarChart2, label: 'DRE', path: '/dre', moduleName: 'financeiro_dre' },
@@ -80,7 +79,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Parceiros', icon: Handshake, colorVar: '--nav-parceiros',
+    label: 'Parceiros', icon: Handshake,
     items: [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
       { icon: Building, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias' },
@@ -88,7 +87,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Sistema', icon: Settings, colorVar: '--nav-sistema',
+    label: 'Sistema', icon: Settings,
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
