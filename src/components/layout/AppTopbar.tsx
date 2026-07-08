@@ -202,16 +202,6 @@ export function AppTopbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative hidden md:block">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              placeholder="Buscar..."
-              className="w-52 lg:w-64 h-9 rounded-lg border border-border bg-input-bg pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors"
-            />
-          </div>
-
-          {isAuthenticated && <NotificacaoBell />}
-
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
