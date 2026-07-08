@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Building, UserCheck, TrendingUp, Handshake, Kanban,
-  ClipboardList, FileSignature, DollarSign, GitBranch, Shield, Palette,
-  CalendarDays, BookOpen, Gift, Wallet, User, Target, FileCheck, FilePlus,
-  Variable, ClipboardCheck, BarChart2, Calendar, Search, Bell, ChevronDown,
+  Building2, Users, Map, Settings, LogOut, Menu, X,
+  UserCog, Building, UserCheck, TrendingUp, Handshake,
+  FileSignature, DollarSign, GitBranch, Shield,
+  BookOpen, Gift, Wallet, User, Target, FileCheck, FilePlus,
+  Variable, ClipboardCheck, BarChart2, ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROLE_LABELS } from '@/types/auth.types';
-import { NotificacaoBell } from './NotificacaoBell';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
