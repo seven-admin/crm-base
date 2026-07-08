@@ -63,7 +63,7 @@ export default function Relatorios() {
   const { data: comissoesGestor, isLoading: loadingComissoes } = useComissoesPorGestor(dateRange.from, dateRange.to);
   const { data: gestoresProduto } = useGestoresProduto();
   const { data: relatorioValores, isLoading: loadingValores } = useRelatorioValores(empreendimentoFilter || undefined);
-  const { data: ticketStats, isLoading: loadingTickets } = useTicketStats(dateRange.from, dateRange.to);
+  
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
