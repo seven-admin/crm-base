@@ -38,8 +38,6 @@ import { UnidadesTab } from '@/components/empreendimentos/UnidadesTab';
 import { TipologiasTab } from '@/components/empreendimentos/TipologiasTab';
 import { DocumentosTab } from '@/components/empreendimentos/DocumentosTab';
 import { MidiasTab } from '@/components/empreendimentos/MidiasTab';
-import { ConfiguracaoComercialTab } from '@/components/empreendimentos/ConfiguracaoComercialTab';
-import { UnidadesValoresTab } from '@/components/empreendimentos/UnidadesValoresTab';
 import { UnidadesMemorialTab } from '@/components/empreendimentos/UnidadesMemorialTab';
 import { HistoricoEmpreendimentoTab } from '@/components/empreendimentos/HistoricoEmpreendimentoTab';
 import { FachadasTab } from '@/components/empreendimentos/FachadasTab';
