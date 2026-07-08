@@ -26,7 +26,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ClienteForm } from '@/components/clientes/ClienteForm';
 import { ClienteInteracoesDialog } from '@/components/clientes/ClienteInteracoesDialog';
-import { ClienteHistoricoAtividadesDialog } from '@/components/clientes/ClienteHistoricoAtividadesDialog';
+
 import { ClienteQuickViewDialog } from '@/components/clientes/ClienteQuickViewDialog';
 import { AcaoEmLoteDialog, AcaoEmLoteData } from '@/components/clientes/AcaoEmLoteDialog';
 import { MarcarPerdidoDialog } from '@/components/clientes/MarcarPerdidoDialog';
