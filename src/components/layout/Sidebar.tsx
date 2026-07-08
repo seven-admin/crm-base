@@ -94,8 +94,6 @@ const menuGroupsDef = [
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
-      
-      { icon: Settings, label: 'Configurações', path: '/configuracoes', moduleName: 'configuracoes' },
     ],
   },
 ];
