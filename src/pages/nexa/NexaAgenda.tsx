@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { useNexaVisitas } from '@/hooks/useNexa';
 import { NovaVisitaDialog } from '@/components/nexa/NovaVisitaDialog';
 import { STATUS_LABELS, STATUS_COLORS } from '@/types/nexa.types';
@@ -14,6 +15,15 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/types/nexa.types';
 export default function NexaAgenda() {
   const [novoOpen, setNovoOpen] = useState(false);
   const { data: visitas, isLoading } = useNexaVisitas();
+
+  return (
+    <MainLayout
+      title="Agenda Nexa"
+      subtitle="Gestão de visitas a empreendimentos"
+      actions={<Button onClick={() => setNovoOpen(true)}><Plus className="h-4 w-4 mr-2" /> Nova visita</Button>}
+    >
+      <div className="space-y-6">
+
 
   return (
     <div className="p-6 space-y-6">
