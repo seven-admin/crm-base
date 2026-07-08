@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { useNexaVisita, useNexaEventos, useUpdateVisitaStatus } from '@/hooks/useNexa';
 import { UnidadeAcaoDialog } from '@/components/nexa/UnidadeAcaoDialog';
 import { VisitaTimeline } from '@/components/nexa/VisitaTimeline';
@@ -20,17 +21,18 @@ export default function NexaVisitaDetalhe() {
   const [acaoOpen, setAcaoOpen] = useState(false);
 
   if (isLoading) {
-    return <div className="p-6 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    return <MainLayout><div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div></MainLayout>;
   }
   if (!visita) {
-    return <div className="p-6">Visita não encontrada.</div>;
+    return <MainLayout><div>Visita não encontrada.</div></MainLayout>;
   }
 
   const nome = visita.cliente?.nome || visita.visitante_nome || 'Visitante';
   const telefone = visita.cliente?.telefone || visita.visitante_telefone;
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <MainLayout>
+      <div className="space-y-6 max-w-5xl mx-auto">
       <Link to="/nexa/agenda" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Voltar para agenda
       </Link>
@@ -106,6 +108,8 @@ export default function NexaVisitaDetalhe() {
         visitaId={visita.id}
         empreendimentoId={visita.empreendimento_id}
       />
-    </div>
+      </div>
+    </MainLayout>
   );
 }
+

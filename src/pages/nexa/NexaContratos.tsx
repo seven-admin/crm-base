@@ -1,17 +1,10 @@
-import { FileText, Construction } from 'lucide-react';
+import { Construction } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 export default function NexaContratos() {
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <FileText className="h-8 w-8 text-primary" />
-          Contratos Nexa
-        </h1>
-        <p className="text-muted-foreground mt-1">Gestão de contratos vinculados às visitas.</p>
-      </div>
-
+    <MainLayout title="Contratos Nexa" subtitle="Gestão de contratos vinculados às visitas.">
       <Card>
         <CardContent className="py-16 text-center">
           <Construction className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
@@ -22,6 +15,6 @@ export default function NexaContratos() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </MainLayout>
   );
 }

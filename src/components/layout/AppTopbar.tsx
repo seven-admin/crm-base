@@ -137,13 +137,14 @@ export function AppTopbar() {
       <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
         {/* Logo */}
         <Link to="/" className="shrink-0 flex items-center">
-          <img src={logo} alt="SevenGroup" className="h-7" />
+          <img src={logo} alt="SevenGroup" className="h-5" />
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center overflow-x-auto">
+        {/* Desktop nav (right aligned) */}
+        <nav className="hidden lg:flex items-center gap-1 ml-auto overflow-x-auto">
           {visibleGroups.map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
+            const isSistema = group.label === 'Sistema';
             return (
               <DropdownMenu key={group.label}>
                 <DropdownMenuTrigger asChild>
@@ -160,7 +161,7 @@ export function AppTopbar() {
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[240px] rounded-xl border-border shadow-popover">
+                <DropdownMenuContent align="end" className="min-w-[240px] rounded-xl border-border shadow-popover">
                   <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
                     {group.label}
                   </DropdownMenuLabel>
@@ -182,38 +183,31 @@ export function AppTopbar() {
                       </DropdownMenuItem>
                     );
                   })}
+                  {isSistema && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-3 py-2">
+                        <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{userRole}</p>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" /> Sair
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
           })}
         </nav>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* User menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="h-9 w-9 rounded-full bg-primary-soft text-primary text-xs font-semibold flex items-center justify-center hover:ring-2 hover:ring-primary/20 transition"
-                aria-label="Menu do usuário"
-              >
-                {userInitials || <User className="h-4 w-4" />}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl border-border shadow-popover">
-              <div className="px-3 py-2">
-                <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
-                <p className="text-xs text-muted-foreground truncate">{userRole}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="text-destructive focus:text-destructive cursor-pointer"
-              >
-                <LogOut className="h-4 w-4 mr-2" /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Right actions (mobile only) */}
+        <div className="flex items-center gap-2 shrink-0 lg:hidden">
+
 
           {/* Mobile trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -224,7 +218,7 @@ export function AppTopbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                <img src={logo} alt="SevenGroup" className="h-7" />
+                <img src={logo} alt="SevenGroup" className="h-5" />
                 <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
@@ -260,6 +254,20 @@ export function AppTopbar() {
                             </Link>
                           );
                         })}
+                        {group.label === 'Sistema' && (
+                          <>
+                            <div className="mt-2 pt-2 border-t border-border px-3">
+                              <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+                              <p className="text-xs text-muted-foreground truncate">{userRole}</p>
+                            </div>
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10"
+                            >
+                              <LogOut className="h-4 w-4" /> Sair
+                            </button>
+                          </>
+                        )}
                       </CollapsibleContent>
                     </Collapsible>
                   );
@@ -267,6 +275,7 @@ export function AppTopbar() {
               </nav>
             </SheetContent>
           </Sheet>
+
         </div>
       </div>
     </header>
