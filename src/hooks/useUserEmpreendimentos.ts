@@ -48,7 +48,7 @@ export function useEmpreendimentosWithLinks(userId: string | undefined) {
       // Fetch all active empreendimentos with unit count
       const { data: empreendimentos, error: empError } = await supabase
         .from('seven_empreendimentos')
-        .select('id, nome, endereco_cidade, endereco_uf, status, unidades(count)')
+        .select('id, nome, endereco_cidade, endereco_uf, status, seven_unidades(count)')
         .eq('is_active', true)
         .order('nome');
 
