@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EmpreendimentoCard } from '@/components/empreendimentos/EmpreendimentoCard';
 import { EmpreendimentoForm } from '@/components/empreendimentos/EmpreendimentoForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -11,11 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Search, Loader2, Building2, ChevronDown } from 'lucide-react';
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
-import type { EmpreendimentoFilters, EmpreendimentoTipo, EmpreendimentoStatus } from '@/types/empreendimentos.types';
-import { EMPREENDIMENTO_TIPO_LABELS, EMPREENDIMENTO_STATUS_LABELS } from '@/types/empreendimentos.types';
+import type { EmpreendimentoFilters, EmpreendimentoTipo, EmpreendimentoStatus, EmpreendimentoWithStats } from '@/types/empreendimentos.types';
+import {
+  EMPREENDIMENTO_TIPO_LABELS,
+  EMPREENDIMENTO_STATUS_LABELS,
+  EMPREENDIMENTO_STATUS_COLORS,
+} from '@/types/empreendimentos.types';
+import { cn } from '@/lib/utils';
 
 const UF_NAMES: Record<string, string> = {
   AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia',
@@ -27,6 +41,102 @@ const UF_NAMES: Record<string, string> = {
   SE: 'Sergipe', TO: 'Tocantins',
 };
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value || 0);
+
+function EmpreendimentoRow({ emp }: { emp: EmpreendimentoWithStats }) {
+  const navigate = useNavigate();
+  const goto = () => navigate(`/empreendimentos/${emp.id}`);
+
+  return (
+    <TableRow
+      className="cursor-pointer hover:bg-muted/50"
+      onClick={goto}
+    >
+      <TableCell className="w-14">
+        {emp.capa_url ? (
+          <img
+            src={emp.capa_url}
+            alt={emp.nome}
+            className="h-10 w-10 rounded-md object-cover border border-border"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-muted-foreground" />
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="font-medium text-foreground">{emp.nome}</TableCell>
+      <TableCell>
+        <Badge variant="secondary" className="font-normal">
+          {EMPREENDIMENTO_TIPO_LABELS[emp.tipo]}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <span
+          className={cn(
+            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
+            EMPREENDIMENTO_STATUS_COLORS[emp.status]
+          )}
+        >
+          {EMPREENDIMENTO_STATUS_LABELS[emp.status]}
+        </span>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {emp.endereco_cidade ? `${emp.endereco_cidade}${emp.endereco_uf ? `/${emp.endereco_uf}` : ''}` : '—'}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {emp.unidades_disponiveis > 0 && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600">
+              {emp.unidades_disponiveis} disp
+            </span>
+          )}
+          {emp.unidades_reservadas > 0 && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600">
+              {emp.unidades_reservadas} res
+            </span>
+          )}
+          {emp.unidades_negociacao > 0 && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
+              {emp.unidades_negociacao} neg
+            </span>
+          )}
+          {emp.unidades_vendidas > 0 && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600">
+              {emp.unidades_vendidas} vend
+            </span>
+          )}
+          {emp.unidades_bloqueadas > 0 && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-gray-500/10 text-gray-500">
+              {emp.unidades_bloqueadas} bloq
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">{formatCurrency(emp.valor_total)}</TableCell>
+      <TableCell className="text-right tabular-nums text-sm">{formatCurrency(emp.valor_vendido)}</TableCell>
+      <TableCell className="text-right">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            goto();
+          }}
+        >
+          Abrir
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 const Empreendimentos = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [filters, setFilters] = useState<EmpreendimentoFilters>({});
@@ -35,14 +145,13 @@ const Empreendimentos = () => {
   const { data: empreendimentos, isLoading } = useEmpreendimentos(filters);
 
   const groupedByUF = useMemo(() => {
-    if (!empreendimentos) return {};
-    const groups: Record<string, typeof empreendimentos> = {};
+    if (!empreendimentos) return {} as Record<string, EmpreendimentoWithStats[]>;
+    const groups: Record<string, EmpreendimentoWithStats[]> = {};
     for (const emp of empreendimentos) {
       const uf = emp.endereco_uf || '__sem_uf';
       (groups[uf] ??= []).push(emp);
     }
-    // Sort keys: real UFs alphabetically, then __sem_uf at end
-    const sorted: Record<string, typeof empreendimentos> = {};
+    const sorted: Record<string, EmpreendimentoWithStats[]> = {};
     const keys = Object.keys(groups).sort((a, b) => {
       if (a === '__sem_uf') return 1;
       if (b === '__sem_uf') return -1;
@@ -78,12 +187,12 @@ const Empreendimentos = () => {
               className="pl-9"
             />
           </div>
-          
+
           <Select
             value={filters.tipo || 'all'}
-            onValueChange={(value) => setFilters(prev => ({ 
-              ...prev, 
-              tipo: value === 'all' ? undefined : value as EmpreendimentoTipo 
+            onValueChange={(value) => setFilters(prev => ({
+              ...prev,
+              tipo: value === 'all' ? undefined : value as EmpreendimentoTipo
             }))}
           >
             <SelectTrigger className="w-[140px]">
@@ -99,9 +208,9 @@ const Empreendimentos = () => {
 
           <Select
             value={filters.status || 'all'}
-            onValueChange={(value) => setFilters(prev => ({ 
-              ...prev, 
-              status: value === 'all' ? undefined : value as EmpreendimentoStatus 
+            onValueChange={(value) => setFilters(prev => ({
+              ...prev,
+              status: value === 'all' ? undefined : value as EmpreendimentoStatus
             }))}
           >
             <SelectTrigger className="w-[140px]">
@@ -141,13 +250,27 @@ const Empreendimentos = () => {
                 <div className="flex-1 border-t border-border ml-2" />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 pt-2 pb-4">
-                  {items.map((empreendimento) => (
-                    <EmpreendimentoCard
-                      key={empreendimento.id}
-                      empreendimento={empreendimento}
-                    />
-                  ))}
+                <div className="rounded-lg border border-border bg-card overflow-hidden mt-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-14"></TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Cidade/UF</TableHead>
+                        <TableHead>Unidades</TableHead>
+                        <TableHead className="text-right">VGV</TableHead>
+                        <TableHead className="text-right">Vendido</TableHead>
+                        <TableHead className="text-right w-24">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {items.map((emp) => (
+                        <EmpreendimentoRow key={emp.id} emp={emp} />
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </CollapsibleContent>
             </Collapsible>

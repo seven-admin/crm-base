@@ -2,7 +2,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import logo from '@/assets/logo-full.png';
 
 const Index = () => {
   const { role, isLoading: authLoading } = useAuth();
@@ -26,7 +25,7 @@ const Index = () => {
   return (
     <MainLayout>
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <img src={logo} alt="Seven Group" className="h-48 object-contain opacity-10" />
+        <p className="text-sm text-muted-foreground">Bem-vindo ao Seven Group</p>
       </div>
     </MainLayout>
   );
