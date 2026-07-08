@@ -383,11 +383,6 @@ const Clientes = () => {
         onOpenChange={(open) => !open && setInteracoesCliente(null)}
       />
 
-      <ClienteHistoricoAtividadesDialog
-        cliente={historicoCliente}
-        open={!!historicoCliente}
-        onOpenChange={(open) => !open && setHistoricoCliente(null)}
-      />
 
       <MarcarPerdidoDialog
         open={perdidoDialogOpen}
