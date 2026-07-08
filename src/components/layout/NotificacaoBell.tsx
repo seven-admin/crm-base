@@ -24,7 +24,7 @@ const TIPO_ICONS: Record<string, string> = {
 const REFERENCIA_ROUTES: Record<string, string> = {
   atividade: '/atividades',
   negociacao: '/negociacoes',
-  marketing: '/marketing',
+  
 };
 
 export function NotificacaoBell() {
