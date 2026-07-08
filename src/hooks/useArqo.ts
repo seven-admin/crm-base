@@ -236,3 +236,80 @@ export function useQualificarIA() {
     onError: (e: any) => toast.error(e.message ?? 'Erro na qualificação IA'),
   });
 }
+
+// ============ CRUD genérico para tabelas de configuração ============
+type ConfigTable =
+  | 'arqo_lead_sources'
+  | 'arqo_temperaturas'
+  | 'arqo_funil_etapas'
+  | 'arqo_grupos_atendimento'
+  | 'arqo_grupo_membros'
+  | 'arqo_sla_regras'
+  | 'arqo_regua_reengajamento';
+
+const invalidationKey: Record<ConfigTable, string> = {
+  arqo_lead_sources: 'sources',
+  arqo_temperaturas: 'temperaturas',
+  arqo_funil_etapas: 'etapas',
+  arqo_grupos_atendimento: 'grupos',
+  arqo_grupo_membros: 'grupo-membros',
+  arqo_sla_regras: 'sla-regras',
+  arqo_regua_reengajamento: 'regua',
+};
+
+export function useUpsertArqoConfig(table: ConfigTable) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: Record<string, any>) => {
+      if (payload.id) {
+        const { id, ...rest } = payload;
+        const { data, error } = await supabase.from(table).update(rest).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+      }
+      const { data, error } = await supabase.from(table).insert(payload).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', invalidationKey[table]] });
+      toast.success('Salvo');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Erro ao salvar'),
+  });
+}
+
+export function useDeleteArqoConfig(table: ConfigTable) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', invalidationKey[table]] });
+      toast.success('Removido');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Erro ao remover'),
+  });
+}
+
+export function useArqoLead(id?: string) {
+  return useQuery({
+    queryKey: ['arqo', 'lead', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('arqo_leads').select(`
+        *,
+        cliente:cliente_id (id, nome, telefone, email, cpf, nivel_cadastro, profissao, renda_mensal),
+        etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento),
+        temperatura:temperatura_id (id, nome, cor, peso),
+        source:source_id (id, nome),
+        consultor:consultor_id (id, full_name, email),
+        empreendimento:empreendimento_id (id, nome)
+      `).eq('id', id!).single();
+      if (error) throw error;
+      return data as unknown as ArqoLeadWithRelations;
+    },
+  });
+}
