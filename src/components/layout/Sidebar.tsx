@@ -187,11 +187,13 @@ export function Sidebar() {
   };
 
   const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
+  const NEXA_ROLES = ['nexa_admin', 'nexa_gestor', 'nexa_corretor'];
 
   const filterItems = useCallback((items: MenuItem[]) =>
     items.filter((item) => {
       if (item.adminOnly) return isAdmin();
       if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
+      if (item.moduleName === 'nexa') return isAdmin() || (role && NEXA_ROLES.includes(role));
       return canAccessModule(item.moduleName);
     }), [isAdmin, canAccessModule, role]);
 
