@@ -356,6 +356,8 @@ export type Database = {
           data_perda: string | null
           data_primeira_compra: string | null
           data_primeira_negociacao: string | null
+          data_promocao_comprador: string | null
+          data_promocao_qualificado: string | null
           data_qualificacao: string | null
           email: string | null
           empreendimento_id: string | null
@@ -377,6 +379,7 @@ export type Database = {
           lead_id: string | null
           motivo_perda: string | null
           nacionalidade: string | null
+          nivel_cadastro: Database["public"]["Enums"]["nivel_cadastro_cliente"]
           nome: string
           nome_mae: string | null
           nome_pai: string | null
@@ -403,6 +406,8 @@ export type Database = {
           data_perda?: string | null
           data_primeira_compra?: string | null
           data_primeira_negociacao?: string | null
+          data_promocao_comprador?: string | null
+          data_promocao_qualificado?: string | null
           data_qualificacao?: string | null
           email?: string | null
           empreendimento_id?: string | null
@@ -424,6 +429,7 @@ export type Database = {
           lead_id?: string | null
           motivo_perda?: string | null
           nacionalidade?: string | null
+          nivel_cadastro?: Database["public"]["Enums"]["nivel_cadastro_cliente"]
           nome: string
           nome_mae?: string | null
           nome_pai?: string | null
@@ -450,6 +456,8 @@ export type Database = {
           data_perda?: string | null
           data_primeira_compra?: string | null
           data_primeira_negociacao?: string | null
+          data_promocao_comprador?: string | null
+          data_promocao_qualificado?: string | null
           data_qualificacao?: string | null
           email?: string | null
           empreendimento_id?: string | null
@@ -471,6 +479,7 @@ export type Database = {
           lead_id?: string | null
           motivo_perda?: string | null
           nacionalidade?: string | null
+          nivel_cadastro?: Database["public"]["Enums"]["nivel_cadastro_cliente"]
           nome?: string
           nome_mae?: string | null
           nome_pai?: string | null
@@ -2150,6 +2159,7 @@ export type Database = {
         | "perdido"
       lead_temperatura: "frio" | "morno" | "quente"
       midia_tipo: "imagem" | "video" | "tour_virtual" | "pdf" | "link"
+      nivel_cadastro_cliente: "lead" | "qualificado" | "comprador"
       parcela_status: "pendente" | "paga" | "atrasada" | "cancelada"
       pendencia_status: "aberta" | "resolvida" | "cancelada"
       prioridade_projeto: "baixa" | "media" | "alta" | "urgente"
@@ -2393,6 +2403,7 @@ export const Constants = {
       ],
       lead_temperatura: ["frio", "morno", "quente"],
       midia_tipo: ["imagem", "video", "tour_virtual", "pdf", "link"],
+      nivel_cadastro_cliente: ["lead", "qualificado", "comprador"],
       parcela_status: ["pendente", "paga", "atrasada", "cancelada"],
       pendencia_status: ["aberta", "resolvida", "cancelada"],
       prioridade_projeto: ["baixa", "media", "alta", "urgente"],
