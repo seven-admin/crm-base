@@ -1,55 +1,87 @@
 
-# Remoção dos módulos Eventos, Marketing e Planejamento
+## Objetivo
 
-Remoção end-to-end das três funcionalidades: código frontend, rotas, permissões, hooks, tipos, e tabelas/enums/sequences no banco.
+Três ajustes visuais/estruturais:
 
-## Escopo por camada
+1. Converter a listagem de `/empreendimentos` de cards para tabela.
+2. Substituir o esquema de destaque laranja por uma paleta neutra (preto/cinza/branco) com amarelo `#FFDF6C` como acento, mantendo a logo atual.
+3. Remover a logo de fundo da página inicial (`Index.tsx`).
 
-### 1. Rotas e navegação (`src/App.tsx`, `AppTopbar.tsx`, `Sidebar.tsx`)
-Remover imports lazy, rotas e itens de menu:
-- **CRM interno:** `/marketing/*`, `/marketing/briefings`, `/marketing/dashboard`, `/marketing/equipe`, `/marketing/etapas`, `/marketing/calendario`, `/marketing/:id`, `/planejamento`, `/planejamento/configuracoes`, `/eventos`, `/eventos/calendario`, `/eventos/:id`, `/eventos/templates`.
-- **Portal Corretor:** rota `eventos` (`PortalEventos`).
-- **Portal Incorporador:** rotas `marketing` e `planejamento` (`PortalIncorporadorMarketing`, `PortalIncorporadorPlanejamento`) e respectivas abas/menu.
-- Remover grupos "Planejamento", "Marketing" e "Eventos" da topbar (e sidebar legada).
+---
 
-### 2. Páginas removidas
-`src/pages/Marketing.tsx`, `MarketingCalendario.tsx`, `MarketingDetalhe.tsx`, `EtapasTickets.tsx`, `DashboardMarketing.tsx`, `EquipeMarketing.tsx`, `Briefings.tsx`, `Eventos.tsx`, `EventoDetalhe.tsx`, `EventosCalendario.tsx`, `EventoTemplates.tsx`, `Planejamento.tsx`, `PlanejamentoConfiguracoes.tsx`, `portal/PortalEventos.tsx`, `portal-incorporador/PortalIncorporadorMarketing.tsx`, `portal-incorporador/PortalIncorporadorPlanejamento.tsx`.
+## 1. Listagem `/empreendimentos` em formato tabela
 
-### 3. Componentes, hooks, tipos
-Remover diretórios/arquivos inteiros:
-- `src/components/eventos/`, `src/components/marketing/`, `src/components/planejamento/`, `src/components/briefings/`.
-- Hooks: `useEventos`, `useEventoInscricoes`, `useEventoTemplates`, `useTickets`, `useTicketEtapas`, `useTicketCriativos`, `useProjetosMarketing`, `useProjetoResponsaveis`, `useEquipeMarketing`, `useDashboardMarketing`, `useRelatoriosMarketing`, `useBriefings`, `useBriefingReferencias`, `usePlanejamentoFases`, `usePlanejamentoStatus`, `usePlanejamentoItens`, `usePlanejamentoItemResponsaveis`, `usePlanejamentoGlobal`, `usePlanejamentoHistorico`, `useGoogleCalendarEvents`, `useGoogleCalendarEmbeds`, `useResumoAtividadesPorCategoria` (auditar uso).
-- Tipos: `src/types/marketing.types.ts`, `src/types/planejamento.types.ts`, `src/types/briefings.types.ts`.
-- Edge function: `supabase/functions/fetch-google-calendar/` (usada só pelo planejamento).
+Arquivo: `src/pages/Empreendimentos.tsx`
 
-### 4. Referências cruzadas a limpar
-- Sidebar de configurações / rotas admin (`PlanejamentoConfiguracoes`, `EtapasTickets`, `EventoTemplates`).
-- Auditar `useSidebarColors`, `useConfiguracoesSistema` (chave `planejamento_limite_sobrecarga`), `useDefaultRoute`, `PermissionGate`, e qualquer import residual — remover apenas o que for exclusivo dos módulos deletados.
+- Substituir o grid de `EmpreendimentoCard` por uma tabela (`@/components/ui/table`) mantendo:
+  - Agrupamento por UF via `Collapsible` (linhas de cabeçalho de grupo em `<tbody>` separados ou uma linha "section header" dentro da tabela).
+  - Toolbar de busca e filtros (Tipo/Status) inalterada.
+- Colunas propostas:
+  1. **Capa** (thumbnail 40x40 arredondado, fallback ícone)
+  2. **Nome** (com código/registro pequeno abaixo, se existir)
+  3. **Tipo** (badge)
+  4. **Status** (badge)
+  5. **Cidade / UF**
+  6. **Unidades** (mini contadores: disp / res / neg / vend / bloq — mesmos chips atuais em versão inline compacta)
+  7. **VGV** (`valor_total`) e **Vendido** (`valor_vendido`) formatados
+  8. **Ações** (botão "Abrir" navegando para o detalhe — mesma rota que o card usa hoje)
+- Linha inteira clicável (cursor pointer) redirecionando para o detalhe, mantendo o botão explícito nas ações.
+- Empty state e loading permanecem, apenas ajustados ao contexto tabular.
+- `EmpreendimentoCard.tsx` **não será removido** nesta fase (ainda usado em outros lugares como Portal). Apenas deixa de ser importado por `Empreendimentos.tsx`.
 
-### 5. Banco de dados (migration destrutiva)
-Drop em cascade:
-- **Tabelas:** `eventos`, `evento_tarefas`, `evento_inscricoes`, `evento_membros`, `evento_templates`, `evento_template_tarefas`, `tickets` (não existe, mas `ticket_criativos`, `ticket_etapas`), `projetos_marketing`, `projeto_comentarios`, `projeto_historico`, `projeto_responsaveis`, `tarefas_projeto`, `briefings`, `briefing_referencias`, `planejamento_itens`, `planejamento_fases`, `planejamento_status`, `planejamento_historico`, `planejamento_item_responsaveis`, `google_calendar_embeds`.
-- **Sequences:** `evento_codigo_seq`, `projeto_codigo_seq`, `briefing_codigo_seq`.
-- **Funções:** `generate_evento_codigo`, `generate_projeto_codigo`, `generate_briefing_codigo`, `log_planejamento_changes`, `is_marketing_supervisor`. Ajustar `reset_sequence_value` e `get_all_sequence_values` removendo as sequences deletadas.
-- **Módulos de permissão** (`public.modules`): remover linhas cujo `name` esteja em (`projetos_marketing`, `projetos_marketing_config`, `briefings`, `eventos`, `eventos_templates`, `planejamento`, `planejamento_config`); cascade remove entradas em `role_permissions` e `user_module_permissions`.
-- **Storage buckets:** `projetos-arquivos` e `briefing-referencias` — remover buckets e objetos (a confirmar via SQL em `storage.objects`/`storage.buckets`).
-- **Configurações de sistema:** remover chave `planejamento_limite_sobrecarga` de `configuracoes_sistema`.
+---
 
-Migration única, em transação, com `DROP ... CASCADE`.
+## 2. Nova paleta de destaques (remover laranja)
 
-## Ordem de execução
-1. Migration destrutiva (aprovação do usuário).
-2. Remover arquivos frontend (páginas, hooks, tipos, componentes, edge function).
-3. Limpar rotas em `App.tsx` e menus em `AppTopbar.tsx` / `Sidebar.tsx`.
-4. Rodar `tsgo` até zerar erros (esperado ajustes em imports órfãos).
-5. Verificação: `rg -i "planejamento|marketing|evento|briefing|ticket_etapa" src/` para garantir zero referências residuais fora de `atividades`.
+Paleta baseada no upload do usuário:
+
+- `#202020` preto principal
+- `#3F3F3F` grafite
+- `#707070` cinza médio
+- `#FFDF6C` amarelo (acento)
+- `#FFFFFF` branco
+
+Arquivo: `src/index.css` — atualizar tokens do `:root` e `.dark`:
+
+- `--primary`: `#202020` (HSL `0 0% 13%`), `--primary-foreground`: `#FFDF6C` para dar contraste na logo/botões chave. Alternativamente, manter `--primary` neutro escuro e usar amarelo apenas via `--accent`. **Decisão adotada:** `--primary = #202020`, `--accent = #FFDF6C` (`48 100% 71%`), `--ring = #FFDF6C`.
+- `--primary-soft`: cinza claro `#EDEDED`.
+- `--accent`: `#FFDF6C`; `--accent-foreground`: `#202020`.
+- `--secondary`: `#F3F3F3` neutro (remover tom slate azulado).
+- `--muted` / `--muted-foreground`: cinzas neutros (`0 0%`).
+- `--border` / `--input`: cinza neutro `#E5E5E5`.
+- `--background`: manter neutro (`0 0% 96%`) para retirar o tom atual.
+- `--ring`: amarelo.
+- `--gradient-primary`: gradiente cinza escuro → preto (sem laranja).
+- Sidebar tokens (`--sidebar-primary`, `--sidebar-ring`): trocar para `#FFDF6C`.
+- Chart palette (`--chart-1..5`): substituir `--chart-1` laranja por amarelo `#FFDF6C`; ajustar demais para tons harmônicos (verde/azul/roxo/vermelho neutros mantidos).
+- Nav group colors: trocar `--nav-comercial` e `--nav-diario` (hoje laranja `27 91% 53%`) para o amarelo/grafite; demais grupos permanecem.
+- `.dark`: mesma lógica com preto/grafite invertidos e amarelo mantido como acento.
+
+Classe utilitária:
+- `.sidebar-nav-item-active` (linhas 396-400) — remover o `hsl(30 91% 54%...)` hard-coded e usar tokens `--sidebar-primary` / `--sidebar-accent`.
+
+**A logo (`logo-full.png` / topbar) permanece inalterada** — só os tokens de UI mudam.
+
+Nenhuma refatoração ampla de componentes: como já usamos `bg-primary`, `text-primary`, `ring-ring`, etc., os tokens propagam. Vou apenas fazer uma varredura rápida (`rg`) para caçar valores laranja hard-coded (`#F47F19`, `27 91%`, `orange-`) e substituí-los por tokens.
+
+---
+
+## 3. Home sem logo de fundo
+
+Arquivo: `src/pages/Index.tsx`
+
+- Remover o `<img>` da logo (linha 29) e o import.
+- Deixar o container central vazio ou com uma mensagem discreta de boas-vindas curta (ex.: "Bem-vindo" em `text-muted-foreground`), mantendo o `MainLayout`.
+
+---
 
 ## Fora de escopo
-- Renomear/reposicionar demais itens de menu.
-- Alterações em Atividades, Financeiro, Negociações ou outros módulos.
-- Backup manual — o usuário confirmou drop irreversível.
+
+- Remoção do `EmpreendimentoCard` (segue vivo em outras telas).
+- Ajustes em portais externos.
+- Mudanças de tipografia ou layout global além dos tokens de cor.
 
 ## Riscos
-- **Irreversível:** dados de eventos/marketing/planejamento serão perdidos.
-- Possíveis referências em `useSidebarColors` (cores `--nav-marketing`, `--nav-eventos`, `--nav-planejamento`) — serão removidas dos tokens.
-- Se algum webhook/edge function fora do escopo consumir essas tabelas, precisará ajuste (validarei durante execução).
+
+- Algum componente pode ter cor laranja hard-coded (`bg-orange-*`, `#F47F19`); será tratado na varredura, mas pequenas telas podem precisar de follow-up se algo escapar.
+- Contraste do amarelo sobre branco em textos pequenos: usaremos amarelo apenas como fundo/acento com foreground escuro, nunca como cor de texto sobre branco.
