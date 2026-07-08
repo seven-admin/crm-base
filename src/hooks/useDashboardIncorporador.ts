@@ -49,13 +49,9 @@ export function useDashboardIncorporador() {
       // Reservas temporárias foram desativadas - a tabela foi removida
       const reservasAtivas = 0;
 
-      // Buscar briefings pendentes
-      const { data: briefings } = await supabase
-        .from('briefings')
-        .select('id')
-        .in('empreendimento_id', empreendimentoIds)
-        .in('status', ['pendente', 'triado', 'em_producao'])
-        .eq('is_active', true);
+      // Briefings removidos do sistema
+      const briefings: Array<{ id: string }> = [];
+
 
       // Buscar contratos em andamento (excluindo comprador histórico)
       const { data: contratos } = await supabase
