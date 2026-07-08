@@ -115,10 +115,10 @@ export function AppTopbar() {
 
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
-      if (item.path === '/marketing/etapas') return isSuperAdmin();
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
     });
+
 
   const visibleGroups = menuGroups
     .map((g) => ({ ...g, items: filterItems(g.items) }))
