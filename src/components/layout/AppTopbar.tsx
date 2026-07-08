@@ -134,12 +134,8 @@ export function AppTopbar() {
 
   const userName = profile?.full_name || 'Usuário';
   const userRole = role ? ROLE_LABELS[role] : '';
-  const userInitials = userName
-    .split(' ')
-    .map((p) => p.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+
+
 
   const toggleMobileGroup = (label: string) =>
     setMobileGroups((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
