@@ -1,90 +1,55 @@
-# Refatoração Visual — Fase 1: Fundação + Layout Global
 
-Objetivo desta rodada: elevar o CRM interno ao padrão visual do `/design-test` sem tocar em regras de negócio. Nenhuma página perde funcionalidade — o que muda é o "chassi" (tokens, layout, primitivos). Páginas herdam o novo visual automaticamente por usarem `<MainLayout>`, `<Card>`, `<Button>`, `<Badge>` e `<Input>` do shadcn.
+# Remoção dos módulos Eventos, Marketing e Planejamento
 
-Portal do Corretor e Portal do Incorporador **não** entram nesta fase.
+Remoção end-to-end das três funcionalidades: código frontend, rotas, permissões, hooks, tipos, e tabelas/enums/sequences no banco.
 
----
+## Escopo por camada
 
-## 1. Design tokens (index.css + tailwind.config.ts)
+### 1. Rotas e navegação (`src/App.tsx`, `AppTopbar.tsx`, `Sidebar.tsx`)
+Remover imports lazy, rotas e itens de menu:
+- **CRM interno:** `/marketing/*`, `/marketing/briefings`, `/marketing/dashboard`, `/marketing/equipe`, `/marketing/etapas`, `/marketing/calendario`, `/marketing/:id`, `/planejamento`, `/planejamento/configuracoes`, `/eventos`, `/eventos/calendario`, `/eventos/:id`, `/eventos/templates`.
+- **Portal Corretor:** rota `eventos` (`PortalEventos`).
+- **Portal Incorporador:** rotas `marketing` e `planejamento` (`PortalIncorporadorMarketing`, `PortalIncorporadorPlanejamento`) e respectivas abas/menu.
+- Remover grupos "Planejamento", "Marketing" e "Eventos" da topbar (e sidebar legada).
 
-Reescrever a paleta semântica para refletir o design-test:
+### 2. Páginas removidas
+`src/pages/Marketing.tsx`, `MarketingCalendario.tsx`, `MarketingDetalhe.tsx`, `EtapasTickets.tsx`, `DashboardMarketing.tsx`, `EquipeMarketing.tsx`, `Briefings.tsx`, `Eventos.tsx`, `EventoDetalhe.tsx`, `EventosCalendario.tsx`, `EventoTemplates.tsx`, `Planejamento.tsx`, `PlanejamentoConfiguracoes.tsx`, `portal/PortalEventos.tsx`, `portal-incorporador/PortalIncorporadorMarketing.tsx`, `portal-incorporador/PortalIncorporadorPlanejamento.tsx`.
 
-- `--background`: cinza-claro suave da tela (`#e1e1e1` → HSL)
-- `--card` / `--popover`: `#FFFFFF`
-- `--foreground`: `#1E293B` (slate-800)
-- `--muted-foreground`: `#94A3B8` (slate-400) para labels/subtítulos
-- `--primary`: laranja da marca `#f47f19` (com `--primary-foreground` branco) — substitui o azul atual
-- `--primary-soft`: `#fce0c7` para bg de avatar/badges
-- `--secondary`: `#F1F5F9` (slate-100), `--secondary-foreground`: `#475569`
-- `--border`: `#E2E8F0`, `--input-bg`: `#FAFBFC`
-- `--ring`: laranja primário
-- `--radius`: `1rem` (16px, rounded-2xl como padrão)
-- Sombras: `--shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)`
-- Status tokens (`--status-*`) alinhados às cores dos badges do design-test (success, warning, danger, info, neutral, purple, orange)
-- Modo dark: manter estrutura atual mas ajustar `--primary` para o laranja
+### 3. Componentes, hooks, tipos
+Remover diretórios/arquivos inteiros:
+- `src/components/eventos/`, `src/components/marketing/`, `src/components/planejamento/`, `src/components/briefings/`.
+- Hooks: `useEventos`, `useEventoInscricoes`, `useEventoTemplates`, `useTickets`, `useTicketEtapas`, `useTicketCriativos`, `useProjetosMarketing`, `useProjetoResponsaveis`, `useEquipeMarketing`, `useDashboardMarketing`, `useRelatoriosMarketing`, `useBriefings`, `useBriefingReferencias`, `usePlanejamentoFases`, `usePlanejamentoStatus`, `usePlanejamentoItens`, `usePlanejamentoItemResponsaveis`, `usePlanejamentoGlobal`, `usePlanejamentoHistorico`, `useGoogleCalendarEvents`, `useGoogleCalendarEmbeds`, `useResumoAtividadesPorCategoria` (auditar uso).
+- Tipos: `src/types/marketing.types.ts`, `src/types/planejamento.types.ts`, `src/types/briefings.types.ts`.
+- Edge function: `supabase/functions/fetch-google-calendar/` (usada só pelo planejamento).
 
-Cores dos grupos de menu (Empreendimentos verde, Comercial laranja etc.) migram para tokens `--nav-*` — hoje vêm do hook `useSidebarColors` e continuarão configuráveis.
+### 4. Referências cruzadas a limpar
+- Sidebar de configurações / rotas admin (`PlanejamentoConfiguracoes`, `EtapasTickets`, `EventoTemplates`).
+- Auditar `useSidebarColors`, `useConfiguracoesSistema` (chave `planejamento_limite_sobrecarga`), `useDefaultRoute`, `PermissionGate`, e qualquer import residual — remover apenas o que for exclusivo dos módulos deletados.
 
-## 2. Layout global — Topbar substituindo Sidebar
+### 5. Banco de dados (migration destrutiva)
+Drop em cascade:
+- **Tabelas:** `eventos`, `evento_tarefas`, `evento_inscricoes`, `evento_membros`, `evento_templates`, `evento_template_tarefas`, `tickets` (não existe, mas `ticket_criativos`, `ticket_etapas`), `projetos_marketing`, `projeto_comentarios`, `projeto_historico`, `projeto_responsaveis`, `tarefas_projeto`, `briefings`, `briefing_referencias`, `planejamento_itens`, `planejamento_fases`, `planejamento_status`, `planejamento_historico`, `planejamento_item_responsaveis`, `google_calendar_embeds`.
+- **Sequences:** `evento_codigo_seq`, `projeto_codigo_seq`, `briefing_codigo_seq`.
+- **Funções:** `generate_evento_codigo`, `generate_projeto_codigo`, `generate_briefing_codigo`, `log_planejamento_changes`, `is_marketing_supervisor`. Ajustar `reset_sequence_value` e `get_all_sequence_values` removendo as sequences deletadas.
+- **Módulos de permissão** (`public.modules`): remover linhas cujo `name` esteja em (`projetos_marketing`, `projetos_marketing_config`, `briefings`, `eventos`, `eventos_templates`, `planejamento`, `planejamento_config`); cascade remove entradas em `role_permissions` e `user_module_permissions`.
+- **Storage buckets:** `projetos-arquivos` e `briefing-referencias` — remover buckets e objetos (a confirmar via SQL em `storage.objects`/`storage.buckets`).
+- **Configurações de sistema:** remover chave `planejamento_limite_sobrecarga` de `configuracoes_sistema`.
 
-Novo componente `src/components/layout/AppTopbar.tsx` baseado em `DesignTest.tsx`:
+Migration única, em transação, com `DROP ... CASCADE`.
 
-- Barra fixa 64px, fundo branco, sombra sutil
-- Logo à esquerda
-- Links horizontais dos **grupos** de menu (Planejamento, Empreendimentos, Clientes, Comercial, Contratos, Financeiro, Parceiros, Marketing, Eventos, Sistema) com underline colorido no ativo
-- Cada grupo abre um **dropdown/mega-menu** com os subitens que hoje existem na sidebar (Cronograma, Configurações, Diário de Bordo, Forecast etc.), respeitando permissões via `usePermissions`
-- Campo de busca global (visual apenas nesta fase)
-- Ícones: notificações (mantém `NotificacaoBell`), mensagens, configurações
-- Avatar do usuário com dropdown (perfil, logout) — reaproveita lógica atual
+## Ordem de execução
+1. Migration destrutiva (aprovação do usuário).
+2. Remover arquivos frontend (páginas, hooks, tipos, componentes, edge function).
+3. Limpar rotas em `App.tsx` e menus em `AppTopbar.tsx` / `Sidebar.tsx`.
+4. Rodar `tsgo` até zerar erros (esperado ajustes em imports órfãos).
+5. Verificação: `rg -i "planejamento|marketing|evento|briefing|ticket_etapa" src/` para garantir zero referências residuais fora de `atividades`.
 
-`MainLayout` refatorado:
-- Remove `<Sidebar />` e o `lg:pl-64`
-- Renderiza `<AppTopbar />` no topo
-- `<PageHeader>` continua abaixo (redesenhado com o padrão do design-test: fundo branco, título tight, subtitle slate-400, ações à direita, back-link sutil)
-- Container do conteúdo com `bg-[hsl(var(--background))]` e padding responsivo
+## Fora de escopo
+- Renomear/reposicionar demais itens de menu.
+- Alterações em Atividades, Financeiro, Negociações ou outros módulos.
+- Backup manual — o usuário confirmou drop irreversível.
 
-Responsividade mobile:
-- Topbar colapsa em um botão "menu" que abre um `Sheet` lateral com a mesma árvore agrupada (reaproveita `Collapsible`)
-- Busca vira ícone que expande
-
-`Sidebar.tsx` atual é mantido no repositório apenas como fallback e removido do `MainLayout`; será deletado numa fase seguinte após validação.
-
-## 3. Primitivos shadcn realinhados
-
-Ajustar variantes (sem quebrar API) em:
-
-- `Button`: variante `default` = laranja sólido; `secondary` = slate-100/slate-600; `outline` = borda laranja + texto laranja; `ghost` mantém; radius 10px; peso 600
-- `Card`: `rounded-2xl`, `shadow-card`, sem borda por padrão (borda opcional via variante)
-- `Badge`: novas variantes `success`, `warning`, `danger`, `info`, `neutral`, `purple`, `orange` mapeadas para os pares cor/bg do design-test; variante `outline` com borda de 40% opacidade
-- `Input` / `Textarea` / `Select`: altura 40px, radius 10px, bg `#FAFBFC`, borda `--border`, foco com ring laranja
-- Checkbox/Radio: accent color laranja
-- `KPICard` (`src/components/dashboard/KPICard.tsx`): reescrito no padrão de `TestKPICard` (título uppercase tracking-wider slate-400, valor 3xl slate-800, badge de variação pill, ícone em círculo colorido)
-
-## 4. Tipografia
-
-- Continua DM Sans (já carregado)
-- Headings: `tracking-tight` + `font-bold`
-- Labels de tabela/KPI: `text-xs uppercase tracking-wider text-muted-foreground`
-- Escala consistente aplicada via classes utilitárias em `Typography` helpers (opcional) ou direto nos componentes primitivos
-
-## 5. Verificação
-
-- Rodar `tsgo` para checar tipos
-- Playwright headless: capturar screenshots de `/` (dashboard), `/clientes`, `/negociacoes`, `/financeiro`, `/empreendimentos` antes/depois para confirmar herança visual e regressões óbvias
-- Testar dropdown de grupos com permissões de usuário padrão vs. super admin
-- Testar topbar em viewport 375px
-
-## Detalhes técnicos
-
-- Arquivos criados: `src/components/layout/AppTopbar.tsx`, `src/components/layout/AppTopbarMobile.tsx`
-- Arquivos alterados: `src/index.css`, `tailwind.config.ts`, `src/components/layout/MainLayout.tsx`, `src/components/layout/PageHeader.tsx`, `src/components/ui/button.tsx`, `src/components/ui/card.tsx`, `src/components/ui/badge.tsx`, `src/components/ui/input.tsx`, `src/components/ui/textarea.tsx`, `src/components/dashboard/KPICard.tsx`
-- Nenhuma alteração de banco, RLS, hooks de dados ou lógica de negócio
-- Portais (`PortalLayout`, `PortalIncorporadorLayout`) permanecem intactos
-
-## Fora do escopo (fases futuras)
-
-- Refatoração página a página (dashboards, tabelas, formulários específicos)
-- Portal do Corretor / Incorporador
-- Remoção definitiva do `Sidebar.tsx` legado
-- Ajustes finos de charts (Recharts) para nova paleta
+## Riscos
+- **Irreversível:** dados de eventos/marketing/planejamento serão perdidos.
+- Possíveis referências em `useSidebarColors` (cores `--nav-marketing`, `--nav-eventos`, `--nav-planejamento`) — serão removidas dos tokens.
+- Se algum webhook/edge function fora do escopo consumir essas tabelas, precisará ajuste (validarei durante execução).
