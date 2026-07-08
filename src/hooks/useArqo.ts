@@ -263,11 +263,11 @@ export function useUpsertArqoConfig(table: ConfigTable) {
     mutationFn: async (payload: Record<string, any>) => {
       if (payload.id) {
         const { id, ...rest } = payload;
-        const { data, error } = await supabase.from(table).update(rest).eq('id', id).select().single();
+        const { data, error } = await (supabase.from(table) as any).update(rest).eq('id', id).select().single();
         if (error) throw error;
         return data;
       }
-      const { data, error } = await supabase.from(table).insert(payload).select().single();
+      const { data, error } = await (supabase.from(table) as any).insert(payload).select().single();
       if (error) throw error;
       return data;
     },
