@@ -81,6 +81,12 @@ const App = () => (
                 <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
                 <Route path="/auditoria" element={<ProtectedRoute moduleName="auditoria" adminOnly><Auditoria /></ProtectedRoute>} />
 
+                {/* Arqo */}
+                <Route path="/arqo/roleta" element={<ArqoProtectedRoute><ArqoRoleta /></ArqoProtectedRoute>} />
+                <Route path="/arqo/leads" element={<ArqoProtectedRoute><ArqoLeadsKanban /></ArqoProtectedRoute>} />
+                <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
+                <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
+
                 {/* Portal do Incorporador */}
                 <Route
                   path="/portal-incorporador"
