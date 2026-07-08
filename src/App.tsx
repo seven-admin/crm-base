@@ -282,8 +282,6 @@ const App = () => (
               <Route index element={<PortalIncorporadorDashboard />} />
               <Route path="executivo" element={<PortalIncorporadorExecutivo />} />
               <Route path="forecast" element={<PortalIncorporadorForecast />} />
-              <Route path="marketing" element={<PortalIncorporadorMarketing />} />
-              <Route path="planejamento" element={<PortalIncorporadorPlanejamento />} />
               <Route path="disponibilidade" element={<PortalIncorporadorDisponibilidade />} />
               <Route path="propostas" element={<PortalIncorporadorPropostas />} />
             </Route>
