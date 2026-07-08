@@ -9,6 +9,8 @@ export interface SevenMenuItem {
   label: string;
   path: string;
   description?: string;
+  moduleName?: string;
+  adminOnly?: boolean;
 }
 
 export interface SevenMenuCategory {
