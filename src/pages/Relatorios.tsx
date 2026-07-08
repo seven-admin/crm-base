@@ -167,7 +167,7 @@ export default function Relatorios() {
       </Card>
 
       <Tabs defaultValue="vendas" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 max-w-4xl">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 max-w-4xl">
           <TabsTrigger value="vendas" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Vendas
@@ -191,10 +191,6 @@ export default function Relatorios() {
           <TabsTrigger value="comissoes" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
             Comissões
-          </TabsTrigger>
-          <TabsTrigger value="marketing" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Marketing
           </TabsTrigger>
         </TabsList>
 
