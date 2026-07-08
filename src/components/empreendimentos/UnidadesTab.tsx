@@ -624,13 +624,6 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
           empreendimentoId={empreendimentoId}
           tipoEmpreendimento={empreendimento?.tipo}
         />
-        <VendaHistoricaDialog
-          open={vendaHistoricaOpen}
-          onOpenChange={setVendaHistoricaOpen}
-          empreendimentoId={empreendimentoId}
-          unidadesSelecionadas={unidadesSelecionadas}
-          onSuccess={handleVendaHistoricaSuccess}
-        />
         <AlterarStatusLoteDialog
           open={statusLoteOpen}
           onOpenChange={setStatusLoteOpen}
