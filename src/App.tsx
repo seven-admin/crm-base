@@ -61,8 +61,6 @@ const PortalMinhaImobiliaria = lazy(() => import("./pages/portal/PortalMinhaImob
 const PortalIncorporadorDashboard = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDashboard"));
 const PortalIncorporadorExecutivo = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorExecutivo"));
 const PortalIncorporadorForecast = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorForecast"));
-const PortalIncorporadorMarketing = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorMarketing"));
-const PortalIncorporadorPlanejamento = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPlanejamento"));
 const PortalIncorporadorDisponibilidade = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDisponibilidade"));
 const PortalIncorporadorPropostas = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPropostas"));
 
