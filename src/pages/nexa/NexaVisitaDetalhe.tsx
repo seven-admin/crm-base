@@ -108,6 +108,8 @@ export default function NexaVisitaDetalhe() {
         visitaId={visita.id}
         empreendimentoId={visita.empreendimento_id}
       />
-    </div>
+      </div>
+    </MainLayout>
   );
 }
+
