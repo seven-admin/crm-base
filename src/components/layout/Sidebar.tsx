@@ -122,26 +122,6 @@ const menuGroupsDef = [
     ],
   },
   {
-    label: 'Marketing',
-    icon: Palette,
-    items: [
-      { icon: BarChart2, label: 'Dashboard', path: '/marketing/dashboard', moduleName: 'projetos_marketing' },
-      { icon: Palette, label: 'Atividades', path: '/marketing', moduleName: 'projetos_marketing' },
-      { icon: Users, label: 'Equipe de Criação', path: '/marketing/equipe', moduleName: 'projetos_marketing' },
-      { icon: Calendar, label: 'Calendário', path: '/marketing/calendario', moduleName: 'projetos_marketing' },
-      { icon: Kanban, label: 'Etapas de Atividades', path: '/marketing/etapas', moduleName: 'projetos_marketing_config', adminOnly: true },
-    ],
-  },
-  {
-    label: 'Eventos',
-    icon: CalendarDays,
-    items: [
-      { icon: CalendarDays, label: 'Listagem', path: '/eventos', moduleName: 'eventos' },
-      { icon: Calendar, label: 'Calendário', path: '/eventos/calendario', moduleName: 'eventos' },
-      { icon: ClipboardList, label: 'Templates', path: '/eventos/templates', moduleName: 'eventos_templates', adminOnly: true },
-    ],
-  },
-  {
     label: 'Sistema',
     icon: Settings,
     items: [
