@@ -11,7 +11,7 @@ export function useIncorporadoras() {
     queryKey: ['incorporadoras'],
     queryFn: async (): Promise<Incorporadora[]> => {
       const { data, error } = await supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .select('*')
         .eq('is_active', true)
         .order('nome');
@@ -24,7 +24,7 @@ export function useIncorporadoras() {
   const createMutation = useMutation({
     mutationFn: async (formData: IncorporadoraFormData) => {
       const { data, error } = await supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .insert(formData)
         .select()
         .single();
@@ -49,7 +49,7 @@ export function useIncorporadoras() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...formData }: IncorporadoraFormData & { id: string }) => {
       const { data, error } = await supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .update(formData)
         .eq('id', id)
         .select()
@@ -75,7 +75,7 @@ export function useIncorporadoras() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .update({ is_active: false })
         .eq('id', id);
       
@@ -116,7 +116,7 @@ export function useIncorporadora(id: string | undefined) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -137,7 +137,7 @@ export function useIncorporadorasPaginated(page = 1, pageSize = 20, search?: str
       const to = from + pageSize - 1;
 
       let query = supabase
-        .from('incorporadoras' as any)
+        .from('seven_incorporadoras' as any)
         .select('*', { count: 'exact' })
         .eq('is_active', true)
         .order('nome')
