@@ -248,74 +248,8 @@ const App = () => (
                 <Auditoria />
               </ProtectedRoute>
             } />
-            {/* Marketing e Criação */}
-            <Route path="/marketing/dashboard" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <DashboardMarketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <Marketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/equipe" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <EquipeMarketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/etapas" element={
-              <ProtectedRoute moduleName="projetos_marketing_config" adminOnly>
-                <EtapasTickets />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/calendario" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <MarketingCalendario />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/:id" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <MarketingDetalhe />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/briefings" element={
-              <ProtectedRoute moduleName="briefings">
-                <Briefings />
-              </ProtectedRoute>
-            } />
-            
-            {/* Planejamento */}
-            <Route path="/planejamento" element={
-              <ProtectedRoute moduleName="planejamento">
-                <Planejamento />
-              </ProtectedRoute>
-            } />
-            <Route path="/planejamento/configuracoes" element={
-              <ProtectedRoute moduleName="planejamento_config" adminOnly>
-                <PlanejamentoConfiguracoes />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos" element={
-              <ProtectedRoute moduleName="eventos">
-                <Eventos />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/calendario" element={
-              <ProtectedRoute moduleName="eventos">
-                <EventosCalendarioPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/:id" element={
-              <ProtectedRoute moduleName="eventos">
-                <EventoDetalhe />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/templates" element={
-              <ProtectedRoute moduleName="eventos_templates" adminOnly>
-                <EventoTemplates />
-              </ProtectedRoute>
-            } />
+
+
 
             {/* Portal do Corretor - Layout aninhado */}
             <Route 
