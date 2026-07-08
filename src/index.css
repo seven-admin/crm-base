@@ -396,10 +396,11 @@
   }
 
   .sidebar-nav-item-active {
-    background: hsl(30 91% 54% / 0.15);
-    color: hsl(30 91% 70%);
+    background: hsl(var(--sidebar-primary) / 0.15);
+    color: hsl(var(--sidebar-primary));
     @apply font-semibold;
   }
+
 
   .sidebar-nav-item-inactive {
     color: hsl(30 10% 65%);
