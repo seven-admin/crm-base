@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ArqoProtectedRoute } from "@/components/arqo/ArqoProtectedRoute";
+import { NexaProtectedRoute } from "@/components/nexa/NexaProtectedRoute";
 import { PortalIncorporadorLayout } from "@/components/portal-incorporador/PortalIncorporadorLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import React, { Suspense, lazy } from "react";
@@ -15,6 +16,11 @@ const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
+
+const NexaAgenda = lazy(() => import("./pages/nexa/NexaAgenda"));
+const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
+const NexaDisponibilidade = lazy(() => import("./pages/nexa/NexaDisponibilidade"));
+const NexaContratos = lazy(() => import("./pages/nexa/NexaContratos"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
