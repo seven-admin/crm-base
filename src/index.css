@@ -6,64 +6,64 @@
 
 @layer base {
   :root {
-    /* Neutral surface / editorial */
-    --background: 0 0% 88%;               /* #E1E1E1 canvas */
-    --foreground: 217 33% 17%;            /* #1E293B slate-800 */
+    /* Neutral surface (grey #E5E5E5-ish) */
+    --background: 0 0% 96%;               /* near white */
+    --foreground: 0 0% 13%;               /* #202020 */
 
     --card: 0 0% 100%;
-    --card-foreground: 217 33% 17%;
+    --card-foreground: 0 0% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 217 33% 17%;
+    --popover-foreground: 0 0% 13%;
 
-    /* Brand accent (laranja SevenGroup) */
-    --primary: 27 91% 53%;                /* #F47F19 */
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 27 89% 88%;           /* #FCE0C7 */
-    --primary-soft-foreground: 27 91% 53%;
+    /* Primary = preto grafite; Accent = amarelo */
+    --primary: 0 0% 13%;                  /* #202020 */
+    --primary-foreground: 48 100% 71%;    /* #FFDF6C */
+    --primary-soft: 0 0% 93%;             /* #EDEDED */
+    --primary-soft-foreground: 0 0% 13%;
 
-    --secondary: 210 40% 96%;             /* #F1F5F9 slate-100 */
-    --secondary-foreground: 215 19% 35%;  /* #475569 slate-600 */
+    --secondary: 0 0% 95%;                /* #F3F3F3 */
+    --secondary-foreground: 0 0% 25%;     /* #3F3F3F */
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 20% 65%;      /* #94A3B8 slate-400 */
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 44%;         /* #707070 */
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 217 33% 17%;
+    --accent: 48 100% 71%;                /* #FFDF6C */
+    --accent-foreground: 0 0% 13%;
 
-    --destructive: 0 84% 60%;             /* #EF4444 */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;               /* #22C55E */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;                /* #F59E0B */
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;                /* #E2E8F0 */
-    --input: 214 32% 91%;
-    --input-bg: 210 20% 98%;              /* #FAFBFC */
-    --ring: 27 91% 53%;
+    --border: 0 0% 90%;                   /* #E5E5E5 */
+    --input: 0 0% 90%;
+    --input-bg: 0 0% 98%;
+    --ring: 48 100% 71%;                  /* amarelo focus */
 
-    --radius: 1rem;                       /* rounded-2xl default */
+    --radius: 1rem;
 
-    /* Sidebar tokens preservados p/ compat (legacy) */
+    /* Sidebar tokens */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 217 33% 17%;
-    --sidebar-primary: 27 91% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 217 33% 17%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 27 91% 53%;
+    --sidebar-foreground: 0 0% 13%;
+    --sidebar-primary: 48 100% 71%;
+    --sidebar-primary-foreground: 0 0% 13%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 13%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 48 100% 71%;
 
-    /* Chart palette */
-    --chart-1: 27 91% 53%;
+    /* Chart palette (amarelo como highlight) */
+    --chart-1: 48 100% 60%;
     --chart-2: 142 71% 45%;
-    --chart-3: 38 92% 50%;
+    --chart-3: 217 91% 60%;
     --chart-4: 0 84% 60%;
     --chart-5: 258 90% 66%;
 
@@ -71,28 +71,29 @@
     --status-available: 142 71% 45%;
     --status-reserved: 38 92% 50%;
     --status-sold: 0 84% 60%;
-    --status-blocked: 215 20% 65%;
+    --status-blocked: 0 0% 44%;
 
-    /* Nav group colors (topbar underline / dropdown icons) */
+    /* Nav group colors */
     --nav-planejamento: 160 84% 39%;
     --nav-empreendimentos: 160 84% 39%;
     --nav-clientes: 258 90% 66%;
-    --nav-comercial: 27 91% 53%;
-    --nav-diario: 27 91% 53%;
+    --nav-comercial: 48 100% 60%;
+    --nav-diario: 48 100% 60%;
     --nav-contratos: 213 94% 68%;
     --nav-financeiro: 38 92% 50%;
     --nav-parceiros: 330 81% 60%;
     --nav-marketing: 330 81% 60%;
     --nav-eventos: 187 85% 43%;
-    --nav-sistema: 215 20% 65%;
+    --nav-sistema: 0 0% 44%;
 
     /* Elevation */
     --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-topbar: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
 
-    --gradient-primary: linear-gradient(135deg, hsl(27 91% 53%) 0%, hsl(27 91% 63%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 13%) 0%, hsl(0 0% 25%) 100%);
   }
+
 
   .dark {
     --background: 220 15% 8%;
