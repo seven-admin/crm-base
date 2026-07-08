@@ -1,71 +1,59 @@
+## Objetivo
 
-## 1. Bug: Novo SLA quebra a tela
+Padronizar prefixos de tabelas: `seven_*` para domínio de negócio Seven, `sistema_*` para infra/plataforma. **Preservar** `profiles`, `roles`, `user_roles` (afetariam o auth) e `arqo_*` / `nexa_*` (já prefixados).
 
-**Causa:** em `src/pages/arqo/ArqoConfig.tsx` linha 17, `tempOptions` inclui `{ value: '', label: '— Todas —' }`. O Radix `<Select.Item>` proíbe `value=""` — por isso o formulário de SLA (que usa esse campo em `Temperatura (opcional)`) explode ao abrir.
+## Categorização final
 
-**Correção:**
-- Trocar o sentinel de `''` para `'__none__'` em `tempOptions`.
-- No `ArqoConfigCrud`, ao gravar, converter `'__none__'` → `null` para `temperatura_id` (campo nullable no banco).
-- Ao carregar item existente sem `temperatura_id`, exibir `'__none__'` no Select.
+**Renomear para `seven_*` (25 tabelas):**
+`empreendimentos`, `blocos`, `unidades`, `tipologias`, `boxes`, `fachadas`, `mapa_empreendimento`, `empreendimento_documentos`, `empreendimento_midias`, `empreendimento_corretores`, `empreendimento_imobiliarias`, `clientes`, `cliente_telefones`, `cliente_socios`, `cliente_interacoes`, `corretores`, `imobiliarias`, `incorporadoras`, `unidade_historico_precos`, `centros_custo`, `centro_custo_empreendimentos`, `plano_contas`, `lancamentos_financeiros`, `saldos_mensais`, `configuracao_comercial`.
 
-## 2. Importação de listas de leads (apenas planejamento — não implementar agora)
+**Renomear para `sistema_*` (5 tabelas):**
+`modules`, `role_permissions`, `user_module_permissions`, `user_empreendimentos`, `audit_logs`, `notificacoes`, `configuracoes_sistema` (essa vira `sistema_configuracoes` para evitar duplicação de "sistema").
 
-Local proposto: dentro do módulo Arqo, nova rota `/arqo/leads/importar` acessível por um botão "Importar" no topo da tela **Arqo → Leads** (kanban/lista). Fluxo previsto para quando implementarmos:
-1. Upload de CSV/XLSX.
-2. Mapeamento de colunas → `nome`, `telefone`, `email`, `cpf`, `origem`, `temperatura`, `grupo`.
-3. Prévia com validação (duplicados por telefone/email/CPF, usando `get_or_create_pessoa`).
-4. Escolha de `lead_source_id`, `grupo_id` e etapa inicial.
-5. Insert em lote via edge function `arqo-import-leads` (para respeitar RLS e roleta).
-6. Relatório final (criados / atualizados / ignorados).
+**Preservar (não renomear):**
+`profiles`, `roles`, `user_roles` (auth), `arqo_*`, `nexa_*`.
 
-Marcador visual: adicionar botão "Importar (em breve)" desabilitado na tela de Leads para o usuário já saber onde vai ficar.
+## Estratégia de execução — Views (baixo risco)
 
-## 3. Novo menu "Seven" (mega-menu)
+Renomear ~30 tabelas fisicamente e reescrever ~500+ queries no frontend em uma tacada é altíssimo risco de quebra em cascata. Faremos assim:
 
-Reorganização da topbar em grupos: **Seven**, **Comercial**, **Arqo**, **Nexa**, **Financeiro**, **Sistema**.
+### Fase 1 — Migração de banco (uma única migration)
 
-**Grupo Seven** substitui a exposição avulsa desses itens e agrupa por categoria:
+1. `ALTER TABLE <antigo> RENAME TO <novo>` para cada tabela.
+2. Foreign keys, RLS policies, triggers, sequences, índices seguem automaticamente (Postgres atualiza referências internas).
+3. **Criar VIEWS com os nomes antigos** apontando para as novas tabelas (`CREATE VIEW empreendimentos AS SELECT * FROM seven_empreendimentos;`), com `GRANT` equivalente e `SECURITY INVOKER` para respeitar RLS da tabela base.
+4. Atualizar todas as **funções SECURITY DEFINER** que fazem `FROM <tabela>` para usar o novo nome (has_role, is_admin, get_user_imobiliaria_id, get_gestor_empreendimento, user_has_empreendimento_access, get_unidades_disponiveis, arqo_atribuir_lead_roleta, get_or_create_pessoa, validate_*, uppercase_*, auto_set_gestor_id_clientes, prevent_gestor_id_change, arqo_transicionar_status, get_module_scope, can_access_module*, get_user_module_permission, get_cidades_corretores, get_imobiliarias_ativas, get_corretor_ids_by_user, is_gestor_imobiliaria, is_seven_team, is_incorporador, is_cliente_externo).
+5. Recriar triggers apontando para os novos nomes de tabela.
 
-```text
-┌─ Seven ▾ ────────────────────────────────────────────────────┐
-│  PORTFÓLIO          PESSOAS            PARCEIROS             │
-│  • Empreendimentos  • Clientes         • Imobiliárias        │
-│  • Blocos/Unidades  • Compradores      • Corretores          │
-│  • Tipologias       • Leads históricos • Incorporadoras      │
-└──────────────────────────────────────────────────────────────┘
-```
+**Resultado após Fase 1:** o app **continua funcionando sem mudança de código** porque as views antigas espelham as tabelas novas. Novas tabelas já ficam com nome final; frontend pode migrar gradualmente.
 
-**Interação (mega-menu):**
-- Ao clicar em "Seven" na topbar, abre um `Popover` largo (`w-[640px]`), ancorado à esquerda do botão.
-- Layout em **3 colunas** com títulos de categoria (`text-xs uppercase tracking-wide text-muted-foreground`) e itens abaixo (ícone lucide + label + descrição curta opcional).
-- Hover destaca o item; clique navega e fecha o popover.
-- Em mobile (< md), o mesmo grupo vira uma seção expansível dentro do `Sheet` já existente, com as 3 categorias como subtítulos empilhados.
+### Fase 2 — Regenerar types.ts
 
-Componente novo: `src/components/layout/SevenMegaMenu.tsx`. `AppTopbar.tsx` passa a renderizar o grupo "Seven" via esse componente em vez do `DropdownMenu` padrão, mantendo os demais grupos como estão.
+O `src/integrations/supabase/types.ts` é regenerado automaticamente pelo Supabase após a migration. Ele passará a listar **tanto** as tabelas novas (`seven_*`, `sistema_*`) **quanto** as views antigas (nomes originais) — o TypeScript aceita as duas.
 
-## 4. Layout geral
+### Fase 3 — Migração do código (posterior, opcional)
 
-**Fundo:**
-- `body` recebe `background: linear-gradient(180deg, #FFFFFF 0%, #E1E1E1 100%)` fixo (via token semântico em `index.css`, ex.: `--app-bg-gradient`, aplicado em `body` e no `<main>` do `MainLayout`).
-- Topbar mantém a cor atual (sem alteração).
-- Cards continuam com `bg-card` (branco) para contraste.
+Substituir gradualmente `.from('empreendimentos')` → `.from('seven_empreendimentos')` etc. via search/replace por módulo. Como as views continuam existindo, nada quebra durante a transição. Quando 100% do código estiver migrado, dropamos as views em uma segunda migration.
 
-**Tabelas (globais — shadcn `Table` e listas atuais):**
-- Inverter zebra: linha "destacada" (hoje escura) passa a `bg-white`; linha alterna fica levemente cinza (`bg-muted/40`).
-- Hover: `hover:bg-muted/60`.
-- **Ícones nas linhas:** hoje ficam invisíveis por herdar cor sobre fundo escuro. Ajustar para `text-foreground/70` com `hover:text-foreground`, garantindo contraste tanto na linha branca quanto na cinza.
-- Alterações centralizadas em `src/components/ui/table.tsx` e nos utilitários de linha usados em `TableRow` (mudança de classes em `data-state=selected` / zebra utility) para propagar a todas as telas.
+Nesta primeira entrega faremos **apenas a Fase 1 + Fase 2**. O código do frontend não muda.
 
-## Detalhes técnicos
+## Riscos e mitigações
 
-- Arquivos alterados:
-  - `src/pages/arqo/ArqoConfig.tsx` (sentinel `__none__`).
-  - `src/components/arqo/ArqoConfigCrud.tsx` (normalização `__none__` ↔ `null` no save/load).
-  - `src/index.css` (token `--app-bg-gradient`, ajustes de zebra/hover de tabela).
-  - `src/components/ui/table.tsx` (classes de `TableRow`).
-  - `src/components/layout/MainLayout.tsx` (aplicar fundo em `<main>`).
-  - `src/components/layout/AppTopbar.tsx` (integrar `SevenMegaMenu`, reordenar grupos).
-  - `src/components/layout/SevenMegaMenu.tsx` (novo).
-  - `src/pages/arqo/ArqoLeads.tsx` (botão "Importar (em breve)" apenas visual).
-- Sem alterações de schema no Supabase.
-- Verificação: build + abrir `Arqo → Configurações → SLA → Novo` sem crash; abrir menu Seven em desktop e mobile; conferir contraste das tabelas em `/clientes`, `/empreendimentos`, `/arqo/leads`, `/nexa/agenda`.
+- **Edge functions** que usam nomes antigos → continuam funcionando via views.
+- **RLS policies** → seguem automaticamente com o rename; validaremos via `supabase--linter` após aplicar.
+- **Funções SECURITY DEFINER com search_path fixo** → precisam ser recriadas com nome novo; incluídas na migration.
+- **Views vs. políticas RLS** → todas as views serão criadas como `SECURITY INVOKER` (padrão em PG 15+) para herdar RLS das tabelas base.
+- **Nomes ambíguos**: `configuracoes_sistema` → `sistema_configuracoes` (evita `sistema_configuracoes_sistema`).
+
+## Verificação após aplicar
+
+1. Rodar `supabase--linter` para conferir se nenhuma policy/função ficou órfã.
+2. Abrir 5 telas críticas: `/empreendimentos`, `/clientes`, `/arqo/leads`, `/nexa/agenda`, `/usuarios` — devem carregar normalmente (via views).
+3. Confirmar login/logout (auth intocado).
+4. Testar criar 1 cliente, 1 lead Arqo, 1 visita Nexa (write path via views).
+
+## Arquivos afetados
+
+- **1 migration** (via `supabase--migration`): renames + views + recriação das SECURITY DEFINER functions.
+- **`src/integrations/supabase/types.ts`**: regenerado automaticamente.
+- **Nenhum arquivo de código do frontend** nesta fase.

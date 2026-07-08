@@ -417,6 +417,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_closer_id_fkey"
             columns: ["closer_id"]
             isOneToOne: false
@@ -445,6 +452,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_etapa_id_fkey"
             columns: ["etapa_id"]
             isOneToOne: false
@@ -470,6 +484,13 @@ export type Database = {
             columns: ["temperatura_id"]
             isOneToOne: false
             referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
             referencedColumns: ["id"]
           },
           {
@@ -644,49 +665,325 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_logs: {
+      nexa_contratos: {
         Row: {
-          action: string
           created_at: string
           id: string
-          ip_address: unknown
-          new_data: Json | null
-          old_data: Json | null
-          record_id: string | null
-          table_name: string
-          user_agent: string | null
-          user_email: string | null
-          user_id: string | null
+          status: string
+          unidade_id: string | null
+          updated_at: string
+          valor: number | null
+          visita_id: string | null
         }
         Insert: {
-          action: string
           created_at?: string
           id?: string
-          ip_address?: unknown
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id?: string | null
-          table_name: string
-          user_agent?: string | null
-          user_email?: string | null
-          user_id?: string | null
+          status?: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number | null
+          visita_id?: string | null
         }
         Update: {
-          action?: string
           created_at?: string
           id?: string
-          ip_address?: unknown
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id?: string | null
-          table_name?: string
-          user_agent?: string | null
-          user_email?: string | null
-          user_id?: string | null
+          status?: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number | null
+          visita_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_contratos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "nexa_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexa_visitas: {
+        Row: {
+          arqo_lead_id: string | null
+          cliente_id: string | null
+          corretor_id: string | null
+          created_at: string
+          created_by: string | null
+          data_hora: string
+          empreendimento_id: string
+          google_event_id: string | null
+          id: string
+          imobiliaria_parceira_id: string | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at: string
+          visitante_nome: string | null
+          visitante_telefone: string | null
+        }
+        Insert: {
+          arqo_lead_id?: string | null
+          cliente_id?: string | null
+          corretor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_hora: string
+          empreendimento_id: string
+          google_event_id?: string | null
+          id?: string
+          imobiliaria_parceira_id?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at?: string
+          visitante_nome?: string | null
+          visitante_telefone?: string | null
+        }
+        Update: {
+          arqo_lead_id?: string | null
+          cliente_id?: string | null
+          corretor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_hora?: string
+          empreendimento_id?: string
+          google_event_id?: string | null
+          id?: string
+          imobiliaria_parceira_id?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at?: string
+          visitante_nome?: string | null
+          visitante_telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
+            columns: ["arqo_lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
+            columns: ["arqo_lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_vw_forecast_ponderado"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "seven_corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_imobiliaria_parceira_id_fkey"
+            columns: ["imobiliaria_parceira_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_imobiliaria_parceira_id_fkey"
+            columns: ["imobiliaria_parceira_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexa_visitas_eventos: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          tipo_evento: string
+          unidade_id: string | null
+          usuario_id: string | null
+          visita_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          tipo_evento: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+          visita_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          tipo_evento?: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+          visita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_visitas_eventos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "nexa_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          cargo: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          percentual_comissao: number | null
+          phone: string | null
+          tipo_vinculo: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          cargo?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          is_active?: boolean
+          percentual_comissao?: number | null
+          phone?: string | null
+          tipo_vinculo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          cargo?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          percentual_comissao?: number | null
+          phone?: string | null
+          tipo_vinculo?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
-      blocos: {
+      roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      seven_blocos: {
         Row: {
           created_at: string
           empreendimento_id: string
@@ -725,9 +1022,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "blocos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      boxes: {
+      seven_boxes: {
         Row: {
           bloco_id: string | null
           coberto: boolean
@@ -782,10 +1086,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "boxes_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "seven_blocos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "boxes_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
             referencedColumns: ["id"]
           },
           {
@@ -797,7 +1122,7 @@ export type Database = {
           },
         ]
       }
-      centro_custo_empreendimentos: {
+      seven_centro_custo_empreendimentos: {
         Row: {
           centro_custo_id: string
           created_at: string | null
@@ -825,15 +1150,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "centro_custo_empreendimentos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "seven_centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "centro_custo_empreendimentos_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "centro_custo_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      centros_custo: {
+      seven_centros_custo: {
         Row: {
           created_at: string | null
           descricao: string | null
@@ -860,7 +1199,7 @@ export type Database = {
         }
         Relationships: []
       }
-      cliente_interacoes: {
+      seven_cliente_interacoes: {
         Row: {
           cliente_id: string
           created_at: string | null
@@ -893,9 +1232,16 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cliente_interacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      cliente_socios: {
+      seven_cliente_socios: {
         Row: {
           cliente_id: string
           created_at: string | null
@@ -929,15 +1275,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cliente_socios_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cliente_socios_socio_id_fkey"
             columns: ["socio_id"]
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cliente_socios_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      cliente_telefones: {
+      seven_cliente_telefones: {
         Row: {
           cliente_id: string
           created_at: string | null
@@ -973,9 +1333,16 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cliente_telefones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      clientes: {
+      seven_clientes: {
         Row: {
           cnpj: string | null
           conjuge_id: string | null
@@ -1135,6 +1502,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clientes_conjuge_id_fkey"
+            columns: ["conjuge_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "clientes_corretor_id_fkey"
             columns: ["corretor_id"]
             isOneToOne: false
@@ -1142,10 +1516,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clientes_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "seven_corretores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "clientes_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
           {
@@ -1162,9 +1550,16 @@ export type Database = {
             referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clientes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      configuracao_comercial: {
+      seven_configuracao_comercial: {
         Row: {
           created_at: string | null
           data_referencia: string
@@ -1227,36 +1622,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "configuracao_comercial_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      configuracoes_sistema: {
-        Row: {
-          categoria: string
-          chave: string
-          created_at: string
-          id: string
-          updated_at: string
-          valor: string
-        }
-        Insert: {
-          categoria?: string
-          chave: string
-          created_at?: string
-          id?: string
-          updated_at?: string
-          valor: string
-        }
-        Update: {
-          categoria?: string
-          chave?: string
-          created_at?: string
-          id?: string
-          updated_at?: string
-          valor?: string
-        }
-        Relationships: []
-      }
-      corretores: {
+      seven_corretores: {
         Row: {
           cidade: string | null
           cod_sorteio: string | null
@@ -1322,9 +1697,16 @@ export type Database = {
             referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "corretores_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      empreendimento_corretores: {
+      seven_empreendimento_corretores: {
         Row: {
           autorizado_em: string
           autorizado_por: string | null
@@ -1362,15 +1744,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "empreendimento_corretores_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "seven_corretores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "empreendimento_corretores_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_corretores_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      empreendimento_documentos: {
+      seven_empreendimento_documentos: {
         Row: {
           arquivo_url: string
           created_at: string
@@ -1416,9 +1812,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_documentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      empreendimento_imobiliarias: {
+      seven_empreendimento_imobiliarias: {
         Row: {
           autorizado_em: string
           autorizado_por: string | null
@@ -1459,15 +1862,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "empreendimento_imobiliarias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "empreendimento_imobiliarias_imobiliaria_id_fkey"
             columns: ["imobiliaria_id"]
             isOneToOne: false
             referencedRelation: "imobiliarias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      empreendimento_midias: {
+      seven_empreendimento_midias: {
         Row: {
           created_at: string
           empreendimento_id: string
@@ -1506,9 +1923,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_midias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      empreendimentos: {
+      seven_empreendimentos: {
         Row: {
           auto_vincular_corretor: boolean
           construtora: string | null
@@ -1623,6 +2047,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "seven_incorporadoras"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "empreendimentos_responsavel_comercial_id_fkey"
             columns: ["responsavel_comercial_id"]
             isOneToOne: false
@@ -1631,7 +2062,7 @@ export type Database = {
           },
         ]
       }
-      fachadas: {
+      seven_fachadas: {
         Row: {
           created_at: string
           descricao: string | null
@@ -1670,9 +2101,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fachadas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      imobiliarias: {
+      seven_imobiliarias: {
         Row: {
           cnpj: string | null
           cpf: string | null
@@ -1750,7 +2188,7 @@ export type Database = {
         }
         Relationships: []
       }
-      incorporadoras: {
+      seven_incorporadoras: {
         Row: {
           cnpj: string | null
           created_at: string | null
@@ -1810,7 +2248,7 @@ export type Database = {
         }
         Relationships: []
       }
-      lancamentos_financeiros: {
+      seven_lancamentos_financeiros: {
         Row: {
           beneficiario_id: string | null
           beneficiario_tipo: string | null
@@ -1923,6 +2361,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lancamentos_financeiros_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "seven_centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lancamentos_financeiros_conferido_por_fkey"
             columns: ["conferido_por"]
             isOneToOne: false
@@ -1934,6 +2379,13 @@ export type Database = {
             columns: ["conta_id"]
             isOneToOne: false
             referencedRelation: "plano_contas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "seven_plano_contas"
             referencedColumns: ["id"]
           },
           {
@@ -1951,15 +2403,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lancamentos_financeiros_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lancamentos_financeiros_recorrencia_pai_id_fkey"
             columns: ["recorrencia_pai_id"]
             isOneToOne: false
             referencedRelation: "lancamentos_financeiros"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lancamentos_financeiros_recorrencia_pai_id_fkey"
+            columns: ["recorrencia_pai_id"]
+            isOneToOne: false
+            referencedRelation: "seven_lancamentos_financeiros"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      mapa_empreendimento: {
+      seven_mapa_empreendimento: {
         Row: {
           altura: number | null
           created_at: string
@@ -1995,290 +2461,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      modules: {
-        Row: {
-          category: string | null
-          created_at: string
-          description: string | null
-          display_name: string
-          icon: string | null
-          id: string
-          is_active: boolean
-          name: string
-          route: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          display_name: string
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          route?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          display_name?: string
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          route?: string | null
-        }
-        Relationships: []
-      }
-      nexa_contratos: {
-        Row: {
-          created_at: string
-          id: string
-          status: string
-          unidade_id: string | null
-          updated_at: string
-          valor: number | null
-          visita_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          status?: string
-          unidade_id?: string | null
-          updated_at?: string
-          valor?: number | null
-          visita_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          status?: string
-          unidade_id?: string | null
-          updated_at?: string
-          valor?: number | null
-          visita_id?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "nexa_contratos_unidade_id_fkey"
-            columns: ["unidade_id"]
-            isOneToOne: false
-            referencedRelation: "unidades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_contratos_visita_id_fkey"
-            columns: ["visita_id"]
-            isOneToOne: false
-            referencedRelation: "nexa_visitas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      nexa_visitas: {
-        Row: {
-          arqo_lead_id: string | null
-          cliente_id: string | null
-          corretor_id: string | null
-          created_at: string
-          created_by: string | null
-          data_hora: string
-          empreendimento_id: string
-          google_event_id: string | null
-          id: string
-          imobiliaria_parceira_id: string | null
-          observacoes: string | null
-          status: Database["public"]["Enums"]["nexa_visita_status"]
-          updated_at: string
-          visitante_nome: string | null
-          visitante_telefone: string | null
-        }
-        Insert: {
-          arqo_lead_id?: string | null
-          cliente_id?: string | null
-          corretor_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          data_hora: string
-          empreendimento_id: string
-          google_event_id?: string | null
-          id?: string
-          imobiliaria_parceira_id?: string | null
-          observacoes?: string | null
-          status?: Database["public"]["Enums"]["nexa_visita_status"]
-          updated_at?: string
-          visitante_nome?: string | null
-          visitante_telefone?: string | null
-        }
-        Update: {
-          arqo_lead_id?: string | null
-          cliente_id?: string | null
-          corretor_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          data_hora?: string
-          empreendimento_id?: string
-          google_event_id?: string | null
-          id?: string
-          imobiliaria_parceira_id?: string | null
-          observacoes?: string | null
-          status?: Database["public"]["Enums"]["nexa_visita_status"]
-          updated_at?: string
-          visitante_nome?: string | null
-          visitante_telefone?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
-            columns: ["arqo_lead_id"]
-            isOneToOne: false
-            referencedRelation: "arqo_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
-            columns: ["arqo_lead_id"]
-            isOneToOne: false
-            referencedRelation: "arqo_vw_forecast_ponderado"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_corretor_id_fkey"
-            columns: ["corretor_id"]
-            isOneToOne: false
-            referencedRelation: "corretores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_empreendimento_id_fkey"
+            foreignKeyName: "mapa_empreendimento_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
-            isOneToOne: false
-            referencedRelation: "empreendimentos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_imobiliaria_parceira_id_fkey"
-            columns: ["imobiliaria_parceira_id"]
-            isOneToOne: false
-            referencedRelation: "imobiliarias"
+            isOneToOne: true
+            referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
         ]
       }
-      nexa_visitas_eventos: {
-        Row: {
-          created_at: string
-          id: string
-          payload: Json
-          tipo_evento: string
-          unidade_id: string | null
-          usuario_id: string | null
-          visita_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          payload?: Json
-          tipo_evento: string
-          unidade_id?: string | null
-          usuario_id?: string | null
-          visita_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          payload?: Json
-          tipo_evento?: string
-          unidade_id?: string | null
-          usuario_id?: string | null
-          visita_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nexa_visitas_eventos_unidade_id_fkey"
-            columns: ["unidade_id"]
-            isOneToOne: false
-            referencedRelation: "unidades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_eventos_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "nexa_visitas_eventos_visita_id_fkey"
-            columns: ["visita_id"]
-            isOneToOne: false
-            referencedRelation: "nexa_visitas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notificacoes: {
-        Row: {
-          created_at: string
-          id: string
-          lida: boolean
-          mensagem: string
-          referencia_id: string | null
-          referencia_tipo: string | null
-          tipo: string
-          titulo: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          lida?: boolean
-          mensagem: string
-          referencia_id?: string | null
-          referencia_tipo?: string | null
-          tipo?: string
-          titulo: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          lida?: boolean
-          mensagem?: string
-          referencia_id?: string | null
-          referencia_tipo?: string | null
-          tipo?: string
-          titulo?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notificacoes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plano_contas: {
+      seven_plano_contas: {
         Row: {
           categoria: string
           codigo: string
@@ -2320,138 +2512,16 @@ export type Database = {
             referencedRelation: "plano_contas"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          cargo: string | null
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          is_active: boolean
-          percentual_comissao: number | null
-          phone: string | null
-          tipo_vinculo: string | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          cargo?: string | null
-          created_at?: string
-          email: string
-          full_name: string
-          id: string
-          is_active?: boolean
-          percentual_comissao?: number | null
-          phone?: string | null
-          tipo_vinculo?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          cargo?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          id?: string
-          is_active?: boolean
-          percentual_comissao?: number | null
-          phone?: string | null
-          tipo_vinculo?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      role_permissions: {
-        Row: {
-          can_create: boolean
-          can_delete: boolean
-          can_edit: boolean
-          can_view: boolean
-          created_at: string
-          id: string
-          module_id: string
-          role: Database["public"]["Enums"]["app_role"] | null
-          role_id: string | null
-          scope: string
-        }
-        Insert: {
-          can_create?: boolean
-          can_delete?: boolean
-          can_edit?: boolean
-          can_view?: boolean
-          created_at?: string
-          id?: string
-          module_id: string
-          role?: Database["public"]["Enums"]["app_role"] | null
-          role_id?: string | null
-          scope?: string
-        }
-        Update: {
-          can_create?: boolean
-          can_delete?: boolean
-          can_edit?: boolean
-          can_view?: boolean
-          created_at?: string
-          id?: string
-          module_id?: string
-          role?: Database["public"]["Enums"]["app_role"] | null
-          role_id?: string | null
-          scope?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "role_permissions_module_id_fkey"
-            columns: ["module_id"]
+            foreignKeyName: "plano_contas_pai_id_fkey"
+            columns: ["pai_id"]
             isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
+            referencedRelation: "seven_plano_contas"
             referencedColumns: ["id"]
           },
         ]
       }
-      roles: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          display_name: string
-          id: string
-          is_active: boolean
-          is_system: boolean
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          display_name: string
-          id?: string
-          is_active?: boolean
-          is_system?: boolean
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          display_name?: string
-          id?: string
-          is_active?: boolean
-          is_system?: boolean
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      saldos_mensais: {
+      seven_saldos_mensais: {
         Row: {
           ano: number
           created_at: string | null
@@ -2489,7 +2559,7 @@ export type Database = {
           },
         ]
       }
-      tipologias: {
+      seven_tipologias: {
         Row: {
           area_privativa: number | null
           area_total: number | null
@@ -2549,9 +2619,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tipologias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      unidade_historico_precos: {
+      seven_unidade_historico_precos: {
         Row: {
           alterado_por: string | null
           area_anterior: number | null
@@ -2590,12 +2667,19 @@ export type Database = {
             foreignKeyName: "unidade_historico_precos_unidade_id_fkey"
             columns: ["unidade_id"]
             isOneToOne: false
+            referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidade_historico_precos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
             referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
       }
-      unidades: {
+      seven_unidades: {
         Row: {
           andar: number | null
           area_privativa: number | null
@@ -2665,6 +2749,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "unidades_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "seven_blocos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "unidades_empreendimento_id_fkey"
             columns: ["empreendimento_id"]
             isOneToOne: false
@@ -2672,10 +2763,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "unidades_fachada_id_fkey"
             columns: ["fachada_id"]
             isOneToOne: false
             referencedRelation: "fachadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_fachada_id_fkey"
+            columns: ["fachada_id"]
+            isOneToOne: false
+            referencedRelation: "seven_fachadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_tipologia_id_fkey"
+            columns: ["tipologia_id"]
+            isOneToOne: false
+            referencedRelation: "seven_tipologias"
             referencedColumns: ["id"]
           },
           {
@@ -2687,7 +2799,217 @@ export type Database = {
           },
         ]
       }
-      user_empreendimentos: {
+      sistema_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sistema_configuracoes: {
+        Row: {
+          categoria: string
+          chave: string
+          created_at: string
+          id: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          categoria?: string
+          chave: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor: string
+        }
+        Update: {
+          categoria?: string
+          chave?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: []
+      }
+      sistema_modules: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          route: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          route?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          route?: string | null
+        }
+        Relationships: []
+      }
+      sistema_notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          referencia_id: string | null
+          referencia_tipo: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo?: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_role_permissions: {
+        Row: {
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          created_at: string
+          id: string
+          module_id: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          role_id: string | null
+          scope: string
+        }
+        Insert: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module_id: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          role_id?: string | null
+          scope?: string
+        }
+        Update: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module_id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          role_id?: string | null
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_user_empreendimentos: {
         Row: {
           created_at: string
           empreendimento_id: string
@@ -2714,9 +3036,16 @@ export type Database = {
             referencedRelation: "empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      user_module_permissions: {
+      sistema_user_module_permissions: {
         Row: {
           can_create: boolean
           can_delete: boolean
@@ -2759,6 +3088,13 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_modules"
             referencedColumns: ["id"]
           },
           {
@@ -2832,6 +3168,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_closer_id_fkey"
             columns: ["closer_id"]
             isOneToOne: false
@@ -2853,6 +3196,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_etapa_id_fkey"
             columns: ["etapa_id"]
             isOneToOne: false
@@ -2871,6 +3221,2135 @@ export type Database = {
             columns: ["temperatura_id"]
             isOneToOne: false
             referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          id: string | null
+          ip_address: unknown
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          id?: string | null
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          id?: string | null
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      blocos: {
+        Row: {
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          is_active: boolean | null
+          nome: string | null
+          total_andares: number | null
+          unidades_por_andar: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          total_andares?: number | null
+          unidades_por_andar?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          total_andares?: number | null
+          unidades_por_andar?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boxes: {
+        Row: {
+          bloco_id: string | null
+          coberto: boolean | null
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          is_active: boolean | null
+          numero: string | null
+          observacoes: string | null
+          status: string | null
+          tipo: string | null
+          unidade_id: string | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          bloco_id?: string | null
+          coberto?: boolean | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          numero?: string | null
+          observacoes?: string | null
+          status?: string | null
+          tipo?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          bloco_id?: string | null
+          coberto?: boolean | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          numero?: string | null
+          observacoes?: string | null
+          status?: string | null
+          tipo?: string | null
+          unidade_id?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boxes_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "blocos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "seven_blocos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centro_custo_empreendimentos: {
+        Row: {
+          centro_custo_id: string | null
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+        }
+        Insert: {
+          centro_custo_id?: string | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+        }
+        Update: {
+          centro_custo_id?: string | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centro_custo_empreendimentos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centro_custo_empreendimentos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "seven_centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centro_custo_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centro_custo_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centros_custo: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string | null
+          is_active: boolean | null
+          nome: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cliente_interacoes: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string | null
+          tipo: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_interacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_interacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_socios: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          id: string | null
+          observacao: string | null
+          percentual_participacao: number | null
+          socio_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          observacao?: string | null
+          percentual_participacao?: number | null
+          socio_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          observacao?: string | null
+          percentual_participacao?: number | null
+          socio_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_socios_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_socios_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_socios_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_socios_socio_id_fkey"
+            columns: ["socio_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_telefones: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string | null
+          is_whatsapp: boolean | null
+          numero: string | null
+          principal: boolean | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          is_whatsapp?: boolean | null
+          numero?: string | null
+          principal?: boolean | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string | null
+          is_whatsapp?: boolean | null
+          numero?: string | null
+          principal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_telefones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_telefones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          cnpj: string | null
+          conjuge_id: string | null
+          corretor_id: string | null
+          cpf: string | null
+          created_at: string | null
+          data_nascimento: string | null
+          data_perda: string | null
+          data_primeira_compra: string | null
+          data_primeira_negociacao: string | null
+          data_promocao_comprador: string | null
+          data_promocao_qualificado: string | null
+          data_qualificacao: string | null
+          email: string | null
+          empreendimento_id: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_logradouro: string | null
+          endereco_numero: string | null
+          endereco_uf: string | null
+          estado_civil: string | null
+          fase: string | null
+          gestor_id: string | null
+          id: string | null
+          imobiliaria_id: string | null
+          inscricao_estadual: string | null
+          interesse: string[] | null
+          is_active: boolean | null
+          lead_id: string | null
+          motivo_perda: string | null
+          nacionalidade: string | null
+          nivel_cadastro:
+            | Database["public"]["Enums"]["nivel_cadastro_cliente"]
+            | null
+          nome: string | null
+          nome_mae: string | null
+          nome_pai: string | null
+          observacoes: string | null
+          origem: string | null
+          passaporte: string | null
+          profissao: string | null
+          razao_social: string | null
+          renda_mensal: number | null
+          rg: string | null
+          telefone: string | null
+          temperatura: string | null
+          tipo_pessoa: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          conjuge_id?: string | null
+          corretor_id?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          data_perda?: string | null
+          data_primeira_compra?: string | null
+          data_primeira_negociacao?: string | null
+          data_promocao_comprador?: string | null
+          data_promocao_qualificado?: string | null
+          data_qualificacao?: string | null
+          email?: string | null
+          empreendimento_id?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          estado_civil?: string | null
+          fase?: string | null
+          gestor_id?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          inscricao_estadual?: string | null
+          interesse?: string[] | null
+          is_active?: boolean | null
+          lead_id?: string | null
+          motivo_perda?: string | null
+          nacionalidade?: string | null
+          nivel_cadastro?:
+            | Database["public"]["Enums"]["nivel_cadastro_cliente"]
+            | null
+          nome?: string | null
+          nome_mae?: string | null
+          nome_pai?: string | null
+          observacoes?: string | null
+          origem?: string | null
+          passaporte?: string | null
+          profissao?: string | null
+          razao_social?: string | null
+          renda_mensal?: number | null
+          rg?: string | null
+          telefone?: string | null
+          temperatura?: string | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          conjuge_id?: string | null
+          corretor_id?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          data_perda?: string | null
+          data_primeira_compra?: string | null
+          data_primeira_negociacao?: string | null
+          data_promocao_comprador?: string | null
+          data_promocao_qualificado?: string | null
+          data_qualificacao?: string | null
+          email?: string | null
+          empreendimento_id?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          estado_civil?: string | null
+          fase?: string | null
+          gestor_id?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          inscricao_estadual?: string | null
+          interesse?: string[] | null
+          is_active?: boolean | null
+          lead_id?: string | null
+          motivo_perda?: string | null
+          nacionalidade?: string | null
+          nivel_cadastro?:
+            | Database["public"]["Enums"]["nivel_cadastro_cliente"]
+            | null
+          nome?: string | null
+          nome_mae?: string | null
+          nome_pai?: string | null
+          observacoes?: string | null
+          origem?: string | null
+          passaporte?: string | null
+          profissao?: string | null
+          razao_social?: string | null
+          renda_mensal?: number | null
+          rg?: string | null
+          telefone?: string | null
+          temperatura?: string | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_conjuge_id_fkey"
+            columns: ["conjuge_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_conjuge_id_fkey"
+            columns: ["conjuge_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "seven_corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracao_comercial: {
+        Row: {
+          created_at: string | null
+          data_referencia: string | null
+          desconto_avista: number | null
+          empreendimento_id: string | null
+          entrada_curto_prazo: number | null
+          entrada_minima: number | null
+          id: string | null
+          indice_reajuste: string | null
+          is_active: boolean | null
+          limite_parcelas_anuais: number | null
+          max_parcelas_entrada: number | null
+          max_parcelas_mensais: number | null
+          parcelas_curto_prazo: number | null
+          taxa_juros_anual: number | null
+          updated_at: string | null
+          valor_m2: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_referencia?: string | null
+          desconto_avista?: number | null
+          empreendimento_id?: string | null
+          entrada_curto_prazo?: number | null
+          entrada_minima?: number | null
+          id?: string | null
+          indice_reajuste?: string | null
+          is_active?: boolean | null
+          limite_parcelas_anuais?: number | null
+          max_parcelas_entrada?: number | null
+          max_parcelas_mensais?: number | null
+          parcelas_curto_prazo?: number | null
+          taxa_juros_anual?: number | null
+          updated_at?: string | null
+          valor_m2?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          data_referencia?: string | null
+          desconto_avista?: number | null
+          empreendimento_id?: string | null
+          entrada_curto_prazo?: number | null
+          entrada_minima?: number | null
+          id?: string | null
+          indice_reajuste?: string | null
+          is_active?: boolean | null
+          limite_parcelas_anuais?: number | null
+          max_parcelas_entrada?: number | null
+          max_parcelas_mensais?: number | null
+          parcelas_curto_prazo?: number | null
+          taxa_juros_anual?: number | null
+          updated_at?: string | null
+          valor_m2?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracao_comercial_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuracao_comercial_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_sistema: {
+        Row: {
+          categoria: string | null
+          chave: string | null
+          created_at: string | null
+          id: string | null
+          updated_at: string | null
+          valor: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          chave?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          chave?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Relationships: []
+      }
+      corretores: {
+        Row: {
+          cidade: string | null
+          cod_sorteio: string | null
+          cpf: string | null
+          created_at: string | null
+          creci: string | null
+          email: string | null
+          id: string | null
+          imobiliaria_id: string | null
+          is_active: boolean | null
+          nome_completo: string | null
+          send_campanha: string | null
+          status_vinculo: string | null
+          telefone: string | null
+          uf: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          cod_sorteio?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          creci?: string | null
+          email?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          is_active?: boolean | null
+          nome_completo?: string | null
+          send_campanha?: string | null
+          status_vinculo?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          cod_sorteio?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          creci?: string | null
+          email?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+          is_active?: boolean | null
+          nome_completo?: string | null
+          send_campanha?: string | null
+          status_vinculo?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corretores_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "corretores_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empreendimento_corretores: {
+        Row: {
+          autorizado_em: string | null
+          autorizado_por: string | null
+          corretor_id: string | null
+          empreendimento_id: string | null
+          id: string | null
+        }
+        Insert: {
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          corretor_id?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+        }
+        Update: {
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          corretor_id?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimento_corretores_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_corretores_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_corretores_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "seven_corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_corretores_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_corretores_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empreendimento_documentos: {
+        Row: {
+          arquivo_url: string | null
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          id: string | null
+          nome: string | null
+          tipo: Database["public"]["Enums"]["documento_tipo"] | null
+        }
+        Insert: {
+          arquivo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          nome?: string | null
+          tipo?: Database["public"]["Enums"]["documento_tipo"] | null
+        }
+        Update: {
+          arquivo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          nome?: string | null
+          tipo?: Database["public"]["Enums"]["documento_tipo"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimento_documentos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_documentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_documentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empreendimento_imobiliarias: {
+        Row: {
+          autorizado_em: string | null
+          autorizado_por: string | null
+          comissao_percentual: number | null
+          empreendimento_id: string | null
+          id: string | null
+          imobiliaria_id: string | null
+        }
+        Insert: {
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          comissao_percentual?: number | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+        }
+        Update: {
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          comissao_percentual?: number | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imobiliaria_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimento_imobiliarias_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_imobiliaria_id_fkey"
+            columns: ["imobiliaria_id"]
+            isOneToOne: false
+            referencedRelation: "seven_imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empreendimento_midias: {
+        Row: {
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          is_capa: boolean | null
+          nome: string | null
+          ordem: number | null
+          tipo: Database["public"]["Enums"]["midia_tipo"] | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_capa?: boolean | null
+          nome?: string | null
+          ordem?: number | null
+          tipo?: Database["public"]["Enums"]["midia_tipo"] | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_capa?: boolean | null
+          nome?: string | null
+          ordem?: number | null
+          tipo?: Database["public"]["Enums"]["midia_tipo"] | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimento_midias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_midias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empreendimentos: {
+        Row: {
+          auto_vincular_corretor: boolean | null
+          construtora: string | null
+          created_at: string | null
+          data_inicio_contrato: string | null
+          descricao_completa: string | null
+          descricao_curta: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_logradouro: string | null
+          endereco_numero: string | null
+          endereco_uf: string | null
+          id: string | null
+          incorporadora: string | null
+          incorporadora_id: string | null
+          infraestrutura: string[] | null
+          is_active: boolean | null
+          latitude: number | null
+          legenda_status_visiveis: string[] | null
+          longitude: number | null
+          mapa_label_formato: string[] | null
+          matricula_mae: string | null
+          meta_12_meses: number | null
+          meta_6_meses: number | null
+          nome: string | null
+          registro_incorporacao: string | null
+          responsavel_comercial_id: string | null
+          status: Database["public"]["Enums"]["empreendimento_status"] | null
+          texto_rodape_relatorio: string | null
+          tipo: Database["public"]["Enums"]["empreendimento_tipo"] | null
+          total_unidades: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_vincular_corretor?: boolean | null
+          construtora?: string | null
+          created_at?: string | null
+          data_inicio_contrato?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          id?: string | null
+          incorporadora?: string | null
+          incorporadora_id?: string | null
+          infraestrutura?: string[] | null
+          is_active?: boolean | null
+          latitude?: number | null
+          legenda_status_visiveis?: string[] | null
+          longitude?: number | null
+          mapa_label_formato?: string[] | null
+          matricula_mae?: string | null
+          meta_12_meses?: number | null
+          meta_6_meses?: number | null
+          nome?: string | null
+          registro_incorporacao?: string | null
+          responsavel_comercial_id?: string | null
+          status?: Database["public"]["Enums"]["empreendimento_status"] | null
+          texto_rodape_relatorio?: string | null
+          tipo?: Database["public"]["Enums"]["empreendimento_tipo"] | null
+          total_unidades?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_vincular_corretor?: boolean | null
+          construtora?: string | null
+          created_at?: string | null
+          data_inicio_contrato?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          id?: string | null
+          incorporadora?: string | null
+          incorporadora_id?: string | null
+          infraestrutura?: string[] | null
+          is_active?: boolean | null
+          latitude?: number | null
+          legenda_status_visiveis?: string[] | null
+          longitude?: number | null
+          mapa_label_formato?: string[] | null
+          matricula_mae?: string | null
+          meta_12_meses?: number | null
+          meta_6_meses?: number | null
+          nome?: string | null
+          registro_incorporacao?: string | null
+          responsavel_comercial_id?: string | null
+          status?: Database["public"]["Enums"]["empreendimento_status"] | null
+          texto_rodape_relatorio?: string | null
+          tipo?: Database["public"]["Enums"]["empreendimento_tipo"] | null
+          total_unidades?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "incorporadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "seven_incorporadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimentos_responsavel_comercial_id_fkey"
+            columns: ["responsavel_comercial_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fachadas: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          id: string | null
+          imagem_url: string | null
+          is_active: boolean | null
+          nome: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imagem_url?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imagem_url?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fachadas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fachadas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      imobiliarias: {
+        Row: {
+          cnpj: string | null
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_logradouro: string | null
+          endereco_numero: string | null
+          endereco_uf: string | null
+          gestor_email: string | null
+          gestor_nome: string | null
+          gestor_telefone: string | null
+          id: string | null
+          is_active: boolean | null
+          nome: string | null
+          site: string | null
+          telefone: string | null
+          tipo_pessoa: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          gestor_email?: string | null
+          gestor_nome?: string | null
+          gestor_telefone?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          site?: string | null
+          telefone?: string | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          gestor_email?: string | null
+          gestor_nome?: string | null
+          gestor_telefone?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          site?: string | null
+          telefone?: string | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      incorporadoras: {
+        Row: {
+          cnpj: string | null
+          created_at: string | null
+          email: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_logradouro: string | null
+          endereco_numero: string | null
+          endereco_uf: string | null
+          id: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          nome: string | null
+          razao_social: string | null
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          nome?: string | null
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_logradouro?: string | null
+          endereco_numero?: string | null
+          endereco_uf?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          nome?: string | null
+          razao_social?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      lancamentos_financeiros: {
+        Row: {
+          beneficiario_id: string | null
+          beneficiario_tipo: string | null
+          bonificacao_id: string | null
+          categoria_fluxo: string | null
+          centro_custo_id: string | null
+          comissao_id: string | null
+          conferido_em: string | null
+          conferido_por: string | null
+          conta_id: string | null
+          contrato_id: string | null
+          created_at: string | null
+          created_by: string | null
+          data_competencia: string | null
+          data_pagamento: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          id: string | null
+          is_recorrente: boolean | null
+          nf_numero: string | null
+          nf_quitada: boolean | null
+          observacoes: string | null
+          recorrencia_frequencia: string | null
+          recorrencia_pai_id: string | null
+          status: string | null
+          status_conferencia: string | null
+          subcategoria: string | null
+          tipo: string | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          beneficiario_id?: string | null
+          beneficiario_tipo?: string | null
+          bonificacao_id?: string | null
+          categoria_fluxo?: string | null
+          centro_custo_id?: string | null
+          comissao_id?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          conta_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_competencia?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_recorrente?: boolean | null
+          nf_numero?: string | null
+          nf_quitada?: boolean | null
+          observacoes?: string | null
+          recorrencia_frequencia?: string | null
+          recorrencia_pai_id?: string | null
+          status?: string | null
+          status_conferencia?: string | null
+          subcategoria?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          beneficiario_id?: string | null
+          beneficiario_tipo?: string | null
+          bonificacao_id?: string | null
+          categoria_fluxo?: string | null
+          centro_custo_id?: string | null
+          comissao_id?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          conta_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_competencia?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_recorrente?: boolean | null
+          nf_numero?: string | null
+          nf_quitada?: boolean | null
+          observacoes?: string | null
+          recorrencia_frequencia?: string | null
+          recorrencia_pai_id?: string | null
+          status?: string | null
+          status_conferencia?: string | null
+          subcategoria?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_financeiros_beneficiario_id_fkey"
+            columns: ["beneficiario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "seven_centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_conferido_por_fkey"
+            columns: ["conferido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "plano_contas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "seven_plano_contas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_recorrencia_pai_id_fkey"
+            columns: ["recorrencia_pai_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos_financeiros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_financeiros_recorrencia_pai_id_fkey"
+            columns: ["recorrencia_pai_id"]
+            isOneToOne: false
+            referencedRelation: "seven_lancamentos_financeiros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mapa_empreendimento: {
+        Row: {
+          altura: number | null
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          imagem_url: string | null
+          largura: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          altura?: number | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imagem_url?: string | null
+          largura?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          altura?: number | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          imagem_url?: string | null
+          largura?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapa_empreendimento_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_empreendimento_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          icon: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          route: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          icon?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          route?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          icon?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          route?: string | null
+        }
+        Relationships: []
+      }
+      notificacoes: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          lida: boolean | null
+          mensagem: string | null
+          referencia_id: string | null
+          referencia_tipo: string | null
+          tipo: string | null
+          titulo: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          lida?: boolean | null
+          mensagem?: string | null
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo?: string | null
+          titulo?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          lida?: boolean | null
+          mensagem?: string | null
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo?: string | null
+          titulo?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plano_contas: {
+        Row: {
+          categoria: string | null
+          codigo: string | null
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          nome: string | null
+          ordem: number | null
+          pai_id: string | null
+          tipo: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          ordem?: number | null
+          pai_id?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          ordem?: number | null
+          pai_id?: string | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_contas_pai_id_fkey"
+            columns: ["pai_id"]
+            isOneToOne: false
+            referencedRelation: "plano_contas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_contas_pai_id_fkey"
+            columns: ["pai_id"]
+            isOneToOne: false
+            referencedRelation: "seven_plano_contas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string | null
+          module_id: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          role_id: string | null
+          scope: string | null
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          role_id?: string | null
+          scope?: string | null
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          role_id?: string | null
+          scope?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saldos_mensais: {
+        Row: {
+          ano: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          mes: number | null
+          saldo_inicial: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          mes?: number | null
+          saldo_inicial?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          mes?: number | null
+          saldo_inicial?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saldos_mensais_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tipologias: {
+        Row: {
+          area_privativa: number | null
+          area_total: number | null
+          banheiros: number | null
+          categoria: Database["public"]["Enums"]["tipologia_categoria"] | null
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          is_active: boolean | null
+          nome: string | null
+          planta_url: string | null
+          quartos: number | null
+          suites: number | null
+          updated_at: string | null
+          vagas: number | null
+          valor_base: number | null
+        }
+        Insert: {
+          area_privativa?: number | null
+          area_total?: number | null
+          banheiros?: number | null
+          categoria?: Database["public"]["Enums"]["tipologia_categoria"] | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          planta_url?: string | null
+          quartos?: number | null
+          suites?: number | null
+          updated_at?: string | null
+          vagas?: number | null
+          valor_base?: number | null
+        }
+        Update: {
+          area_privativa?: number | null
+          area_total?: number | null
+          banheiros?: number | null
+          categoria?: Database["public"]["Enums"]["tipologia_categoria"] | null
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          nome?: string | null
+          planta_url?: string | null
+          quartos?: number | null
+          suites?: number | null
+          updated_at?: string | null
+          vagas?: number | null
+          valor_base?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tipologias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tipologias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidade_historico_precos: {
+        Row: {
+          alterado_por: string | null
+          area_anterior: number | null
+          area_nova: number | null
+          created_at: string | null
+          id: string | null
+          motivo: string | null
+          unidade_id: string | null
+          valor_anterior: number | null
+          valor_novo: number | null
+        }
+        Insert: {
+          alterado_por?: string | null
+          area_anterior?: number | null
+          area_nova?: number | null
+          created_at?: string | null
+          id?: string | null
+          motivo?: string | null
+          unidade_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Update: {
+          alterado_por?: string | null
+          area_anterior?: number | null
+          area_nova?: number | null
+          created_at?: string | null
+          id?: string | null
+          motivo?: string | null
+          unidade_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidade_historico_precos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidade_historico_precos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          andar: number | null
+          area_privativa: number | null
+          bloco_id: string | null
+          created_at: string | null
+          data_venda: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          fachada_id: string | null
+          id: string | null
+          is_active: boolean | null
+          numero: string | null
+          observacoes: string | null
+          polygon_coords: Json | null
+          posicao: string | null
+          status: Database["public"]["Enums"]["unidade_status"] | null
+          tipologia_id: string | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          andar?: number | null
+          area_privativa?: number | null
+          bloco_id?: string | null
+          created_at?: string | null
+          data_venda?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          fachada_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          numero?: string | null
+          observacoes?: string | null
+          polygon_coords?: Json | null
+          posicao?: string | null
+          status?: Database["public"]["Enums"]["unidade_status"] | null
+          tipologia_id?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          andar?: number | null
+          area_privativa?: number | null
+          bloco_id?: string | null
+          created_at?: string | null
+          data_venda?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          fachada_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          numero?: string | null
+          observacoes?: string | null
+          polygon_coords?: Json | null
+          posicao?: string | null
+          status?: Database["public"]["Enums"]["unidade_status"] | null
+          tipologia_id?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidades_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "blocos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "seven_blocos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_fachada_id_fkey"
+            columns: ["fachada_id"]
+            isOneToOne: false
+            referencedRelation: "fachadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_fachada_id_fkey"
+            columns: ["fachada_id"]
+            isOneToOne: false
+            referencedRelation: "seven_fachadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_tipologia_id_fkey"
+            columns: ["tipologia_id"]
+            isOneToOne: false
+            referencedRelation: "seven_tipologias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_tipologia_id_fkey"
+            columns: ["tipologia_id"]
+            isOneToOne: false
+            referencedRelation: "tipologias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_empreendimentos: {
+        Row: {
+          created_at: string | null
+          empreendimento_id: string | null
+          id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empreendimento_id?: string | null
+          id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_module_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string | null
+          module_id: string | null
+          scope: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          scope?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          module_id?: string | null
+          scope?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_module_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
