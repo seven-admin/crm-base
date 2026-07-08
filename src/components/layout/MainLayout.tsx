@@ -1,9 +1,6 @@
 import { ReactNode } from 'react';
 import { AppTopbar } from './AppTopbar';
 import { PageHeader } from './PageHeader';
-import { AceitarTermosDialog } from '@/components/auth/AceitarTermosDialog';
-import { useVerificarAceite } from '@/hooks/useTermosAceite';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -17,11 +14,6 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children, title, subtitle, actions, badge, backTo, backLabel, metadata }: MainLayoutProps) {
-  const { isAuthenticated } = useAuth();
-  const { data: verificacao, refetch } = useVerificarAceite();
-
-  const precisaAceitarTermos = isAuthenticated && verificacao?.precisaAceitar;
-
   return (
     <div className="min-h-screen bg-background">
       <AppTopbar />
@@ -41,11 +33,6 @@ export function MainLayout({ children, title, subtitle, actions, badge, backTo, 
       <main className="p-4 md:p-6">
         {children}
       </main>
-
-      <AceitarTermosDialog
-        open={!!precisaAceitarTermos}
-        onAccepted={() => refetch()}
-      />
     </div>
   );
 }

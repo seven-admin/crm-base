@@ -28,7 +28,7 @@ import { UnidadeForm } from './UnidadeForm';
 import { UnidadeBulkForm } from './UnidadeBulkForm';
 import { BlocoForm } from './BlocoForm';
 import { ImportarUnidadesDialog } from './ImportarUnidadesDialog';
-import { VendaHistoricaDialog } from './VendaHistoricaDialog';
+
 import { AlterarStatusLoteDialog } from './AlterarStatusLoteDialog';
 import { AlterarTipologiaLoteDialog } from './AlterarTipologiaLoteDialog';
 import { cn } from '@/lib/utils';
@@ -623,13 +623,6 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
           onOpenChange={setImportDialogOpen}
           empreendimentoId={empreendimentoId}
           tipoEmpreendimento={empreendimento?.tipo}
-        />
-        <VendaHistoricaDialog
-          open={vendaHistoricaOpen}
-          onOpenChange={setVendaHistoricaOpen}
-          empreendimentoId={empreendimentoId}
-          unidadesSelecionadas={unidadesSelecionadas}
-          onSuccess={handleVendaHistoricaSuccess}
         />
         <AlterarStatusLoteDialog
           open={statusLoteOpen}

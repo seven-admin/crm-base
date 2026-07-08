@@ -2,10 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Building, UserCheck, TrendingUp, Handshake,
-  FileSignature, DollarSign, GitBranch, Shield,
-  BookOpen, Gift, Wallet, User, Target, FileCheck, FilePlus,
-  Variable, ClipboardCheck, BarChart2, ChevronDown,
+  UserCog, Shield, User, ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,40 +46,9 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Comercial', icon: Target,
-    items: [
-      { icon: BookOpen, label: 'Diário de Bordo', path: '/atividades', moduleName: 'atividades' },
-      { icon: TrendingUp, label: 'Resumo', path: '/forecast', moduleName: 'forecast' },
-      { icon: Handshake, label: 'Forecast', path: '/negociacoes', moduleName: 'negociacoes' },
-      { icon: ClipboardCheck, label: 'Solicitação de Reserva', path: '/solicitacoes', moduleName: 'solicitacoes', adminOnly: true },
-      { icon: Target, label: 'Metas', path: '/metas-comerciais', moduleName: 'forecast' },
-      { icon: GitBranch, label: 'Configurações Comerciais', path: '/configuracoes/negociacoes', moduleName: 'negociacoes_config', adminOnly: true },
-    ],
-  },
-  {
-    label: 'Contratos', icon: FileSignature,
-    items: [
-      { icon: FileCheck, label: 'Gestão de Contratos', path: '/contratos', moduleName: 'contratos' },
-      { icon: FilePlus, label: 'Templates', path: '/contratos?tab=templates', moduleName: 'contratos_templates' },
-      { icon: Variable, label: 'Variáveis', path: '/contratos?tab=variaveis', moduleName: 'contratos_variaveis' },
-      { icon: ClipboardCheck, label: 'Tipos de Parcela', path: '/tipos-parcela', moduleName: 'contratos_tipos_parcela' },
-    ],
-  },
-  {
-    label: 'Financeiro', icon: DollarSign,
-    items: [
-      { icon: Wallet, label: 'Fluxo de Caixa', path: '/financeiro', moduleName: 'financeiro_fluxo' },
-      { icon: BarChart2, label: 'DRE', path: '/dre', moduleName: 'financeiro_dre' },
-      { icon: DollarSign, label: 'Comissões', path: '/comissoes', moduleName: 'comissoes' },
-      { icon: Gift, label: 'Bonificações', path: '/bonificacoes', moduleName: 'bonificacoes' },
-    ],
-  },
-  {
-    label: 'Parceiros', icon: Handshake,
+    label: 'Parceiros', icon: Building2,
     items: [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
-      { icon: Building, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias' },
-      { icon: UserCheck, label: 'Corretores', path: '/corretores', moduleName: 'corretores' },
     ],
   },
   {
@@ -90,10 +56,11 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
-      { icon: Settings, label: 'Configurações', path: '/configuracoes', moduleName: 'configuracoes' },
     ],
   },
 ];
+
+
 
 
 function isPathActive(item: MenuItem, pathname: string, search: string) {
@@ -216,12 +183,6 @@ export function AppTopbar() {
                 <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
                 <p className="text-xs text-muted-foreground truncate">{userRole}</p>
               </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/configuracoes?tab=perfil" className="cursor-pointer">
-                  <User className="h-4 w-4 mr-2" /> Meu Perfil
-                </Link>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

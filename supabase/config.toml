@@ -1,4 +1,1 @@
 project_id = "pizerpoxuqopekmbvohh"
-
-[functions.exportar-tabela-disponiveis]
-verify_jwt = false
