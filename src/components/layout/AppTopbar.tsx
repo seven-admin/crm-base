@@ -184,12 +184,6 @@ export function AppTopbar() {
                 <p className="text-xs text-muted-foreground truncate">{userRole}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/configuracoes?tab=perfil" className="cursor-pointer">
-                  <User className="h-4 w-4 mr-2" /> Meu Perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="text-destructive focus:text-destructive cursor-pointer"
