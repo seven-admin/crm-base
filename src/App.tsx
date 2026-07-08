@@ -46,8 +46,6 @@ const TiposParcela = lazy(() => import("./pages/TiposParcela"));
 const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
 const DashboardExecutivo = lazy(() => import("./pages/DashboardExecutivo"));
 const Solicitacoes = lazy(() => import("./pages/Solicitacoes"));
-const DashboardMarketing = lazy(() => import("./pages/DashboardMarketing"));
-const EquipeMarketing = lazy(() => import("./pages/EquipeMarketing"));
 const TermosUso = lazy(() => import("./pages/TermosUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PortalClientes = lazy(() => import("./pages/PortalClientes"));
