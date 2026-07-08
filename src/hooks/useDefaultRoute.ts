@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // Admin/Super Admin vão direto para dashboard, outros seguem prioridade
 const routePriority = [
   { path: '/', module: 'dashboard' },
-  { path: '/marketing', module: 'projetos_marketing' },
+  
   { path: '/mapa-unidades', module: 'unidades' },
   { path: '/empreendimentos', module: 'empreendimentos' },
   { path: '/clientes', module: 'clientes' },
