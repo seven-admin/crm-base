@@ -1,59 +1,90 @@
-## Objetivo
+# Refatoração Visual — Fase 1: Fundação + Layout Global
 
-Alterar a função `public.get_unidades_disponiveis` para que o filtro de status seja opcional. Quando nenhum status for informado, a função retornará unidades de **todos os status** (disponível, reservada, negociação, contrato, vendida, bloqueada).
+Objetivo desta rodada: elevar o CRM interno ao padrão visual do `/design-test` sem tocar em regras de negócio. Nenhuma página perde funcionalidade — o que muda é o "chassi" (tokens, layout, primitivos). Páginas herdam o novo visual automaticamente por usarem `<MainLayout>`, `<Card>`, `<Button>`, `<Badge>` e `<Input>` do shadcn.
 
-## Mudanças
+Portal do Corretor e Portal do Incorporador **não** entram nesta fase.
 
-### 1. Migração SQL — recriar a função
+---
 
-- Adicionar novo parâmetro opcional `p_status text[] DEFAULT NULL`
-- Manter os parâmetros existentes `p_incorporadora_id` e `p_empreendimento_id`
-- Remover o filtro fixo `AND u.status = 'disponivel'`
-- Substituir por: `AND (p_status IS NULL OR u.status::text = ANY(p_status))`
-- Manter os demais filtros (`e.is_active`, `u.is_active`) e o `ORDER BY` atuais
-- Manter `SECURITY DEFINER` e `search_path = public`
+## 1. Design tokens (index.css + tailwind.config.ts)
 
-Comportamento resultante:
-- Chamada sem parâmetro de status → retorna todas as unidades ativas de todos os status
-- Chamada com `p_status => ARRAY['disponivel']` → mantém compatibilidade com o uso atual (relatório de disponíveis)
-- Chamada com múltiplos, ex. `ARRAY['disponivel','reservada']` → filtra por essa lista
+Reescrever a paleta semântica para refletir o design-test:
 
-### 2. Sem alterações no frontend nesta etapa
+- `--background`: cinza-claro suave da tela (`#e1e1e1` → HSL)
+- `--card` / `--popover`: `#FFFFFF`
+- `--foreground`: `#1E293B` (slate-800)
+- `--muted-foreground`: `#94A3B8` (slate-400) para labels/subtítulos
+- `--primary`: laranja da marca `#f47f19` (com `--primary-foreground` branco) — substitui o azul atual
+- `--primary-soft`: `#fce0c7` para bg de avatar/badges
+- `--secondary`: `#F1F5F9` (slate-100), `--secondary-foreground`: `#475569`
+- `--border`: `#E2E8F0`, `--input-bg`: `#FAFBFC`
+- `--ring`: laranja primário
+- `--radius`: `1rem` (16px, rounded-2xl como padrão)
+- Sombras: `--shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)`
+- Status tokens (`--status-*`) alinhados às cores dos badges do design-test (success, warning, danger, info, neutral, purple, orange)
+- Modo dark: manter estrutura atual mas ajustar `--primary` para o laranja
 
-Os pontos que hoje chamam a RPC continuam funcionando exatamente como antes (não passam `p_status`, então continuam recebendo — atenção: com a nova assinatura, chamadas sem `p_status` passam a retornar **todos** os status). 
+Cores dos grupos de menu (Empreendimentos verde, Comercial laranja etc.) migram para tokens `--nav-*` — hoje vêm do hook `useSidebarColors` e continuarão configuráveis.
 
-Portanto, para preservar o comportamento atual do relatório "Exportar Disponíveis", será necessário ajustar a chamada existente para passar explicitamente `p_status: ['disponivel']`. Isso será feito no mesmo passo:
+## 2. Layout global — Topbar substituindo Sidebar
 
-- Localizar as chamadas de `rpc('get_unidades_disponiveis', ...)` no código
-- Nas chamadas cujo objetivo é apenas disponíveis (ex.: exportação de disponíveis do empreendimento), adicionar `p_status: ['disponivel']`
-- Deixar sem `p_status` os usos que queiram trazer tudo
+Novo componente `src/components/layout/AppTopbar.tsx` baseado em `DesignTest.tsx`:
+
+- Barra fixa 64px, fundo branco, sombra sutil
+- Logo à esquerda
+- Links horizontais dos **grupos** de menu (Planejamento, Empreendimentos, Clientes, Comercial, Contratos, Financeiro, Parceiros, Marketing, Eventos, Sistema) com underline colorido no ativo
+- Cada grupo abre um **dropdown/mega-menu** com os subitens que hoje existem na sidebar (Cronograma, Configurações, Diário de Bordo, Forecast etc.), respeitando permissões via `usePermissions`
+- Campo de busca global (visual apenas nesta fase)
+- Ícones: notificações (mantém `NotificacaoBell`), mensagens, configurações
+- Avatar do usuário com dropdown (perfil, logout) — reaproveita lógica atual
+
+`MainLayout` refatorado:
+- Remove `<Sidebar />` e o `lg:pl-64`
+- Renderiza `<AppTopbar />` no topo
+- `<PageHeader>` continua abaixo (redesenhado com o padrão do design-test: fundo branco, título tight, subtitle slate-400, ações à direita, back-link sutil)
+- Container do conteúdo com `bg-[hsl(var(--background))]` e padding responsivo
+
+Responsividade mobile:
+- Topbar colapsa em um botão "menu" que abre um `Sheet` lateral com a mesma árvore agrupada (reaproveita `Collapsible`)
+- Busca vira ícone que expande
+
+`Sidebar.tsx` atual é mantido no repositório apenas como fallback e removido do `MainLayout`; será deletado numa fase seguinte após validação.
+
+## 3. Primitivos shadcn realinhados
+
+Ajustar variantes (sem quebrar API) em:
+
+- `Button`: variante `default` = laranja sólido; `secondary` = slate-100/slate-600; `outline` = borda laranja + texto laranja; `ghost` mantém; radius 10px; peso 600
+- `Card`: `rounded-2xl`, `shadow-card`, sem borda por padrão (borda opcional via variante)
+- `Badge`: novas variantes `success`, `warning`, `danger`, `info`, `neutral`, `purple`, `orange` mapeadas para os pares cor/bg do design-test; variante `outline` com borda de 40% opacidade
+- `Input` / `Textarea` / `Select`: altura 40px, radius 10px, bg `#FAFBFC`, borda `--border`, foco com ring laranja
+- Checkbox/Radio: accent color laranja
+- `KPICard` (`src/components/dashboard/KPICard.tsx`): reescrito no padrão de `TestKPICard` (título uppercase tracking-wider slate-400, valor 3xl slate-800, badge de variação pill, ícone em círculo colorido)
+
+## 4. Tipografia
+
+- Continua DM Sans (já carregado)
+- Headings: `tracking-tight` + `font-bold`
+- Labels de tabela/KPI: `text-xs uppercase tracking-wider text-muted-foreground`
+- Escala consistente aplicada via classes utilitárias em `Typography` helpers (opcional) ou direto nos componentes primitivos
+
+## 5. Verificação
+
+- Rodar `tsgo` para checar tipos
+- Playwright headless: capturar screenshots de `/` (dashboard), `/clientes`, `/negociacoes`, `/financeiro`, `/empreendimentos` antes/depois para confirmar herança visual e regressões óbvias
+- Testar dropdown de grupos com permissões de usuário padrão vs. super admin
+- Testar topbar em viewport 375px
 
 ## Detalhes técnicos
 
-SQL previsto (resumo):
+- Arquivos criados: `src/components/layout/AppTopbar.tsx`, `src/components/layout/AppTopbarMobile.tsx`
+- Arquivos alterados: `src/index.css`, `tailwind.config.ts`, `src/components/layout/MainLayout.tsx`, `src/components/layout/PageHeader.tsx`, `src/components/ui/button.tsx`, `src/components/ui/card.tsx`, `src/components/ui/badge.tsx`, `src/components/ui/input.tsx`, `src/components/ui/textarea.tsx`, `src/components/dashboard/KPICard.tsx`
+- Nenhuma alteração de banco, RLS, hooks de dados ou lógica de negócio
+- Portais (`PortalLayout`, `PortalIncorporadorLayout`) permanecem intactos
 
-```text
-CREATE OR REPLACE FUNCTION public.get_unidades_disponiveis(
-  p_incorporadora_id uuid DEFAULT NULL,
-  p_empreendimento_id uuid DEFAULT NULL,
-  p_status text[] DEFAULT NULL
-)
-RETURNS TABLE (...mesmas colunas de hoje...)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
-AS $$
-  SELECT ...
-  FROM public.unidades u
-  JOIN public.empreendimentos e ON e.id = u.empreendimento_id
-  LEFT JOIN public.incorporadoras i ON i.id = e.incorporadora_id
-  LEFT JOIN public.blocos b ON b.id = u.bloco_id
-  LEFT JOIN public.tipologias t ON t.id = u.tipologia_id
-  WHERE e.is_active = true
-    AND u.is_active = true
-    AND (p_status IS NULL OR u.status::text = ANY(p_status))
-    AND (p_incorporadora_id IS NULL OR e.incorporadora_id = p_incorporadora_id)
-    AND (p_empreendimento_id IS NULL OR e.id = p_empreendimento_id)
-  ORDER BY e.nome, b.nome, u.andar, u.numero;
-$$;
-```
+## Fora do escopo (fases futuras)
 
-Confirma que posso seguir com essa alteração?
+- Refatoração página a página (dashboards, tabelas, formulários específicos)
+- Portal do Corretor / Incorporador
+- Remoção definitiva do `Sidebar.tsx` legado
+- Ajustes finos de charts (Recharts) para nova paleta

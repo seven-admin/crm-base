@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
@@ -18,14 +17,13 @@ export function PageHeader({ title, subtitle, actions, badge, backTo, backLabel,
   const navigate = useNavigate();
 
   return (
-    <header className="bg-gradient-to-r from-card to-muted/30 border-b border-border px-4 md:px-6 py-4">
-      {/* Back Navigation */}
+    <header className="bg-card border-b border-border px-4 md:px-6 py-5">
       {backTo && (
         <div className="mb-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="gap-1 -ml-2 text-muted-foreground hover:text-foreground"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 -ml-2 h-8 text-muted-foreground hover:text-foreground font-medium"
             onClick={() => navigate(backTo)}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -34,7 +32,6 @@ export function PageHeader({ title, subtitle, actions, badge, backTo, backLabel,
         </div>
       )}
 
-      {/* Title Row with Actions */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
@@ -42,7 +39,7 @@ export function PageHeader({ title, subtitle, actions, badge, backTo, backLabel,
             {badge}
           </div>
           {(subtitle || metadata) && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 flex-wrap">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
               {subtitle && <span>{subtitle}</span>}
               {subtitle && metadata && <span>·</span>}
               {metadata}

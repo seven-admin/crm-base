@@ -6,106 +6,134 @@
 
 @layer base {
   :root {
-    --background: 30 14% 96%;
-    --foreground: 0 0% 4%;
+    /* Neutral surface / editorial */
+    --background: 0 0% 88%;               /* #E1E1E1 canvas */
+    --foreground: 217 33% 17%;            /* #1E293B slate-800 */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 217 33% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 217 33% 17%;
 
-    --primary: 213 58% 45%;
+    /* Brand accent (laranja SevenGroup) */
+    --primary: 27 91% 53%;                /* #F47F19 */
     --primary-foreground: 0 0% 100%;
+    --primary-soft: 27 89% 88%;           /* #FCE0C7 */
+    --primary-soft-foreground: 27 91% 53%;
 
-    --secondary: 30 8% 93%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 210 40% 96%;             /* #F1F5F9 slate-100 */
+    --secondary-foreground: 215 19% 35%;  /* #475569 slate-600 */
 
-    --muted: 30 8% 91%;
-    --muted-foreground: 30 5% 40%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 20% 65%;      /* #94A3B8 slate-400 */
 
-    --accent: 30 8% 91%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 217 33% 17%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;             /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
+    --success: 142 71% 45%;               /* #22C55E */
+    --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
+    --warning: 38 92% 50%;                /* #F59E0B */
+    --warning-foreground: 0 0% 100%;
 
     --info: 217 91% 60%;
-    --info-foreground: 0 0% 98%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 30 8% 88%;
-    --input: 30 8% 88%;
-    --ring: 213 58% 45%;
+    --border: 214 32% 91%;                /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --input-bg: 210 20% 98%;              /* #FAFBFC */
+    --ring: 27 91% 53%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;                       /* rounded-2xl default */
 
-    --sidebar-background: 220 16% 12%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 9%;
-    --sidebar-accent: 220 14% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 12% 20%;
-    --sidebar-ring: 213 58% 45%;
+    /* Sidebar tokens preservados p/ compat (legacy) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 217 33% 17%;
+    --sidebar-primary: 27 91% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 217 33% 17%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 27 91% 53%;
 
-    /* Custom tokens */
-    --chart-1: 213 58% 45%;
-    --chart-2: 142 76% 36%;
+    /* Chart palette */
+    --chart-1: 27 91% 53%;
+    --chart-2: 142 71% 45%;
     --chart-3: 38 92% 50%;
     --chart-4: 0 84% 60%;
-    --chart-5: 262 83% 58%;
+    --chart-5: 258 90% 66%;
 
-    --status-available: 142 76% 36%;
+    /* Status tokens */
+    --status-available: 142 71% 45%;
     --status-reserved: 38 92% 50%;
     --status-sold: 0 84% 60%;
-    --status-blocked: 0 0% 45%;
+    --status-blocked: 215 20% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(213 58% 45%) 0%, hsl(213 58% 55%) 100%);
+    /* Nav group colors (topbar underline / dropdown icons) */
+    --nav-planejamento: 160 84% 39%;
+    --nav-empreendimentos: 160 84% 39%;
+    --nav-clientes: 258 90% 66%;
+    --nav-comercial: 27 91% 53%;
+    --nav-diario: 27 91% 53%;
+    --nav-contratos: 213 94% 68%;
+    --nav-financeiro: 38 92% 50%;
+    --nav-parceiros: 330 81% 60%;
+    --nav-marketing: 330 81% 60%;
+    --nav-eventos: 187 85% 43%;
+    --nav-sistema: 215 20% 65%;
+
+    /* Elevation */
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-topbar: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05);
+
+    --gradient-primary: linear-gradient(135deg, hsl(27 91% 53%) 0%, hsl(27 91% 63%) 100%);
   }
 
   .dark {
-    --background: 0 0% 7%;
+    --background: 220 15% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 10%;
+    --card: 220 14% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 10%;
+    --popover: 220 14% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 213 58% 50%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 27 91% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 27 60% 25%;
+    --primary-soft-foreground: 27 91% 75%;
 
-    --secondary: 30 5% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 30 5% 15%;
-    --muted-foreground: 30 5% 60%;
+    --muted: 220 12% 18%;
+    --muted-foreground: 215 15% 65%;
 
-    --accent: 30 5% 15%;
+    --accent: 220 12% 18%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 5% 18%;
-    --input: 30 5% 18%;
-    --ring: 213 58% 50%;
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --input-bg: 220 14% 14%;
+    --ring: 27 91% 55%;
 
-    --sidebar-background: 220 16% 12%;
+    --sidebar-background: 220 15% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 213 58% 50%;
+    --sidebar-primary: 27 91% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 18%;
+    --sidebar-accent: 220 12% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 220 12% 20%;
-    --sidebar-ring: 213 58% 50%;
+    --sidebar-ring: 27 91% 55%;
   }
 }
 

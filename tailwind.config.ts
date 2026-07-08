@@ -20,12 +20,15 @@ export default {
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
+        "input-bg": "hsl(var(--input-bg))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          soft: "hsl(var(--primary-soft))",
+          "soft-foreground": "hsl(var(--primary-soft-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -88,11 +91,17 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        "2xl": "calc(var(--radius) + 0.25rem)",
+        xl: "var(--radius)",
+        lg: "calc(var(--radius) - 0.25rem)",
+        md: "calc(var(--radius) - 0.375rem)",
+        sm: "calc(var(--radius) - 0.5rem)",
       },
-      boxShadow: {},
+      boxShadow: {
+        card: "var(--shadow-card)",
+        topbar: "var(--shadow-topbar)",
+        popover: "var(--shadow-popover)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
