@@ -20,14 +20,6 @@ const routeTitles: Record<string, { title: string; subtitle?: string }> = {
     title: 'Resumo', 
     subtitle: 'Resumo de vendas e indicadores comerciais' 
   },
-  '/portal-incorporador/marketing': { 
-    title: 'Produção de Marketing', 
-    subtitle: 'Acompanhe os tickets de criação' 
-  },
-  '/portal-incorporador/planejamento': { 
-    title: 'Planejamento', 
-    subtitle: 'Cronograma de tarefas dos empreendimentos' 
-  },
   '/portal-incorporador/disponibilidade': { 
     title: 'Disponibilidade', 
     subtitle: 'Visualize a disponibilidade de unidades por empreendimento' 
