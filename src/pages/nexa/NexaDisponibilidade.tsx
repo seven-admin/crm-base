@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
 
 const formatBRL = (v: number | null) =>
@@ -17,16 +18,11 @@ export default function NexaDisponibilidade() {
   const { data: unidades, isLoading, refetch, isFetching } = useUnidadesDisponiveis(empId);
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <MapPin className="h-8 w-8 text-primary" />
-          Unidades disponíveis
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Consulta em tempo real do banco. Recarregue para ver o status mais recente.
-        </p>
-      </div>
+    <MainLayout
+      title="Unidades disponíveis"
+      subtitle="Consulta em tempo real do banco. Recarregue para ver o status mais recente."
+    >
+      <div className="space-y-6">
 
       <div className="flex gap-3 items-end">
         <div className="flex-1 max-w-md">
