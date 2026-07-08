@@ -204,10 +204,10 @@ export function Sidebar() {
 
   const filterItems = useCallback((items: MenuItem[]) =>
     items.filter((item) => {
-      if (item.path === '/marketing/etapas') return isSuperAdmin();
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
-    }), [isSuperAdmin, isAdmin, canAccessModule]);
+    }), [isAdmin, canAccessModule]);
+
 
   const visibleGroups = useMemo(() => menuGroups
     .map((group) => ({
