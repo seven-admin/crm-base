@@ -87,7 +87,10 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
                     <Switch checked={!!editing?.[f.name]} onCheckedChange={v => setEditing({ ...editing, [f.name]: v })} />
                   </div>
                 ) : f.type === 'select' ? (
-                  <Select value={editing?.[f.name] ?? ''} onValueChange={v => setEditing({ ...editing, [f.name]: v })}>
+                  <Select
+                    value={(editing?.[f.name] ?? '') === '' ? '__none__' : editing?.[f.name]}
+                    onValueChange={v => setEditing({ ...editing, [f.name]: v })}
+                  >
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
                       {f.options?.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
