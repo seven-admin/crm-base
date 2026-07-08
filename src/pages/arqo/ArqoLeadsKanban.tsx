@@ -28,7 +28,15 @@ export default function ArqoLeadsKanban() {
   }, [leads, etapasAtivas]);
 
   return (
-    <MainLayout title="Arqo — Kanban de Leads" subtitle="Pipeline visual de leads e oportunidades">
+    <MainLayout
+      title="Arqo — Kanban de Leads"
+      subtitle="Pipeline visual de leads e oportunidades"
+      actions={
+        <Button variant="outline" size="sm" disabled title="Em breve: importar CSV/Excel">
+          Importar (em breve)
+        </Button>
+      }
+    >
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-96" />)}
