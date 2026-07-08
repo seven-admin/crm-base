@@ -45,7 +45,12 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
   };
 
   const save = () => {
-    upsert.mutate(editing, { onSuccess: () => setOpen(false) });
+    // Normaliza sentinel "__none__" -> null (para FKs opcionais como temperatura_id)
+    const payload = { ...editing };
+    Object.keys(payload).forEach((k) => {
+      if (payload[k] === '__none__') payload[k] = null;
+    });
+    upsert.mutate(payload, { onSuccess: () => setOpen(false) });
   };
 
   return (
