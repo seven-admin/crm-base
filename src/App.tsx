@@ -14,6 +14,7 @@ const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
 const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
+const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -84,6 +85,7 @@ const App = () => (
                 {/* Arqo */}
                 <Route path="/arqo/roleta" element={<ArqoProtectedRoute><ArqoRoleta /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads" element={<ArqoProtectedRoute><ArqoLeadsKanban /></ArqoProtectedRoute>} />
+                <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute><ArqoLeadDetail /></ArqoProtectedRoute>} />
                 <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
 
