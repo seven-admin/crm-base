@@ -120,6 +120,13 @@ export function AppTopbar() {
     .map((g) => ({ ...g, items: filterItems(g.items) }))
     .filter((g) => g.items.length > 0);
 
+  const sevenVisible: SevenMenuCategory[] = sevenCategories
+    .map((c) => ({ ...c, items: filterItems(c.items) }))
+    .filter((c) => c.items.length > 0);
+  const sevenHasActive = sevenVisible.some((c) =>
+    c.items.some((i) => isPathActive(i, location.pathname, location.search)),
+  );
+
   const handleLogout = async () => {
     await signOut();
     navigate('/auth');
