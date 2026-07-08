@@ -241,6 +241,47 @@ export function AppTopbar() {
                 </button>
               </div>
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                {sevenVisible.length > 0 && (
+                  <Collapsible
+                    open={mobileGroups.includes('Seven')}
+                    onOpenChange={() => toggleMobileGroup('Seven')}
+                  >
+                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                      <span className="flex items-center gap-2.5">
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        Seven
+                      </span>
+                      <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', mobileGroups.includes('Seven') && 'rotate-180')} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-3 py-1 space-y-2">
+                      {sevenVisible.map((cat) => (
+                        <div key={cat.label} className="space-y-0.5">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-3 pt-1">
+                            {cat.label}
+                          </p>
+                          {cat.items.map((item) => {
+                            const active = location.pathname === item.path;
+                            return (
+                              <Link
+                                key={item.path}
+                                to={item.path}
+                                className={cn(
+                                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm',
+                                  active
+                                    ? 'bg-primary-soft text-primary font-medium'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+                                )}
+                              >
+                                <item.icon className="h-4 w-4 text-muted-foreground" />
+                                {item.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
                 {visibleGroups.map((group) => {
                   const isOpen = mobileGroups.includes(group.label);
                   return (
