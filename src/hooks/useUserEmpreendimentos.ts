@@ -65,7 +65,7 @@ export function useEmpreendimentosWithLinks(userId: string | undefined) {
       const linkedIds = new Set((links || []).map(l => l.empreendimento_id));
 
       return (empreendimentos || []).map(emp => {
-        const unidadesData = emp.unidades as unknown as { count: number }[] | null;
+        const unidadesData = (emp as any).seven_unidades as { count: number }[] | null;
         const unidadesCount = unidadesData?.[0]?.count || 0;
         
         return {
