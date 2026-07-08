@@ -45,7 +45,12 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
   };
 
   const save = () => {
-    upsert.mutate(editing, { onSuccess: () => setOpen(false) });
+    // Normaliza sentinel "__none__" -> null (para FKs opcionais como temperatura_id)
+    const payload = { ...editing };
+    Object.keys(payload).forEach((k) => {
+      if (payload[k] === '__none__') payload[k] = null;
+    });
+    upsert.mutate(payload, { onSuccess: () => setOpen(false) });
   };
 
   return (
@@ -82,7 +87,10 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
                     <Switch checked={!!editing?.[f.name]} onCheckedChange={v => setEditing({ ...editing, [f.name]: v })} />
                   </div>
                 ) : f.type === 'select' ? (
-                  <Select value={editing?.[f.name] ?? ''} onValueChange={v => setEditing({ ...editing, [f.name]: v })}>
+                  <Select
+                    value={(editing?.[f.name] ?? '') === '' ? '__none__' : editing?.[f.name]}
+                    onValueChange={v => setEditing({ ...editing, [f.name]: v })}
+                  >
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
                       {f.options?.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}

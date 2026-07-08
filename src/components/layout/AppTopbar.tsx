@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
-  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
+  UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
+  Home, Handshake,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
 import logo from '@/assets/logo-sevengroup.png';
 
 interface MenuItem {
@@ -23,6 +25,7 @@ interface MenuItem {
   path: string;
   moduleName: string;
   adminOnly?: boolean;
+  description?: string;
 }
 
 interface MenuGroup {
@@ -31,14 +34,32 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const menuGroups: MenuGroup[] = [
+// Grupo Seven agrupado por categoria (mega-menu)
+const sevenCategories: { label: string; items: MenuItem[] }[] = [
   {
-    label: 'Empreendimentos', icon: Building2,
+    label: 'Portfólio',
     items: [
-      { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
-      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
+      { icon: Building2, label: 'Empreendimentos', path: '/empreendimentos', moduleName: 'empreendimentos', description: 'Projetos e obras' },
+      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades', description: 'Mapa de unidades' },
     ],
   },
+  {
+    label: 'Pessoas',
+    items: [
+      { icon: Users, label: 'Clientes', path: '/clientes', moduleName: 'clientes', description: 'Cadastro geral' },
+    ],
+  },
+  {
+    label: 'Parceiros',
+    items: [
+      { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras', description: 'Empresas parceiras' },
+      { icon: Handshake, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias', description: 'Rede parceira' },
+      { icon: UserCog, label: 'Corretores', path: '/corretores', moduleName: 'corretores', description: 'Time comercial externo' },
+    ],
+  },
+];
+
+const menuGroups: MenuGroup[] = [
   {
     label: 'Arqo', icon: Target,
     items: [
@@ -54,18 +75,6 @@ const menuGroups: MenuGroup[] = [
       { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
       { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
-    ],
-  },
-  {
-    label: 'Clientes', icon: Users,
-    items: [
-      { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
-    ],
-  },
-  {
-    label: 'Parceiros', icon: Building2,
-    items: [
-      { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
     ],
   },
   {
@@ -111,6 +120,13 @@ export function AppTopbar() {
     .map((g) => ({ ...g, items: filterItems(g.items) }))
     .filter((g) => g.items.length > 0);
 
+  const sevenVisible: SevenMenuCategory[] = sevenCategories
+    .map((c) => ({ ...c, items: filterItems(c.items) }))
+    .filter((c) => c.items.length > 0);
+  const sevenHasActive = sevenVisible.some((c) =>
+    c.items.some((i) => isPathActive(i, location.pathname, location.search)),
+  );
+
   const handleLogout = async () => {
     await signOut();
     navigate('/auth');
@@ -118,12 +134,8 @@ export function AppTopbar() {
 
   const userName = profile?.full_name || 'Usuário';
   const userRole = role ? ROLE_LABELS[role] : '';
-  const userInitials = userName
-    .split(' ')
-    .map((p) => p.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+
+
 
   const toggleMobileGroup = (label: string) =>
     setMobileGroups((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
@@ -142,6 +154,7 @@ export function AppTopbar() {
 
         {/* Desktop nav (right aligned) */}
         <nav className="hidden lg:flex items-center gap-1 ml-auto overflow-x-auto">
+          <SevenMegaMenu categories={sevenVisible} hasActive={sevenHasActive} />
           {visibleGroups.map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
             const isSistema = group.label === 'Sistema';
@@ -224,6 +237,47 @@ export function AppTopbar() {
                 </button>
               </div>
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                {sevenVisible.length > 0 && (
+                  <Collapsible
+                    open={mobileGroups.includes('Seven')}
+                    onOpenChange={() => toggleMobileGroup('Seven')}
+                  >
+                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                      <span className="flex items-center gap-2.5">
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        Seven
+                      </span>
+                      <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', mobileGroups.includes('Seven') && 'rotate-180')} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-3 py-1 space-y-2">
+                      {sevenVisible.map((cat) => (
+                        <div key={cat.label} className="space-y-0.5">
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-3 pt-1">
+                            {cat.label}
+                          </p>
+                          {cat.items.map((item) => {
+                            const active = location.pathname === item.path;
+                            return (
+                              <Link
+                                key={item.path}
+                                to={item.path}
+                                className={cn(
+                                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm',
+                                  active
+                                    ? 'bg-primary-soft text-primary font-medium'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+                                )}
+                              >
+                                <item.icon className="h-4 w-4 text-muted-foreground" />
+                                {item.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
                 {visibleGroups.map((group) => {
                   const isOpen = mobileGroups.includes(group.label);
                   return (

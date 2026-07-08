@@ -144,8 +144,11 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply text-foreground font-sans antialiased;
     font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(180deg, #ffffff 0%, #e1e1e1 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 
   h1, h2, h3 {
