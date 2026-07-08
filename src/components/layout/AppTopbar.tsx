@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Shield, User, ChevronDown,
+  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,6 +37,15 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
       { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
+    ],
+  },
+  {
+    label: 'Arqo', icon: Target,
+    items: [
+      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
+      { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
+      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
+      { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
     ],
   },
   {
@@ -78,9 +87,12 @@ export function AppTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
+  const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
+
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
       if (item.adminOnly) return isAdmin();
+      if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
       return canAccessModule(item.moduleName);
     });
 
