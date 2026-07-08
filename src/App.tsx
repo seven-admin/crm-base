@@ -14,6 +14,7 @@ const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
 const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
+const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
