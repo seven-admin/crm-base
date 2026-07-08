@@ -218,7 +218,7 @@ export function AppTopbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                <img src={logo} alt="SevenGroup" className="h-7" />
+                <img src={logo} alt="SevenGroup" className="h-5" />
                 <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
@@ -254,6 +254,20 @@ export function AppTopbar() {
                             </Link>
                           );
                         })}
+                        {group.label === 'Sistema' && (
+                          <>
+                            <div className="mt-2 pt-2 border-t border-border px-3">
+                              <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+                              <p className="text-xs text-muted-foreground truncate">{userRole}</p>
+                            </div>
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10"
+                            >
+                              <LogOut className="h-4 w-4" /> Sair
+                            </button>
+                          </>
+                        )}
                       </CollapsibleContent>
                     </Collapsible>
                   );
@@ -261,6 +275,7 @@ export function AppTopbar() {
               </nav>
             </SheetContent>
           </Sheet>
+
         </div>
       </div>
     </header>
