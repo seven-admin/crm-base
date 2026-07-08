@@ -64,14 +64,7 @@ interface MenuGroup {
 }
 
 const menuGroupsDef = [
-  {
-    label: 'Planejamento',
-    icon: ClipboardList,
-    items: [
-      { icon: ClipboardList, label: 'Cronograma', path: '/planejamento', moduleName: 'planejamento' },
-      { icon: Settings, label: 'Configurações', path: '/planejamento/configuracoes', moduleName: 'planejamento_config', adminOnly: true },
-    ],
-  },
+
   {
     label: 'Empreendimentos',
     icon: Building2,
