@@ -41,7 +41,7 @@ export function ClienteConjugeSelect({
   useEffect(() => {
     if (value && !open) {
       supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select('nome')
         .eq('id', value)
         .maybeSingle()

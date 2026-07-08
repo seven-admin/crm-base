@@ -19,13 +19,13 @@ export function useUnidades(empreendimentoId: string | undefined, filters?: Unid
       if (!empreendimentoId) return [];
 
       let query = supabase
-        .from('unidades')
+        .from('seven_unidades')
         .select(`
           *,
-          bloco:blocos(*),
-          tipologia:tipologias(*),
-          fachada:fachadas(id, nome, descricao, imagem_url),
-          boxes(numero, tipo)
+          bloco:seven_blocos(*),
+          tipologia:seven_tipologias(*),
+          fachada:seven_fachadas(id, nome, descricao, imagem_url),
+          seven_boxes(numero, tipo)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -68,7 +68,7 @@ export function useCreateUnidade() {
         polygon_coords: polygon_coords as unknown as Json,
       };
       const { data: result, error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .insert(insertData as any)
         .select()
         .single();
@@ -101,7 +101,7 @@ export function useCreateUnidadesBulk() {
       }));
       
       const { data: result, error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .insert(unidadesWithEmp as any)
         .select();
 
@@ -135,7 +135,7 @@ export function useUpdateUnidade() {
         polygon_coords: data.polygon_coords as unknown as Json,
       };
       const { data: result, error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .update(updateData as any)
         .eq('id', id)
         .select()
@@ -163,7 +163,7 @@ export function useDeleteUnidade() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .delete()
         .eq('id', id);
 
@@ -202,7 +202,7 @@ export function useUpdateUnidadesBulk() {
 
       // Fetch current values for history
       const { data: unidadesAtuais } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .select('id, valor, area_privativa')
         .in('id', updates.map(u => u.id));
 
@@ -232,7 +232,7 @@ export function useUpdateUnidadesBulk() {
       // Insert history records
       if (historicoEntries.length > 0) {
         const { error: histError } = await supabase
-          .from('unidade_historico_precos')
+          .from('seven_unidade_historico_precos')
           .insert(historicoEntries);
         if (histError) console.error('Erro ao registrar histórico:', histError);
       }
@@ -240,7 +240,7 @@ export function useUpdateUnidadesBulk() {
       // Update each unit
       for (const update of updates) {
         const { error } = await supabase
-          .from('unidades')
+          .from('seven_unidades')
           .update({ 
             area_privativa: update.area_privativa, 
             valor: update.valor 
@@ -285,7 +285,7 @@ export function useUpdateUnidadesMemorial() {
         
         if (Object.keys(updateData).length > 0) {
           const { error } = await supabase
-            .from('unidades')
+            .from('seven_unidades')
             .update(updateData)
             .eq('id', update.id);
           if (error) throw error;
@@ -311,7 +311,7 @@ export function useUpdateUnidadesStatusBatch() {
   return useMutation({
     mutationFn: async ({ ids, empreendimentoId, status }: { ids: string[]; empreendimentoId: string; status: UnidadeStatus }) => {
       const { error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .update({ status })
         .in('id', ids);
 
@@ -342,7 +342,7 @@ export function useUpdateUnidadesTipologiaBatch() {
       }
 
       const { error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .update(updateData)
         .in('id', ids);
 
@@ -368,7 +368,7 @@ export function useDeleteUnidadesBatch() {
   return useMutation({
     mutationFn: async ({ ids, empreendimentoId }: { ids: string[]; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .delete()
         .in('id', ids);
 

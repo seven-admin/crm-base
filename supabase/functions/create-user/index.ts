@@ -13,7 +13,7 @@ async function copyPermissionsFromBaseRole(
 ): Promise<void> {
   // Get all permissions from base role
   const { data: basePerms, error: baseError } = await supabaseAdmin
-    .from('role_permissions')
+    .from('sistema_role_permissions')
     .select('*')
     .eq('role_id', baseRoleId);
 
@@ -34,7 +34,7 @@ async function copyPermissionsFromBaseRole(
   }));
 
   const { error: insertError } = await supabaseAdmin
-    .from('role_permissions')
+    .from('sistema_role_permissions')
     .insert(newPerms);
 
   if (insertError) {
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
 
     // Check if the role has any permissions configured
     const { count: permCount } = await supabaseAdmin
-      .from('role_permissions')
+      .from('sistema_role_permissions')
       .select('*', { count: 'exact', head: true })
       .eq('role_id', roleData.id)
 

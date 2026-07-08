@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
     // Limpeza preventiva de referências antes de excluir
     await supabaseAdmin.from('briefings').update({ criado_por: null }).eq('criado_por', user_id);
-    await supabaseAdmin.from('lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', user_id);
+    await supabaseAdmin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', user_id);
 
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
 

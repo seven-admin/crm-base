@@ -44,7 +44,7 @@ export function useGestoresMultiplosEmpreendimentos(empreendimentoIds: string[])
 
       // Buscar vínculos de empreendimento dos gestores
       const { data: links, error: linksError } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select('empreendimento_id, user_id')
         .in('empreendimento_id', empreendimentoIds)
         .in('user_id', gestorUserIds);

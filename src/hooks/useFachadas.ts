@@ -26,7 +26,7 @@ export function useFachadas(empreendimentoId: string | undefined) {
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('fachadas')
+        .from('seven_fachadas')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -45,7 +45,7 @@ export function useCreateFachada() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: FachadaFormData }) => {
       const { data: result, error } = await supabase
-        .from('fachadas')
+        .from('seven_fachadas')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -70,7 +70,7 @@ export function useUpdateFachada() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId, data }: { id: string; empreendimentoId: string; data: Partial<FachadaFormData> }) => {
       const { data: result, error } = await supabase
-        .from('fachadas')
+        .from('seven_fachadas')
         .update(data)
         .eq('id', id)
         .select()
@@ -96,7 +96,7 @@ export function useDeleteFachada() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('fachadas')
+        .from('seven_fachadas')
         .update({ is_active: false })
         .eq('id', id);
 

@@ -10,10 +10,10 @@ export function useEmpreendimentoCorretores(empreendimentoId: string | undefined
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('empreendimento_corretores')
+        .from('seven_empreendimento_corretores')
         .select(`
           *,
-          corretor:corretores(id, nome_completo, email, telefone, creci)
+          corretor:seven_corretores(id, nome_completo, email, telefone, creci)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .order('autorizado_em', { ascending: false });
@@ -32,10 +32,10 @@ export function useEmpreendimentoImobiliarias(empreendimentoId: string | undefin
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('empreendimento_imobiliarias')
+        .from('seven_empreendimento_imobiliarias')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome, email, telefone)
+          imobiliaria:seven_imobiliarias(id, nome, email, telefone)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .order('autorizado_em', { ascending: false });
@@ -53,7 +53,7 @@ export function useAddCorretorToEmpreendimento() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, corretorId }: { empreendimentoId: string; corretorId: string }) => {
       const { data: result, error } = await supabase
-        .from('empreendimento_corretores')
+        .from('seven_empreendimento_corretores')
         .insert({
           empreendimento_id: empreendimentoId,
           corretor_id: corretorId,
@@ -85,7 +85,7 @@ export function useRemoveCorretorFromEmpreendimento() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('empreendimento_corretores')
+        .from('seven_empreendimento_corretores')
         .delete()
         .eq('id', id);
 
@@ -116,7 +116,7 @@ export function useAddImobiliariaToEmpreendimento() {
       comissaoPercentual?: number;
     }) => {
       const { data: result, error } = await supabase
-        .from('empreendimento_imobiliarias')
+        .from('seven_empreendimento_imobiliarias')
         .insert({
           empreendimento_id: empreendimentoId,
           imobiliaria_id: imobiliariaId,
@@ -149,7 +149,7 @@ export function useRemoveImobiliariaFromEmpreendimento() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('empreendimento_imobiliarias')
+        .from('seven_empreendimento_imobiliarias')
         .delete()
         .eq('id', id);
 
@@ -180,7 +180,7 @@ export function useUpdateImobiliariaComissao() {
       comissaoPercentual: number;
     }) => {
       const { data: result, error } = await supabase
-        .from('empreendimento_imobiliarias')
+        .from('seven_empreendimento_imobiliarias')
         .update({ comissao_percentual: comissaoPercentual })
         .eq('id', id)
         .select()

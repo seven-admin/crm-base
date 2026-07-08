@@ -23,7 +23,7 @@ export function useNotificacoes() {
     queryFn: async (): Promise<Notificacao[]> => {
       if (!user?.id) return [];
       const { data, error } = await supabase
-        .from('notificacoes')
+        .from('sistema_notificacoes')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -40,7 +40,7 @@ export function useNotificacoes() {
   const marcarComoLida = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('notificacoes')
+        .from('sistema_notificacoes')
         .update({ lida: true })
         .eq('id', id);
       if (error) throw error;
@@ -54,7 +54,7 @@ export function useNotificacoes() {
     mutationFn: async () => {
       if (!user?.id) return;
       const { error } = await supabase
-        .from('notificacoes')
+        .from('sistema_notificacoes')
         .update({ lida: true })
         .eq('user_id', user.id)
         .eq('lida', false);
@@ -75,7 +75,7 @@ export function useNotificacoes() {
       referencia_tipo?: string;
     }) => {
       const { error } = await supabase
-        .from('notificacoes')
+        .from('sistema_notificacoes')
         .insert(data);
       if (error) throw error;
     },

@@ -11,7 +11,7 @@ export function useClienteSocios(clienteId: string | undefined) {
       if (!clienteId) return [];
 
       const { data, error } = await supabase
-        .from('cliente_socios')
+        .from('seven_cliente_socios')
         .select(`
           id,
           cliente_id,
@@ -19,7 +19,7 @@ export function useClienteSocios(clienteId: string | undefined) {
           percentual_participacao,
           observacao,
           created_at,
-          socio:clientes!cliente_socios_socio_id_fkey(id, nome, cpf)
+          socio:seven_clientes!cliente_socios_socio_id_fkey(id, nome, cpf)
         `)
         .eq('cliente_id', clienteId)
         .order('created_at', { ascending: true });
@@ -37,7 +37,7 @@ export function useAddClienteSocio() {
   return useMutation({
     mutationFn: async (data: ClienteSocioFormData) => {
       const { data: socio, error } = await supabase
-        .from('cliente_socios')
+        .from('seven_cliente_socios')
         .insert({
           cliente_id: data.cliente_id,
           socio_id: data.socio_id,
@@ -80,7 +80,7 @@ export function useUpdateClienteSocio() {
       data: Partial<Pick<ClienteSocioFormData, 'percentual_participacao' | 'observacao'>> 
     }) => {
       const { data: socio, error } = await supabase
-        .from('cliente_socios')
+        .from('seven_cliente_socios')
         .update(data)
         .eq('id', id)
         .select()
@@ -105,7 +105,7 @@ export function useRemoveClienteSocio() {
   return useMutation({
     mutationFn: async ({ id, clienteId }: { id: string; clienteId: string }) => {
       const { error } = await supabase
-        .from('cliente_socios')
+        .from('seven_cliente_socios')
         .delete()
         .eq('id', id);
 

@@ -15,7 +15,7 @@ export function useClienteInteracoes(clienteId?: string) {
       if (!clienteId) return [];
       
       const { data, error } = await supabase
-        .from('cliente_interacoes')
+        .from('seven_cliente_interacoes')
         .select('*')
         .eq('cliente_id', clienteId)
         .order('created_at', { ascending: false });
@@ -45,7 +45,7 @@ export function useClienteInteracoes(clienteId?: string) {
   const createMutation = useMutation({
     mutationFn: async (formData: ClienteInteracaoFormData) => {
       const { data, error } = await supabase
-        .from('cliente_interacoes')
+        .from('seven_cliente_interacoes')
         .insert({
           ...formData,
           user_id: user?.id

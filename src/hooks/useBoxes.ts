@@ -10,11 +10,11 @@ export function useBoxes(empreendimentoId: string | undefined, filters?: { bloco
       if (!empreendimentoId) return [];
 
       let query = supabase
-        .from('boxes')
+        .from('seven_boxes')
         .select(`
           *,
-          bloco:blocos(id, nome),
-          unidade:unidades(id, numero)
+          bloco:seven_blocos(id, nome),
+          unidade:seven_unidades(id, numero)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -41,7 +41,7 @@ export function useCreateBox() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: BoxFormData }) => {
       const { data: result, error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .insert({
           ...data,
           empreendimento_id: empreendimentoId,
@@ -85,7 +85,7 @@ export function useCreateBoxesBulk() {
       }
 
       const { data: result, error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .insert(boxes)
         .select();
 
@@ -113,7 +113,7 @@ export function useUpdateBox() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId, data }: { id: string; empreendimentoId: string; data: Partial<BoxFormData> }) => {
       const { data: result, error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .update(data)
         .eq('id', id)
         .select()
@@ -139,7 +139,7 @@ export function useDeleteBox() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .update({ is_active: false })
         .eq('id', id);
 
@@ -172,7 +172,7 @@ export function useVincularBoxUnidade() {
       status?: 'disponivel' | 'reservado' | 'vendido';
     }) => {
       const { data: result, error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .update({ 
           unidade_id: unidadeId,
           status: unidadeId ? status : 'disponivel'
@@ -202,7 +202,7 @@ export function useDeleteBoxesBatch() {
   return useMutation({
     mutationFn: async ({ ids, empreendimentoId }: { ids: string[]; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .update({ is_active: false })
         .in('id', ids);
 
@@ -236,7 +236,7 @@ export function useVincularBoxesBatch() {
       status?: 'disponivel' | 'reservado' | 'vendido';
     }) => {
       const { error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .update({
           unidade_id: unidadeId,
           status: unidadeId ? status : 'disponivel',

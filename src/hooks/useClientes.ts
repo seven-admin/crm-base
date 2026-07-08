@@ -64,14 +64,14 @@ export function useClientes(filters?: ClienteFilters) {
     queryFn: async () => {
       // Tenta com join de cônjuge
       let query = supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          empreendimento:empreendimentos(id, nome),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          empreendimento:seven_empreendimentos(id, nome),
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -85,13 +85,13 @@ export function useClientes(filters?: ClienteFilters) {
       if (error?.code === 'PGRST200') {
         console.warn('Schema cache error, retrying without conjuge join');
         let fallbackQuery = supabase
-          .from('clientes')
+          .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name),
-            empreendimento:empreendimentos(id, nome)
+            empreendimento:seven_empreendimentos(id, nome)
           `)
           .eq('is_active', true)
           .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -128,7 +128,7 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
     queryFn: async () => {
       // Count total
       let countQuery = supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%');
@@ -146,14 +146,14 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
 
       // Paginated data
       let query = supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          empreendimento:empreendimentos(id, nome),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          empreendimento:seven_empreendimentos(id, nome),
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -168,13 +168,13 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
       if (error?.code === 'PGRST200') {
         console.warn('Schema cache error, retrying without conjuge join (paginated)');
         let fallbackQuery = supabase
-          .from('clientes')
+          .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name),
-            empreendimento:empreendimentos(id, nome)
+            empreendimento:seven_empreendimentos(id, nome)
           `)
           .eq('is_active', true)
           .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -223,13 +223,13 @@ export function useCliente(id: string | undefined) {
 
       // Tenta com join de cônjuge
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -239,11 +239,11 @@ export function useCliente(id: string | undefined) {
         console.warn('Schema cache error, retrying without conjuge join (single)');
         perf.start(`${perfKey}:fallback`, { id });
         const fallback = await supabase
-          .from('clientes')
+          .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name)
           `)
           .eq('id', id)
@@ -284,7 +284,7 @@ export function useClienteStats() {
     queryKey: ['clientes-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select('fase')
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%');
@@ -323,7 +323,7 @@ export function useCreateCliente() {
       };
 
       const { data: cliente, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .insert(insertData)
         .select()
         .single();
@@ -351,7 +351,7 @@ export function useUpdateCliente() {
     mutationFn: async ({ id, data }: { id: string; data: Partial<ClienteFormData> }) => {
       const updateData = normalizeClienteForSave(data);
       const { data: cliente, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update(updateData)
         .eq('id', id)
         .select()
@@ -380,7 +380,7 @@ export function useDeleteCliente() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update({ is_active: false })
         .eq('id', id);
 
@@ -406,7 +406,7 @@ export function useQualificarCliente() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update({ 
           fase: 'qualificado',
           data_qualificacao: new Date().toISOString()
@@ -438,7 +438,7 @@ export function useMarcarPerdido() {
   return useMutation({
     mutationFn: async ({ id, motivo }: { id: string; motivo?: string }) => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update({ 
           fase: 'perdido',
           motivo_perda: motivo,
@@ -471,7 +471,7 @@ export function useAtualizarTemperatura() {
   return useMutation({
     mutationFn: async ({ id, temperatura }: { id: string; temperatura: string }) => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update({ temperatura })
         .eq('id', id)
         .select()
@@ -499,7 +499,7 @@ export function useReativarCliente() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update({ 
           fase: 'prospecto',
           motivo_perda: null,
@@ -553,7 +553,7 @@ export function useUpdateClientesEmLote() {
       }
 
       const { error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .update(updateData)
         .in('id', ids);
 

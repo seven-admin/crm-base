@@ -15,7 +15,7 @@ export function useConfiguracoesSistema(categoria?: string) {
     queryKey: ['configuracoes-sistema', categoria],
     queryFn: async () => {
       let query = supabase
-        .from('configuracoes_sistema')
+        .from('sistema_configuracoes')
         .select('*');
       
       if (categoria) {
@@ -35,7 +35,7 @@ export function useConfiguracao(chave: string) {
     queryKey: ['configuracao-sistema', chave],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('configuracoes_sistema')
+        .from('sistema_configuracoes')
         .select('*')
         .eq('chave', chave)
         .single();
@@ -55,7 +55,7 @@ export function useUpdateConfiguracao() {
   return useMutation({
     mutationFn: async ({ chave, valor }: { chave: string; valor: string }) => {
       const { data, error } = await supabase
-        .from('configuracoes_sistema')
+        .from('sistema_configuracoes')
         .update({ valor })
         .eq('chave', chave)
         .select()
@@ -78,7 +78,7 @@ export function useUpdateConfiguracoes() {
     mutationFn: async (configs: { chave: string; valor: string }[]) => {
       const promises = configs.map(({ chave, valor }) =>
         supabase
-          .from('configuracoes_sistema')
+          .from('sistema_configuracoes')
           .update({ valor })
           .eq('chave', chave)
       );

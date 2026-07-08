@@ -23,7 +23,7 @@ export function useEmpreendimentosSelect(options: Options = {}) {
     queryKey: ['empreendimentos-select'],
     queryFn: async (): Promise<EmpreendimentoSelect[]> => {
       const { data, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id, nome')
         .eq('is_active', true)
         .order('nome', { ascending: true });

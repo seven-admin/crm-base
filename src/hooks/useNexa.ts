@@ -109,7 +109,7 @@ export async function buscarClientePorTelefone(telefone: string) {
   const clean = telefone.replace(/\D/g, '');
   if (!clean) return null;
   const { data } = await supabase
-    .from('clientes')
+    .from('seven_clientes')
     .select('id, nome, telefone, email, whatsapp')
     .or(`telefone.ilike.%${clean}%,whatsapp.ilike.%${clean}%`)
     .limit(5);
@@ -132,7 +132,7 @@ export function useEmpreendimentosAtivos() {
     queryKey: ['nexa', 'empreendimentos'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id, nome')
         .eq('is_active', true)
         .order('nome');
@@ -177,7 +177,7 @@ export function useBoxesDisponiveis(empreendimentoId?: string) {
     staleTime: 0,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('boxes')
+        .from('seven_boxes')
         .select('id, numero, empreendimento_id, status')
         .eq('empreendimento_id', empreendimentoId!)
         .eq('status', 'disponivel')
@@ -215,7 +215,7 @@ export function useAcaoUnidade() {
 
       // UPDATE atômico só se ainda disponível
       const { data: updated, error: uerr } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .update({ status: novoStatus as any })
         .eq('id', unidadeId)
         .eq('status', 'disponivel')
@@ -240,7 +240,7 @@ export function useAcaoUnidade() {
       const boxesConflito: string[] = [];
       for (const bid of boxIds) {
         const { data: bup, error: berr } = await supabase
-          .from('boxes')
+          .from('seven_boxes')
           .update({ status: novoStatus as any })
           .eq('id', bid)
           .eq('status', 'disponivel')

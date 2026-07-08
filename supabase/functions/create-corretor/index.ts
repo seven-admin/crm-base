@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     if (isGestorImobiliaria && !isAdmin) {
       // Gestor can only create for their own imobiliaria
       const { data: gestorImob } = await supabaseAdmin
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('id')
         .eq('user_id', callerUser.id)
         .maybeSingle();
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     // Check duplicates
     if (cpfLimpo) {
       const { data: existingCpf } = await supabaseAdmin
-        .from('corretores')
+        .from('seven_corretores')
         .select('id')
         .eq('cpf', cpfLimpo)
         .maybeSingle();
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
 
     if (creci) {
       const { data: existingCreci } = await supabaseAdmin
-        .from('corretores')
+        .from('seven_corretores')
         .select('id')
         .eq('creci', creci.trim().toUpperCase())
         .maybeSingle();
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
 
     if ((!finalCidade || !finalUf) && finalImobiliariaId) {
       const { data: imobData } = await supabaseAdmin
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('endereco_cidade, endereco_uf')
         .eq('id', finalImobiliariaId)
         .maybeSingle();
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
 
     // 5. Create corretor record
     const { error: corretorError } = await supabaseAdmin
-      .from('corretores')
+      .from('seven_corretores')
       .insert({
         nome_completo: nome_completo.toUpperCase(),
         cpf: cpfLimpo || null,
@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
 
     // 6. Inherit empreendimentos from imobiliaria
     const { data: empLinks } = await supabaseAdmin
-      .from('empreendimento_imobiliarias')
+      .from('seven_empreendimento_imobiliarias')
       .select('empreendimento_id')
       .eq('imobiliaria_id', finalImobiliariaId);
 
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
       }));
 
       await supabaseAdmin
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .insert(userEmpLinks);
     }
 

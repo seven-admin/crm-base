@@ -23,7 +23,7 @@ export function useMeuCorretor() {
 
       // Prioridade 1: buscar por user_id
       const { data: byUserId } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('id, nome_completo, imobiliaria_id, user_id')
         .eq('user_id', user.id)
         .eq('is_active', true)
@@ -34,7 +34,7 @@ export function useMeuCorretor() {
       // Fallback: buscar por email
       if (profile?.email) {
         const { data: byEmail } = await supabase
-          .from('corretores')
+          .from('seven_corretores')
           .select('id, nome_completo, imobiliaria_id, user_id')
           .eq('email', profile.email)
           .eq('is_active', true)

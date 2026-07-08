@@ -10,7 +10,7 @@ export function useTipologias(empreendimentoId: string | undefined) {
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('tipologias')
+        .from('seven_tipologias')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -29,7 +29,7 @@ export function useCreateTipologia() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: TipologiaFormData }) => {
       const { data: result, error } = await supabase
-        .from('tipologias')
+        .from('seven_tipologias')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -53,7 +53,7 @@ export function useCreateTipologiaSilent() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: TipologiaFormData }) => {
       const { data: result, error } = await supabase
-        .from('tipologias')
+        .from('seven_tipologias')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -73,7 +73,7 @@ export function useUpdateTipologia() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId, data }: { id: string; empreendimentoId: string; data: Partial<TipologiaFormData> }) => {
       const { data: result, error } = await supabase
-        .from('tipologias')
+        .from('seven_tipologias')
         .update(data)
         .eq('id', id)
         .select()
@@ -99,7 +99,7 @@ export function useDeleteTipologia() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('tipologias')
+        .from('seven_tipologias')
         .update({ is_active: false })
         .eq('id', id);
 

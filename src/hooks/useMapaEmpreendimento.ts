@@ -25,7 +25,7 @@ export function useMapaEmpreendimento(empreendimentoId: string | undefined) {
       if (!empreendimentoId) return null;
 
       const { data, error } = await supabase
-        .from('mapa_empreendimento')
+        .from('seven_mapa_empreendimento')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .maybeSingle();
@@ -43,7 +43,7 @@ export function useCreateMapa() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: MapaFormData }) => {
       const { data: result, error } = await supabase
-        .from('mapa_empreendimento')
+        .from('seven_mapa_empreendimento')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -68,7 +68,7 @@ export function useUpdateMapa() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId, data }: { id: string; empreendimentoId: string; data: Partial<MapaFormData> }) => {
       const { data: result, error } = await supabase
-        .from('mapa_empreendimento')
+        .from('seven_mapa_empreendimento')
         .update(data)
         .eq('id', id)
         .select()
@@ -94,7 +94,7 @@ export function useDeleteMapa() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       const { error } = await supabase
-        .from('mapa_empreendimento')
+        .from('seven_mapa_empreendimento')
         .delete()
         .eq('id', id);
 

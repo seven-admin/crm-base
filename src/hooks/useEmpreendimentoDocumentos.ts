@@ -10,7 +10,7 @@ export function useEmpreendimentoDocumentos(empreendimentoId: string | undefined
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('empreendimento_documentos')
+        .from('seven_empreendimento_documentos')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .order('created_at', { ascending: false });
@@ -56,7 +56,7 @@ export function useUploadDocumento() {
 
       // Insert record
       const { data: result, error } = await supabase
-        .from('empreendimento_documentos')
+        .from('seven_empreendimento_documentos')
         .insert({
           empreendimento_id: empreendimentoId,
           tipo,
@@ -97,7 +97,7 @@ export function useDeleteDocumento() {
 
       // Delete record
       const { error } = await supabase
-        .from('empreendimento_documentos')
+        .from('seven_empreendimento_documentos')
         .delete()
         .eq('id', id);
 

@@ -23,10 +23,10 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
     queryKey: ['corretores', imobiliariaId],
     queryFn: async (): Promise<Corretor[]> => {
       let query = supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .order('nome_completo');
       
@@ -73,10 +73,10 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -107,7 +107,7 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
         imobiliaria_id: formData.imobiliaria_id!,
       };
       const { data, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .insert(insertData)
         .select()
         .single();
@@ -133,7 +133,7 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...formData }: CorretorFormData & { id: string }) => {
       const { data, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update(formData)
         .eq('id', id)
         .select()
@@ -160,7 +160,7 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .delete()
         .eq('id', id);
       
@@ -203,10 +203,10 @@ export function useCorretor(id: string | undefined) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -240,10 +240,10 @@ export function useCorretoresPaginated(page = 1, pageSize = 20, search?: string,
       const to = from + pageSize - 1;
 
       let query = supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `, { count: 'exact' })
         .order('nome_completo')
         .range(from, to);

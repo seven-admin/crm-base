@@ -13,7 +13,7 @@ export function useEmpreendimentos(filters?: EmpreendimentoFilters) {
     queryKey: ['empreendimentos', filters],
     queryFn: async (): Promise<EmpreendimentoWithStats[]> => {
       let query = supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -41,9 +41,9 @@ export function useEmpreendimentos(filters?: EmpreendimentoFilters) {
       // Batch fetch all units and covers in 2 queries instead of 2*N
       const empIds = empList.map(e => e.id);
       const [{ data: allUnidades }, { data: allCapas }] = await Promise.all([
-        supabase.from('unidades').select('status, valor, empreendimento_id')
+        supabase.from('seven_unidades').select('status, valor, empreendimento_id')
           .in('empreendimento_id', empIds).eq('is_active', true),
-        supabase.from('empreendimento_midias').select('url, empreendimento_id')
+        supabase.from('seven_empreendimento_midias').select('url, empreendimento_id')
           .in('empreendimento_id', empIds).eq('is_capa', true),
       ]);
 
@@ -99,7 +99,7 @@ export function useEmpreendimento(id: string | undefined) {
       if (!id) return null;
 
       const { data: emp, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -109,14 +109,14 @@ export function useEmpreendimento(id: string | undefined) {
 
       // Get unit stats
       const { data: unidades } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .select('status, valor')
         .eq('empreendimento_id', id)
         .eq('is_active', true);
 
       // Get cover image
       const { data: capa } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .select('url')
         .eq('empreendimento_id', id)
         .eq('is_capa', true)
@@ -172,7 +172,7 @@ export function useCreateEmpreendimento() {
   return useMutation({
     mutationFn: async (data: EmpreendimentoFormData) => {
       const { data: result, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .insert(data)
         .select()
         .single();
@@ -197,7 +197,7 @@ export function useUpdateEmpreendimento() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmpreendimentoFormData> }) => {
       const { data: result, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .update(data)
         .eq('id', id)
         .select()
@@ -224,7 +224,7 @@ export function useDeleteEmpreendimento() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .update({ is_active: false })
         .eq('id', id);
 
@@ -247,7 +247,7 @@ export function useToggleAutoVincularCorretor() {
   return useMutation({
     mutationFn: async ({ id, auto_vincular_corretor }: { id: string; auto_vincular_corretor: boolean }) => {
       const { error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .update({ auto_vincular_corretor } as any)
         .eq('id', id);
 

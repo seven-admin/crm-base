@@ -60,7 +60,7 @@ export function useUserModulePermissions(userId: string | undefined) {
       if (!userId) return [];
       
       const { data, error } = await supabase
-        .from('user_module_permissions')
+        .from('sistema_user_module_permissions')
         .select('*')
         .eq('user_id', userId);
 
@@ -79,7 +79,7 @@ export function useModulesWithPermissions(userId: string | undefined, userRole: 
 
       // Fetch all active modules
       const { data: modules, error: modulesError } = await supabase
-        .from('modules')
+        .from('sistema_modules')
         .select('*')
         .eq('is_active', true)
         .order('display_name');
@@ -98,7 +98,7 @@ export function useModulesWithPermissions(userId: string | undefined, userRole: 
 
         if (roleData?.id) {
           const { data: rolePerms, error: roleError } = await supabase
-            .from('role_permissions')
+            .from('sistema_role_permissions')
             .select('*')
             .eq('role_id', roleData.id);
 
@@ -113,7 +113,7 @@ export function useModulesWithPermissions(userId: string | undefined, userRole: 
 
       // Fetch user custom permissions
       const { data: userPerms, error: userError } = await supabase
-        .from('user_module_permissions')
+        .from('sistema_user_module_permissions')
         .select('*')
         .eq('user_id', userId);
 
@@ -196,7 +196,7 @@ export function useSetUserModulePermission() {
     mutationFn: async ({ userId, moduleId, permissions }: SetPermissionParams) => {
       // Check if permission already exists
       const { data: existing } = await supabase
-        .from('user_module_permissions')
+        .from('sistema_user_module_permissions')
         .select('id')
         .eq('user_id', userId)
         .eq('module_id', moduleId)
@@ -205,7 +205,7 @@ export function useSetUserModulePermission() {
       if (existing) {
         // Update
         const { error } = await supabase
-          .from('user_module_permissions')
+          .from('sistema_user_module_permissions')
           .update({
             ...permissions,
             updated_at: new Date().toISOString()
@@ -216,7 +216,7 @@ export function useSetUserModulePermission() {
       } else {
         // Insert
         const { error } = await supabase
-          .from('user_module_permissions')
+          .from('sistema_user_module_permissions')
           .insert({
             user_id: userId,
             module_id: moduleId,
@@ -244,7 +244,7 @@ export function useRemoveUserModulePermission() {
   return useMutation({
     mutationFn: async ({ userId, moduleId }: { userId: string; moduleId: string }) => {
       const { error } = await supabase
-        .from('user_module_permissions')
+        .from('sistema_user_module_permissions')
         .delete()
         .eq('user_id', userId)
         .eq('module_id', moduleId);
@@ -269,7 +269,7 @@ export function useResetUserPermissions() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const { error } = await supabase
-        .from('user_module_permissions')
+        .from('sistema_user_module_permissions')
         .delete()
         .eq('user_id', userId);
 

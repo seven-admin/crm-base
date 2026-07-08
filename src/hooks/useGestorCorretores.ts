@@ -27,7 +27,7 @@ export function useGestorCorretores() {
       if (!imobiliariaId) return [];
 
       const { data, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('id, nome_completo, email, cpf, creci, telefone, is_active, created_at, user_id, status_vinculo')
         .eq('imobiliaria_id', imobiliariaId)
         .order('nome_completo');
@@ -86,7 +86,7 @@ export function useGestorCorretores() {
       const updateData: { nome_completo?: string; telefone?: string; creci?: string } = { ...dados };
       if (nome !== undefined) updateData.nome_completo = nome;
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update(updateData)
         .eq('id', id);
 
@@ -104,7 +104,7 @@ export function useGestorCorretores() {
   const toggleStatus = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update({ is_active })
         .eq('id', id);
 
@@ -122,7 +122,7 @@ export function useGestorCorretores() {
   const aprovarVinculo = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update({ status_vinculo: 'ativo', is_active: true } as any)
         .eq('id', id);
       if (error) throw error;
@@ -139,7 +139,7 @@ export function useGestorCorretores() {
   const rejeitarVinculo = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update({ status_vinculo: 'rejeitado', imobiliaria_id: null } as any)
         .eq('id', id);
       if (error) throw error;
