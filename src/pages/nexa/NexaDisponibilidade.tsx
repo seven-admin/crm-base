@@ -80,6 +80,8 @@ export default function NexaDisponibilidade() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </MainLayout>
   );
 }
+
