@@ -27,7 +27,7 @@ export function useUserEmpreendimentos(userId: string | undefined) {
       if (!userId) return [];
 
       const { data, error } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select('*')
         .eq('user_id', userId);
 
@@ -47,7 +47,7 @@ export function useEmpreendimentosWithLinks(userId: string | undefined) {
 
       // Fetch all active empreendimentos with unit count
       const { data: empreendimentos, error: empError } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id, nome, endereco_cidade, endereco_uf, status, unidades(count)')
         .eq('is_active', true)
         .order('nome');
@@ -56,7 +56,7 @@ export function useEmpreendimentosWithLinks(userId: string | undefined) {
 
       // Fetch user links
       const { data: links, error: linksError } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select('empreendimento_id')
         .eq('user_id', userId);
 
@@ -92,7 +92,7 @@ export function useToggleUserEmpreendimento() {
       if (link) {
         // Create link
         const { error } = await supabase
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .insert({
             user_id: userId,
             empreendimento_id: empreendimentoId
@@ -102,7 +102,7 @@ export function useToggleUserEmpreendimento() {
       } else {
         // Remove link
         const { error } = await supabase
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .delete()
           .eq('user_id', userId)
           .eq('empreendimento_id', empreendimentoId);
@@ -130,7 +130,7 @@ export function useBulkLinkEmpreendimentos() {
     mutationFn: async ({ userId, empreendimentoIds }: { userId: string; empreendimentoIds: string[] }) => {
       // First, delete all existing links
       const { error: deleteError } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .delete()
         .eq('user_id', userId);
 
@@ -144,7 +144,7 @@ export function useBulkLinkEmpreendimentos() {
         }));
 
         const { error: insertError } = await supabase
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .insert(links);
 
         if (insertError) throw insertError;
@@ -169,7 +169,7 @@ export function useClearUserEmpreendimentos() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const { error } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .delete()
         .eq('user_id', userId);
 

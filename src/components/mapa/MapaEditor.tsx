@@ -870,7 +870,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
       // 3. Execute batch removal in a single call
       if (removedUnidadeIds.length > 0) {
         const { error } = await supabase
-          .from('unidades')
+          .from('seven_unidades')
           .update({ polygon_coords: null })
           .in('id', removedUnidadeIds);
         if (error) throw error;
@@ -881,7 +881,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
         const results = await Promise.all(
           modifiedItems.map(({ unidadeId, coords }) =>
             supabase
-              .from('unidades')
+              .from('seven_unidades')
               .update({ polygon_coords: coords as any })
               .eq('id', unidadeId)
           )

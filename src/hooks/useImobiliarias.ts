@@ -24,7 +24,7 @@ export function useImobiliarias(options: QueryOptions = {}) {
     queryKey: ['imobiliarias'],
     queryFn: async (): Promise<Imobiliaria[]> => {
       const { data, error } = await supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('*')
         .order('nome');
       
@@ -32,7 +32,7 @@ export function useImobiliarias(options: QueryOptions = {}) {
       
       // Get corretores count for each imobiliaria
       const { data: corretores } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('imobiliaria_id');
       
       const counts: Record<string, number> = {};
@@ -56,7 +56,7 @@ export function useImobiliarias(options: QueryOptions = {}) {
   const createMutation = useMutation({
     mutationFn: async (formData: ImobiliariaFormData) => {
       const { data, error } = await supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .insert(formData)
         .select()
         .single();
@@ -101,7 +101,7 @@ export function useImobiliarias(options: QueryOptions = {}) {
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...formData }: ImobiliariaFormData & { id: string }) => {
       const { data, error } = await supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .update(formData)
         .eq('id', id)
         .select()
@@ -194,7 +194,7 @@ export function useImobiliaria(id: string | undefined) {
       if (!id) return null;
       
       const { data, error } = await supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -215,7 +215,7 @@ export function useImobiliariasPaginated(page = 1, pageSize = 20, search?: strin
       const to = from + pageSize - 1;
 
       let query = supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('*', { count: 'exact' })
         .order('nome')
         .range(from, to);
@@ -229,7 +229,7 @@ export function useImobiliariasPaginated(page = 1, pageSize = 20, search?: strin
 
       // Get corretores count for each imobiliaria
       const { data: corretores } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('imobiliaria_id');
 
       const counts: Record<string, number> = {};

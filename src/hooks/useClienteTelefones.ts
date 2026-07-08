@@ -26,7 +26,7 @@ export function useClienteTelefones(clienteId: string | undefined) {
       if (!clienteId) return [];
 
       const { data, error } = await supabase
-        .from('cliente_telefones')
+        .from('seven_cliente_telefones')
         .select('*')
         .eq('cliente_id', clienteId)
         .order('principal', { ascending: false })
@@ -51,7 +51,7 @@ export function useCreateClienteTelefone() {
       data: ClienteTelefoneFormData 
     }) => {
       const { data: result, error } = await supabase
-        .from('cliente_telefones')
+        .from('seven_cliente_telefones')
         .insert({
           cliente_id: clienteId,
           numero: data.numero,
@@ -89,7 +89,7 @@ export function useUpdateClienteTelefone() {
       data: Partial<ClienteTelefoneFormData> 
     }) => {
       const { data: result, error } = await supabase
-        .from('cliente_telefones')
+        .from('seven_cliente_telefones')
         .update(data)
         .eq('id', id)
         .select()
@@ -120,7 +120,7 @@ export function useDeleteClienteTelefone() {
       clienteId: string 
     }) => {
       const { error } = await supabase
-        .from('cliente_telefones')
+        .from('seven_cliente_telefones')
         .delete()
         .eq('id', id);
 

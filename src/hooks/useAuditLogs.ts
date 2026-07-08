@@ -60,7 +60,7 @@ export function useAuditLogs(filters: AuditLogFilters = {}) {
     queryKey: ['audit-logs', startDate?.toISOString(), endDate?.toISOString(), userId, action, tableName, page, pageSize],
     queryFn: async () => {
       let query = supabase
-        .from('audit_logs')
+        .from('sistema_audit_logs')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
@@ -115,7 +115,7 @@ export function useAuditStats() {
     queryFn: async () => {
       // Contagem por ação
       const { data: logs } = await supabase
-        .from('audit_logs')
+        .from('sistema_audit_logs')
         .select('action, table_name, created_at')
         .order('created_at', { ascending: false })
         .limit(1000);

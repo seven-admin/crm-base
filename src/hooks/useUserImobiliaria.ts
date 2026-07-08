@@ -14,7 +14,7 @@ export function useUserImobiliaria() {
       if (!user) return null;
 
       const { data, error } = await supabase
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('id')
         .eq('user_id', user.id)
         .limit(1).maybeSingle();

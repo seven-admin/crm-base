@@ -16,7 +16,7 @@ export function useGestorEmpreendimentos() {
 
       // Buscar empreendimentos vinculados ao usuário
       const { data: links, error: linksError } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select('empreendimento_id')
         .eq('user_id', user.id);
 
@@ -33,7 +33,7 @@ export function useGestorEmpreendimentos() {
 
       // Buscar dados dos empreendimentos
       const { data: empreendimentos, error } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id, nome')
         .in('id', empIds)
         .eq('is_active', true)

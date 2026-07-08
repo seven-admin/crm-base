@@ -50,7 +50,7 @@ export function useCorretoresUsuarios() {
 
       // 3. Buscar corretores com user_id
       const { data: corretores, error: corretoresError } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('*, imobiliaria:imobiliarias(id, nome)')
         .in('user_id', userIds);
 
@@ -116,7 +116,7 @@ export function useUpdateCorretorUsuario() {
       // Update corretor if exists
       if (data.corretorId) {
         const { error: corretorError } = await supabase
-          .from('corretores')
+          .from('seven_corretores')
           .update({
             nome_completo: data.fullName,
             cpf: data.cpf?.replace(/\D/g, '') || null,
@@ -187,7 +187,7 @@ export function useCreateCorretorVinculo() {
       imobiliaria_id?: string;
     }) => {
       const { data: insertedData, error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .insert({
           user_id: data.userId,
           email: data.email,

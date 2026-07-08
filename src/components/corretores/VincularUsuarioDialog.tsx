@@ -56,7 +56,7 @@ export function VincularUsuarioDialog({
 
       // Buscar corretores que já têm user_id
       const { data: corretores } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('user_id')
         .not('user_id', 'is', null);
 
@@ -87,7 +87,7 @@ export function VincularUsuarioDialog({
     setIsLinking(true);
     try {
       const { error } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .update({ user_id: selectedUserId })
         .eq('id', corretorId);
 

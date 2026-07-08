@@ -25,7 +25,7 @@ export function useActivateCorretor() {
 
       // 1. Verificar se já existe registro em corretores
       const { data: existingCorretor } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('id')
         .eq('user_id', userId)
         .maybeSingle();
@@ -34,13 +34,13 @@ export function useActivateCorretor() {
       if (!existingCorretor) {
         // Corretor precisa de imobiliária - buscar imobiliária padrão de migração
         const { data: defaultImob } = await supabase
-          .from('imobiliarias')
+          .from('seven_imobiliarias')
           .select('id')
           .eq('id', '00000000-0000-0000-0000-000000000001')
           .maybeSingle();
 
         const { error: corretorError } = await supabase
-          .from('corretores')
+          .from('seven_corretores')
           .insert({
             user_id: userId,
             email: email,
@@ -64,7 +64,7 @@ export function useActivateCorretor() {
 
       // 4. Buscar todos empreendimentos ativos
       const { data: emps, error: empError } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id')
         .eq('is_active', true)
         .eq('auto_vincular_corretor', true);
@@ -73,7 +73,7 @@ export function useActivateCorretor() {
 
       // 5. Verificar vínculos existentes para não duplicar
       const { data: existingLinks } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select('empreendimento_id')
         .eq('user_id', userId);
 
@@ -89,7 +89,7 @@ export function useActivateCorretor() {
 
       if (newLinks.length > 0) {
         const { error: linkError } = await supabase
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .insert(newLinks);
 
         if (linkError) throw linkError;
@@ -113,7 +113,7 @@ export function useActivateCorretor() {
 
       // Buscar telefone/whatsapp do corretor
       const { data: corretorData } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('telefone, whatsapp')
         .eq('user_id', data.params.userId)
         .maybeSingle();
@@ -153,7 +153,7 @@ export function useBulkActivateCorretores() {
     mutationFn: async (users: BulkActivateParams[]): Promise<{ total: number; empreendimentos: number; users: BulkActivateParams[] }> => {
       // Buscar empreendimentos ativos uma única vez
       const { data: emps, error: empError } = await supabase
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id')
         .eq('is_active', true)
         .eq('auto_vincular_corretor', true);
@@ -167,7 +167,7 @@ export function useBulkActivateCorretores() {
 
         // Verificar se já existe registro em corretores
         const { data: existingCorretor } = await supabase
-          .from('corretores')
+          .from('seven_corretores')
           .select('id')
           .eq('user_id', userId)
           .maybeSingle();
@@ -175,7 +175,7 @@ export function useBulkActivateCorretores() {
         // Se não existe, criar o registro
         if (!existingCorretor) {
           const { error: corretorError } = await supabase
-            .from('corretores')
+            .from('seven_corretores')
             .insert({
               user_id: userId,
               email: email,
@@ -202,7 +202,7 @@ export function useBulkActivateCorretores() {
 
         // Verificar vínculos existentes
         const { data: existingLinks } = await supabase
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .select('empreendimento_id')
           .eq('user_id', userId);
 
@@ -218,7 +218,7 @@ export function useBulkActivateCorretores() {
 
         if (newLinks.length > 0) {
           const { error: linkError } = await supabase
-            .from('user_empreendimentos')
+            .from('sistema_user_empreendimentos')
             .insert(newLinks);
 
           if (!linkError) {
@@ -240,7 +240,7 @@ export function useBulkActivateCorretores() {
       const admin = await getUsuarioLogado();
       const userIds = data.users.map(u => u.userId);
       const { data: corretoresData } = await supabase
-        .from('corretores')
+        .from('seven_corretores')
         .select('user_id, telefone, whatsapp')
         .in('user_id', userIds);
 

@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
     // 2) Desvincular corretores (o UX já avisava isso; mantém consistência)
     const { error: desvincularCorretoresError, data: corretoresAtualizados } = await supabaseAdmin
-      .from('corretores')
+      .from('seven_corretores')
       .update({ imobiliaria_id: null })
       .eq('imobiliaria_id', imobiliaria_id)
       .select('id');
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     }
 
     // 3) Excluir imobiliária
-    const { error: deleteError } = await supabaseAdmin.from('imobiliarias').delete().eq('id', imobiliaria_id);
+    const { error: deleteError } = await supabaseAdmin.from('seven_imobiliarias').delete().eq('id', imobiliaria_id);
 
     if (deleteError) {
       console.error('Error deleting imobiliaria:', deleteError);

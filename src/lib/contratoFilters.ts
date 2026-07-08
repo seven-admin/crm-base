@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export async function getClientesHistoricosIds(): Promise<string[]> {
   const { data } = await supabase
-    .from('clientes')
+    .from('seven_clientes')
     .select('id')
     .ilike('nome', '%COMPRADOR HISTÓRICO%');
   return (data || []).map(c => c.id);

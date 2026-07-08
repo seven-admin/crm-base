@@ -16,7 +16,7 @@ export function useClientesSelect(excludeId?: string, enabled: boolean = true) {
     queryKey: ['clientes-select', excludeId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('clientes')
+        .from('seven_clientes')
         .select('id, nome, cpf')
         .eq('is_active', true)
         .not('nome', 'ilike', 'COMPRADOR HISTÓRICO (PRÉ-SISTEMA)')

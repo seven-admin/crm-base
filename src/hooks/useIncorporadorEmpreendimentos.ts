@@ -28,7 +28,7 @@ export function useIncorporadorEmpreendimentos(): UseIncorporadorEmpreendimentos
       if (!user?.id) return { ids: [], empreendimentos: [] };
 
       const { data, error } = await supabase
-        .from('user_empreendimentos')
+        .from('sistema_user_empreendimentos')
         .select(`
           empreendimento_id,
           empreendimento:empreendimentos(id, nome, status, tipo, endereco_cidade, endereco_uf)

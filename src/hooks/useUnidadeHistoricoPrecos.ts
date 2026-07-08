@@ -22,7 +22,7 @@ export function useUnidadeHistoricoPrecos(unidadeId: string | undefined) {
 
       // Buscar histórico
       const { data: historico, error } = await supabase
-        .from('unidade_historico_precos')
+        .from('seven_unidade_historico_precos')
         .select('*')
         .eq('unidade_id', unidadeId)
         .order('created_at', { ascending: false });

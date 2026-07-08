@@ -10,7 +10,7 @@ export function useEmpreendimentoMidias(empreendimentoId: string | undefined) {
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .order('ordem', { ascending: true });
@@ -57,7 +57,7 @@ export function useUploadMidia() {
       // If setting as cover, unset other covers first
       if (isCapa) {
         await supabase
-          .from('empreendimento_midias')
+          .from('seven_empreendimento_midias')
           .update({ is_capa: false })
           .eq('empreendimento_id', empreendimentoId)
           .eq('is_capa', true);
@@ -65,7 +65,7 @@ export function useUploadMidia() {
 
       // Insert record
       const { data: result, error } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .insert({
           empreendimento_id: empreendimentoId,
           tipo,
@@ -99,14 +99,14 @@ export function useSetMidiaCapa() {
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       // Unset other covers
       await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .update({ is_capa: false })
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_capa', true);
 
       // Set this as cover
       const { data: result, error } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .update({ is_capa: true })
         .eq('id', id)
         .select()
@@ -146,7 +146,7 @@ export function useDeleteMidia() {
 
       // Delete record
       const { error } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .delete()
         .eq('id', id);
 
@@ -175,7 +175,7 @@ export function useAddMidiaLink() {
       url: string 
     }) => {
       const { data, error } = await supabase
-        .from('empreendimento_midias')
+        .from('seven_empreendimento_midias')
         .insert({
           empreendimento_id: empreendimentoId,
           tipo: 'link',

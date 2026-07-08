@@ -42,7 +42,7 @@ export function useModules() {
     queryKey: ['modules'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('modules')
+        .from('sistema_modules')
         .select('id, name, display_name, category, is_active')
         .eq('is_active', true)
         .order('display_name');
@@ -77,7 +77,7 @@ export function useRolePermissions(roleId: string | null) {
       if (!roleId) return [];
 
       const { data, error } = await supabase
-        .from('role_permissions')
+        .from('sistema_role_permissions')
         .select(`
           id,
           role_id,
@@ -165,7 +165,7 @@ export function useCloneRole() {
 
       // Get source permissions
       const { data: sourcePerms, error: permsError } = await supabase
-        .from('role_permissions')
+        .from('sistema_role_permissions')
         .select('*')
         .eq('role_id', sourceRoleId);
 
@@ -184,7 +184,7 @@ export function useCloneRole() {
         }));
 
         const { error: insertError } = await supabase
-          .from('role_permissions')
+          .from('sistema_role_permissions')
           .insert(newPerms as any);
 
         if (insertError) throw insertError;
@@ -300,7 +300,7 @@ export function useUpdateRolePermission() {
       }>;
     }) => {
       const { data: existing } = await supabase
-        .from('role_permissions')
+        .from('sistema_role_permissions')
         .select('id')
         .eq('role_id', roleId)
         .eq('module_id', moduleId)
@@ -308,13 +308,13 @@ export function useUpdateRolePermission() {
 
       if (existing) {
         const { error } = await supabase
-          .from('role_permissions')
+          .from('sistema_role_permissions')
           .update(permission)
           .eq('id', existing.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('role_permissions')
+          .from('sistema_role_permissions')
           .insert({
             role_id: roleId,
             module_id: moduleId,
@@ -379,7 +379,7 @@ export function useBulkUpdateRolePermissions() {
 
       for (const perm of permissions) {
         const { data: existing } = await supabase
-          .from('role_permissions')
+          .from('sistema_role_permissions')
           .select('id')
           .eq('role_id', roleId)
           .eq('module_id', perm.moduleId)
@@ -387,7 +387,7 @@ export function useBulkUpdateRolePermissions() {
 
         if (existing) {
           await supabase
-            .from('role_permissions')
+            .from('sistema_role_permissions')
             .update({
               can_view: perm.can_view,
               can_create: perm.can_create,
@@ -398,7 +398,7 @@ export function useBulkUpdateRolePermissions() {
             .eq('id', existing.id);
         } else {
           await supabase
-            .from('role_permissions')
+            .from('sistema_role_permissions')
             .insert({
               role_id: roleId,
               role: legacyRole, // NULL for dynamic roles, value for legacy roles

@@ -14,7 +14,7 @@ export function useBlocos(empreendimentoId: string | undefined) {
       if (!empreendimentoId) return [];
 
       const { data, error } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -35,7 +35,7 @@ export function useBlocosComContagem(empreendimentoId: string | undefined) {
 
       // Buscar blocos
       const { data: blocos, error: blocosError } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .select('*')
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)
@@ -48,7 +48,7 @@ export function useBlocosComContagem(empreendimentoId: string | undefined) {
       // Buscar contagem de unidades por bloco
       const blocoIds = blocos.map(b => b.id);
       const { data: contagemData, error: contagemError } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .select('bloco_id')
         .in('bloco_id', blocoIds)
         .eq('is_active', true);
@@ -78,7 +78,7 @@ export function useCreateBloco() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: BlocoFormData }) => {
       const { data: result, error } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -103,7 +103,7 @@ export function useCreateBlocoSilent() {
   return useMutation({
     mutationFn: async ({ empreendimentoId, data }: { empreendimentoId: string; data: BlocoFormData }) => {
       const { data: result, error } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .insert({ ...data, empreendimento_id: empreendimentoId })
         .select()
         .single();
@@ -123,7 +123,7 @@ export function useUpdateBloco() {
   return useMutation({
     mutationFn: async ({ id, empreendimentoId, data }: { id: string; empreendimentoId: string; data: Partial<BlocoFormData> }) => {
       const { data: result, error } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .update(data)
         .eq('id', id)
         .select()
@@ -151,7 +151,7 @@ export function useDeleteBloco() {
     mutationFn: async ({ id, empreendimentoId }: { id: string; empreendimentoId: string }) => {
       // Desvincular unidades do bloco antes de excluir
       const { error: updateError } = await supabase
-        .from('unidades')
+        .from('seven_unidades')
         .update({ bloco_id: null })
         .eq('bloco_id', id);
 
@@ -159,7 +159,7 @@ export function useDeleteBloco() {
 
       // Soft delete do bloco
       const { error } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .update({ is_active: false })
         .eq('id', id);
 
@@ -186,7 +186,7 @@ export function useAtualizarContagemBlocos() {
     mutationFn: async (empreendimentoId: string) => {
       // Buscar todos os blocos do empreendimento
       const { data: blocos, error: blocosError } = await supabase
-        .from('blocos')
+        .from('seven_blocos')
         .select('id')
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true);
@@ -197,7 +197,7 @@ export function useAtualizarContagemBlocos() {
       // Para cada bloco, contar unidades e atualizar
       for (const bloco of blocos) {
         const { count, error: countError } = await supabase
-          .from('unidades')
+          .from('seven_unidades')
           .select('*', { count: 'exact', head: true })
           .eq('bloco_id', bloco.id)
           .eq('is_active', true);
@@ -205,7 +205,7 @@ export function useAtualizarContagemBlocos() {
         if (countError) continue;
 
         await supabase
-          .from('blocos')
+          .from('seven_blocos')
           .update({ unidades_por_andar: count })
           .eq('id', bloco.id);
       }

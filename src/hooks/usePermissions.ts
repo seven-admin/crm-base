@@ -45,9 +45,9 @@ export function usePermissions() {
           { data: roleData },
           { data: userPerms },
         ] = await Promise.all([
-          supabase.from('modules').select('*').eq('is_active', true),
+          supabase.from('sistema_modules').select('*').eq('is_active', true),
           supabase.from('roles').select('id, role_permissions(*)').eq('name', role).maybeSingle(),
-          supabase.from('user_module_permissions').select('*').eq('user_id', user.id),
+          supabase.from('sistema_user_module_permissions').select('*').eq('user_id', user.id),
         ]);
 
         // Role permissions come from the joined query — no extra round-trip
@@ -140,7 +140,7 @@ export function usePermissions() {
     if (role === 'admin' || role === 'super_admin') return true;
 
     const { data } = await supabase
-      .from('user_empreendimentos')
+      .from('sistema_user_empreendimentos')
       .select('id')
       .eq('user_id', user.id)
       .eq('empreendimento_id', empreendimentoId)
@@ -154,7 +154,7 @@ export function usePermissions() {
     if (role === 'admin' || role === 'super_admin') return [];
 
     const { data } = await supabase
-      .from('user_empreendimentos')
+      .from('sistema_user_empreendimentos')
       .select('empreendimento_id')
       .eq('user_id', user.id);
 

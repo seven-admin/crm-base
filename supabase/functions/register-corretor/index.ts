@@ -61,18 +61,18 @@ Deno.serve(async (req) => {
     }
 
     // Verificar duplicatas
-    const { data: existingCpf } = await supabaseAdmin.from('corretores').select('id').eq('cpf', cpfLimpo).maybeSingle();
+    const { data: existingCpf } = await supabaseAdmin.from('seven_corretores').select('id').eq('cpf', cpfLimpo).maybeSingle();
     if (existingCpf) return jsonResponse({ error: 'CPF já cadastrado no sistema' }, 400);
 
     const { data: existingEmail } = await supabaseAdmin.from('profiles').select('id').eq('email', email.toLowerCase()).maybeSingle();
     if (existingEmail) return jsonResponse({ error: 'Email já cadastrado no sistema' }, 400);
 
-    const { data: existingCreci } = await supabaseAdmin.from('corretores').select('id').eq('creci', creci.trim().toUpperCase()).maybeSingle();
+    const { data: existingCreci } = await supabaseAdmin.from('seven_corretores').select('id').eq('creci', creci.trim().toUpperCase()).maybeSingle();
     if (existingCreci) return jsonResponse({ error: 'CRECI já cadastrado no sistema' }, 400);
 
     // Se vinculado, verificar se imobiliária existe
     if (imobiliaria_id) {
-      const { data: imob } = await supabaseAdmin.from('imobiliarias').select('id').eq('id', imobiliaria_id).eq('is_active', true).maybeSingle();
+      const { data: imob } = await supabaseAdmin.from('seven_imobiliarias').select('id').eq('id', imobiliaria_id).eq('is_active', true).maybeSingle();
       if (!imob) return jsonResponse({ error: 'Imobiliária não encontrada ou inativa' }, 400);
     }
 
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 
     // Criar registro em corretores
     const statusVinculo = imobiliaria_id ? 'pendente' : 'ativo';
-    await supabaseAdmin.from('corretores').insert({
+    await supabaseAdmin.from('seven_corretores').insert({
       nome_completo: nome_completo.toUpperCase(),
       cpf: cpfLimpo,
       creci: creci.trim().toUpperCase(),

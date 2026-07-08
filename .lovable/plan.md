@@ -1,59 +1,93 @@
 ## Objetivo
 
-Padronizar prefixos de tabelas: `seven_*` para domínio de negócio Seven, `sistema_*` para infra/plataforma. **Preservar** `profiles`, `roles`, `user_roles` (afetariam o auth) e `arqo_*` / `nexa_*` (já prefixados).
+Migrar todo o código (frontend + edge functions) para usar os novos nomes de tabela (`seven_*`, `sistema_*`) e, ao final, **remover as views de compatibilidade**.
 
-## Categorização final
+## Escopo
 
-**Renomear para `seven_*` (25 tabelas):**
-`empreendimentos`, `blocos`, `unidades`, `tipologias`, `boxes`, `fachadas`, `mapa_empreendimento`, `empreendimento_documentos`, `empreendimento_midias`, `empreendimento_corretores`, `empreendimento_imobiliarias`, `clientes`, `cliente_telefones`, `cliente_socios`, `cliente_interacoes`, `corretores`, `imobiliarias`, `incorporadoras`, `unidade_historico_precos`, `centros_custo`, `centro_custo_empreendimentos`, `plano_contas`, `lancamentos_financeiros`, `saldos_mensais`, `configuracao_comercial`.
+- **40 arquivos** no `src/` com `.from('<nome_antigo>')`.
+- **4 edge functions** com `.from('<nome_antigo>')`: `register-imobiliaria`, `delete-imobiliaria`, `register-corretor`, `create-corretor`.
+- Nenhuma referência antiga em SQL do frontend (não usamos RPC com nome de tabela em string).
 
-**Renomear para `sistema_*` (5 tabelas):**
-`modules`, `role_permissions`, `user_module_permissions`, `user_empreendimentos`, `audit_logs`, `notificacoes`, `configuracoes_sistema` (essa vira `sistema_configuracoes` para evitar duplicação de "sistema").
+## Mapeamento de renomes
 
-**Preservar (não renomear):**
-`profiles`, `roles`, `user_roles` (auth), `arqo_*`, `nexa_*`.
+**Seven (25):**
+```text
+empreendimentos              → seven_empreendimentos
+blocos                       → seven_blocos
+unidades                     → seven_unidades
+tipologias                   → seven_tipologias
+boxes                        → seven_boxes
+fachadas                     → seven_fachadas
+mapa_empreendimento          → seven_mapa_empreendimento
+empreendimento_documentos    → seven_empreendimento_documentos
+empreendimento_midias        → seven_empreendimento_midias
+empreendimento_corretores    → seven_empreendimento_corretores
+empreendimento_imobiliarias  → seven_empreendimento_imobiliarias
+clientes                     → seven_clientes
+cliente_telefones            → seven_cliente_telefones
+cliente_socios               → seven_cliente_socios
+cliente_interacoes           → seven_cliente_interacoes
+corretores                   → seven_corretores
+imobiliarias                 → seven_imobiliarias
+incorporadoras               → seven_incorporadoras
+unidade_historico_precos     → seven_unidade_historico_precos
+centros_custo                → seven_centros_custo
+centro_custo_empreendimentos → seven_centro_custo_empreendimentos
+plano_contas                 → seven_plano_contas
+lancamentos_financeiros      → seven_lancamentos_financeiros
+saldos_mensais               → seven_saldos_mensais
+configuracao_comercial       → seven_configuracao_comercial
+```
 
-## Estratégia de execução — Views (baixo risco)
+**Sistema (7):**
+```text
+modules                    → sistema_modules
+role_permissions           → sistema_role_permissions
+user_module_permissions    → sistema_user_module_permissions
+user_empreendimentos       → sistema_user_empreendimentos
+audit_logs                 → sistema_audit_logs
+notificacoes               → sistema_notificacoes
+configuracoes_sistema      → sistema_configuracoes
+```
 
-Renomear ~30 tabelas fisicamente e reescrever ~500+ queries no frontend em uma tacada é altíssimo risco de quebra em cascata. Faremos assim:
+Preservados (não trocar): `profiles`, `roles`, `user_roles`, `arqo_*`, `nexa_*`, `arqo_vw_forecast_ponderado`.
 
-### Fase 1 — Migração de banco (uma única migration)
+## Execução
 
-1. `ALTER TABLE <antigo> RENAME TO <novo>` para cada tabela.
-2. Foreign keys, RLS policies, triggers, sequences, índices seguem automaticamente (Postgres atualiza referências internas).
-3. **Criar VIEWS com os nomes antigos** apontando para as novas tabelas (`CREATE VIEW empreendimentos AS SELECT * FROM seven_empreendimentos;`), com `GRANT` equivalente e `SECURITY INVOKER` para respeitar RLS da tabela base.
-4. Atualizar todas as **funções SECURITY DEFINER** que fazem `FROM <tabela>` para usar o novo nome (has_role, is_admin, get_user_imobiliaria_id, get_gestor_empreendimento, user_has_empreendimento_access, get_unidades_disponiveis, arqo_atribuir_lead_roleta, get_or_create_pessoa, validate_*, uppercase_*, auto_set_gestor_id_clientes, prevent_gestor_id_change, arqo_transicionar_status, get_module_scope, can_access_module*, get_user_module_permission, get_cidades_corretores, get_imobiliarias_ativas, get_corretor_ids_by_user, is_gestor_imobiliaria, is_seven_team, is_incorporador, is_cliente_externo).
-5. Recriar triggers apontando para os novos nomes de tabela.
+### Passo 1 — Substituição em massa
+Script `sed` iterando o mapeamento acima:
+- Alvo: `src/**/*.{ts,tsx}` e `supabase/functions/**/*.ts`.
+- Padrão exato: `.from('<antigo>')` e `.from("<antigo>")` → `.from('<novo>')`.
+- Só ocorrências literais dentro de `.from(...)` — não mexemos em nomes de arquivo, comentários, strings de UI, rotas, permissões, ícones ou variáveis.
+- Também substituir referências a nomes de tabela em `foreignTable:` / `referencedTable:` se existirem (a checar durante execução).
 
-**Resultado após Fase 1:** o app **continua funcionando sem mudança de código** porque as views antigas espelham as tabelas novas. Novas tabelas já ficam com nome final; frontend pode migrar gradualmente.
+### Passo 2 — Ajustes específicos
+- Verificar joins embutidos no formato `select('*, tabela(*)')`: nesses casos o Supabase JS aceita nome de tabela como alias de FK; se houver, também trocar (`, clientes(` → `, seven_clientes(` etc.).
+- Rodar `bunx tsgo --noEmit` — o `types.ts` regenerado terá apenas os novos nomes (após drop das views). Qualquer referência esquecida acusa erro de tipo.
 
-### Fase 2 — Regenerar types.ts
+### Passo 3 — Drop das views (migration)
+Após o `tsgo` passar sem erros, uma segunda migration:
+```sql
+DROP VIEW IF EXISTS public.<nome_antigo> CASCADE;  -- x32
+```
+`CASCADE` só afeta views/objetos que dependam da view — nada mais depende delas hoje.
 
-O `src/integrations/supabase/types.ts` é regenerado automaticamente pelo Supabase após a migration. Ele passará a listar **tanto** as tabelas novas (`seven_*`, `sistema_*`) **quanto** as views antigas (nomes originais) — o TypeScript aceita as duas.
+### Passo 4 — Regenerar types.ts
+Automático após o drop. Passa a listar só os nomes novos.
 
-### Fase 3 — Migração do código (posterior, opcional)
+### Passo 5 — Validação
+- `bunx tsgo --noEmit` limpo.
+- Abrir manualmente: `/`, `/empreendimentos`, `/clientes`, `/arqo/leads`, `/nexa/agenda`, `/usuarios`.
+- Rodar `supabase--linter` para conferir se não sobrou nada quebrado.
 
-Substituir gradualmente `.from('empreendimentos')` → `.from('seven_empreendimentos')` etc. via search/replace por módulo. Como as views continuam existindo, nada quebra durante a transição. Quando 100% do código estiver migrado, dropamos as views em uma segunda migration.
+## Riscos
 
-Nesta primeira entrega faremos **apenas a Fase 1 + Fase 2**. O código do frontend não muda.
-
-## Riscos e mitigações
-
-- **Edge functions** que usam nomes antigos → continuam funcionando via views.
-- **RLS policies** → seguem automaticamente com o rename; validaremos via `supabase--linter` após aplicar.
-- **Funções SECURITY DEFINER com search_path fixo** → precisam ser recriadas com nome novo; incluídas na migration.
-- **Views vs. políticas RLS** → todas as views serão criadas como `SECURITY INVOKER` (padrão em PG 15+) para herdar RLS das tabelas base.
-- **Nomes ambíguos**: `configuracoes_sistema` → `sistema_configuracoes` (evita `sistema_configuracoes_sistema`).
-
-## Verificação após aplicar
-
-1. Rodar `supabase--linter` para conferir se nenhuma policy/função ficou órfã.
-2. Abrir 5 telas críticas: `/empreendimentos`, `/clientes`, `/arqo/leads`, `/nexa/agenda`, `/usuarios` — devem carregar normalmente (via views).
-3. Confirmar login/logout (auth intocado).
-4. Testar criar 1 cliente, 1 lead Arqo, 1 visita Nexa (write path via views).
+- **Joins com nome de tabela como alias** (`select('*, clientes(nome)')`) podem estar espalhados. O `sed` cobre os `.from(...)`; farei uma varredura extra para `, <antigo>(` e `, <antigo>!` (foreign hint) e trocarei também.
+- **Se algum arquivo importar tipos do `types.ts` pelo nome antigo** (`Database['public']['Tables']['clientes']`), quebra. Farei busca prévia por esse padrão antes do drop e ajusto se houver.
 
 ## Arquivos afetados
 
-- **1 migration** (via `supabase--migration`): renames + views + recriação das SECURITY DEFINER functions.
-- **`src/integrations/supabase/types.ts`**: regenerado automaticamente.
-- **Nenhum arquivo de código do frontend** nesta fase.
+- ~40 arquivos em `src/` (edição em massa via sed).
+- 4 edge functions.
+- 1 migration final (`DROP VIEW`).
+- `src/integrations/supabase/types.ts` regenerado.

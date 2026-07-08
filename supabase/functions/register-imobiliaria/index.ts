@@ -109,14 +109,14 @@ Deno.serve(async (req) => {
 
     if (tipo_pessoa === 'juridica' && cnpjLimpo) {
       const { data: existingCnpj } = await supabaseAdmin
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('id')
         .eq('cnpj', cnpjLimpo)
         .maybeSingle();
       if (existingCnpj) return errorResponse('CNPJ já cadastrado no sistema');
     } else if (tipo_pessoa === 'fisica' && cpfLimpo) {
       const { data: existingCpf } = await supabaseAdmin
-        .from('imobiliarias')
+        .from('seven_imobiliarias')
         .select('id')
         .eq('cpf', cpfLimpo)
         .maybeSingle();
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
     // 4. Criar registro na tabela imobiliarias
     const { error: imobiliariaError } = await supabaseAdmin
-      .from('imobiliarias')
+      .from('seven_imobiliarias')
       .insert({
         nome: nome_imobiliaria.toUpperCase(),
         tipo_pessoa: tipo_pessoa || 'juridica',
@@ -187,14 +187,14 @@ Deno.serve(async (req) => {
 
     // 5. Auto-vincular empreendimentos com auto_vincular_corretor = true
     const { data: imobCreated } = await supabaseAdmin
-      .from('imobiliarias')
+      .from('seven_imobiliarias')
       .select('id')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (imobCreated) {
       const { data: empsAuto } = await supabaseAdmin
-        .from('empreendimentos')
+        .from('seven_empreendimentos')
         .select('id')
         .eq('auto_vincular_corretor', true);
 
@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
           imobiliaria_id: imobCreated.id,
         }));
         await supabaseAdmin
-          .from('empreendimento_imobiliarias')
+          .from('seven_empreendimento_imobiliarias')
           .upsert(links, { onConflict: 'empreendimento_id,imobiliaria_id' });
 
         const userEmpLinks = empsAuto.map(e => ({
@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
           empreendimento_id: e.id,
         }));
         await supabaseAdmin
-          .from('user_empreendimentos')
+          .from('sistema_user_empreendimentos')
           .upsert(userEmpLinks, { onConflict: 'user_id,empreendimento_id' });
       }
     }
