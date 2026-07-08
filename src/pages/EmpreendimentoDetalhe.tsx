@@ -347,22 +347,11 @@ export default function EmpreendimentoDetalhe() {
         )}
 
         {isAdminOrGestor && (
-          <TabsContent value="valores">
-            <UnidadesValoresTab empreendimentoId={id!} />
-          </TabsContent>
-        )}
-
-        {isAdminOrGestor && (
           <TabsContent value="memorial">
             <UnidadesMemorialTab empreendimentoId={id!} />
           </TabsContent>
         )}
 
-        {isAdminOrGestor && (
-          <TabsContent value="comercial">
-            <ConfiguracaoComercialTab empreendimentoId={id!} />
-          </TabsContent>
-        )}
 
         {isAdminOrGestor && (
           <TabsContent value="historico">
