@@ -15,7 +15,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, title, subtitle, actions, badge, backTo, backLabel, metadata }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <AppTopbar />
 
       {title && (
