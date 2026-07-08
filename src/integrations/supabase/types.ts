@@ -2033,6 +2033,207 @@ export type Database = {
         }
         Relationships: []
       }
+      nexa_contratos: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          unidade_id: string | null
+          updated_at: string
+          valor: number | null
+          visita_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number | null
+          visita_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number | null
+          visita_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_contratos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "nexa_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexa_visitas: {
+        Row: {
+          arqo_lead_id: string | null
+          cliente_id: string | null
+          corretor_id: string | null
+          created_at: string
+          created_by: string | null
+          data_hora: string
+          empreendimento_id: string
+          google_event_id: string | null
+          id: string
+          imobiliaria_parceira_id: string | null
+          observacoes: string | null
+          status: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at: string
+          visitante_nome: string | null
+          visitante_telefone: string | null
+        }
+        Insert: {
+          arqo_lead_id?: string | null
+          cliente_id?: string | null
+          corretor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_hora: string
+          empreendimento_id: string
+          google_event_id?: string | null
+          id?: string
+          imobiliaria_parceira_id?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at?: string
+          visitante_nome?: string | null
+          visitante_telefone?: string | null
+        }
+        Update: {
+          arqo_lead_id?: string | null
+          cliente_id?: string | null
+          corretor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_hora?: string
+          empreendimento_id?: string
+          google_event_id?: string | null
+          id?: string
+          imobiliaria_parceira_id?: string | null
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["nexa_visita_status"]
+          updated_at?: string
+          visitante_nome?: string | null
+          visitante_telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
+            columns: ["arqo_lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_arqo_lead_id_fkey"
+            columns: ["arqo_lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_vw_forecast_ponderado"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_corretor_id_fkey"
+            columns: ["corretor_id"]
+            isOneToOne: false
+            referencedRelation: "corretores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_imobiliaria_parceira_id_fkey"
+            columns: ["imobiliaria_parceira_id"]
+            isOneToOne: false
+            referencedRelation: "imobiliarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexa_visitas_eventos: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          tipo_evento: string
+          unidade_id: string | null
+          usuario_id: string | null
+          visita_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          tipo_evento: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+          visita_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          tipo_evento?: string
+          unidade_id?: string | null
+          usuario_id?: string | null
+          visita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_visitas_eventos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "nexa_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificacoes: {
         Row: {
           created_at: string
@@ -2818,6 +3019,7 @@ export type Database = {
       is_cliente_externo: { Args: { _user_id: string }; Returns: boolean }
       is_gestor_imobiliaria: { Args: { _user_id: string }; Returns: boolean }
       is_incorporador: { Args: { _user_id: string }; Returns: boolean }
+      is_nexa_user: { Args: { _user_id: string }; Returns: boolean }
       is_seven_team: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       user_has_empreendimento_access: {
@@ -2894,6 +3096,12 @@ export type Database = {
         | "perdido"
       lead_temperatura: "frio" | "morno" | "quente"
       midia_tipo: "imagem" | "video" | "tour_virtual" | "pdf" | "link"
+      nexa_visita_status:
+        | "agendada"
+        | "confirmada"
+        | "realizada"
+        | "no_show"
+        | "cancelada"
       nivel_cadastro_cliente: "lead" | "qualificado" | "comprador"
       parcela_status: "pendente" | "paga" | "atrasada" | "cancelada"
       pendencia_status: "aberta" | "resolvida" | "cancelada"
@@ -3138,6 +3346,13 @@ export const Constants = {
       ],
       lead_temperatura: ["frio", "morno", "quente"],
       midia_tipo: ["imagem", "video", "tour_virtual", "pdf", "link"],
+      nexa_visita_status: [
+        "agendada",
+        "confirmada",
+        "realizada",
+        "no_show",
+        "cancelada",
+      ],
       nivel_cadastro_cliente: ["lead", "qualificado", "comprador"],
       parcela_status: ["pendente", "paga", "atrasada", "cancelada"],
       pendencia_status: ["aberta", "resolvida", "cancelada"],

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2, Users, Map, Settings, LogOut, Menu, X,
-  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp,
+  Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
+  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,6 +49,14 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
+    label: 'Nexa', icon: CalendarDays,
+    items: [
+      { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
+      { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
+      { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
+    ],
+  },
+  {
     label: 'Clientes', icon: Users,
     items: [
       { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
@@ -88,11 +96,13 @@ export function AppTopbar() {
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
   const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
+  const NEXA_ROLES = ['nexa_admin', 'nexa_gestor', 'nexa_corretor'];
 
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
       if (item.adminOnly) return isAdmin();
       if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
+      if (item.moduleName === 'nexa') return isAdmin() || (role && NEXA_ROLES.includes(role));
       return canAccessModule(item.moduleName);
     });
 
