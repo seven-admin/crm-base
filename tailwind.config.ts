@@ -89,6 +89,14 @@ export default {
           sold: "hsl(var(--status-sold))",
           blocked: "hsl(var(--status-blocked))",
         },
+        table: {
+          row: "hsl(var(--table-row))",
+          "row-alt": "hsl(var(--table-row-alt))",
+          "row-hover": "hsl(var(--table-row-hover))",
+          border: "hsl(var(--table-border))",
+          header: "hsl(var(--table-header))",
+          "header-foreground": "hsl(var(--table-header-foreground))",
+        },
       },
       borderRadius: {
         "2xl": "calc(var(--radius) + 0.25rem)",
