@@ -156,7 +156,6 @@ export function AppTopbar() {
         <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center overflow-x-auto">
           {visibleGroups.map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
-            const color = `hsl(var(${group.colorVar}))`;
             return (
               <DropdownMenu key={group.label}>
                 <DropdownMenuTrigger asChild>
@@ -165,7 +164,7 @@ export function AppTopbar() {
                       'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap',
                       hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
                     )}
-                    style={hasActive ? { boxShadow: `inset 0 -2px 0 0 ${color}` } : undefined}
+                    style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
                   >
                     <span className="flex items-center gap-1.5">
                       {group.label}
@@ -189,7 +188,7 @@ export function AppTopbar() {
                             active && 'bg-primary-soft text-primary font-medium'
                           )}
                         >
-                          <item.icon className="h-4 w-4" style={{ color }} />
+                          <item.icon className="h-4 w-4 text-muted-foreground" />
                           <span>{item.label}</span>
                         </Link>
                       </DropdownMenuItem>
