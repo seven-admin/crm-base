@@ -22,10 +22,10 @@ export function useUnidades(empreendimentoId: string | undefined, filters?: Unid
         .from('seven_unidades')
         .select(`
           *,
-          bloco:blocos(*),
-          tipologia:tipologias(*),
-          fachada:fachadas(id, nome, descricao, imagem_url),
-          boxes(numero, tipo)
+          bloco:seven_blocos(*),
+          tipologia:seven_tipologias(*),
+          fachada:seven_fachadas(id, nome, descricao, imagem_url),
+          seven_boxes(numero, tipo)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)

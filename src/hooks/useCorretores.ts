@@ -26,7 +26,7 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
         .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .order('nome_completo');
       
@@ -76,7 +76,7 @@ export function useCorretores(imobiliariaId?: string, options: QueryOptions = {}
         .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -206,7 +206,7 @@ export function useCorretor(id: string | undefined) {
         .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -243,7 +243,7 @@ export function useCorretoresPaginated(page = 1, pageSize = 20, search?: string,
         .from('seven_corretores')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome)
+          imobiliaria:seven_imobiliarias(id, nome)
         `, { count: 'exact' })
         .order('nome_completo')
         .range(from, to);

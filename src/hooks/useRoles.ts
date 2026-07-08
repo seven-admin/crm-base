@@ -87,7 +87,7 @@ export function useRolePermissions(roleId: string | null) {
           can_edit,
           can_delete,
           scope,
-          module:modules(id, name, display_name)
+          module:sistema_modules(id, name, display_name)
         `)
         .eq('role_id', roleId);
 

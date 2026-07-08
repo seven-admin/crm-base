@@ -67,11 +67,11 @@ export function useClientes(filters?: ClienteFilters) {
         .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          empreendimento:empreendimentos(id, nome),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          empreendimento:seven_empreendimentos(id, nome),
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -88,10 +88,10 @@ export function useClientes(filters?: ClienteFilters) {
           .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name),
-            empreendimento:empreendimentos(id, nome)
+            empreendimento:seven_empreendimentos(id, nome)
           `)
           .eq('is_active', true)
           .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -149,11 +149,11 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
         .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          empreendimento:empreendimentos(id, nome),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          empreendimento:seven_empreendimentos(id, nome),
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('is_active', true)
         .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -171,10 +171,10 @@ export function useClientesPaginated(filters?: ClienteFilters & { page?: number;
           .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name),
-            empreendimento:empreendimentos(id, nome)
+            empreendimento:seven_empreendimentos(id, nome)
           `)
           .eq('is_active', true)
           .not('nome', 'ilike', '%COMPRADOR HISTÓRICO%')
@@ -226,10 +226,10 @@ export function useCliente(id: string | undefined) {
         .from('seven_clientes')
         .select(`
           *,
-          corretor:corretores(id, nome_completo),
-          imobiliaria:imobiliarias(id, nome),
+          corretor:seven_corretores(id, nome_completo),
+          imobiliaria:seven_imobiliarias(id, nome),
           gestor:profiles(id, full_name),
-          conjuge:clientes!clientes_conjuge_id_fkey(id, nome)
+          conjuge:seven_clientes!clientes_conjuge_id_fkey(id, nome)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -242,8 +242,8 @@ export function useCliente(id: string | undefined) {
           .from('seven_clientes')
           .select(`
             *,
-            corretor:corretores(id, nome_completo),
-            imobiliaria:imobiliarias(id, nome),
+            corretor:seven_corretores(id, nome_completo),
+            imobiliaria:seven_imobiliarias(id, nome),
             gestor:profiles(id, full_name)
           `)
           .eq('id', id)

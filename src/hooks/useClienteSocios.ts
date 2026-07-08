@@ -19,7 +19,7 @@ export function useClienteSocios(clienteId: string | undefined) {
           percentual_participacao,
           observacao,
           created_at,
-          socio:clientes!cliente_socios_socio_id_fkey(id, nome, cpf)
+          socio:seven_clientes!cliente_socios_socio_id_fkey(id, nome, cpf)
         `)
         .eq('cliente_id', clienteId)
         .order('created_at', { ascending: true });

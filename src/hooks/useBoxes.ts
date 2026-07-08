@@ -13,8 +13,8 @@ export function useBoxes(empreendimentoId: string | undefined, filters?: { bloco
         .from('seven_boxes')
         .select(`
           *,
-          bloco:blocos(id, nome),
-          unidade:unidades(id, numero)
+          bloco:seven_blocos(id, nome),
+          unidade:seven_unidades(id, numero)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .eq('is_active', true)

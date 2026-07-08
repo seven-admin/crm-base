@@ -31,7 +31,7 @@ export function useIncorporadorEmpreendimentos(): UseIncorporadorEmpreendimentos
         .from('sistema_user_empreendimentos')
         .select(`
           empreendimento_id,
-          empreendimento:empreendimentos(id, nome, status, tipo, endereco_cidade, endereco_uf)
+          empreendimento:seven_empreendimentos(id, nome, status, tipo, endereco_cidade, endereco_uf)
         `)
         .eq('user_id', user.id);
 

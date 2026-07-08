@@ -13,7 +13,7 @@ export function useEmpreendimentoCorretores(empreendimentoId: string | undefined
         .from('seven_empreendimento_corretores')
         .select(`
           *,
-          corretor:corretores(id, nome_completo, email, telefone, creci)
+          corretor:seven_corretores(id, nome_completo, email, telefone, creci)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .order('autorizado_em', { ascending: false });
@@ -35,7 +35,7 @@ export function useEmpreendimentoImobiliarias(empreendimentoId: string | undefin
         .from('seven_empreendimento_imobiliarias')
         .select(`
           *,
-          imobiliaria:imobiliarias(id, nome, email, telefone)
+          imobiliaria:seven_imobiliarias(id, nome, email, telefone)
         `)
         .eq('empreendimento_id', empreendimentoId)
         .order('autorizado_em', { ascending: false });

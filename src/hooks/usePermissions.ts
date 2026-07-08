@@ -46,7 +46,7 @@ export function usePermissions() {
           { data: userPerms },
         ] = await Promise.all([
           supabase.from('sistema_modules').select('*').eq('is_active', true),
-          supabase.from('roles').select('id, role_permissions(*)').eq('name', role).maybeSingle(),
+          supabase.from('roles').select('id, sistema_role_permissions(*)').eq('name', role).maybeSingle(),
           supabase.from('sistema_user_module_permissions').select('*').eq('user_id', user.id),
         ]);
 

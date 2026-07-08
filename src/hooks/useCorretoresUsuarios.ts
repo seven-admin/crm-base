@@ -51,7 +51,7 @@ export function useCorretoresUsuarios() {
       // 3. Buscar corretores com user_id
       const { data: corretores, error: corretoresError } = await supabase
         .from('seven_corretores')
-        .select('*, imobiliaria:imobiliarias(id, nome)')
+        .select('*, imobiliaria:seven_imobiliarias(id, nome)')
         .in('user_id', userIds);
 
       if (corretoresError) throw corretoresError;
