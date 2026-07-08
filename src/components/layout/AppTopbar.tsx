@@ -250,12 +250,11 @@ export function AppTopbar() {
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
                 {visibleGroups.map((group) => {
                   const isOpen = mobileGroups.includes(group.label);
-                  const color = `hsl(var(${group.colorVar}))`;
                   return (
                     <Collapsible key={group.label} open={isOpen} onOpenChange={() => toggleMobileGroup(group.label)}>
                       <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
                         <span className="flex items-center gap-2.5">
-                          <group.icon className="h-4 w-4" style={{ color }} />
+                          <group.icon className="h-4 w-4 text-muted-foreground" />
                           {group.label}
                         </span>
                         <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
@@ -274,7 +273,7 @@ export function AppTopbar() {
                                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                               )}
                             >
-                              <item.icon className="h-4 w-4" style={{ color }} />
+                              <item.icon className="h-4 w-4 text-muted-foreground" />
                               {item.label}
                             </Link>
                           );
