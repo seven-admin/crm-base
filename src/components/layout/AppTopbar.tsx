@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
-  UserCog, Shield, User, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
+  UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
+  Home, Handshake,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
 import logo from '@/assets/logo-sevengroup.png';
 
 interface MenuItem {
@@ -23,6 +25,7 @@ interface MenuItem {
   path: string;
   moduleName: string;
   adminOnly?: boolean;
+  description?: string;
 }
 
 interface MenuGroup {
@@ -31,14 +34,32 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const menuGroups: MenuGroup[] = [
+// Grupo Seven agrupado por categoria (mega-menu)
+const sevenCategories: { label: string; items: MenuItem[] }[] = [
   {
-    label: 'Empreendimentos', icon: Building2,
+    label: 'Portfólio',
     items: [
-      { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
-      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades' },
+      { icon: Building2, label: 'Empreendimentos', path: '/empreendimentos', moduleName: 'empreendimentos', description: 'Projetos e obras' },
+      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades', description: 'Mapa de unidades' },
     ],
   },
+  {
+    label: 'Pessoas',
+    items: [
+      { icon: Users, label: 'Clientes', path: '/clientes', moduleName: 'clientes', description: 'Cadastro geral' },
+    ],
+  },
+  {
+    label: 'Parceiros',
+    items: [
+      { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras', description: 'Empresas parceiras' },
+      { icon: Handshake, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias', description: 'Rede parceira' },
+      { icon: UserCog, label: 'Corretores', path: '/corretores', moduleName: 'corretores', description: 'Time comercial externo' },
+    ],
+  },
+];
+
+const menuGroups: MenuGroup[] = [
   {
     label: 'Arqo', icon: Target,
     items: [
@@ -54,18 +75,6 @@ const menuGroups: MenuGroup[] = [
       { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
       { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
-    ],
-  },
-  {
-    label: 'Clientes', icon: Users,
-    items: [
-      { icon: Users, label: 'Cadastro de Clientes', path: '/clientes', moduleName: 'clientes' },
-    ],
-  },
-  {
-    label: 'Parceiros', icon: Building2,
-    items: [
-      { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
     ],
   },
   {
