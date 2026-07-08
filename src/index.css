@@ -18,7 +18,7 @@
 
     /* Primary = preto grafite; Accent = amarelo */
     --primary: 0 0% 13%;                  /* #202020 */
-    --primary-foreground: 48 100% 71%;    /* #FFDF6C */
+    --primary-foreground: 27 92% 54%;    /* #F5941E */
     --primary-soft: 0 0% 93%;             /* #EDEDED */
     --primary-soft-foreground: 0 0% 13%;
 
@@ -28,7 +28,7 @@
     --muted: 0 0% 95%;
     --muted-foreground: 0 0% 44%;         /* #707070 */
 
-    --accent: 48 100% 71%;                /* #FFDF6C */
+    --accent: 27 92% 54%;                /* #F5941E */
     --accent-foreground: 0 0% 13%;
 
     --destructive: 0 84% 60%;
@@ -46,22 +46,22 @@
     --border: 0 0% 90%;                   /* #E5E5E5 */
     --input: 0 0% 90%;
     --input-bg: 0 0% 98%;
-    --ring: 48 100% 71%;                  /* amarelo focus */
+    --ring: 27 92% 54%;                  /* laranja focus */
 
     --radius: 1rem;
 
     /* Sidebar tokens */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 48 100% 71%;
+    --sidebar-primary: 27 92% 54%;
     --sidebar-primary-foreground: 0 0% 13%;
     --sidebar-accent: 0 0% 95%;
     --sidebar-accent-foreground: 0 0% 13%;
     --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 48 100% 71%;
+    --sidebar-ring: 27 92% 54%;
 
     /* Chart palette (amarelo como highlight) */
-    --chart-1: 48 100% 60%;
+    --chart-1: 27 92% 54%;
     --chart-2: 142 71% 45%;
     --chart-3: 217 91% 60%;
     --chart-4: 0 84% 60%;
@@ -77,8 +77,8 @@
     --nav-planejamento: 160 84% 39%;
     --nav-empreendimentos: 160 84% 39%;
     --nav-clientes: 258 90% 66%;
-    --nav-comercial: 48 100% 60%;
-    --nav-diario: 48 100% 60%;
+    --nav-comercial: 27 92% 54%;
+    --nav-diario: 27 92% 54%;
     --nav-contratos: 213 94% 68%;
     --nav-financeiro: 38 92% 50%;
     --nav-parceiros: 330 81% 60%;
@@ -105,10 +105,10 @@
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 48 100% 71%;
+    --primary: 27 92% 54%;
     --primary-foreground: 0 0% 13%;
     --primary-soft: 0 0% 18%;
-    --primary-soft-foreground: 48 100% 71%;
+    --primary-soft-foreground: 27 92% 54%;
 
     --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 90%;
@@ -116,7 +116,7 @@
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 48 100% 71%;
+    --accent: 27 92% 54%;
     --accent-foreground: 0 0% 13%;
 
     --destructive: 0 72% 51%;
@@ -125,16 +125,16 @@
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --input-bg: 0 0% 14%;
-    --ring: 48 100% 71%;
+    --ring: 27 92% 54%;
 
     --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 48 100% 71%;
+    --sidebar-primary: 27 92% 54%;
     --sidebar-primary-foreground: 0 0% 13%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 48 100% 71%;
+    --sidebar-ring: 27 92% 54%;
   }
 
 }
