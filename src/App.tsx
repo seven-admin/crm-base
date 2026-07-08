@@ -5,9 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ArqoProtectedRoute } from "@/components/arqo/ArqoProtectedRoute";
 import { PortalIncorporadorLayout } from "@/components/portal-incorporador/PortalIncorporadorLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import React, { Suspense, lazy } from "react";
+
+const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
+const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
+const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
+const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -74,6 +80,12 @@ const App = () => (
                 <Route path="/usuarios" element={<ProtectedRoute moduleName="usuarios" adminOnly><Usuarios /></ProtectedRoute>} />
                 <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
                 <Route path="/auditoria" element={<ProtectedRoute moduleName="auditoria" adminOnly><Auditoria /></ProtectedRoute>} />
+
+                {/* Arqo */}
+                <Route path="/arqo/roleta" element={<ArqoProtectedRoute><ArqoRoleta /></ArqoProtectedRoute>} />
+                <Route path="/arqo/leads" element={<ArqoProtectedRoute><ArqoLeadsKanban /></ArqoProtectedRoute>} />
+                <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
+                <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
 
                 {/* Portal do Incorporador */}
                 <Route

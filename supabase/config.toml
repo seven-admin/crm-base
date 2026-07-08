@@ -1,1 +1,13 @@
 project_id = "pizerpoxuqopekmbvohh"
+
+[functions.arqo-ingest-lead]
+verify_jwt = false
+
+[functions.arqo-qualificar-lead]
+verify_jwt = true
+
+[functions.arqo-sla-check]
+verify_jwt = false
+
+[functions.arqo-reengajamento]
+verify_jwt = false

@@ -14,6 +14,636 @@ export type Database = {
   }
   public: {
     Tables: {
+      arqo_agendamentos: {
+        Row: {
+          created_at: string
+          data_hora: string
+          duracao_min: number
+          google_event_id: string | null
+          id: string
+          lead_id: string
+          local: string | null
+          observacoes: string | null
+          responsavel_id: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_hora: string
+          duracao_min?: number
+          google_event_id?: string | null
+          id?: string
+          lead_id: string
+          local?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_hora?: string
+          duracao_min?: number
+          google_event_id?: string | null
+          id?: string
+          lead_id?: string
+          local?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_agendamentos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_agendamentos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_vw_forecast_ponderado"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "arqo_agendamentos_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_funil_etapas: {
+        Row: {
+          categoria: string
+          cor: string
+          created_at: string
+          descricao: string | null
+          id: string
+          is_active: boolean
+          is_encerramento: boolean
+          nome: string
+          ordem: number
+          peso: number
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          cor?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          is_encerramento?: boolean
+          nome: string
+          ordem: number
+          peso?: number
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          cor?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          is_encerramento?: boolean
+          nome?: string
+          ordem?: number
+          peso?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      arqo_grupo_membros: {
+        Row: {
+          created_at: string
+          grupo_id: string
+          id: string
+          is_active: boolean
+          ordem_roleta: number
+          papel: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          grupo_id: string
+          id?: string
+          is_active?: boolean
+          ordem_roleta?: number
+          papel?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          grupo_id?: string
+          id?: string
+          is_active?: boolean
+          ordem_roleta?: number
+          papel?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_grupo_membros_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_grupos_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_grupo_membros_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_grupos_atendimento: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      arqo_lead_events: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          etapa_de: string | null
+          etapa_para: string | null
+          id: string
+          lead_id: string
+          payload: Json
+          temperatura_de: string | null
+          temperatura_para: string | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          etapa_de?: string | null
+          etapa_para?: string | null
+          id?: string
+          lead_id: string
+          payload?: Json
+          temperatura_de?: string | null
+          temperatura_para?: string | null
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          etapa_de?: string | null
+          etapa_para?: string | null
+          id?: string
+          lead_id?: string
+          payload?: Json
+          temperatura_de?: string | null
+          temperatura_para?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_lead_events_etapa_de_fkey"
+            columns: ["etapa_de"]
+            isOneToOne: false
+            referencedRelation: "arqo_funil_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_etapa_para_fkey"
+            columns: ["etapa_para"]
+            isOneToOne: false
+            referencedRelation: "arqo_funil_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_vw_forecast_ponderado"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_temperatura_de_fkey"
+            columns: ["temperatura_de"]
+            isOneToOne: false
+            referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_temperatura_para_fkey"
+            columns: ["temperatura_para"]
+            isOneToOne: false
+            referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_lead_events_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_lead_sources: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      arqo_leads: {
+        Row: {
+          atendimento_final_pelo_gestor: boolean
+          atribuido_em: string | null
+          cliente_id: string
+          closer_id: string | null
+          consultor_id: string | null
+          created_at: string
+          created_by: string | null
+          empreendimento_id: string | null
+          etapa_id: string
+          fechado_em: string | null
+          grupo_id: string | null
+          id: string
+          is_active: boolean
+          motivo_perda: string | null
+          observacoes: string | null
+          optout_em: string | null
+          proximo_contato_em: string | null
+          qualificacao_atualizada_em: string | null
+          qualificacao_resumo: string | null
+          qualificacao_score: number | null
+          source_id: string | null
+          temperatura_id: string | null
+          tentativas_contato: number
+          ultimo_contato_em: string | null
+          unidade_id: string | null
+          updated_at: string
+          valor_estimado: number | null
+        }
+        Insert: {
+          atendimento_final_pelo_gestor?: boolean
+          atribuido_em?: string | null
+          cliente_id: string
+          closer_id?: string | null
+          consultor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          empreendimento_id?: string | null
+          etapa_id: string
+          fechado_em?: string | null
+          grupo_id?: string | null
+          id?: string
+          is_active?: boolean
+          motivo_perda?: string | null
+          observacoes?: string | null
+          optout_em?: string | null
+          proximo_contato_em?: string | null
+          qualificacao_atualizada_em?: string | null
+          qualificacao_resumo?: string | null
+          qualificacao_score?: number | null
+          source_id?: string | null
+          temperatura_id?: string | null
+          tentativas_contato?: number
+          ultimo_contato_em?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+          valor_estimado?: number | null
+        }
+        Update: {
+          atendimento_final_pelo_gestor?: boolean
+          atribuido_em?: string | null
+          cliente_id?: string
+          closer_id?: string | null
+          consultor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          empreendimento_id?: string | null
+          etapa_id?: string
+          fechado_em?: string | null
+          grupo_id?: string | null
+          id?: string
+          is_active?: boolean
+          motivo_perda?: string | null
+          observacoes?: string | null
+          optout_em?: string | null
+          proximo_contato_em?: string | null
+          qualificacao_atualizada_em?: string | null
+          qualificacao_resumo?: string | null
+          qualificacao_score?: number | null
+          source_id?: string | null
+          temperatura_id?: string | null
+          tentativas_contato?: number
+          ultimo_contato_em?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+          valor_estimado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_leads_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_funil_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_grupos_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_temperatura_id_fkey"
+            columns: ["temperatura_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_oportunidade_responsaveis: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          papel: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          papel: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          papel?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_oportunidade_responsaveis_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_oportunidade_responsaveis_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_vw_forecast_ponderado"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "arqo_oportunidade_responsaveis_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_regua_reengajamento: {
+        Row: {
+          canal: string
+          created_at: string
+          dias_apos_ultimo_contato: number
+          id: string
+          is_active: boolean
+          mensagem_template: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          canal?: string
+          created_at?: string
+          dias_apos_ultimo_contato: number
+          id?: string
+          is_active?: boolean
+          mensagem_template: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          canal?: string
+          created_at?: string
+          dias_apos_ultimo_contato?: number
+          id?: string
+          is_active?: boolean
+          mensagem_template?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      arqo_sla_regras: {
+        Row: {
+          acao_expiracao: string
+          created_at: string
+          etapa_id: string
+          horas_max: number
+          id: string
+          is_active: boolean
+          temperatura_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao_expiracao?: string
+          created_at?: string
+          etapa_id: string
+          horas_max?: number
+          id?: string
+          is_active?: boolean
+          temperatura_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao_expiracao?: string
+          created_at?: string
+          etapa_id?: string
+          horas_max?: number
+          id?: string
+          is_active?: boolean
+          temperatura_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_sla_regras_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_funil_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_sla_regras_temperatura_id_fkey"
+            columns: ["temperatura_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arqo_temperaturas: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          is_active: boolean
+          nome: string
+          ordem: number
+          peso: number
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          nome: string
+          ordem?: number
+          peso?: number
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          nome?: string
+          ordem?: number
+          peso?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1973,9 +2603,104 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      arqo_vw_forecast_ponderado: {
+        Row: {
+          cliente_id: string | null
+          closer_id: string | null
+          consultor_id: string | null
+          created_at: string | null
+          empreendimento_id: string | null
+          etapa_categoria: string | null
+          etapa_id: string | null
+          etapa_nome: string | null
+          fator_ponderacao: number | null
+          grupo_id: string | null
+          lead_id: string | null
+          temperatura_id: string | null
+          temperatura_nome: string | null
+          updated_at: string | null
+          valor_bruto: number | null
+          valor_ponderado: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqo_leads_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_funil_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_grupos_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_temperatura_id_fkey"
+            columns: ["temperatura_id"]
+            isOneToOne: false
+            referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      arqo_atribuir_lead_roleta: {
+        Args: {
+          p_grupo_id: string
+          p_lead_id: string
+          p_tipo_atribuicao?: string
+        }
+        Returns: string
+      }
+      arqo_liberar_consultor: {
+        Args: { p_lead_id: string }
+        Returns: undefined
+      }
+      arqo_registrar_tentativa: {
+        Args: { p_canal?: string; p_comentario?: string; p_lead_id: string }
+        Returns: undefined
+      }
+      arqo_transicionar_status: {
+        Args: {
+          p_comentario?: string
+          p_etapa_para: string
+          p_lead_id: string
+          p_motivo_perda?: string
+        }
+        Returns: undefined
+      }
       can_access_empreendimento: {
         Args: { _empreendimento_id: string; _user_id: string }
         Returns: boolean
@@ -2011,6 +2736,16 @@ export type Database = {
       }
       get_module_scope: {
         Args: { _module_name: string; _user_id: string }
+        Returns: string
+      }
+      get_or_create_pessoa: {
+        Args: {
+          p_cpf?: string
+          p_email?: string
+          p_nome: string
+          p_origem?: string
+          p_telefone?: string
+        }
         Returns: string
       }
       get_role_id: { Args: { _role_name: string }; Returns: string }

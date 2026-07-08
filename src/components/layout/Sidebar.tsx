@@ -74,6 +74,16 @@ const menuGroupsDef = [
     ],
   },
   {
+    label: 'Arqo',
+    icon: Target,
+    items: [
+      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
+      { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
+      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
+      { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
+    ],
+  },
+  {
     label: 'Clientes',
     icon: Users,
     items: [
@@ -167,11 +177,14 @@ export function Sidebar() {
     );
   };
 
+  const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
+
   const filterItems = useCallback((items: MenuItem[]) =>
     items.filter((item) => {
       if (item.adminOnly) return isAdmin();
+      if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
       return canAccessModule(item.moduleName);
-    }), [isAdmin, canAccessModule]);
+    }), [isAdmin, canAccessModule, role]);
 
 
   const visibleGroups = useMemo(() => menuGroups
