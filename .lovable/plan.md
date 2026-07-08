@@ -1,29 +1,42 @@
-## Situação atual
+## Diagnóstico
 
-A migração do frontend + edge functions já foi executada no turno anterior:
+`/empreendimentos` retorna vazio porque a policy RLS chama `user_has_empreendimento_access()` e essa função (junto com várias outras) ainda referencia os **nomes antigos** de tabelas (ex.: `public.user_empreendimentos`, `public.corretores`, `public.imobiliarias`). Como as views antigas foram derrubadas, todo `SELECT` em `seven_empreendimentos` explode com `42P01: relation "public.user_empreendimentos" does not exist` — e o PostgREST devolve erro que a UI trata como lista vazia.
 
-- 40+ arquivos em `src/**/*.ts(x)` reescritos (`.from('clientes')` → `.from('seven_clientes')`, etc.)
-- 6 edge functions reescritas (`create-corretor`, `create-user`, `delete-imobiliaria`, `delete-user`, `register-corretor`, `register-imobiliaria`)
-- Joins embutidos em `select(...)` reescritos (ex.: `blocos(nome)` → `seven_blocos(nome)`)
-- Views antigas dropadas na migration `20260708210518`
-- `types.ts` regenerado
-- `tsgo --noEmit` limpo
+Confirmei chamando o REST direto:
+```
+GET /rest/v1/seven_empreendimentos?is_active=eq.true
+→ {"code":"42P01","message":"relation \"public.user_empreendimentos\" does not exist"}
+```
 
-Verificação agora: `rg` não encontra nenhuma referência remanescente aos nomes antigos de tabela.
+## Correção
 
-## O que fazer neste passo
+Migration que recria (`CREATE OR REPLACE FUNCTION`) todas as funções SQL que ainda usam nomes antigos, apontando para os nomes novos.
 
-Como não há código antigo pendente, o plano é apenas **validar em execução** que nada quebrou depois da queda das views:
+Funções a atualizar:
 
-1. Abrir o preview nas rotas principais (Empreendimentos, Clientes, Corretores, Unidades, Financeiro, Notificações) via Playwright headless.
-2. Coletar erros de console e respostas HTTP 4xx/5xx do Supabase.
-3. Se aparecer alguma tabela antiga em erro (ex.: um `.rpc()` que referencia nome antigo internamente, ou string dinâmica que o `sed` não pegou), corrigir pontualmente.
-4. Rodar `supabase--linter` para confirmar que não sobrou RLS órfão.
+| Função | Referência antiga → nova |
+|---|---|
+| `user_has_empreendimento_access` | `user_empreendimentos` → `sistema_user_empreendimentos`; `corretores` → `seven_corretores`; `empreendimento_imobiliarias` → `seven_empreendimento_imobiliarias`; `imobiliarias` → `seven_imobiliarias` |
+| `can_access_empreendimento` | `user_empreendimentos` → `sistema_user_empreendimentos` |
+| `can_access_module` | `role_permissions`/`modules` → `sistema_role_permissions`/`sistema_modules` |
+| `can_access_module_v2` | `user_module_permissions`/`modules`/`role_permissions` → `sistema_*` |
+| `get_user_module_permission` | `user_module_permissions`/`modules` → `sistema_*` |
+| `get_module_scope` | `role_permissions`/`modules` → `sistema_*` |
+| `get_gestor_empreendimento` | `user_empreendimentos` → `sistema_user_empreendimentos` |
+| `get_user_imobiliaria_id` | `imobiliarias` → `seven_imobiliarias` |
+| `get_imobiliarias_ativas` | `imobiliarias` → `seven_imobiliarias` |
+| `get_corretor_ids_by_user` | `corretores` → `seven_corretores` |
+| `get_cidades_corretores` | `corretores`/`imobiliarias` → `seven_*` |
+| `get_or_create_pessoa` | `clientes` → `seven_clientes` |
+| `get_unidades_disponiveis` | `unidades`/`empreendimentos`/`incorporadoras`/`blocos`/`tipologias` → `seven_*` |
+| `ensure_single_principal_telefone` | `cliente_telefones` → `seven_cliente_telefones` |
+| `generate_cod_sorteio` | `corretores` → `seven_corretores` |
+| `audit_trigger_func` | `audit_logs` → `sistema_audit_logs` |
 
-Nenhuma nova migration deve ser necessária. Se algo aparecer, corrijo no ponto exato.
+Nada de código frontend muda nesta etapa — o problema é 100% dentro do banco.
 
-## Detalhes técnicos
+## Validação
 
-- Preservados intactos: `profiles`, `roles`, `user_roles`, `arqo_*`, `nexa_*`.
-- Edge functions afetadas serão redeployadas automaticamente ao editar; se algo falhar, uso `supabase--edge_function_logs` para diagnosticar.
-- Caso surja erro do tipo `relation "xxx" does not exist`, é sinal de string dinâmica (template literal) que escapou do `sed` — corrijo caso a caso.
+Após a migration:
+1. `curl` no endpoint REST de `seven_empreendimentos` deve devolver JSON com registros (não mais 42P01).
+2. Playwright em `/empreendimentos` deve renderizar cards em vez de "Nenhum empreendimento encontrado".
