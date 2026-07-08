@@ -95,6 +95,13 @@ const App = () => (
                 <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
 
+                {/* Nexa */}
+                <Route path="/nexa/agenda" element={<NexaProtectedRoute><NexaAgenda /></NexaProtectedRoute>} />
+                <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute><NexaVisitaDetalhe /></NexaProtectedRoute>} />
+                <Route path="/nexa/disponibilidade" element={<NexaProtectedRoute><NexaDisponibilidade /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos" element={<NexaProtectedRoute><NexaContratos /></NexaProtectedRoute>} />
+
+
                 {/* Portal do Incorporador */}
                 <Route
                   path="/portal-incorporador"
