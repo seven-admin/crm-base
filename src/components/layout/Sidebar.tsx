@@ -64,14 +64,7 @@ interface MenuGroup {
 }
 
 const menuGroupsDef = [
-  {
-    label: 'Planejamento',
-    icon: ClipboardList,
-    items: [
-      { icon: ClipboardList, label: 'Cronograma', path: '/planejamento', moduleName: 'planejamento' },
-      { icon: Settings, label: 'Configurações', path: '/planejamento/configuracoes', moduleName: 'planejamento_config', adminOnly: true },
-    ],
-  },
+
   {
     label: 'Empreendimentos',
     icon: Building2,
@@ -126,26 +119,6 @@ const menuGroupsDef = [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras' },
       { icon: Building, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias' },
       { icon: UserCheck, label: 'Corretores', path: '/corretores', moduleName: 'corretores' },
-    ],
-  },
-  {
-    label: 'Marketing',
-    icon: Palette,
-    items: [
-      { icon: BarChart2, label: 'Dashboard', path: '/marketing/dashboard', moduleName: 'projetos_marketing' },
-      { icon: Palette, label: 'Atividades', path: '/marketing', moduleName: 'projetos_marketing' },
-      { icon: Users, label: 'Equipe de Criação', path: '/marketing/equipe', moduleName: 'projetos_marketing' },
-      { icon: Calendar, label: 'Calendário', path: '/marketing/calendario', moduleName: 'projetos_marketing' },
-      { icon: Kanban, label: 'Etapas de Atividades', path: '/marketing/etapas', moduleName: 'projetos_marketing_config', adminOnly: true },
-    ],
-  },
-  {
-    label: 'Eventos',
-    icon: CalendarDays,
-    items: [
-      { icon: CalendarDays, label: 'Listagem', path: '/eventos', moduleName: 'eventos' },
-      { icon: Calendar, label: 'Calendário', path: '/eventos/calendario', moduleName: 'eventos' },
-      { icon: ClipboardList, label: 'Templates', path: '/eventos/templates', moduleName: 'eventos_templates', adminOnly: true },
     ],
   },
   {
@@ -231,10 +204,10 @@ export function Sidebar() {
 
   const filterItems = useCallback((items: MenuItem[]) =>
     items.filter((item) => {
-      if (item.path === '/marketing/etapas') return isSuperAdmin();
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
-    }), [isSuperAdmin, isAdmin, canAccessModule]);
+    }), [isAdmin, canAccessModule]);
+
 
   const visibleGroups = useMemo(() => menuGroups
     .map((group) => ({

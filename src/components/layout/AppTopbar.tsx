@@ -38,13 +38,6 @@ interface MenuGroup {
 
 const menuGroups: MenuGroup[] = [
   {
-    label: 'Planejamento', icon: ClipboardList, colorVar: '--nav-planejamento',
-    items: [
-      { icon: ClipboardList, label: 'Cronograma', path: '/planejamento', moduleName: 'planejamento' },
-      { icon: Settings, label: 'Configurações', path: '/planejamento/configuracoes', moduleName: 'planejamento_config', adminOnly: true },
-    ],
-  },
-  {
     label: 'Empreendimentos', icon: Building2, colorVar: '--nav-empreendimentos',
     items: [
       { icon: Building2, label: 'Listagem', path: '/empreendimentos', moduleName: 'empreendimentos' },
@@ -95,24 +88,6 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Marketing', icon: Palette, colorVar: '--nav-marketing',
-    items: [
-      { icon: BarChart2, label: 'Dashboard', path: '/marketing/dashboard', moduleName: 'projetos_marketing' },
-      { icon: Palette, label: 'Atividades', path: '/marketing', moduleName: 'projetos_marketing' },
-      { icon: Users, label: 'Equipe de Criação', path: '/marketing/equipe', moduleName: 'projetos_marketing' },
-      { icon: Calendar, label: 'Calendário', path: '/marketing/calendario', moduleName: 'projetos_marketing' },
-      { icon: Kanban, label: 'Etapas de Atividades', path: '/marketing/etapas', moduleName: 'projetos_marketing_config', adminOnly: true },
-    ],
-  },
-  {
-    label: 'Eventos', icon: CalendarDays, colorVar: '--nav-eventos',
-    items: [
-      { icon: CalendarDays, label: 'Listagem', path: '/eventos', moduleName: 'eventos' },
-      { icon: Calendar, label: 'Calendário', path: '/eventos/calendario', moduleName: 'eventos' },
-      { icon: ClipboardList, label: 'Templates', path: '/eventos/templates', moduleName: 'eventos_templates', adminOnly: true },
-    ],
-  },
-  {
     label: 'Sistema', icon: Settings, colorVar: '--nav-sistema',
     items: [
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
@@ -121,6 +96,7 @@ const menuGroups: MenuGroup[] = [
     ],
   },
 ];
+
 
 function isPathActive(item: MenuItem, pathname: string, search: string) {
   const [basePath, queryString] = item.path.split('?');
@@ -139,10 +115,10 @@ export function AppTopbar() {
 
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
-      if (item.path === '/marketing/etapas') return isSuperAdmin();
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
     });
+
 
   const visibleGroups = menuGroups
     .map((g) => ({ ...g, items: filterItems(g.items) }))

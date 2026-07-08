@@ -38,15 +38,6 @@ const PortalSolicitacoes = lazy(() => import("./pages/PortalSolicitacoes"));
 const ConfiguracaoNegociacoes = lazy(() => import("./pages/ConfiguracaoNegociacoes"));
 const Relatorios = lazy(() => import("./pages/Relatorios"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
-const Marketing = lazy(() => import("./pages/Marketing"));
-const MarketingCalendario = lazy(() => import("./pages/MarketingCalendario"));
-const MarketingDetalhe = lazy(() => import("./pages/MarketingDetalhe"));
-const EtapasTickets = lazy(() => import("./pages/EtapasTickets"));
-const Eventos = lazy(() => import("./pages/Eventos"));
-const EventoDetalhe = lazy(() => import("./pages/EventoDetalhe"));
-const EventosCalendarioPage = lazy(() => import("./pages/EventosCalendario"));
-const EventoTemplates = lazy(() => import("./pages/EventoTemplates"));
-const Briefings = lazy(() => import("./pages/Briefings"));
 const Financeiro = lazy(() => import("./pages/Financeiro"));
 const Bonificacoes = lazy(() => import("./pages/Bonificacoes"));
 const DRE = lazy(() => import("./pages/DRE"));
@@ -55,27 +46,21 @@ const TiposParcela = lazy(() => import("./pages/TiposParcela"));
 const AssinarContrato = lazy(() => import("./pages/AssinarContrato"));
 const DashboardExecutivo = lazy(() => import("./pages/DashboardExecutivo"));
 const Solicitacoes = lazy(() => import("./pages/Solicitacoes"));
-const DashboardMarketing = lazy(() => import("./pages/DashboardMarketing"));
-const EquipeMarketing = lazy(() => import("./pages/EquipeMarketing"));
 const TermosUso = lazy(() => import("./pages/TermosUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const PortalClientes = lazy(() => import("./pages/PortalClientes"));
 const NovaPropostaComercial = lazy(() => import("./pages/NovaPropostaComercial"));
 const SemAcesso = lazy(() => import("./pages/SemAcesso"));
-const Planejamento = lazy(() => import("./pages/Planejamento"));
-const PlanejamentoConfiguracoes = lazy(() => import("./pages/PlanejamentoConfiguracoes"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const DesignTest = lazy(() => import("./pages/DesignTest"));
 const PortalCorretoresGestao = lazy(() => import("./pages/portal/PortalCorretoresGestao"));
 const PortalMinhaImobiliaria = lazy(() => import("./pages/portal/PortalMinhaImobiliaria"));
-const PortalEventos = lazy(() => import("./pages/portal/PortalEventos"));
+
 
 // Portal Incorporador pages
 const PortalIncorporadorDashboard = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDashboard"));
 const PortalIncorporadorExecutivo = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorExecutivo"));
 const PortalIncorporadorForecast = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorForecast"));
-const PortalIncorporadorMarketing = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorMarketing"));
-const PortalIncorporadorPlanejamento = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPlanejamento"));
 const PortalIncorporadorDisponibilidade = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDisponibilidade"));
 const PortalIncorporadorPropostas = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorPropostas"));
 
@@ -263,74 +248,8 @@ const App = () => (
                 <Auditoria />
               </ProtectedRoute>
             } />
-            {/* Marketing e Criação */}
-            <Route path="/marketing/dashboard" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <DashboardMarketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <Marketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/equipe" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <EquipeMarketing />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/etapas" element={
-              <ProtectedRoute moduleName="projetos_marketing_config" adminOnly>
-                <EtapasTickets />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/calendario" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <MarketingCalendario />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/:id" element={
-              <ProtectedRoute moduleName="projetos_marketing">
-                <MarketingDetalhe />
-              </ProtectedRoute>
-            } />
-            <Route path="/marketing/briefings" element={
-              <ProtectedRoute moduleName="briefings">
-                <Briefings />
-              </ProtectedRoute>
-            } />
-            
-            {/* Planejamento */}
-            <Route path="/planejamento" element={
-              <ProtectedRoute moduleName="planejamento">
-                <Planejamento />
-              </ProtectedRoute>
-            } />
-            <Route path="/planejamento/configuracoes" element={
-              <ProtectedRoute moduleName="planejamento_config" adminOnly>
-                <PlanejamentoConfiguracoes />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos" element={
-              <ProtectedRoute moduleName="eventos">
-                <Eventos />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/calendario" element={
-              <ProtectedRoute moduleName="eventos">
-                <EventosCalendarioPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/:id" element={
-              <ProtectedRoute moduleName="eventos">
-                <EventoDetalhe />
-              </ProtectedRoute>
-            } />
-            <Route path="/eventos/templates" element={
-              <ProtectedRoute moduleName="eventos_templates" adminOnly>
-                <EventoTemplates />
-              </ProtectedRoute>
-            } />
+
+
 
             {/* Portal do Corretor - Layout aninhado */}
             <Route 
@@ -346,7 +265,7 @@ const App = () => (
               <Route path="empreendimentos/:id" element={<PortalEmpreendimentoDetalhe />} />
               <Route path="solicitacoes" element={<PortalSolicitacoes />} />
               <Route path="clientes" element={<PortalClientes />} />
-              <Route path="eventos" element={<PortalEventos />} />
+              
               <Route path="corretores" element={<PortalCorretoresGestao />} />
               <Route path="minha-imobiliaria" element={<PortalMinhaImobiliaria />} />
             </Route>
@@ -363,8 +282,6 @@ const App = () => (
               <Route index element={<PortalIncorporadorDashboard />} />
               <Route path="executivo" element={<PortalIncorporadorExecutivo />} />
               <Route path="forecast" element={<PortalIncorporadorForecast />} />
-              <Route path="marketing" element={<PortalIncorporadorMarketing />} />
-              <Route path="planejamento" element={<PortalIncorporadorPlanejamento />} />
               <Route path="disponibilidade" element={<PortalIncorporadorDisponibilidade />} />
               <Route path="propostas" element={<PortalIncorporadorPropostas />} />
             </Route>

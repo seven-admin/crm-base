@@ -128,17 +128,8 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
         .eq('is_active', true);
       unidadesQ = applyEmpFilter(unidadesQ, empreendimentoId, empreendimentoIds);
 
-      let ticketsQ = supabase
-        .from('projetos_marketing')
-        .select('id, status, data_previsao, empreendimento_id')
-        .eq('is_active', true);
-      ticketsQ = applyEmpFilter(ticketsQ, empreendimentoId, empreendimentoIds);
+      // Marketing e briefings removidos do sistema
 
-      let briefingsQ = supabase
-        .from('briefings')
-        .select('id, status')
-        .eq('is_active', true);
-      briefingsQ = applyEmpFilter(briefingsQ, empreendimentoId, empreendimentoIds);
 
       const [
         { data: contratos },
@@ -149,8 +140,6 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
         { data: parcelas },
         { data: unidades },
         { data: empreendimentos },
-        { data: tickets },
-        { data: briefings },
         { data: clientes },
         { data: atividades },
       ] = await Promise.all([
@@ -162,11 +151,12 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
         supabase.from('comissao_parcelas').select('id, valor, status, data_vencimento, comissao_id'),
         unidadesQ,
         supabase.from('empreendimentos').select('id, nome').eq('is_active', true),
-        ticketsQ,
-        briefingsQ,
         supabase.from('clientes').select('id, temperatura, fase').eq('is_active', true),
         supabase.from('atividades').select('id, status, data_inicio, data_fim, requer_followup, data_followup'),
       ]);
+      const tickets: Array<{ status: string; data_previsao: string | null }> = [];
+      const briefings: Array<{ status: string }> = [];
+
 
       const lancamentos = (lancamentosRaw as LancamentoRow[] | null) || [];
 
