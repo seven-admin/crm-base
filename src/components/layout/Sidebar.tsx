@@ -74,6 +74,16 @@ const menuGroupsDef = [
     ],
   },
   {
+    label: 'Arqo',
+    icon: Target,
+    items: [
+      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
+      { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
+      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
+      { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
+    ],
+  },
+  {
     label: 'Clientes',
     icon: Users,
     items: [
