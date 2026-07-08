@@ -128,17 +128,8 @@ export function useDashboardExecutivo(empreendimentoId?: string, empreendimentoI
         .eq('is_active', true);
       unidadesQ = applyEmpFilter(unidadesQ, empreendimentoId, empreendimentoIds);
 
-      let ticketsQ = supabase
-        .from('projetos_marketing')
-        .select('id, status, data_previsao, empreendimento_id')
-        .eq('is_active', true);
-      ticketsQ = applyEmpFilter(ticketsQ, empreendimentoId, empreendimentoIds);
+      // Marketing e briefings removidos do sistema
 
-      let briefingsQ = supabase
-        .from('briefings')
-        .select('id, status')
-        .eq('is_active', true);
-      briefingsQ = applyEmpFilter(briefingsQ, empreendimentoId, empreendimentoIds);
 
       const [
         { data: contratos },
