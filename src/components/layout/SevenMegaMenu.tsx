@@ -8,8 +8,8 @@ export interface SevenMenuItem {
   icon: LucideIcon;
   label: string;
   path: string;
+  moduleName: string;
   description?: string;
-  moduleName?: string;
   adminOnly?: boolean;
 }
 
