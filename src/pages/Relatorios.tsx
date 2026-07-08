@@ -35,7 +35,7 @@ import {
   useComissoesPorGestor,
   useRelatorioValores,
 } from '@/hooks/useRelatorios';
-import { useTicketStats } from '@/hooks/useRelatoriosMarketing';
+
 import { useEmpreendimentos } from '@/hooks/useEmpreendimentos';
 import { useGestoresProduto } from '@/hooks/useGestores';
 
