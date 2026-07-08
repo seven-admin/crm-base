@@ -158,6 +158,7 @@ export function AppTopbar() {
 
         {/* Desktop nav (right aligned) */}
         <nav className="hidden lg:flex items-center gap-1 ml-auto overflow-x-auto">
+          <SevenMegaMenu categories={sevenVisible} hasActive={sevenHasActive} />
           {visibleGroups.map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
             const isSistema = group.label === 'Sistema';
