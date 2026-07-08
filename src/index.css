@@ -403,8 +403,9 @@
 
 
   .sidebar-nav-item-inactive {
-    color: hsl(30 10% 65%);
+    color: hsl(var(--sidebar-foreground) / 0.75);
   }
+
 
   .sidebar-nav-item-inactive:hover {
     color: hsl(0 0% 95%);
