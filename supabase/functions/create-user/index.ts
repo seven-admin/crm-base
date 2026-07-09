@@ -209,9 +209,11 @@ Deno.serve(async (req) => {
         phone: phone || null,
         is_active,
         tipo_vinculo,
-        cargo: tipo_vinculo === 'funcionario_seven' ? cargo : null
+        cargo: tipo_vinculo === 'funcionario_seven' ? cargo : null,
+        empresa
       })
       .eq('id', newUserId)
+
 
     if (profileError) {
       console.error('Error updating profile:', profileError)
