@@ -1,67 +1,72 @@
-/* Fonts loaded via index.html <link> for non-blocking render */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @layer base {
   :root {
-    /* Paleta nova — azul institucional sobre neutros suaves */
+    /* Neutros suaves + azul institucional + laranja como accent */
     --background: 240 14% 98%;             /* #f8f8fa */
-    --foreground: 210 30% 12%;             /* #141d26 */
-    --card: 0 0% 100%;                     /* #ffffff */
-    --card-foreground: 210 30% 12%;
+    --foreground: 220 26% 14%;             /* #1b2330 */
+    --card: 0 0% 100%;
+    --card-foreground: 220 26% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 12%;
+    --popover-foreground: 220 26% 14%;
     --primary: 208 91% 53%;                /* #198EF4 */
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 208 71% 82%;           /* #b2d4f2 */
-    --primary-soft-foreground: 208 100% 16%; /* #002c52 */
-    --secondary: 210 32% 21%;              /* #243447 */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 225 15% 94%;                  /* #e5e6eb */
-    --muted-foreground: 210 20% 60%;       /* #8899ac */
-    --accent: 336 74% 45%;                 /* #c51f5d — uso pontual */
+    --primary-soft: 208 90% 94%;           /* #e2f0fd */
+    --primary-soft-foreground: 208 100% 22%;
+    --secondary: 220 14% 96%;              /* #f1f3f5 */
+    --secondary-foreground: 220 26% 20%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;       /* labels acinzentados */
+    --accent: 28 91% 54%;                  /* #F5941E laranja accent */
     --accent-foreground: 0 0% 100%;
-    --destructive: 12 71% 48%;             /* #d24726 */
+    --accent-soft: 28 100% 94%;            /* #ffe6cc */
+    --accent-soft-foreground: 28 91% 34%;
+    --destructive: 0 78% 60%;              /* #ea5455 coral suave */
     --destructive-foreground: 0 0% 100%;
-    --success: 142 55% 40%;
+    --success: 168 76% 42%;                /* #17bfa8 teal */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 43 96% 56%;
     --warning-foreground: 0 0% 100%;
-    --info: 208 91% 53%;                   /* #198EF4 — mesmo tom do primary */
+    --info: 208 91% 53%;
     --info-foreground: 0 0% 100%;
-    --border: 225 15% 91%;                 /* #e5e6eb suave */
-    --input: 228 14% 84%;                  /* #d2d4dc */
+    --border: 220 13% 91%;
+    --input: 220 13% 88%;
     --input-bg: 0 0% 100%;
-    --ring: 208 91% 53%;                   /* foco azul institucional */
-    --radius: 0.75rem;
-    /* Tabelas — contraste bem sutil entre linhas */
-    --table-row: 0 0% 100%;                /* #ffffff */
-    --table-row-alt: 240 14% 98%;          /* #f8f8fa */
-    --table-row-hover: 220 20% 96%;        /* #eef1f5 */
-    --table-border: 220 14% 94%;           /* #eceef2 */
-    --table-header: 228 15% 96%;           /* #f4f5f8 */
-    --table-header-foreground: 210 20% 45%;
-    /* Sidebar tokens */
+    --ring: 208 91% 53%;
+    --radius: 1rem;
+    /* Card escuro (tipo Status Summary da referência) */
+    --surface-dark: 217 33% 17%;           /* #1e293b */
+    --surface-dark-foreground: 210 40% 96%;
+    /* Tabelas — divisórias sutis, sem zebra pesada */
+    --table-row: 0 0% 100%;
+    --table-row-alt: 220 20% 98%;
+    --table-row-hover: 220 20% 96%;
+    --table-border: 220 13% 93%;
+    --table-header: 0 0% 100%;
+    --table-header-foreground: 215 16% 45%;
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 30% 12%;
-    --sidebar-primary: 208 91% 53%;        /* #198EF4 */
+    --sidebar-foreground: 220 26% 14%;
+    --sidebar-primary: 208 91% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 208 71% 88%;         /* variação leve do primary-soft */
-    --sidebar-accent-foreground: 208 100% 16%;
-    --sidebar-border: 225 15% 91%;
+    --sidebar-accent: 208 90% 96%;
+    --sidebar-accent-foreground: 208 100% 22%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 208 91% 53%;
-    /* Chart palette */
-    --chart-1: 208 91% 53%;                /* #198EF4 */
-    --chart-2: 210 32% 21%;
-    --chart-3: 208 71% 82%;
-    --chart-4: 336 74% 45%;
-    --chart-5: 12 71% 48%;
+    /* Chart palette (pastel, referência) */
+    --chart-1: 208 91% 65%;                /* blue */
+    --chart-2: 28 91% 65%;                 /* orange */
+    --chart-3: 168 60% 65%;                /* teal */
+    --chart-4: 340 82% 76%;                /* pink */
+    --chart-5: 258 83% 78%;                /* purple */
+    --chart-6: 43 96% 70%;                 /* yellow */
     /* Status tokens */
-    --status-available: 142 55% 40%;
-    --status-reserved: 38 92% 50%;
-    --status-sold: 12 71% 48%;
-    --status-blocked: 210 20% 60%;
-    /* Nav group colors — uma única identidade azul */
+    --status-available: 168 76% 42%;
+    --status-reserved: 43 96% 56%;
+    --status-sold: 0 78% 60%;
+    --status-blocked: 215 16% 55%;
+    /* Nav group — unified blue */
     --nav-planejamento: 208 91% 53%;
     --nav-empreendimentos: 208 91% 53%;
     --nav-clientes: 208 91% 53%;
@@ -73,49 +78,53 @@
     --nav-marketing: 208 91% 53%;
     --nav-eventos: 208 91% 53%;
     --nav-sistema: 208 91% 53%;
-    /* Elevation */
-    --shadow-card: 0 1px 2px rgba(20, 29, 38, 0.04), 0 1px 3px rgba(20, 29, 38, 0.05);
-    --shadow-topbar: 0 1px 2px rgba(20, 29, 38, 0.04);
-    --shadow-popover: 0 8px 24px rgba(20, 29, 38, 0.08), 0 2px 6px rgba(20, 29, 38, 0.05);
-    --gradient-primary: linear-gradient(135deg, hsl(208 91% 53%) 0%, hsl(208 100% 16%) 100%);
+    /* Elevation — muito sutil */
+    --shadow-card: 0 1px 3px rgb(20 29 38 / 0.04), 0 1px 2px rgb(20 29 38 / 0.03);
+    --shadow-topbar: 0 1px 2px rgb(20 29 38 / 0.04);
+    --shadow-popover: 0 10px 30px rgb(20 29 38 / 0.10), 0 2px 6px rgb(20 29 38 / 0.05);
+    --gradient-primary: linear-gradient(135deg, hsl(208 91% 53%) 0%, hsl(208 100% 32%) 100%);
   }
   .dark {
-    --background: 210 34% 12%;             /* #15202b */
-    --foreground: 210 25% 92%;
-    --card: 208 30% 15%;                   /* #192734 */
-    --card-foreground: 210 25% 92%;
-    --popover: 208 30% 15%;
-    --popover-foreground: 210 25% 92%;
-    --primary: 208 91% 53%;                /* #198EF4 — mesmo tom do light */
+    --background: 220 26% 9%;              /* #0f1620 */
+    --foreground: 210 40% 96%;
+    --card: 217 33% 13%;                   /* #17202e */
+    --card-foreground: 210 40% 96%;
+    --popover: 217 33% 13%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 208 91% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 210 32% 21%;           /* #243447 */
-    --primary-soft-foreground: 208 71% 82%;
-    --secondary: 210 32% 21%;              /* #243447 */
-    --secondary-foreground: 210 25% 92%;
-    --muted: 208 28% 18%;                  /* #22303c */
-    --muted-foreground: 210 20% 60%;       /* #8899ac */
-    --accent: 336 74% 55%;
+    --primary-soft: 208 60% 22%;
+    --primary-soft-foreground: 208 90% 85%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 28 91% 58%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 12 71% 55%;
+    --accent-soft: 28 60% 22%;
+    --accent-soft-foreground: 28 90% 85%;
+    --destructive: 0 78% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 208 28% 18%;                 /* #22303c */
-    --input: 208 28% 22%;
-    --input-bg: 208 30% 15%;
-    --ring: 208 91% 53%;
-    --table-row: 208 30% 15%;              /* #192734 */
-    --table-row-alt: 210 34% 13%;          /* leve variação */
-    --table-row-hover: 210 32% 21%;        /* #243447 */
-    --table-border: 208 28% 18%;
-    --table-header: 210 34% 11%;
-    --table-header-foreground: 210 20% 60%;
-    --sidebar-background: 210 34% 12%;
-    --sidebar-foreground: 210 25% 92%;
-    --sidebar-primary: 208 91% 53%;
+    --border: 217 33% 20%;
+    --input: 217 33% 22%;
+    --input-bg: 217 33% 13%;
+    --ring: 208 91% 58%;
+    --surface-dark: 217 33% 10%;
+    --surface-dark-foreground: 210 40% 96%;
+    --table-row: 217 33% 13%;
+    --table-row-alt: 217 33% 15%;
+    --table-row-hover: 217 33% 20%;
+    --table-border: 217 33% 20%;
+    --table-header: 217 33% 13%;
+    --table-header-foreground: 215 20% 65%;
+    --sidebar-background: 220 26% 9%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 208 91% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 32% 21%;
-    --sidebar-accent-foreground: 210 25% 92%;
-    --sidebar-border: 208 28% 18%;
-    --sidebar-ring: 208 91% 53%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 208 91% 58%;
   }
 }
 @layer base {
@@ -124,15 +133,16 @@
   }
   body {
     @apply text-foreground font-sans antialiased;
-    font-family: 'DM Sans', sans-serif;
+    font-feature-settings: "cv11", "ss01";
     background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
-  h1, h2, h3 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
   }
 }
+
 @layer components {
   .card-elevated {
     @apply bg-card rounded-lg border border-border;
