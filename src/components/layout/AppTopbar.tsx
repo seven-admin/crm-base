@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake,
+  Home, Handshake, User as UserIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
+
 import { ROLE_LABELS } from '@/types/auth.types';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -80,11 +82,14 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Sistema', icon: Settings,
     items: [
+      { icon: UserIcon, label: 'Meu Perfil', path: '/meu-perfil', moduleName: '__self__' },
+      { icon: Shield, label: 'Perfis de Acesso', path: '/usuarios?tab=perfis', moduleName: 'usuarios', adminOnly: true },
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
     ],
   },
 ];
+
 
 
 
@@ -101,6 +106,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
+  const { canAccessGroup, isExterno } = useEmpresaAccess();
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
@@ -110,6 +116,7 @@ export function AppTopbar() {
 
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
+      if (item.moduleName === '__self__') return true;
       if (item.adminOnly) return isAdmin();
       if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
       if (item.moduleName === 'nexa') return isAdmin() || (role && NEXA_ROLES.includes(role));
@@ -119,14 +126,23 @@ export function AppTopbar() {
 
   const visibleGroups = menuGroups
     .map((g) => ({ ...g, items: filterItems(g.items) }))
-    .filter((g) => g.items.length > 0);
+    .filter((g) => g.items.length > 0)
+    .filter((g) => {
+      if (g.label === 'Arqo') return canAccessGroup('arqo');
+      if (g.label === 'Nexa') return canAccessGroup('nexa');
+      if (g.label === 'Sistema') return canAccessGroup('sistema') && !isExterno;
+      return true;
+    });
 
-  const sevenVisible: SevenMenuCategory[] = sevenCategories
-    .map((c) => ({ ...c, items: filterItems(c.items) }))
-    .filter((c) => c.items.length > 0);
+  const sevenVisible: SevenMenuCategory[] = canAccessGroup('seven')
+    ? sevenCategories
+        .map((c) => ({ ...c, items: filterItems(c.items) }))
+        .filter((c) => c.items.length > 0)
+    : [];
   const sevenHasActive = sevenVisible.some((c) =>
     c.items.some((i) => isPathActive(i, location.pathname, location.search)),
   );
+
 
   const handleLogout = async () => {
     await signOut();

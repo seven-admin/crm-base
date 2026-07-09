@@ -76,11 +76,11 @@ const registerSchema = z.object({
     val => !val || val.length === 0 || val.length >= 14,
     'Telefone deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX'
   ),
-  aceite_termos: z.literal(true, { errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }) })
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não conferem',
   path: ['confirmPassword'],
 });
+
 
 interface CorretorRegisterFormProps {
   onBack: () => void;
@@ -103,8 +103,8 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
     uf: '',
     telefone: '',
     telefone_contato: '',
-    aceite_termos: false
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -369,23 +369,8 @@ export function CorretorRegisterForm({ onBack }: CorretorRegisterFormProps) {
             </div>
           </div>
 
-          <div className="flex items-start space-x-2 pt-2">
-            <Checkbox
-              id="aceite_termos"
-              checked={formData.aceite_termos}
-              onCheckedChange={(checked) => handleChange('aceite_termos', checked === true)}
-              className={errors.aceite_termos ? 'border-destructive' : ''}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <label htmlFor="aceite_termos" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Li e aceito os{' '}
-                <Link to="/termos" target="_blank" className="text-primary hover:underline">Termos de Uso</Link>
-                {' '}e a{' '}
-                <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">Política de Privacidade</Link>
-              </label>
-              {errors.aceite_termos && <p className="text-xs text-destructive">{errors.aceite_termos}</p>}
-            </div>
-          </div>
+
+
 
           <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={isLoading}>
             {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>) : 'Criar Conta'}

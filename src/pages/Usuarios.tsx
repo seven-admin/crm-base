@@ -86,6 +86,7 @@ export default function Usuarios() {
   const [editIsActive, setEditIsActive] = useState(true);
   const [editTipoVinculo, setEditTipoVinculo] = useState<'funcionario_seven' | 'terceiro'>('terceiro');
   const [editCargo, setEditCargo] = useState('');
+  const [editEmpresa, setEditEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
 
   // Create form state
   const [createEmail, setCreateEmail] = useState('');
@@ -96,6 +97,8 @@ export default function Usuarios() {
   const [createTipoVinculo, setCreateTipoVinculo] = useState<'funcionario_seven' | 'terceiro'>('terceiro');
   const [createCargo, setCreateCargo] = useState('');
   const [createBaseRoleId, setCreateBaseRoleId] = useState<string>('');
+  const [createEmpresa, setCreateEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
+
 
   // Check if selected role has permissions
   const selectedRoleHasPermissions = useMemo(() => {
@@ -156,8 +159,10 @@ export default function Usuarios() {
     setEditIsActive(user.is_active);
     setEditTipoVinculo(user.tipo_vinculo || 'terceiro');
     setEditCargo(user.cargo || '');
+    setEditEmpresa(((user as any).empresa as any) || 'seven');
     setActiveTab('dados');
     setIsEditDialogOpen(true);
+
   };
 
   const handleSaveUser = async () => {
@@ -173,9 +178,11 @@ export default function Usuarios() {
           phone: editPhone || null,
           is_active: editIsActive,
           tipo_vinculo: editTipoVinculo,
-          cargo: editTipoVinculo === 'funcionario_seven' ? editCargo || null : null
-        })
+          cargo: editTipoVinculo === 'funcionario_seven' ? editCargo || null : null,
+          empresa: editEmpresa,
+        } as any)
         .eq('id', editingUser.id);
+
 
       if (profileError) throw profileError;
 
@@ -247,9 +254,11 @@ export default function Usuarios() {
           is_active: createIsActive,
           tipo_vinculo: createTipoVinculo,
           cargo: createTipoVinculo === 'funcionario_seven' ? createCargo || null : null,
-          base_role_id: !selectedRoleHasPermissions && createBaseRoleId ? createBaseRoleId : null
+          base_role_id: !selectedRoleHasPermissions && createBaseRoleId ? createBaseRoleId : null,
+          empresa: createEmpresa,
         }
       });
+
 
       if (response.error) {
         throw new Error(response.error.message || 'Erro ao criar usuário');
@@ -897,6 +906,28 @@ export default function Usuarios() {
                   </p>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="edit-empresa">Vínculo à Empresa</Label>
+                  <Select value={editEmpresa} onValueChange={(v) => setEditEmpresa(v as any)}>
+                    <SelectTrigger id="edit-empresa">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seven">Seven</SelectItem>
+                      <SelectItem value="arqo">Arqo</SelectItem>
+                      <SelectItem value="nexa">Nexa</SelectItem>
+                      <SelectItem value="incorporador">Incorporador</SelectItem>
+                      <SelectItem value="externo">Externo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define quais módulos o usuário enxerga no sistema.
+                  </p>
+                </div>
+
+
+
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Status do Usuário</Label>
@@ -1087,6 +1118,24 @@ export default function Usuarios() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="create-empresa">Vínculo à Empresa *</Label>
+                <Select value={createEmpresa} onValueChange={(v) => setCreateEmpresa(v as any)}>
+                  <SelectTrigger id="create-empresa">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="seven">Seven</SelectItem>
+                    <SelectItem value="arqo">Arqo</SelectItem>
+                    <SelectItem value="nexa">Nexa</SelectItem>
+                    <SelectItem value="incorporador">Incorporador</SelectItem>
+                    <SelectItem value="externo">Externo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+
 
               {/* Show base role selector when selected role might not have permissions */}
               {!selectedRoleHasPermissions && (

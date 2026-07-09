@@ -136,8 +136,10 @@ Deno.serve(async (req) => {
       is_active = true, 
       tipo_vinculo = 'terceiro', 
       cargo = null,
-      base_role_id = null 
+      base_role_id = null,
+      empresa = 'seven'
     } = await req.json()
+
 
     if (!email || !full_name || !role) {
       return new Response(
@@ -207,9 +209,11 @@ Deno.serve(async (req) => {
         phone: phone || null,
         is_active,
         tipo_vinculo,
-        cargo: tipo_vinculo === 'funcionario_seven' ? cargo : null
+        cargo: tipo_vinculo === 'funcionario_seven' ? cargo : null,
+        empresa
       })
       .eq('id', newUserId)
+
 
     if (profileError) {
       console.error('Error updating profile:', profileError)

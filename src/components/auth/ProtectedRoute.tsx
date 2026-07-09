@@ -3,8 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useDefaultRoute } from '@/hooks/useDefaultRoute';
+import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { ActionType } from '@/types/auth.types';
 import { Loader2 } from 'lucide-react';
+
 
 // Check if user has any view permission at all
 const hasAnyViewPermission = (permissions: { can_view: boolean }[]): boolean => {
@@ -29,7 +31,9 @@ export function ProtectedRoute({
   const { isAuthenticated, isLoading: authLoading, role } = useAuth();
   const { canAccessModule, isAdmin, isLoading: permLoading, permissions } = usePermissions();
   const { getDefaultRoute } = useDefaultRoute();
+  const { empresa, isSeven } = useEmpresaAccess();
   const location = useLocation();
+
   const [timedOut, setTimedOut] = useState(false);
 
   // Keep loading while authenticated but role not yet loaded
@@ -72,16 +76,33 @@ export function ProtectedRoute({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // IMPORTANTE: Verificar se usuário com role específico está tentando acessar área errada
-  // Incorporadores só podem acessar /portal-incorporador/*
-  if (role === 'incorporador' && !location.pathname.startsWith('/portal-incorporador')) {
+  // Restrição por empresa (ortogonal ao role). Admins Seven passam.
+  const path = location.pathname;
+  const isSelfPath = path === '/meu-perfil' || path === '/sem-acesso';
+  if (!isSelfPath && !isAdmin()) {
+    if (empresa === 'externo') {
+      return <Navigate to="/sem-acesso" replace />;
+    }
+    if (empresa === 'arqo' && !path.startsWith('/arqo')) {
+      return <Navigate to="/arqo/roleta" replace />;
+    }
+    if (empresa === 'nexa' && !path.startsWith('/nexa')) {
+      return <Navigate to="/nexa/agenda" replace />;
+    }
+    if (empresa === 'incorporador' && !path.startsWith('/portal-incorporador')) {
+      return <Navigate to="/portal-incorporador" replace />;
+    }
+  }
+
+  // IMPORTANTE: legado por role (mantém compat com role incorporador / corretor)
+  if (role === 'incorporador' && !path.startsWith('/portal-incorporador') && !isSelfPath) {
     return <Navigate to="/portal-incorporador" replace />;
   }
 
-  // Corretores e gestores de imobiliária só podem acessar /portal-corretor/* e /portal/*
-  if ((role === 'corretor' || role === 'gestor_imobiliaria') && !location.pathname.startsWith('/portal-corretor') && !location.pathname.startsWith('/portal')) {
+  if ((role === 'corretor' || role === 'gestor_imobiliaria') && !path.startsWith('/portal-corretor') && !path.startsWith('/portal') && !isSelfPath) {
     return <Navigate to="/portal-corretor" replace />;
   }
+
 
   // Check admin-only routes
   if (adminOnly && !isAdmin()) {
