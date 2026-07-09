@@ -76,11 +76,11 @@ const registerSchema = z.object({
     val => !val || val.length === 0 || val.length >= 14,
     'Telefone deve estar no formato (XX) XXXX-XXXX ou (XX) XXXXX-XXXX'
   ),
-  aceite_termos: z.literal(true, { errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }) })
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não conferem',
   path: ['confirmPassword'],
 });
+
 
 interface CorretorRegisterFormProps {
   onBack: () => void;
