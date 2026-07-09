@@ -616,6 +616,24 @@ export default function Usuarios() {
                     )}
                   </>
                 )}
+
+                {isSuperAdmin() && !showOnlyPendentes && selectedUsers.size > 0 && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={clearSelection}>
+                      Limpar ({selectedUsers.size})
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={isBulkDeleting}
+                      className="gap-2"
+                    >
+                      {isBulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      Excluir {selectedUsers.size} usuário(s)
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </CardHeader>
