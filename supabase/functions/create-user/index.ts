@@ -136,8 +136,10 @@ Deno.serve(async (req) => {
       is_active = true, 
       tipo_vinculo = 'terceiro', 
       cargo = null,
-      base_role_id = null 
+      base_role_id = null,
+      empresa = 'seven'
     } = await req.json()
+
 
     if (!email || !full_name || !role) {
       return new Response(
