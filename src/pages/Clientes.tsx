@@ -89,6 +89,8 @@ const Clientes = () => {
   const marcarPerdidoMutation = useMarcarPerdido();
   const reativarMutation = useReativarCliente();
   const updateEmLoteMutation = useUpdateClientesEmLote();
+  const deleteEmLoteMutation = useDeleteClientesEmLote();
+  const { isSuperAdmin } = usePermissions();
   const isMobile = useIsMobile();
 
   // Reset page when filters change
