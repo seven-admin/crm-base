@@ -86,6 +86,7 @@ export default function Usuarios() {
   const [editIsActive, setEditIsActive] = useState(true);
   const [editTipoVinculo, setEditTipoVinculo] = useState<'funcionario_seven' | 'terceiro'>('terceiro');
   const [editCargo, setEditCargo] = useState('');
+  const [editEmpresa, setEditEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
 
   // Create form state
   const [createEmail, setCreateEmail] = useState('');
@@ -96,6 +97,8 @@ export default function Usuarios() {
   const [createTipoVinculo, setCreateTipoVinculo] = useState<'funcionario_seven' | 'terceiro'>('terceiro');
   const [createCargo, setCreateCargo] = useState('');
   const [createBaseRoleId, setCreateBaseRoleId] = useState<string>('');
+  const [createEmpresa, setCreateEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
+
 
   // Check if selected role has permissions
   const selectedRoleHasPermissions = useMemo(() => {
