@@ -409,6 +409,28 @@ export default function Usuarios() {
     fetchUsers();
   };
 
+  // Excluir em lote (super admin)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) return;
+    if (!confirm(`ATENÇÃO: Excluir PERMANENTEMENTE ${selectedUsers.size} usuário(s)? Esta ação não pode ser desfeita.`)) return;
+    setIsBulkDeleting(true);
+    try {
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { user_ids: Array.from(selectedUsers) }
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+      toast.success(response.data?.message ?? 'Usuários excluídos');
+      setSelectedUsers(new Set());
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(sanitizeErrorMessage(error, 'excluir usuários'));
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const getRoleBadgeVariant = (role?: AppRole | null) => {
     switch (role) {
       case 'super_admin':
@@ -594,6 +616,24 @@ export default function Usuarios() {
                     )}
                   </>
                 )}
+
+                {isSuperAdmin() && !showOnlyPendentes && selectedUsers.size > 0 && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={clearSelection}>
+                      Limpar ({selectedUsers.size})
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={isBulkDeleting}
+                      className="gap-2"
+                    >
+                      {isBulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      Excluir {selectedUsers.size} usuário(s)
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -659,7 +699,7 @@ export default function Usuarios() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        {showOnlyPendentes && (
+                        {(showOnlyPendentes || isSuperAdmin()) && (
                           <TableHead className="w-12"></TableHead>
                         )}
                         <TableHead>Usuário</TableHead>
@@ -679,12 +719,12 @@ export default function Usuarios() {
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => handleEditUser(user)}
                         >
-                          {showOnlyPendentes && (
+                          {(showOnlyPendentes || isSuperAdmin()) && (
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <Checkbox
                                 checked={selectedUsers.has(user.id)}
                                 onCheckedChange={() => toggleUserSelection(user.id)}
-                                disabled={user.is_active}
+                                disabled={showOnlyPendentes && user.is_active}
                               />
                             </TableCell>
                           )}
@@ -747,13 +787,24 @@ export default function Usuarios() {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
+                              {isSuperAdmin() && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteUser(user.id, user.email)}
+                                  disabled={isDeletingUser}
+                                  title="Excluir usuário"
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                       {filteredUsers.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={showOnlyPendentes ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={(showOnlyPendentes || isSuperAdmin()) ? 9 : 8} className="text-center py-8 text-muted-foreground">
                             Nenhum usuário encontrado
                           </TableCell>
                         </TableRow>

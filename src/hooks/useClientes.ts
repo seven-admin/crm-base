@@ -399,6 +399,29 @@ export function useDeleteCliente() {
   });
 }
 
+export function useDeleteClientesEmLote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return;
+      const { error } = await supabase.from('seven_clientes').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_data, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes-stats'] });
+      invalidateDashboards(queryClient);
+      toast.success(`${ids.length} cliente(s) excluído(s) permanentemente`);
+    },
+    onError: (error: Error) => {
+      toast.error(sanitizeErrorMessage(error, 'excluir clientes em lote'));
+    },
+  });
+}
+
+
+
 // Qualificar cliente (prospecto → qualificado)
 export function useQualificarCliente() {
   const queryClient = useQueryClient();

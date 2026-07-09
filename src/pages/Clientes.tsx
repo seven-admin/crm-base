@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { useClientesPaginated, useDeleteCliente, useCreateCliente, useUpdateCliente, useClienteStats, useQualificarCliente, useMarcarPerdido, useReativarCliente, useCliente, useUpdateClientesEmLote } from '@/hooks/useClientes';
+import { useClientesPaginated, useDeleteCliente, useCreateCliente, useUpdateCliente, useClienteStats, useQualificarCliente, useMarcarPerdido, useReativarCliente, useCliente, useUpdateClientesEmLote, useDeleteClientesEmLote } from '@/hooks/useClientes';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { Cliente, ClienteFormData, ClienteFase } from '@/types/clientes.types';
 import { perf } from '@/lib/perf';
@@ -88,6 +89,8 @@ const Clientes = () => {
   const marcarPerdidoMutation = useMarcarPerdido();
   const reativarMutation = useReativarCliente();
   const updateEmLoteMutation = useUpdateClientesEmLote();
+  const deleteEmLoteMutation = useDeleteClientesEmLote();
+  const { isSuperAdmin } = usePermissions();
   const isMobile = useIsMobile();
 
   // Reset page when filters change
@@ -200,6 +203,14 @@ const Clientes = () => {
         onNew={handleOpenNew}
         selectedCount={selectedIds.size}
         onOpenAcaoEmLote={() => setAcaoEmLoteDialogOpen(true)}
+        onDeleteSelecionados={isSuperAdmin() ? () => {
+          if (selectedIds.size === 0) return;
+          if (!confirm(`Excluir PERMANENTEMENTE ${selectedIds.size} cliente(s)? Esta ação não pode ser desfeita.`)) return;
+          deleteEmLoteMutation.mutate(Array.from(selectedIds), {
+            onSuccess: () => setSelectedIds(new Set())
+          });
+        } : undefined}
+        isDeletingLote={deleteEmLoteMutation.isPending}
         gestorId={selectedGestor}
         onGestorChange={setSelectedGestor}
         gestores={gestores}

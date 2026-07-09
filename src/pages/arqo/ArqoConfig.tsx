@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useArqoEtapas, useArqoTemperaturas, useArqoSources, useArqoGrupos, useArqoSlaRegras, useArqoRegua } from '@/hooks/useArqo';
 import { ArqoConfigCrud, type ConfigField } from '@/components/arqo/ArqoConfigCrud';
+import { ArqoGrupoMembros } from '@/components/arqo/ArqoGrupoMembros';
 
 export default function ArqoConfig() {
   const { data: etapas = [] } = useArqoEtapas();
@@ -170,10 +171,8 @@ export default function ArqoConfig() {
                 </div>
               )}
             />
-            <p className="text-xs text-muted-foreground mt-3">
-              Membros dos grupos ainda são gerenciados via SQL. Interface completa em breve.
-            </p>
           </Card>
+          <ArqoGrupoMembros />
         </TabsContent>
 
         <TabsContent value="sla">
