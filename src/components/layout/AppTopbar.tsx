@@ -3,13 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake, Sun, Moon,
+  Home, Handshake,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useThemeContext } from '@/components/ThemeProvider';
 import { ROLE_LABELS } from '@/types/auth.types';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -102,7 +101,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
-  const { theme, toggleTheme } = useThemeContext();
+  
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
@@ -200,21 +199,6 @@ export function AppTopbar() {
                   })}
                   {isSistema && (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={toggleTheme}
-                        className="cursor-pointer"
-                      >
-                        {theme === 'dark' ? (
-                          <>
-                            <Sun className="h-4 w-4 mr-2" /> Modo claro
-                          </>
-                        ) : (
-                          <>
-                            <Moon className="h-4 w-4 mr-2" /> Modo escuro
-                          </>
-                        )}
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-3 py-2">
                         <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
@@ -327,20 +311,6 @@ export function AppTopbar() {
                         })}
                         {group.label === 'Sistema' && (
                           <>
-                            <button
-                              onClick={toggleTheme}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-secondary"
-                            >
-                              {theme === 'dark' ? (
-                                <>
-                                  <Sun className="h-4 w-4" /> Modo claro
-                                </>
-                              ) : (
-                                <>
-                                  <Moon className="h-4 w-4" /> Modo escuro
-                                </>
-                              )}
-                            </button>
                             <div className="mt-2 pt-2 border-t border-border px-3">
                               <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
                               <p className="text-xs text-muted-foreground truncate">{userRole}</p>
