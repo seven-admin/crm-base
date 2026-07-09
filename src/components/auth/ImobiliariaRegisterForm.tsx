@@ -33,8 +33,8 @@ const baseSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
   confirmPassword: z.string(),
-  aceite_termos: z.literal(true, { errorMap: () => ({ message: 'Você deve aceitar os termos de uso' }) })
 }).refine((data) => data.password === data.confirmPassword, {
+
   message: 'As senhas não conferem',
   path: ['confirmPassword'],
 }).refine((data) => {
