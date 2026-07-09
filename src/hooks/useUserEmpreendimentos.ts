@@ -186,3 +186,57 @@ export function useClearUserEmpreendimentos() {
     }
   });
 }
+
+// Empreendimentos em que o usuário é responsável comercial
+export interface EmpreendimentoResponsavel {
+  id: string;
+  nome: string;
+  cidade: string | null;
+  uf: string | null;
+  status: string;
+}
+
+export function useUserEmpreendimentosResponsavel(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['user-empreendimentos-responsavel', userId],
+    queryFn: async (): Promise<EmpreendimentoResponsavel[]> => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('seven_empreendimentos')
+        .select('id, nome, endereco_cidade, endereco_uf, status')
+        .eq('responsavel_comercial_id', userId)
+        .order('nome');
+      if (error) throw error;
+      return (data || []).map((e: any) => ({
+        id: e.id,
+        nome: e.nome,
+        cidade: e.endereco_cidade,
+        uf: e.endereco_uf,
+        status: e.status,
+      }));
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useRemoveResponsavelComercial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ empreendimentoId }: { userId: string; empreendimentoId: string }) => {
+      const { error } = await supabase
+        .from('seven_empreendimentos')
+        .update({ responsavel_comercial_id: null })
+        .eq('id', empreendimentoId);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['user-empreendimentos-responsavel', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['empreendimentos'] });
+      toast.success('Responsabilidade removida');
+    },
+    onError: (error) => {
+      console.error('Erro ao remover responsabilidade:', error);
+      toast.error('Erro ao remover responsabilidade');
+    },
+  });
+}
