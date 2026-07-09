@@ -41,6 +41,8 @@ const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const SemAcesso = lazy(() => import("./pages/SemAcesso"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const DesignTest = lazy(() => import("./pages/DesignTest"));
+const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
+
 
 // Portal Incorporador
 const PortalIncorporadorDisponibilidade = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDisponibilidade"));
