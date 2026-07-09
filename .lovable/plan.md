@@ -1,38 +1,30 @@
-## Toggle de Tema Claro/Escuro + Labels do Menu em Maiúsculas
+## Objetivo
+Substituir o conteúdo de `src/index.css` pelo CSS fornecido, adotando o novo tom de azul primário `#198EF4` como base do sistema.
 
-### 1. Toggle de Tema
+## Análise da mudança
+Diff em relação ao CSS atual é mínimo — apenas os tokens de azul primário mudam:
 
-Adicionar alternância de tema no menu **Sistema** da topbar.
+| Token | Antes | Depois |
+|---|---|---|
+| `--primary` (light) | `210 83% 39%` (#1160b7) | `208 91% 53%` (#198EF4) |
+| `--primary-soft` | `206 71% 82%` | `208 71% 82%` |
+| `--primary-soft-foreground` | `217 100% 16%` | `208 100% 16%` |
+| `--info` | `210 83% 39%` | `208 91% 53%` |
+| `--ring` | `210 83% 39%` | `208 91% 53%` |
+| `--sidebar-primary` / `--sidebar-accent` / `--sidebar-ring` | tons `210/206` | tons `208` |
+| `--chart-1` | `210 83% 39%` | `208 91% 53%` |
+| `--nav-*` (todos) | `210 83% 39%` | `208 91% 53%` |
+| `--gradient-primary` | `210 83% 39% → 217 100% 16%` | `208 91% 53% → 208 100% 16%` |
+| `.dark --primary` | `210 83% 55%` | `208 91% 53%` (mesmo do light) |
+| `.dark --ring`, `.dark --sidebar-*` | idem | idem |
 
-- **`src/hooks/useTheme.ts` (novo)**
-  - Hook que gerencia o estado `light` / `dark`.
-  - Persiste em `localStorage` (`theme`).
-  - Aplica/remove a classe `dark` no `<html>`.
-  - Detecta preferência do SO (`prefers-color-scheme`) como fallback inicial.
+Toda a estrutura de camadas (`@layer base/components/utilities`), classes utilitárias, animações e tokens de tabela/status/sombra permanecem idênticos.
 
-- **`src/components/ThemeProvider.tsx` (novo)**
-  - Provider simples que inicializa o tema o mais cedo possível para evitar flash.
+## Passos
+1. Sobrescrever `src/index.css` com o novo conteúdo fornecido.
 
-- **`src/main.tsx`**
-  - Envolver o `<App />` com o `ThemeProvider`.
+Sem impacto em componentes: nenhum arquivo TSX faz referência hard-coded aos hex antigos — todos consomem via tokens semânticos (`bg-primary`, `text-primary`, etc.).
 
-- **`src/components/layout/AppTopbar.tsx`**
-  - Dentro do dropdown **Sistema**, adicionar um item "Modo escuro / Modo claro" com ícone `Sun`/`Moon` (lucide-react) que dispara o toggle.
-
-- **Revisão do `src/index.css`**
-  - Conferir se os tokens `.dark` cobrem: fundo, tabelas (`--table-row`, `--table-row-alt`), bordas e a topbar. Ajustar apenas o necessário para o contraste ficar coerente com o tema claro atual.
-
-### 2. Labels do Menu em Maiúsculas
-
-No estado inicial do `AppTopbar`, os rótulos dos grupos principais devem aparecer em maiúsculas:
-
-- **SEVEN**
-- **ARQO**
-- **NEXA**
-- **SISTEMA**
-
-Aplicar via `text-transform: uppercase` nos botões/triggers de navegação principais, sem alterar os textos literais dos submenus (categorias e itens permanecem em formato normal/title case).
-
-### Escopo
-
-Somente UI e tokens de tema. Nenhuma mudança em backend, rotas ou lógica de negócio.
+## Verificação
+- Conferir visualmente `/nexa/agenda`, `/empreendimentos` e topbar/mega-menu para validar o novo azul primário nos estados de foco, botões, sidebar ativa e gráficos.
+- Alternar tema claro/escuro pelo menu Sistema.
