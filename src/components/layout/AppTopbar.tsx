@@ -3,12 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake,
+  Home, Handshake, Sun, Moon,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useThemeContext } from '@/components/ThemeProvider';
 import { ROLE_LABELS } from '@/types/auth.types';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
