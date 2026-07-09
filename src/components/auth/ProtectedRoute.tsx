@@ -3,8 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useDefaultRoute } from '@/hooks/useDefaultRoute';
+import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { ActionType } from '@/types/auth.types';
 import { Loader2 } from 'lucide-react';
+
 
 // Check if user has any view permission at all
 const hasAnyViewPermission = (permissions: { can_view: boolean }[]): boolean => {
