@@ -203,6 +203,14 @@ const Clientes = () => {
         onNew={handleOpenNew}
         selectedCount={selectedIds.size}
         onOpenAcaoEmLote={() => setAcaoEmLoteDialogOpen(true)}
+        onDeleteSelecionados={isSuperAdmin() ? () => {
+          if (selectedIds.size === 0) return;
+          if (!confirm(`Excluir PERMANENTEMENTE ${selectedIds.size} cliente(s)? Esta ação não pode ser desfeita.`)) return;
+          deleteEmLoteMutation.mutate(Array.from(selectedIds), {
+            onSuccess: () => setSelectedIds(new Set())
+          });
+        } : undefined}
+        isDeletingLote={deleteEmLoteMutation.isPending}
         gestorId={selectedGestor}
         onGestorChange={setSelectedGestor}
         gestores={gestores}
