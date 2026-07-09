@@ -409,6 +409,28 @@ export default function Usuarios() {
     fetchUsers();
   };
 
+  // Excluir em lote (super admin)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) return;
+    if (!confirm(`ATENÇÃO: Excluir PERMANENTEMENTE ${selectedUsers.size} usuário(s)? Esta ação não pode ser desfeita.`)) return;
+    setIsBulkDeleting(true);
+    try {
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { user_ids: Array.from(selectedUsers) }
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+      toast.success(response.data?.message ?? 'Usuários excluídos');
+      setSelectedUsers(new Set());
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(sanitizeErrorMessage(error, 'excluir usuários'));
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const getRoleBadgeVariant = (role?: AppRole | null) => {
     switch (role) {
       case 'super_admin':
