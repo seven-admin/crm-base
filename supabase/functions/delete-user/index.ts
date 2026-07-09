@@ -65,38 +65,42 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { user_id } = await req.json();
+    const body = await req.json();
+    const rawIds: string[] = Array.isArray(body?.user_ids)
+      ? body.user_ids
+      : body?.user_id
+        ? [body.user_id]
+        : [];
+    const ids = rawIds.filter((id) => typeof id === 'string' && id.length > 0 && id !== user.id);
 
-    if (!user_id) {
+    if (ids.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'ID do usuário é obrigatório' }),
+        JSON.stringify({ error: 'Nenhum ID de usuário válido informado' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (user_id === user.id) {
-      return new Response(
-        JSON.stringify({ error: 'Você não pode excluir sua própria conta' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const results: Array<{ user_id: string; success: boolean; error?: string }> = [];
+    for (const id of ids) {
+      try {
+        // Limpeza preventiva de referências antes de excluir
+        await supabaseAdmin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', id);
+        const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(id);
+        if (delErr) throw delErr;
+        results.push({ user_id: id, success: true });
+      } catch (err: any) {
+        console.error('Erro ao excluir', id, err);
+        results.push({ user_id: id, success: false, error: err?.message ?? 'erro' });
+      }
     }
 
-    // Limpeza preventiva de referências antes de excluir
-    await supabaseAdmin.from('briefings').update({ criado_por: null }).eq('criado_por', user_id);
-    await supabaseAdmin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', user_id);
-
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
-
-    if (deleteError) {
-      console.error('Error deleting user:', deleteError);
-      return new Response(
-        JSON.stringify({ error: deleteError.message || 'Erro ao excluir usuário' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    const okCount = results.filter(r => r.success).length;
     return new Response(
-      JSON.stringify({ success: true, message: 'Usuário excluído com sucesso' }),
+      JSON.stringify({
+        success: okCount === ids.length,
+        message: `${okCount}/${ids.length} usuário(s) excluído(s)`,
+        results,
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: unknown) {
