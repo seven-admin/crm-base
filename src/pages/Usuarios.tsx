@@ -254,9 +254,11 @@ export default function Usuarios() {
           is_active: createIsActive,
           tipo_vinculo: createTipoVinculo,
           cargo: createTipoVinculo === 'funcionario_seven' ? createCargo || null : null,
-          base_role_id: !selectedRoleHasPermissions && createBaseRoleId ? createBaseRoleId : null
+          base_role_id: !selectedRoleHasPermissions && createBaseRoleId ? createBaseRoleId : null,
+          empresa: createEmpresa,
         }
       });
+
 
       if (response.error) {
         throw new Error(response.error.message || 'Erro ao criar usuário');
