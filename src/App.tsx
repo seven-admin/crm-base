@@ -30,6 +30,8 @@ const MapaUnidadesPage = lazy(() => import("./pages/MapaUnidadesPage"));
 const Clientes = lazy(() => import("./pages/Clientes"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Incorporadoras = lazy(() => import("./pages/Incorporadoras"));
+const Imobiliarias = lazy(() => import("./pages/Imobiliarias"));
+const Corretores = lazy(() => import("./pages/Corretores"));
 
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -85,7 +87,9 @@ const App = () => (
                 <Route path="/mapa-unidades" element={<ProtectedRoute moduleName="unidades"><MapaUnidadesPage /></ProtectedRoute>} />
                 <Route path="/clientes" element={<ProtectedRoute moduleName="clientes"><Clientes /></ProtectedRoute>} />
                 <Route path="/usuarios" element={<ProtectedRoute moduleName="usuarios" adminOnly><Usuarios /></ProtectedRoute>} />
-                <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
+               <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
+               <Route path="/imobiliarias" element={<ProtectedRoute moduleName="imobiliarias"><Imobiliarias /></ProtectedRoute>} />
+               <Route path="/corretores" element={<ProtectedRoute moduleName="corretores"><Corretores /></ProtectedRoute>} />
                 <Route path="/auditoria" element={<ProtectedRoute moduleName="auditoria" adminOnly><Auditoria /></ProtectedRoute>} />
 
                 {/* Arqo */}
