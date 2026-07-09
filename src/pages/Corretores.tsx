@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, UserCog, Phone, Mail, Trash2, Building2 } from 'lucide-react';
+import { Plus, Search, UserCog, Phone, Mail, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,25 +11,21 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useCorretores, useCorretor, useCorretoresPaginated } from '@/hooks/useCorretores';
-import { useImobiliarias } from '@/hooks/useImobiliarias';
 import { usePermissions } from '@/hooks/usePermissions';
 import { CorretorForm } from '@/components/mercado/CorretorForm';
 import { Corretor } from '@/types/mercado.types';
 
 export default function Corretores() {
   const [search, setSearch] = useState('');
-  const [imobiliariaId, setImobiliariaId] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const { create, update, delete: deleteCorretor, isCreating, isUpdating } = useCorretores();
-  const { data, isLoading } = useCorretoresPaginated(page, 20, search || undefined, imobiliariaId);
+  const { data, isLoading } = useCorretoresPaginated(page, 20, search || undefined);
   const { data: detalhe, isLoading: isLoadingDetalhe } = useCorretor(editingId || undefined);
-  const { imobiliarias } = useImobiliarias();
   const { canAccessModule } = usePermissions();
 
   const corretores = data?.corretores || [];
@@ -103,17 +99,6 @@ export default function Corretores() {
               className="pl-9"
             />
           </div>
-          <Select value={imobiliariaId} onValueChange={(v) => { setImobiliariaId(v); setPage(1); }}>
-            <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Todas as imobiliárias" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as imobiliárias</SelectItem>
-              {imobiliarias.map((i) => (
-                <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <p className="text-sm text-muted-foreground">
             {total} corretor{total !== 1 ? 'es' : ''}
           </p>
@@ -130,7 +115,6 @@ export default function Corretores() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Corretor</TableHead>
-                    <TableHead>Imobiliária</TableHead>
                     <TableHead>Contato</TableHead>
                     <TableHead>CRECI</TableHead>
                     <TableHead>Status</TableHead>
@@ -154,14 +138,6 @@ export default function Corretores() {
                             {c.cpf && <p className="text-sm text-muted-foreground">{c.cpf}</p>}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {(c as any).imobiliaria?.nome && (
-                          <div className="flex items-center gap-1 text-sm">
-                            <Building2 className="h-3 w-3 text-muted-foreground" />
-                            {(c as any).imobiliaria.nome}
-                          </div>
-                        )}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Building2, Phone, Mail, MapPin, Trash2, Users } from 'lucide-react';
+import { Plus, Search, Building2, Phone, Mail, MapPin, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -117,7 +117,6 @@ export default function Imobiliarias() {
                     <TableHead>Imobiliária</TableHead>
                     <TableHead>Contato</TableHead>
                     <TableHead>Cidade</TableHead>
-                    <TableHead>Corretores</TableHead>
                     <TableHead>Status</TableHead>
                     {canDelete && <TableHead className="w-[60px]"></TableHead>}
                   </TableRow>
@@ -156,11 +155,6 @@ export default function Imobiliarias() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="h-3 w-3" />{(imob as any).corretores_count ?? 0}
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <Badge variant={imob.is_active ? 'default' : 'secondary'}>
                           {imob.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
@@ -177,7 +171,7 @@ export default function Imobiliarias() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Excluir imobiliária?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Esta ação desativará a imobiliária. Corretores vinculados não serão excluídos.
+                                  Esta ação desativará a imobiliária.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

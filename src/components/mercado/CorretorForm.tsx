@@ -6,10 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useImobiliarias } from '@/hooks/useImobiliarias';
 import { Corretor, CorretorFormData } from '@/types/mercado.types';
-import { User, Building, Phone, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { User, Phone, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { validarCPF, formatarCPF, formatarTelefone } from '@/lib/documentUtils';
 
@@ -20,12 +18,11 @@ const formSchema = z.object({
     .refine((val) => !val || val.replace(/\D/g, '').length === 0 || validarCPF(val), {
       message: 'CPF inválido',
     }),
-  imobiliaria_id: z.string().optional(),
   telefone: z.string().min(1, 'Celular é obrigatório'),
   whatsapp: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   creci: z.string().optional(),
-  is_active: z.boolean().default(true)
+  is_active: z.boolean().default(true),
 });
 
 interface CorretorFormProps {
@@ -36,26 +33,23 @@ interface CorretorFormProps {
 
 const STEPS = [
   { id: 1, title: 'Dados Pessoais', icon: User },
-  { id: 2, title: 'Vínculo', icon: Building },
-  { id: 3, title: 'Contato', icon: Phone },
+  { id: 2, title: 'Contato', icon: Phone },
 ];
 
 export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormProps) {
-  const { imobiliarias } = useImobiliarias();
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome_completo: '',
       cpf: '',
-      imobiliaria_id: '',
       telefone: '',
       whatsapp: '',
       email: '',
       creci: '',
-      is_active: true
-    }
+      is_active: true,
+    },
   });
 
   useEffect(() => {
@@ -63,60 +57,44 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
       reset({
         nome_completo: initialData.nome_completo || '',
         cpf: initialData.cpf || '',
-        imobiliaria_id: initialData.imobiliaria_id || '',
         telefone: initialData.telefone || '',
         whatsapp: initialData.whatsapp || '',
         email: initialData.email || '',
         creci: initialData.creci || '',
-        is_active: initialData.is_active ?? true
+        is_active: initialData.is_active ?? true,
       });
     } else {
       reset({
         nome_completo: '',
         cpf: '',
-        imobiliaria_id: '',
         telefone: '',
         whatsapp: '',
         email: '',
         creci: '',
-        is_active: true
+        is_active: true,
       });
       setCurrentStep(1);
     }
   }, [initialData?.id, reset]);
 
   const isActive = watch('is_active');
-  const selectedImobiliaria = watch('imobiliaria_id');
 
   const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
     const formData: CorretorFormData = {
       nome_completo: data.nome_completo,
       cpf: data.cpf || undefined,
-      imobiliaria_id: data.imobiliaria_id,
       telefone: data.telefone || undefined,
       whatsapp: data.whatsapp || undefined,
       email: data.email || undefined,
       creci: data.creci || undefined,
-      is_active: data.is_active
+      is_active: data.is_active,
     };
     onSubmit(formData);
   };
 
-  const nextStep = () => {
-    if (currentStep < STEPS.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const goToStep = (step: number) => {
-    setCurrentStep(step);
-  };
+  const nextStep = () => currentStep < STEPS.length && setCurrentStep(currentStep + 1);
+  const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1);
+  const goToStep = (step: number) => setCurrentStep(step);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
@@ -126,38 +104,38 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
           const StepIcon = step.icon;
           const isStepActive = currentStep === step.id;
           const isCompleted = currentStep > step.id;
-          
+
           return (
             <div key={step.id} className="flex items-center flex-1">
               <button
                 type="button"
                 onClick={() => goToStep(step.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1 group transition-all",
-                  isStepActive || isCompleted ? "cursor-pointer" : "cursor-pointer opacity-60"
+                  'flex flex-col items-center gap-1 group transition-all cursor-pointer',
+                  !isStepActive && !isCompleted && 'opacity-60'
                 )}
               >
                 <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                  isStepActive && "bg-primary text-primary-foreground ring-4 ring-primary/20",
-                  isCompleted && "bg-primary text-primary-foreground",
-                  !isStepActive && !isCompleted && "bg-muted text-muted-foreground group-hover:bg-muted/80"
+                  'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                  isStepActive && 'bg-primary text-primary-foreground ring-4 ring-primary/20',
+                  isCompleted && 'bg-primary text-primary-foreground',
+                  !isStepActive && !isCompleted && 'bg-muted text-muted-foreground group-hover:bg-muted/80'
                 )}>
                   {isCompleted ? <Check className="h-5 w-5" /> : <StepIcon className="h-5 w-5" />}
                 </div>
                 <span className={cn(
-                  "text-xs font-medium transition-colors",
-                  isStepActive && "text-primary",
-                  !isStepActive && "text-muted-foreground"
+                  'text-xs font-medium transition-colors',
+                  isStepActive && 'text-primary',
+                  !isStepActive && 'text-muted-foreground'
                 )}>
                   {step.title}
                 </span>
               </button>
-              
+
               {index < STEPS.length - 1 && (
                 <div className={cn(
-                  "flex-1 h-0.5 mx-2 transition-colors",
-                  isCompleted ? "bg-primary" : "bg-muted"
+                  'flex-1 h-0.5 mx-2 transition-colors',
+                  isCompleted ? 'bg-primary' : 'bg-muted'
                 )} />
               )}
             </div>
@@ -165,9 +143,7 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
         })}
       </div>
 
-      {/* Step Content */}
       <div className="flex-1 overflow-y-auto px-1">
-        {/* Step 1: Dados Pessoais */}
         {currentStep === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -179,11 +155,11 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cpf">CPF</Label>
-                <Input 
-                  id="cpf" 
+                <Input
+                  id="cpf"
                   value={watch('cpf') || ''}
                   onChange={(e) => setValue('cpf', formatarCPF(e.target.value))}
-                  placeholder="000.000.000-00" 
+                  placeholder="000.000.000-00"
                   maxLength={14}
                 />
                 {errors.cpf && <p className="text-sm text-destructive">{errors.cpf.message}</p>}
@@ -196,53 +172,27 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
           </div>
         )}
 
-        {/* Step 2: Vínculo */}
         {currentStep === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Imobiliária</Label>
-              <Select 
-                value={selectedImobiliaria || '__autonomo__'} 
-                onValueChange={(value) => setValue('imobiliaria_id', value === '__autonomo__' ? '' : value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma imobiliária" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__autonomo__">Autônomo (sem vínculo)</SelectItem>
-                  {imobiliarias.map(imob => (
-                    <SelectItem key={imob.id} value={imob.id}>{imob.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Deixe como "Autônomo" se o corretor não é vinculado a nenhuma imobiliária.</p>
-              {errors.imobiliaria_id && <p className="text-sm text-destructive">{errors.imobiliaria_id.message}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Contato */}
-        {currentStep === 3 && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="telefone">Celular *</Label>
-                <Input 
-                  id="telefone" 
+                <Input
+                  id="telefone"
                   value={watch('telefone') || ''}
                   onChange={(e) => setValue('telefone', formatarTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000" 
+                  placeholder="(00) 00000-0000"
                   maxLength={15}
                 />
                 {errors.telefone && <p className="text-sm text-destructive">{errors.telefone.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input 
-                  id="whatsapp" 
+                <Input
+                  id="whatsapp"
                   value={watch('whatsapp') || ''}
                   onChange={(e) => setValue('whatsapp', formatarTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000" 
+                  placeholder="(00) 00000-0000"
                   maxLength={15}
                 />
               </div>
@@ -270,22 +220,14 @@ export function CorretorForm({ initialData, onSubmit, isLoading }: CorretorFormP
         )}
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex justify-between pt-6 border-t mt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={prevStep}
-          disabled={currentStep === 1}
-        >
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Anterior
+        <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1}>
+          <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
         </Button>
 
         {currentStep < STEPS.length ? (
           <Button type="button" onClick={nextStep}>
-            Próximo
-            <ChevronRight className="h-4 w-4 ml-2" />
+            Próximo <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
         ) : (
           <Button type="submit" disabled={isLoading}>

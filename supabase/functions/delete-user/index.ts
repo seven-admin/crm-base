@@ -5,6 +5,72 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Limpeza preventiva de todas as referências ao usuário antes do delete no auth.
+// Cada etapa loga o erro mas segue adiante — o delete final vai reportar se algo
+// ainda estiver bloqueando.
+async function cleanupReferences(admin: ReturnType<typeof createClient>, userId: string) {
+  const steps: Array<{ label: string; run: () => Promise<any> }> = [
+    // Nullify em tabelas de dados operacionais
+    { label: 'seven_lancamentos_financeiros.beneficiario_id',
+      run: () => admin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', userId) },
+    { label: 'seven_clientes.gestor_id',
+      run: () => admin.from('seven_clientes').update({ gestor_id: null }).eq('gestor_id', userId) },
+    { label: 'seven_clientes.created_by',
+      run: () => admin.from('seven_clientes').update({ created_by: null }).eq('created_by', userId) },
+    { label: 'arqo_leads.consultor_id',
+      run: () => admin.from('arqo_leads').update({ consultor_id: null }).eq('consultor_id', userId) },
+    { label: 'arqo_leads.closer_id',
+      run: () => admin.from('arqo_leads').update({ closer_id: null }).eq('closer_id', userId) },
+    { label: 'arqo_leads.created_by',
+      run: () => admin.from('arqo_leads').update({ created_by: null }).eq('created_by', userId) },
+    { label: 'arqo_lead_events.usuario_id',
+      run: () => admin.from('arqo_lead_events').update({ usuario_id: null }).eq('usuario_id', userId) },
+    { label: 'nexa_visitas.corretor_id',
+      run: () => admin.from('nexa_visitas').update({ corretor_id: null }).eq('corretor_id', userId) },
+    { label: 'nexa_visitas.criado_por',
+      run: () => admin.from('nexa_visitas').update({ criado_por: null }).eq('criado_por', userId) },
+    { label: 'sistema_notificacoes',
+      run: () => admin.from('sistema_notificacoes').delete().eq('user_id', userId) },
+
+    // Delete em tabelas de vínculo
+    { label: 'sistema_user_empreendimentos',
+      run: () => admin.from('sistema_user_empreendimentos').delete().eq('user_id', userId) },
+    { label: 'sistema_user_module_permissions',
+      run: () => admin.from('sistema_user_module_permissions').delete().eq('user_id', userId) },
+    { label: 'arqo_grupo_membros',
+      run: () => admin.from('arqo_grupo_membros').delete().eq('user_id', userId) },
+    { label: 'arqo_oportunidade_responsaveis',
+      run: () => admin.from('arqo_oportunidade_responsaveis').delete().eq('user_id', userId) },
+    { label: 'seven_empreendimento_corretores.user_id',
+      run: () => admin.from('seven_empreendimento_corretores').delete().eq('user_id', userId) },
+
+    // Desvincula corretor/imobiliária do usuário (sem apagar o cadastro)
+    { label: 'seven_corretores.user_id',
+      run: () => admin.from('seven_corretores').update({ user_id: null }).eq('user_id', userId) },
+    { label: 'seven_imobiliarias.user_id',
+      run: () => admin.from('seven_imobiliarias').update({ user_id: null }).eq('user_id', userId) },
+
+    // Roles (por último, antes do delete no auth)
+    { label: 'user_roles',
+      run: () => admin.from('user_roles').delete().eq('user_id', userId) },
+  ];
+
+  const warnings: string[] = [];
+  for (const step of steps) {
+    try {
+      const { error } = await step.run();
+      if (error && !/does not exist|column .* does not exist/i.test(error.message)) {
+        warnings.push(`${step.label}: ${error.message}`);
+        console.warn(`[cleanup] ${step.label}:`, error.message);
+      }
+    } catch (e: any) {
+      warnings.push(`${step.label}: ${e?.message ?? 'erro'}`);
+      console.warn(`[cleanup] ${step.label}:`, e);
+    }
+  }
+  return warnings;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,12 +101,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create admin client for role check and user deletion
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Use admin client to check role (bypasses RLS)
     const { data: userRoleData, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role_id, roles!inner(name)')
@@ -80,14 +144,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    const results: Array<{ user_id: string; success: boolean; error?: string }> = [];
+    const results: Array<{ user_id: string; success: boolean; error?: string; warnings?: string[] }> = [];
     for (const id of ids) {
       try {
-        // Limpeza preventiva de referências antes de excluir
-        await supabaseAdmin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', id);
+        const warnings = await cleanupReferences(supabaseAdmin, id);
         const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(id);
         if (delErr) throw delErr;
-        results.push({ user_id: id, success: true });
+        results.push({ user_id: id, success: true, warnings });
       } catch (err: any) {
         console.error('Erro ao excluir', id, err);
         results.push({ user_id: id, success: false, error: err?.message ?? 'erro' });
@@ -95,10 +158,11 @@ Deno.serve(async (req) => {
     }
 
     const okCount = results.filter(r => r.success).length;
+    const firstError = results.find(r => !r.success)?.error;
     return new Response(
       JSON.stringify({
         success: okCount === ids.length,
-        message: `${okCount}/${ids.length} usuário(s) excluído(s)`,
+        message: `${okCount}/${ids.length} usuário(s) excluído(s)` + (firstError ? ` — ${firstError}` : ''),
         results,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -29,23 +29,7 @@ export function useImobiliarias(options: QueryOptions = {}) {
         .order('nome');
       
       if (error) throw error;
-      
-      // Get corretores count for each imobiliaria
-      const { data: corretores } = await supabase
-        .from('seven_corretores')
-        .select('imobiliaria_id');
-      
-      const counts: Record<string, number> = {};
-      corretores?.forEach(c => {
-        if (c.imobiliaria_id) {
-          counts[c.imobiliaria_id] = (counts[c.imobiliaria_id] || 0) + 1;
-        }
-      });
-      
-      return (data || []).map(imob => ({
-        ...imob,
-        corretores_count: counts[imob.id] || 0
-      }));
+      return (data || []) as Imobiliaria[];
     },
     enabled,
     staleTime,
@@ -227,22 +211,7 @@ export function useImobiliariasPaginated(page = 1, pageSize = 20, search?: strin
       const { data, error, count } = await query;
       if (error) throw error;
 
-      // Get corretores count for each imobiliaria
-      const { data: corretores } = await supabase
-        .from('seven_corretores')
-        .select('imobiliaria_id');
-
-      const counts: Record<string, number> = {};
-      corretores?.forEach(c => {
-        if (c.imobiliaria_id) {
-          counts[c.imobiliaria_id] = (counts[c.imobiliaria_id] || 0) + 1;
-        }
-      });
-
-      const imobiliarias = (data || []).map(imob => ({
-        ...imob,
-        corretores_count: counts[imob.id] || 0
-      }));
+      const imobiliarias = (data || []) as Imobiliaria[];
 
       return {
         imobiliarias,
