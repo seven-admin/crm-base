@@ -171,10 +171,8 @@ export default function ArqoConfig() {
                 </div>
               )}
             />
-            <p className="text-xs text-muted-foreground mt-3">
-              Membros dos grupos ainda são gerenciados via SQL. Interface completa em breve.
-            </p>
           </Card>
+          <ArqoGrupoMembros />
         </TabsContent>
 
         <TabsContent value="sla">
