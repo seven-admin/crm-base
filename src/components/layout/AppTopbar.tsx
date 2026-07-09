@@ -102,6 +102,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
+  const { theme, toggleTheme } = useThemeContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
