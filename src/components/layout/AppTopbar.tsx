@@ -299,7 +299,7 @@ export function AppTopbar() {
                   const isOpen = mobileGroups.includes(group.label);
                   return (
                     <Collapsible key={group.label} open={isOpen} onOpenChange={() => toggleMobileGroup(group.label)}>
-                      <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                      <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground uppercase tracking-wide">
                         <span className="flex items-center gap-2.5">
                           <group.icon className="h-4 w-4 text-muted-foreground" />
                           {group.label}
@@ -327,6 +327,20 @@ export function AppTopbar() {
                         })}
                         {group.label === 'Sistema' && (
                           <>
+                            <button
+                              onClick={toggleTheme}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-secondary"
+                            >
+                              {theme === 'dark' ? (
+                                <>
+                                  <Sun className="h-4 w-4" /> Modo claro
+                                </>
+                              ) : (
+                                <>
+                                  <Moon className="h-4 w-4" /> Modo escuro
+                                </>
+                              )}
+                            </button>
                             <div className="mt-2 pt-2 border-t border-border px-3">
                               <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
                               <p className="text-xs text-muted-foreground truncate">{userRole}</p>
