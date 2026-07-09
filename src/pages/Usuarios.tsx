@@ -923,6 +923,9 @@ export default function Usuarios() {
                   <p className="text-xs text-muted-foreground">
                     Define quais módulos o usuário enxerga no sistema.
                   </p>
+                </div>
+
+
 
 
                 <div className="flex items-center justify-between">
