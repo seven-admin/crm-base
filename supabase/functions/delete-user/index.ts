@@ -32,6 +32,26 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
     { label: 'sistema_notificacoes',
       run: () => admin.from('sistema_notificacoes').delete().eq('user_id', userId) },
 
+    // Nullify em referências que bloqueiam a exclusão (FKs sem SET NULL)
+    { label: 'seven_empreendimentos.responsavel_comercial_id',
+      run: () => admin.from('seven_empreendimentos').update({ responsavel_comercial_id: null }).eq('responsavel_comercial_id', userId) },
+    { label: 'seven_empreendimento_documentos.created_by',
+      run: () => admin.from('seven_empreendimento_documentos').update({ created_by: null }).eq('created_by', userId) },
+    { label: 'seven_empreendimento_corretores.autorizado_por',
+      run: () => admin.from('seven_empreendimento_corretores').update({ autorizado_por: null }).eq('autorizado_por', userId) },
+    { label: 'seven_empreendimento_imobiliarias.autorizado_por',
+      run: () => admin.from('seven_empreendimento_imobiliarias').update({ autorizado_por: null }).eq('autorizado_por', userId) },
+    { label: 'seven_lancamentos_financeiros.created_by',
+      run: () => admin.from('seven_lancamentos_financeiros').update({ created_by: null }).eq('created_by', userId) },
+    { label: 'seven_lancamentos_financeiros.conferido_por',
+      run: () => admin.from('seven_lancamentos_financeiros').update({ conferido_por: null }).eq('conferido_por', userId) },
+    { label: 'seven_saldos_mensais.created_by',
+      run: () => admin.from('seven_saldos_mensais').update({ created_by: null }).eq('created_by', userId) },
+    { label: 'arqo_agendamentos.responsavel_id',
+      run: () => admin.from('arqo_agendamentos').update({ responsavel_id: null }).eq('responsavel_id', userId) },
+    { label: 'nexa_visitas_eventos.usuario_id',
+      run: () => admin.from('nexa_visitas_eventos').update({ usuario_id: null }).eq('usuario_id', userId) },
+
     // Delete em tabelas de vínculo
     { label: 'sistema_user_empreendimentos',
       run: () => admin.from('sistema_user_empreendimentos').delete().eq('user_id', userId) },
