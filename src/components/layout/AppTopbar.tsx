@@ -259,7 +259,7 @@ export function AppTopbar() {
                     open={mobileGroups.includes('Seven')}
                     onOpenChange={() => toggleMobileGroup('Seven')}
                   >
-                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground uppercase tracking-wide">
                       <span className="flex items-center gap-2.5">
                         <Home className="h-4 w-4 text-muted-foreground" />
                         Seven
