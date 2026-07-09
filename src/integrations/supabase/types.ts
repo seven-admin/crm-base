@@ -851,6 +851,7 @@ export type Database = {
           cargo: string | null
           created_at: string
           email: string
+          empresa: string
           full_name: string
           id: string
           is_active: boolean
@@ -864,6 +865,7 @@ export type Database = {
           cargo?: string | null
           created_at?: string
           email: string
+          empresa?: string
           full_name: string
           id: string
           is_active?: boolean
@@ -877,6 +879,7 @@ export type Database = {
           cargo?: string | null
           created_at?: string
           email?: string
+          empresa?: string
           full_name?: string
           id?: string
           is_active?: boolean
@@ -2990,6 +2993,7 @@ export type Database = {
           valor: number
         }[]
       }
+      get_user_empresa: { Args: { _user_id: string }; Returns: string }
       get_user_imobiliaria_id: { Args: { _user_id: string }; Returns: string }
       get_user_module_permission: {
         Args: { _module_name: string; _user_id: string }
