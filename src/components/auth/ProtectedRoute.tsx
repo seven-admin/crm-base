@@ -31,7 +31,9 @@ export function ProtectedRoute({
   const { isAuthenticated, isLoading: authLoading, role } = useAuth();
   const { canAccessModule, isAdmin, isLoading: permLoading, permissions } = usePermissions();
   const { getDefaultRoute } = useDefaultRoute();
+  const { empresa, isSeven } = useEmpresaAccess();
   const location = useLocation();
+
   const [timedOut, setTimedOut] = useState(false);
 
   // Keep loading while authenticated but role not yet loaded
