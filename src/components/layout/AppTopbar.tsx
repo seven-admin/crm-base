@@ -82,11 +82,14 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Sistema', icon: Settings,
     items: [
+      { icon: UserIcon, label: 'Meu Perfil', path: '/meu-perfil', moduleName: '__self__' },
+      { icon: Shield, label: 'Perfis de Acesso', path: '/usuarios?tab=perfis', moduleName: 'usuarios', adminOnly: true },
       { icon: Shield, label: 'Auditoria', path: '/auditoria', moduleName: 'auditoria', adminOnly: true },
       { icon: UserCog, label: 'Usuários', path: '/usuarios', moduleName: 'usuarios', adminOnly: true },
     ],
   },
 ];
+
 
 
 
