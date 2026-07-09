@@ -1,66 +1,74 @@
-## Dashboard Inicial (dados mockados)
+# Plano de modificações
 
-Substituir o placeholder de `/` (`src/pages/Index.tsx`) por um dashboard estruturado em seções verticais, usando dados mockados em um arquivo isolado para facilitar substituição futura por dados reais.
+## 1. Clientes — exclusão (super admin) e em lote
+- Em `src/pages/Clientes.tsx` (tabela): adicionar coluna de checkbox por linha + checkbox "selecionar todos" no header, visível apenas para super admin (`useIsSuperAdmin`).
+- Barra de ações flutuante quando houver seleção: "Excluir selecionados (N)" com confirmação (AlertDialog).
+- Hook `useDeleteClientesBulk`: chama `supabase.from('seven_clientes').delete().in('id', ids)` em blocos de 100.
+- Botão de exclusão individual (ícone lixeira) na linha, também restrito a super admin.
+- RLS: verificar se já existe policy DELETE para super admin em `seven_clientes`; se não, adicionar via migration.
 
-### Estrutura da página
+## 2. Selects/formulários — remover destaque laranja residual
+- Auditar `src/components/ui/select.tsx`, `command.tsx`, `dropdown-menu.tsx`, `toggle.tsx`, `radio-group.tsx`, `checkbox.tsx` procurando classes `accent`, `orange`, `[hsl(...)]` hardcoded.
+- Substituir estados `data-[state=checked]`, `data-[highlighted]`, `focus:` por tokens `primary`/`ring` (azul institucional #198EF4) — o accent laranja fica reservado só para CTAs.
+- Varrer formulários grandes (Cliente, Empreendimento, Arqo, Nexa) por `bg-accent`, `text-accent`, `border-accent` indevidos em selects/inputs.
 
-```text
-┌─────────────────────────────────────────────────┐
-│ PageHeader: "Visão Geral" + período (mock)      │
-├─────────────────────────────────────────────────┤
-│ KPIs (grid 4 colunas → 2 em md → 1 em sm)       │
-├─────────────────────────────────────────────────┤
-│ Funil Arqo (6 etapas, barras horizontais)       │
-├─────────────────────────────────────────────────┤
-│ Top 5 empreendimentos (tabela)                  │
-└─────────────────────────────────────────────────┘
-```
+## 3. Rotas 404: `/imobiliarias` e `/corretores`
+- Menu Seven aponta para `/n` (placeholder). Criar as páginas e rotas:
+  - `src/pages/Imobiliarias.tsx` — listagem em tabela de `seven_imobiliarias` (nome, cidade/UF, gestor, corretores vinculados, ativo) + CRUD via dialog.
+  - `src/pages/Corretores.tsx` — listagem de `seven_corretores` (nome, CRECI, imobiliária, cidade, status) + CRUD via dialog e vínculo com imobiliária.
+- Registrar rotas em `src/App.tsx`:
+  ```
+  <Route path="/imobiliarias" element={<ProtectedRoute moduleName="imobiliarias"><Imobiliarias /></ProtectedRoute>} />
+  <Route path="/corretores" element={<ProtectedRoute moduleName="corretores"><Corretores /></ProtectedRoute>} />
+  ```
+- Atualizar `AppTopbar.tsx` (mega-menu Seven) trocando `path: '/n'` pelas rotas reais.
 
-### 1. KPIs — faixa superior (4 cards)
+## 4. Sistema de Roleta Arqo (completo)
+Hoje existe a página `/arqo/roleta` (puxar próximo lead) e a RPC `arqo_atribuir_lead_roleta`, mas falta a gestão de grupos/membros/regras. Entregar:
 
-Combo geral cobrindo captação, vendas e Nexa:
+### 4a. Gestão de grupos e membros (frontend `/arqo/config` aba Grupos)
+- Substituir o placeholder "membros gerenciados via SQL" por CRUD real de `arqo_grupo_membros`:
+  - Adicionar/remover membros (select de usuários com role Arqo).
+  - Definir `papel` (consultor/supervisor), `ordem_roleta` (drag & drop) e `is_active`.
+- Regras por grupo: modo de distribuição (`roleta` | `manual`), horário de atendimento (janela), SLA de primeira resposta em minutos.
 
-- **Leads novos no mês** — número + variação vs mês anterior
-- **Taxa de conversão** — % lead→venda + mini sparkline
-- **VGV em negociação** — R$ formatado + contagem de propostas
-- **Vendas no mês** — unidades + ticket médio
+### 4b. Importação de leads em lote (falta atualmente)
+- Aba nova "Importar" em `/arqo/config` (ou botão em `/arqo/leads`): upload CSV com colunas nome, telefone, email, origem, empreendimento, valor_estimado.
+- Preview + validação + insert em massa em `arqo_leads` com atribuição automática via roleta se um grupo for escolhido.
 
-Cada card usa o padrão visual dos `KPICard` existentes (`src/components/dashboard/KPICard.tsx`), com ícone à esquerda, valor em destaque e delta colorido (verde/vermelho) à direita.
+### 4c. Motor de distribuição
+- RPC/edge function `arqo_distribuir_lead_automatico(lead_id)`: aplica a RPC existente respeitando janela de atendimento e SLA; log em `arqo_lead_events`.
+- Trigger opcional em `arqo_leads` (AFTER INSERT) para chamar a distribuição quando o lead vier com `grupo_id`.
 
-### 2. Funil Arqo (Leads)
+### 4d. Página `/arqo/roleta` (melhorias)
+- Painel do supervisor (quem tem papel supervisor no grupo): ver todos os leads ativos do grupo, reatribuir, forçar liberação.
+- Contador de SLA por lead (tempo desde `atribuido_em`) com alerta visual quando estourar.
+- Histórico curto do lead atual (últimos eventos de `arqo_lead_events`).
 
-Card único com 6 etapas em barras horizontais empilhadas, largura proporcional ao volume:
+## 5. Reestruturar controle de Usuários
+- Em `src/pages/Usuarios.tsx`:
+  - Listagem em tabela com colunas: nome, email, roles (badges), último login, ativo/inativo.
+  - Seleção em lote (checkbox) com ação "Excluir selecionados" (super admin).
+  - Ação "Criar novo usuário": dialog com nome, email, roles, empreendimentos vinculados; chama edge function admin (usa `service_role`) para `auth.admin.createUser` + insert em `profiles`/`user_roles`.
+  - Ação "Excluir usuário": edge function `admin-delete-user` que remove de `auth.users` e limpa referências (`profiles`, `user_roles`, `sistema_user_empreendimentos`, etc.).
+  - Ação "Redefinir senha" já existente permanece.
+- Novas edge functions:
+  - `admin-create-user` (verify_jwt=false, valida super admin no código via JWT).
+  - `admin-delete-user` (idem).
+  - `admin-delete-users-bulk` (recebe array de ids).
 
-`Novo → Qualificado → Reunião → Proposta → Ganho | Perdido`
+## Detalhes técnicos
 
-Cada etapa mostra: nome, contagem absoluta, % de conversão desde a etapa anterior. Ganho em verde, Perdido em vermelho ao final. Um pequeno rodapé com "Conversão total: X%".
+- Todas as ações destrutivas em lote validam super admin no backend (edge function) além do frontend.
+- Migrations necessárias:
+  - Policies DELETE para super admin em `seven_clientes` (se ausente).
+  - Coluna `sla_primeira_resposta_min` e `janela_atendimento` (jsonb) em `arqo_grupos_atendimento` (se ausentes).
+- Nenhum novo secret é necessário — as edge functions admin usam `SUPABASE_SERVICE_ROLE_KEY` já configurado.
 
-### 3. Top 5 empreendimentos
-
-Tabela com colunas: **Empreendimento · Tipo · Leads ativos · Propostas · Vendas no mês · VGV negociado**. Ordenada por VGV negociado desc, limitada a 5 linhas. Usa o mesmo estilo de tabela sutil já aplicado no projeto.
-
-### Dados mockados
-
-Novo arquivo `src/pages/dashboard/mockData.ts` exportando:
-
-- `mockKPIs` — 4 objetos `{ label, value, delta, trend, icon }`
-- `mockFunilArqo` — array de 6 etapas `{ etapa, quantidade, cor }`
-- `mockTopEmpreendimentos` — 5 objetos com os campos da tabela
-
-Valores plausíveis (ex.: 342 leads novos, conversão 8,4%, VGV R$ 18,2 mi, 7 vendas no mês). Nomes fictícios de empreendimentos (Residencial Aurora, Loteamento Vista Verde, etc.) misturando tipos Vertical, Loteamento e Comercial.
-
-### Arquivos
-
-- **Edit** `src/pages/Index.tsx` — manter os redirects existentes (incorporador / corretor / gestor_imobiliaria) e trocar o placeholder pelo novo dashboard dentro do `MainLayout`.
-- **New** `src/pages/dashboard/DashboardHome.tsx` — componente do dashboard.
-- **New** `src/pages/dashboard/components/FunilArqoCard.tsx` — barras horizontais do funil.
-- **New** `src/pages/dashboard/components/TopEmpreendimentosTable.tsx` — tabela top 5.
-- **New** `src/pages/dashboard/mockData.ts` — dados fictícios centralizados.
-
-### Detalhes técnicos
-
-- Reuso de componentes existentes: `MainLayout`, `PageHeader`, `KPICard`, `Card`, `Table` (shadcn). Nenhuma nova dependência.
-- Formatação monetária via `formatCurrency` de `src/lib/formatters.ts`.
-- Cores seguem tokens semânticos (`--primary`, `--accent`, `--success`, `--destructive`) — nada hardcoded.
-- Todo componente marcado internamente com comentário `// TODO: substituir por dados reais` para facilitar migração futura.
-- Sem impacto em rotas, permissões ou banco de dados.
+## Ordem de execução sugerida
+1. Migration (RLS + colunas de grupo).
+2. Edge functions admin (create/delete/bulk user + import leads).
+3. Rotas e páginas Imobiliárias/Corretores.
+4. Refactor de Usuários e Clientes (exclusão em lote).
+5. Roleta Arqo (gestão de grupos, importação, painel supervisor).
+6. Sweep visual dos selects para remover laranja residual.
