@@ -3,12 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake,
+  Home, Handshake, Sun, Moon,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useThemeContext } from '@/components/ThemeProvider';
 import { ROLE_LABELS } from '@/types/auth.types';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -101,6 +102,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
+  const { theme, toggleTheme } = useThemeContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
@@ -163,7 +165,7 @@ export function AppTopbar() {
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
-                      'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap',
+                      'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap uppercase tracking-wide',
                       hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
                     )}
                     style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
@@ -198,6 +200,21 @@ export function AppTopbar() {
                   })}
                   {isSistema && (
                     <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={toggleTheme}
+                        className="cursor-pointer"
+                      >
+                        {theme === 'dark' ? (
+                          <>
+                            <Sun className="h-4 w-4 mr-2" /> Modo claro
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="h-4 w-4 mr-2" /> Modo escuro
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-3 py-2">
                         <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
@@ -242,7 +259,7 @@ export function AppTopbar() {
                     open={mobileGroups.includes('Seven')}
                     onOpenChange={() => toggleMobileGroup('Seven')}
                   >
-                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                    <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground uppercase tracking-wide">
                       <span className="flex items-center gap-2.5">
                         <Home className="h-4 w-4 text-muted-foreground" />
                         Seven
@@ -282,7 +299,7 @@ export function AppTopbar() {
                   const isOpen = mobileGroups.includes(group.label);
                   return (
                     <Collapsible key={group.label} open={isOpen} onOpenChange={() => toggleMobileGroup(group.label)}>
-                      <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground">
+                      <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary text-sm font-medium text-foreground uppercase tracking-wide">
                         <span className="flex items-center gap-2.5">
                           <group.icon className="h-4 w-4 text-muted-foreground" />
                           {group.label}
@@ -310,6 +327,20 @@ export function AppTopbar() {
                         })}
                         {group.label === 'Sistema' && (
                           <>
+                            <button
+                              onClick={toggleTheme}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-secondary"
+                            >
+                              {theme === 'dark' ? (
+                                <>
+                                  <Sun className="h-4 w-4" /> Modo claro
+                                </>
+                              ) : (
+                                <>
+                                  <Moon className="h-4 w-4" /> Modo escuro
+                                </>
+                              )}
+                            </button>
                             <div className="mt-2 pt-2 border-t border-border px-3">
                               <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
                               <p className="text-xs text-muted-foreground truncate">{userRole}</p>

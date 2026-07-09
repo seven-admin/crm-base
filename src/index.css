@@ -161,7 +161,7 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'DM Sans', sans-serif;
-    background: linear-gradient(180deg, #ffffff 0%, #f8f8fa 100%);
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
