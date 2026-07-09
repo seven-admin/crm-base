@@ -1,86 +1,66 @@
-# Plano — Novo padrão visual global
+## Dashboard Inicial (dados mockados)
 
-Aplicar o estilo das referências (dashboard limpo, formulários com labels acima, tabelas divididas com badges, gráficos suaves) em todo o sistema, mantendo `#198EF4` como primário e adicionando laranja `#F5941E` como accent.
+Substituir o placeholder de `/` (`src/pages/Index.tsx`) por um dashboard estruturado em seções verticais, usando dados mockados em um arquivo isolado para facilitar substituição futura por dados reais.
 
-## 1. Tokens globais (`src/index.css`)
+### Estrutura da página
 
-Novos/ajustados tokens HSL:
-- `--primary: 210 90% 53%` (#198EF4) — mantém
-- `--accent: 28 91% 54%` (#F5941E) — passa a ser usado ativamente
-- `--background: 240 14% 98%` — mantém
-- `--card: 0 0% 100%` com `--radius: 1rem` (cantos 16px, estilo das refs)
-- `--border: 220 13% 91%` — mais suave
-- `--muted-foreground: 215 16% 55%` — labels acinzentados como nas refs
-- Novo bloco de **status badges** (soft): `--status-pending`, `--status-progress`, `--status-done`, `--status-fixed` em pares bg/fg pastel
-- Novo `--surface-dark: 217 33% 17%` para cards escuros tipo "Status Summary"
-- Sombras: `--shadow-card: 0 1px 3px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.03)` (bem sutil)
+```text
+┌─────────────────────────────────────────────────┐
+│ PageHeader: "Visão Geral" + período (mock)      │
+├─────────────────────────────────────────────────┤
+│ KPIs (grid 4 colunas → 2 em md → 1 em sm)       │
+├─────────────────────────────────────────────────┤
+│ Funil Arqo (6 etapas, barras horizontais)       │
+├─────────────────────────────────────────────────┤
+│ Top 5 empreendimentos (tabela)                  │
+└─────────────────────────────────────────────────┘
+```
 
-## 2. Tipografia
+### 1. KPIs — faixa superior (4 cards)
 
-- Instalar `@fontsource/inter` (weights 400/500/600/700) via `bun add`, importar em `main.tsx`
-- `fontFamily.sans` no Tailwind → Inter, feature-settings `"cv11","ss01"`
-- Escala: títulos `text-2xl font-bold tracking-tight`, KPIs `text-4xl font-bold`, labels `text-xs uppercase tracking-wider text-muted-foreground`
+Combo geral cobrindo captação, vendas e Nexa:
 
-## 3. Componentes shadcn ajustados
+- **Leads novos no mês** — número + variação vs mês anterior
+- **Taxa de conversão** — % lead→venda + mini sparkline
+- **VGV em negociação** — R$ formatado + contagem de propostas
+- **Vendas no mês** — unidades + ticket médio
 
-**Card** (`src/components/ui/card.tsx`)
-- `rounded-2xl border-border/60 shadow-[var(--shadow-card)] bg-card`
-- Variante `card-dark` (fundo `--surface-dark`, texto claro) para painéis de destaque tipo "Status Summary"
+Cada card usa o padrão visual dos `KPICard` existentes (`src/components/dashboard/KPICard.tsx`), com ícone à esquerda, valor em destaque e delta colorido (verde/vermelho) à direita.
 
-**Button** (`src/components/ui/button.tsx`)
-- `default` → azul primário sólido, `rounded-lg`, `h-10`, hover -8% brightness
-- Nova variante `accent` → laranja `#F5941E` (para CTAs principais tipo Submit das refs)
-- `secondary` → cinza neutro `bg-muted text-muted-foreground`
-- `outline` refinado (borda mais fina, hover bg-muted/50)
+### 2. Funil Arqo (Leads)
 
-**Input** (`src/components/ui/input.tsx`)
-- `h-11 rounded-lg border-border/70 bg-card`
-- Placeholder `text-muted-foreground/60`
-- Focus ring azul primário fino (2px, offset-0)
-- Label padrão acima com `text-sm font-medium mb-1.5`
+Card único com 6 etapas em barras horizontais empilhadas, largura proporcional ao volume:
 
-**Table** (`src/components/ui/table.tsx`)
-- Header: sem fundo, `text-muted-foreground text-xs font-medium uppercase tracking-wide`, `border-b`
-- Linhas: `border-b border-border/50` (linhas divididas, sem zebra pesada — estilo Basic Table da ref)
-- Nova classe utilitária `.table-striped` (opcional) com `bg-muted/30` em linhas ímpares
-- Hover: `hover:bg-muted/40`
-- Padding `py-4` (respiração generosa das refs)
+`Novo → Qualificado → Reunião → Proposta → Ganho | Perdido`
 
-**Badge** (`src/components/ui/badge.tsx`)
-- Novas variantes soft: `pending` (laranja/coral pastel), `progress` (amarelo pastel), `done` (verde-água pastel), `fixed` (rosa pastel), `info` (azul pastel)
-- `rounded-md px-2.5 py-1 text-xs font-medium`
+Cada etapa mostra: nome, contagem absoluta, % de conversão desde a etapa anterior. Ganho em verde, Perdido em vermelho ao final. Um pequeno rodapé com "Conversão total: X%".
 
-## 4. Gráficos (Recharts)
+### 3. Top 5 empreendimentos
 
-Novo `src/lib/chartColors.ts` (atualizar):
-- Paleta pastel suave: `#FBCFE8` (pink), `#BFDBFE` (blue), `#FDE68A` (yellow), `#A7F3D0` (teal), `#DDD6FE` (purple), `#FED7AA` (orange)
-- Grid `stroke-border/40`, eixo `text-muted-foreground text-xs`
-- Line/Area com `strokeWidth={2}`, pontos com ring branco (estilo Performance Line Chart da ref)
-- Doughnut com `innerRadius=60%`, sem stroke
+Tabela com colunas: **Empreendimento · Tipo · Leads ativos · Propostas · Vendas no mês · VGV negociado**. Ordenada por VGV negociado desc, limitada a 5 linhas. Usa o mesmo estilo de tabela sutil já aplicado no projeto.
 
-## 5. Cards de KPI
+### Dados mockados
 
-Atualizar `src/components/dashboard/KPICard.tsx` no padrão da ref:
-- Label pequeno em cima (`text-xs uppercase text-muted-foreground`)
-- Valor grande (`text-3xl font-bold`)
-- Delta abaixo com seta ↑/↓ verde/vermelho e `text-xs`
-- Sem borda, apenas card com sombra sutil OU inline sem card (variante `inline`) — como a linha superior da imagem 1
+Novo arquivo `src/pages/dashboard/mockData.ts` exportando:
 
-## 6. Layout de página (`PageHeader`)
+- `mockKPIs` — 4 objetos `{ label, value, delta, trend, icon }`
+- `mockFunilArqo` — array de 6 etapas `{ etapa, quantidade, cor }`
+- `mockTopEmpreendimentos` — 5 objetos com os campos da tabela
 
-Ajustar `src/components/layout/PageHeader.tsx`:
-- Título grande + subtítulo em cinza (estilo "Good Morning, John Doe / Your performance summary")
-- Ações à direita alinhadas (Share/Print/Export → Outline/Outline/Accent)
-- Sem fundo colorido, apenas padding generoso
+Valores plausíveis (ex.: 342 leads novos, conversão 8,4%, VGV R$ 18,2 mi, 7 vendas no mês). Nomes fictícios de empreendimentos (Residencial Aurora, Loteamento Vista Verde, etc.) misturando tipos Vertical, Loteamento e Comercial.
 
-## 7. Detalhes técnicos
+### Arquivos
 
-- Não alterar lógica de negócio, apenas presentation
-- Verificar que dark mode continua funcionando (todos tokens em HSL)
-- Rodar typecheck após alterações
+- **Edit** `src/pages/Index.tsx` — manter os redirects existentes (incorporador / corretor / gestor_imobiliaria) e trocar o placeholder pelo novo dashboard dentro do `MainLayout`.
+- **New** `src/pages/dashboard/DashboardHome.tsx` — componente do dashboard.
+- **New** `src/pages/dashboard/components/FunilArqoCard.tsx` — barras horizontais do funil.
+- **New** `src/pages/dashboard/components/TopEmpreendimentosTable.tsx` — tabela top 5.
+- **New** `src/pages/dashboard/mockData.ts` — dados fictícios centralizados.
 
-## Fora do escopo
+### Detalhes técnicos
 
-- Refatorar páginas específicas para o novo layout (fica para próxima iteração — os componentes já entregam 80% do visual automaticamente)
-- Substituir bibliotecas de gráfico
-- Mudanças em edge functions / DB
+- Reuso de componentes existentes: `MainLayout`, `PageHeader`, `KPICard`, `Card`, `Table` (shadcn). Nenhuma nova dependência.
+- Formatação monetária via `formatCurrency` de `src/lib/formatters.ts`.
+- Cores seguem tokens semânticos (`--primary`, `--accent`, `--success`, `--destructive`) — nada hardcoded.
+- Todo componente marcado internamente com comentário `// TODO: substituir por dados reais` para facilitar migração futura.
+- Sem impacto em rotas, permissões ou banco de dados.
