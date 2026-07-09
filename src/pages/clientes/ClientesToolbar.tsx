@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download, Edit, Plus, Search } from 'lucide-react';
+import { Download, Edit, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 
 type GestorOption = {
   id: string;
@@ -20,6 +20,8 @@ type Props = {
   onNew: () => void;
   selectedCount: number;
   onOpenAcaoEmLote: () => void;
+  onDeleteSelecionados?: () => void;
+  isDeletingLote?: boolean;
   gestorId: string;
   onGestorChange: (value: string) => void;
   gestores: GestorOption[];
@@ -31,6 +33,8 @@ export function ClientesToolbar({
   onNew,
   selectedCount,
   onOpenAcaoEmLote,
+  onDeleteSelecionados,
+  isDeletingLote,
   gestorId,
   onGestorChange,
   gestores,
@@ -70,6 +74,16 @@ export function ClientesToolbar({
           >
             <Edit className="h-4 w-4 mr-2" />
             Editar {selectedCount} selecionado(s)
+          </Button>
+        )}
+        {selectedCount > 0 && onDeleteSelecionados && (
+          <Button
+            variant="destructive"
+            onClick={onDeleteSelecionados}
+            disabled={isDeletingLote}
+          >
+            {isDeletingLote ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+            Excluir {selectedCount}
           </Button>
         )}
         <Button variant="outline">
