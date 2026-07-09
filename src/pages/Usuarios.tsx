@@ -159,8 +159,10 @@ export default function Usuarios() {
     setEditIsActive(user.is_active);
     setEditTipoVinculo(user.tipo_vinculo || 'terceiro');
     setEditCargo(user.cargo || '');
+    setEditEmpresa(((user as any).empresa as any) || 'seven');
     setActiveTab('dados');
     setIsEditDialogOpen(true);
+
   };
 
   const handleSaveUser = async () => {
