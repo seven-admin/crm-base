@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useArqoEtapas, useArqoTemperaturas, useArqoSources, useArqoGrupos, useArqoSlaRegras, useArqoRegua } from '@/hooks/useArqo';
 import { ArqoConfigCrud, type ConfigField } from '@/components/arqo/ArqoConfigCrud';
+import { ArqoGrupoMembros } from '@/components/arqo/ArqoGrupoMembros';
 
 export default function ArqoConfig() {
   const { data: etapas = [] } = useArqoEtapas();
