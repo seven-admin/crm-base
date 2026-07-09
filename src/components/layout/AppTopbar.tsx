@@ -165,7 +165,7 @@ export function AppTopbar() {
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
-                      'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap',
+                      'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap uppercase tracking-wide',
                       hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
                     )}
                     style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
@@ -200,6 +200,21 @@ export function AppTopbar() {
                   })}
                   {isSistema && (
                     <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={toggleTheme}
+                        className="cursor-pointer"
+                      >
+                        {theme === 'dark' ? (
+                          <>
+                            <Sun className="h-4 w-4 mr-2" /> Modo claro
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="h-4 w-4 mr-2" /> Modo escuro
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-3 py-2">
                         <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
