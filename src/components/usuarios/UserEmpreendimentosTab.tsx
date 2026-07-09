@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, Building2, MapPin, RotateCcw, Info } from 'lucide-react';
+import { Loader2, Search, Building2, MapPin, RotateCcw, Info, X, UserCheck } from 'lucide-react';
 import { 
   useEmpreendimentosWithLinks, 
   useToggleUserEmpreendimento,
-  useClearUserEmpreendimentos
+  useClearUserEmpreendimentos,
+  useUserEmpreendimentosResponsavel,
+  useRemoveResponsavelComercial,
 } from '@/hooks/useUserEmpreendimentos';
 
 interface UserEmpreendimentosTabProps {
