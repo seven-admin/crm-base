@@ -7,6 +7,16 @@ export type ActionType = 'view' | 'create' | 'edit' | 'delete';
 
 export type ScopeType = 'global' | 'empreendimento' | 'proprio';
 
+export type EmpresaVinculo = 'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo';
+
+export const EMPRESA_LABELS: Record<EmpresaVinculo, string> = {
+  seven: 'Seven',
+  arqo: 'Arqo',
+  nexa: 'Nexa',
+  incorporador: 'Incorporador',
+  externo: 'Externo',
+};
+
 export interface Profile {
   id: string;
   full_name: string;
@@ -14,9 +24,11 @@ export interface Profile {
   phone: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  empresa: EmpresaVinculo;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface Role {
   id: string;
