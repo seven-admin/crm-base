@@ -24,6 +24,8 @@ export function UserEmpreendimentosTab({ userId, userScope }: UserEmpreendimento
   const { data: empreendimentos, isLoading } = useEmpreendimentosWithLinks(userId);
   const toggleLink = useToggleUserEmpreendimento();
   const clearLinks = useClearUserEmpreendimentos();
+  const { data: responsavelEmps, isLoading: loadingResponsavel } = useUserEmpreendimentosResponsavel(userId);
+  const removeResponsavel = useRemoveResponsavelComercial();
 
   const linkedCount = empreendimentos?.filter(e => e.is_linked).length || 0;
 
