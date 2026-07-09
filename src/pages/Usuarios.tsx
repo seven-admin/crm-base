@@ -1119,6 +1119,24 @@ export default function Usuarios() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="create-empresa">Vínculo à Empresa *</Label>
+                <Select value={createEmpresa} onValueChange={(v) => setCreateEmpresa(v as any)}>
+                  <SelectTrigger id="create-empresa">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="seven">Seven</SelectItem>
+                    <SelectItem value="arqo">Arqo</SelectItem>
+                    <SelectItem value="nexa">Nexa</SelectItem>
+                    <SelectItem value="incorporador">Incorporador</SelectItem>
+                    <SelectItem value="externo">Externo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+
+
               {/* Show base role selector when selected role might not have permissions */}
               {!selectedRoleHasPermissions && (
                 <div className="space-y-2 p-3 border border-warning/50 rounded-lg bg-warning/5">
