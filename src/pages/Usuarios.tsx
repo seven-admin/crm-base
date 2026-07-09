@@ -906,6 +906,25 @@ export default function Usuarios() {
                   </p>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="edit-empresa">Vínculo à Empresa</Label>
+                  <Select value={editEmpresa} onValueChange={(v) => setEditEmpresa(v as any)}>
+                    <SelectTrigger id="edit-empresa">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seven">Seven</SelectItem>
+                      <SelectItem value="arqo">Arqo</SelectItem>
+                      <SelectItem value="nexa">Nexa</SelectItem>
+                      <SelectItem value="incorporador">Incorporador</SelectItem>
+                      <SelectItem value="externo">Externo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define quais módulos o usuário enxerga no sistema.
+                  </p>
+
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Status do Usuário</Label>
