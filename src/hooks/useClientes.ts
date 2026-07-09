@@ -418,6 +418,9 @@ export function useDeleteClientesEmLote() {
       toast.error(sanitizeErrorMessage(error, 'excluir clientes em lote'));
     },
   });
+}
+
+
 
 // Qualificar cliente (prospecto → qualificado)
 export function useQualificarCliente() {
