@@ -1,47 +1,31 @@
-
 ## Diagnóstico
 
-O `delete-user` continua falhando para gestores de produto porque existem FKs para `public.profiles(id)` **sem** `ON DELETE SET NULL/CASCADE`. Ao excluir o profile (cascata do `auth.users`), o Postgres bloqueia. Colunas hoje bloqueantes:
+A exclusão ainda falhou porque os usuários Tânia Moraes, Joel, Lucas, Michel e Pedro continuam referenciados em `seven_clientes.gestor_id`.
 
-- `seven_empreendimentos.responsavel_comercial_id`
-- `seven_empreendimento_documentos.created_by`
-- `seven_empreendimento_corretores.autorizado_por`
-- `seven_empreendimento_imobiliarias.autorizado_por`
-- `seven_clientes.gestor_id` e `seven_clientes.created_by`
-- `seven_lancamentos_financeiros.created_by` e `conferido_por`
-- `seven_saldos_mensais.created_by`
+O `delete-user` tenta zerar esse campo antes de excluir, mas o `UPDATE` em `seven_clientes` está sendo bloqueado pelo trigger `validate_nivel_cadastro_cliente()`. Esse trigger revalida dados obrigatórios do cliente mesmo quando a alteração é só administrativa (`gestor_id = null`). Como há clientes antigos/incompletos, o cleanup falha e o Auth não consegue apagar o `profile`.
 
-Como você pediu para não mexer nas tabelas, a solução é fazer **nullify preventivo** nessas colunas dentro da edge function antes do `auth.admin.deleteUser`.
+## Plano de correção
 
-## 1. Ampliar `supabase/functions/delete-user/index.ts`
+1. Ajustar a função `validate_nivel_cadastro_cliente()` no banco
+   - Manter a validação normal para criação/edição real de clientes.
+   - Em `UPDATE`, ignorar validação quando a alteração for apenas em campos administrativos como `gestor_id`, `created_by`, `updated_at` ou similares.
+   - Isso evita que uma rotina de limpeza seja bloqueada por dados legados incompletos.
 
-Adicionar ao `cleanupReferences` (mantendo os steps atuais) o nullify de:
+2. Melhorar a Edge Function `delete-user`
+   - Antes do `auth.admin.deleteUser`, continuar limpando referências.
+   - Se alguma limpeza crítica falhar, retornar a mensagem exata por tabela/campo em vez de apenas `AuthRetryableFetchError`.
+   - Tratar `seven_clientes.gestor_id` como referência crítica, para facilitar diagnóstico futuro.
 
-- `seven_empreendimentos.responsavel_comercial_id`
-- `seven_empreendimento_documentos.created_by`
-- `seven_empreendimento_corretores.autorizado_por`
-- `seven_empreendimento_imobiliarias.autorizado_por`
-- `seven_lancamentos_financeiros.created_by`
-- `seven_lancamentos_financeiros.conferido_por`
-- `seven_saldos_mensais.created_by`
-- `arqo_agendamentos.responsavel_id`
-- `nexa_visitas_eventos.usuario_id`
+3. Remover as atribuições atuais dos usuários que falharam
+   - Zerar `seven_clientes.gestor_id` para os usuários informados que ainda ficaram presos:
+     - Tânia Moraes
+     - Joel
+     - Lucas
+     - Michel
+     - Pedro
+   - Confirmar que não restam referências bloqueantes em FKs sem `ON DELETE SET NULL`.
 
-Depois disso o cascade do delete no auth resolve o restante (as demais FKs já estão `SET NULL`/`CASCADE`).
-
-## 2. Remover atribuições de responsável por empreendimento (UI)
-
-Estender `src/components/usuarios/UserEmpreendimentosTab.tsx` (já lista os empreendimentos vinculados via `sistema_user_empreendimentos`) para também mostrar e permitir **remover** a atribuição de "Responsável Comercial":
-
-- Novo hook (ou extensão de `useUserEmpreendimentos`) que consulta `seven_empreendimentos` onde `responsavel_comercial_id = user_id`.
-- Nova seção "Responsável Comercial" na aba, listando esses empreendimentos com botão "Remover responsabilidade" que faz `update seven_empreendimentos set responsavel_comercial_id = null where id = ?`.
-- Manter a seção existente de `sistema_user_empreendimentos` (vínculo de acesso) como está, apenas separada visualmente.
-
-Acesso: restrito ao super admin, seguindo o padrão do resto da aba.
-
-## Ordem de execução
-
-1. Ampliar `delete-user/index.ts` com os nullifies acima.
-2. Ajustar `UserEmpreendimentosTab.tsx` + hook para exibir/remover responsabilidade comercial.
-
-Sem migrações. Sem mudanças de schema.
+4. Validar
+   - Consultar novamente as referências desses usuários em `seven_clientes.gestor_id`.
+   - Conferir logs do `delete-user` após a alteração.
+   - A partir daí, a exclusão desses gestores deve funcionar pela tela de Usuários.
