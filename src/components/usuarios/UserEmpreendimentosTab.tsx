@@ -71,7 +71,51 @@ export function UserEmpreendimentosTab({ userId, userScope }: UserEmpreendimento
         </AlertDescription>
       </Alert>
 
-      {/* Header with search and actions */}
+      {/* Responsável Comercial */}
+      <div className="rounded-lg border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <UserCheck className="h-4 w-4 text-muted-foreground" />
+          <h4 className="font-medium text-sm">Responsável Comercial</h4>
+          <Badge variant="secondary" className="text-xs">
+            {responsavelEmps?.length || 0}
+          </Badge>
+        </div>
+        {loadingResponsavel ? (
+          <div className="flex items-center py-2"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+        ) : !responsavelEmps || responsavelEmps.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Este usuário não é responsável comercial por nenhum empreendimento.</p>
+        ) : (
+          <div className="space-y-2">
+            {responsavelEmps.map((emp) => (
+              <div key={emp.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                <div>
+                  <p className="text-sm font-medium">{emp.nome}</p>
+                  {emp.cidade && (
+                    <p className="text-xs text-muted-foreground">
+                      {emp.cidade}{emp.uf ? `/${emp.uf}` : ''}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={removeResponsavel.isPending}
+                  onClick={() => {
+                    if (confirm(`Remover ${emp.nome} da responsabilidade deste usuário?`)) {
+                      removeResponsavel.mutate({ userId, empreendimentoId: emp.id });
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Remover
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
