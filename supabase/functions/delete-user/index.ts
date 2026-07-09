@@ -15,8 +15,6 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
       run: () => admin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', userId) },
     { label: 'seven_clientes.gestor_id', critical: true,
       run: () => admin.from('seven_clientes').update({ gestor_id: null }).eq('gestor_id', userId) },
-    { label: 'seven_clientes.created_by', critical: true,
-      run: () => admin.from('seven_clientes').update({ created_by: null }).eq('created_by', userId) },
     { label: 'arqo_leads.consultor_id',
       run: () => admin.from('arqo_leads').update({ consultor_id: null }).eq('consultor_id', userId) },
     { label: 'arqo_leads.closer_id',
