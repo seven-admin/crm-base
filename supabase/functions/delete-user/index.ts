@@ -9,13 +9,13 @@ const corsHeaders = {
 // Cada etapa loga o erro mas segue adiante — o delete final vai reportar se algo
 // ainda estiver bloqueando.
 async function cleanupReferences(admin: ReturnType<typeof createClient>, userId: string) {
-  const steps: Array<{ label: string; run: () => Promise<any> }> = [
+  const steps: Array<{ label: string; critical?: boolean; run: () => Promise<any> }> = [
     // Nullify em tabelas de dados operacionais
     { label: 'seven_lancamentos_financeiros.beneficiario_id',
       run: () => admin.from('seven_lancamentos_financeiros').update({ beneficiario_id: null }).eq('beneficiario_id', userId) },
-    { label: 'seven_clientes.gestor_id',
+    { label: 'seven_clientes.gestor_id', critical: true,
       run: () => admin.from('seven_clientes').update({ gestor_id: null }).eq('gestor_id', userId) },
-    { label: 'seven_clientes.created_by',
+    { label: 'seven_clientes.created_by', critical: true,
       run: () => admin.from('seven_clientes').update({ created_by: null }).eq('created_by', userId) },
     { label: 'arqo_leads.consultor_id',
       run: () => admin.from('arqo_leads').update({ consultor_id: null }).eq('consultor_id', userId) },
@@ -33,19 +33,19 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
       run: () => admin.from('sistema_notificacoes').delete().eq('user_id', userId) },
 
     // Nullify em referências que bloqueiam a exclusão (FKs sem SET NULL)
-    { label: 'seven_empreendimentos.responsavel_comercial_id',
+    { label: 'seven_empreendimentos.responsavel_comercial_id', critical: true,
       run: () => admin.from('seven_empreendimentos').update({ responsavel_comercial_id: null }).eq('responsavel_comercial_id', userId) },
-    { label: 'seven_empreendimento_documentos.created_by',
+    { label: 'seven_empreendimento_documentos.created_by', critical: true,
       run: () => admin.from('seven_empreendimento_documentos').update({ created_by: null }).eq('created_by', userId) },
-    { label: 'seven_empreendimento_corretores.autorizado_por',
+    { label: 'seven_empreendimento_corretores.autorizado_por', critical: true,
       run: () => admin.from('seven_empreendimento_corretores').update({ autorizado_por: null }).eq('autorizado_por', userId) },
-    { label: 'seven_empreendimento_imobiliarias.autorizado_por',
+    { label: 'seven_empreendimento_imobiliarias.autorizado_por', critical: true,
       run: () => admin.from('seven_empreendimento_imobiliarias').update({ autorizado_por: null }).eq('autorizado_por', userId) },
-    { label: 'seven_lancamentos_financeiros.created_by',
+    { label: 'seven_lancamentos_financeiros.created_by', critical: true,
       run: () => admin.from('seven_lancamentos_financeiros').update({ created_by: null }).eq('created_by', userId) },
-    { label: 'seven_lancamentos_financeiros.conferido_por',
+    { label: 'seven_lancamentos_financeiros.conferido_por', critical: true,
       run: () => admin.from('seven_lancamentos_financeiros').update({ conferido_por: null }).eq('conferido_por', userId) },
-    { label: 'seven_saldos_mensais.created_by',
+    { label: 'seven_saldos_mensais.created_by', critical: true,
       run: () => admin.from('seven_saldos_mensais').update({ created_by: null }).eq('created_by', userId) },
     { label: 'arqo_agendamentos.responsavel_id',
       run: () => admin.from('arqo_agendamentos').update({ responsavel_id: null }).eq('responsavel_id', userId) },
@@ -76,18 +76,28 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
   ];
 
   const warnings: string[] = [];
+  const criticalFailures: string[] = [];
   for (const step of steps) {
     try {
       const { error } = await step.run();
       if (error && !/does not exist|column .* does not exist/i.test(error.message)) {
-        warnings.push(`${step.label}: ${error.message}`);
+        const message = `${step.label}: ${error.message}`;
+        warnings.push(message);
+        if (step.critical) criticalFailures.push(message);
         console.warn(`[cleanup] ${step.label}:`, error.message);
       }
     } catch (e: any) {
-      warnings.push(`${step.label}: ${e?.message ?? 'erro'}`);
+      const message = `${step.label}: ${e?.message ?? 'erro'}`;
+      warnings.push(message);
+      if (step.critical) criticalFailures.push(message);
       console.warn(`[cleanup] ${step.label}:`, e);
     }
   }
+
+  if (criticalFailures.length > 0) {
+    throw new Error(`Falha ao limpar referências obrigatórias antes da exclusão: ${criticalFailures.join(' | ')}`);
+  }
+
   return warnings;
 }
 
