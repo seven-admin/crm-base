@@ -114,7 +114,6 @@ export default function ArqoLeadsKanban() {
           })}
         </div>
       )}
-      )}
       <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
     </MainLayout>
   );
