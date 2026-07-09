@@ -6,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Phone, Mail } from 'lucide-react';
+import { ArrowRight, Sparkles, Phone, Mail, Upload } from 'lucide-react';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
+import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 
 export default function ArqoLeadsKanban() {
   const { data: leads = [], isLoading } = useArqoLeads();
   const { data: etapas = [] } = useArqoEtapas();
   const transicionar = useTransicionarEtapa();
   const [dragging, setDragging] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const etapasAtivas = useMemo(() => etapas.filter(e => e.categoria === 'ativa'), [etapas]);
 
@@ -32,8 +34,8 @@ export default function ArqoLeadsKanban() {
       title="Arqo — Kanban de Leads"
       subtitle="Pipeline visual de leads e oportunidades"
       actions={
-        <Button variant="outline" size="sm" disabled title="Em breve: importar CSV/Excel">
-          Importar (em breve)
+        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" /> Importar CSV
         </Button>
       }
     >
