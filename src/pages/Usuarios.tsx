@@ -178,9 +178,11 @@ export default function Usuarios() {
           phone: editPhone || null,
           is_active: editIsActive,
           tipo_vinculo: editTipoVinculo,
-          cargo: editTipoVinculo === 'funcionario_seven' ? editCargo || null : null
-        })
+          cargo: editTipoVinculo === 'funcionario_seven' ? editCargo || null : null,
+          empresa: editEmpresa,
+        } as any)
         .eq('id', editingUser.id);
+
 
       if (profileError) throw profileError;
 
