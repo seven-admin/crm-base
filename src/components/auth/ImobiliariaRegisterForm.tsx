@@ -376,30 +376,7 @@ export function ImobiliariaRegisterForm({ onBack }: ImobiliariaRegisterFormProps
             </div>
           </div>
 
-          <div className="flex items-start space-x-2 pt-2">
-            <Checkbox
-              id="aceite_termos"
-              checked={formData.aceite_termos}
-              onCheckedChange={(checked) => handleChange('aceite_termos', checked === true)}
-              className={errors.aceite_termos ? 'border-destructive' : ''}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <label
-                htmlFor="aceite_termos"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Li e aceito os{' '}
-                <Link to="/termos" target="_blank" className="text-primary hover:underline">
-                  Termos de Uso
-                </Link>
-                {' '}e a{' '}
-                <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">
-                  Política de Privacidade
-                </Link>
-              </label>
-              {errors.aceite_termos && <p className="text-xs text-destructive">{errors.aceite_termos}</p>}
-            </div>
-          </div>
+
 
           <Button type="submit" className="w-full h-11 text-sm font-semibold" disabled={isLoading}>
             {isLoading ? (
