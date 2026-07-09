@@ -34,7 +34,7 @@ export function SevenMegaMenu({ categories, hasActive }: SevenMegaMenuProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap',
+            'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap uppercase tracking-wide',
             hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
           )}
           style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
