@@ -684,9 +684,6 @@ export default function Usuarios() {
                         <Badge variant={getRoleBadgeVariant(user.role)}>
                           {getRoleDisplayName(user.role)}
                         </Badge>
-                        <Badge variant={user.tipo_vinculo === 'funcionario_seven' ? 'default' : 'outline'}>
-                          {user.tipo_vinculo === 'funcionario_seven' ? 'Seven' : 'Terceiro'}
-                        </Badge>
                         <Badge variant={user.is_active ? 'default' : 'secondary'}>
                           {user.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
