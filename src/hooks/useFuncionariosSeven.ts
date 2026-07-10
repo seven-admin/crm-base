@@ -41,3 +41,20 @@ export function useAllProfiles() {
     }
   });
 }
+
+export function useProfilesByEmpresa(empresa: string) {
+  return useQuery({
+    queryKey: ['profiles-by-empresa', empresa],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, is_active, tipo_vinculo')
+        .eq('empresa', empresa as any)
+        .eq('is_active', true)
+        .order('full_name');
+
+      if (error) throw error;
+      return (data || []) as FuncionarioSeven[];
+    }
+  });
+}
