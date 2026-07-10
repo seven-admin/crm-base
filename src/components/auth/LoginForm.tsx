@@ -16,12 +16,7 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
 });
 
-interface LoginFormProps {
-  onRegisterImobiliaria?: () => void;
-  onRegisterCorretor?: () => void;
-}
-
-export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFormProps) {
+export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
@@ -204,29 +199,6 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
             >
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </Button>
-
-            {(onRegisterImobiliaria || onRegisterCorretor) && (
-              <div className="text-center pt-2 space-y-1">
-                {onRegisterImobiliaria && (
-                  <button
-                    type="button"
-                    onClick={onRegisterImobiliaria}
-                    className="text-sm text-primary hover:underline block w-full"
-                  >
-                    Cadastrar Imobiliária
-                  </button>
-                )}
-                {onRegisterCorretor && (
-                  <button
-                    type="button"
-                    onClick={onRegisterCorretor}
-                    className="text-sm text-primary hover:underline block w-full"
-                  >
-                    Cadastrar Corretor
-                  </button>
-                )}
-              </div>
-            )}
           </form>
         </div>
 
