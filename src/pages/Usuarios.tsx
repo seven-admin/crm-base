@@ -714,7 +714,7 @@ export default function Usuarios() {
                         <TableHead>Usuário</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Perfil</TableHead>
-                        <TableHead>Vínculo</TableHead>
+                        
                         <TableHead className="hidden lg:table-cell">Cargo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="hidden lg:table-cell">Cadastro</TableHead>
