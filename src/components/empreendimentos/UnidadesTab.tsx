@@ -190,14 +190,13 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
   const handleExportarDisponiveis = async () => {
     if (!unidades || !empreendimento) return;
-    
+
     const disponiveis = unidades.filter(u => u.status === 'disponivel');
     if (disponiveis.length === 0) {
       toast.warning('Nenhuma unidade disponível para exportar.');
       return;
     }
 
-    // Ordenação: Bloco/Quadra → Andar → Número
     const ordenadas = [...disponiveis].sort((a, b) => {
       const blocoA = a.bloco?.nome || '';
       const blocoB = b.bloco?.nome || '';
@@ -210,105 +209,162 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
 
     const blocoLabel = isLoteamento ? 'Quadra' : 'Bloco';
     const unidLabel = isLoteamento ? 'Lote' : 'Número';
-    const dataGeracao = format(new Date(), 'dd/MM/yyyy HH:mm:ss');
+    const dataGeracao = format(new Date(), 'dd/MM/yyyy HH:mm');
+    const nomeEmpreendimento = empreendimento.nome.replace(/[^a-zA-Z0-9À-ÿ ]/g, '').replace(/ /g, '_');
+    const dataHoje = format(new Date(), 'dd-MM-yyyy');
 
     const formatarMoeda = (valor: number | null | undefined) => {
       if (valor == null) return '-';
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    // Larguras fixas por coluna (soma = 100%) — evita reflow/quebra
-    const colWidths = ['10%', '14%', '8%', '22%', '14%', '12%', '20%'];
-    const colGroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}">`).join('')}</colgroup>`;
+    // Pré-carrega imagens em base64 (evita CORS em jsPDF)
+    const fetchAsDataURL = async (url: string): Promise<string> => {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    };
 
-    const tdBase = "padding: 4px 6px; font-family: 'Helvetica','Arial',sans-serif; font-size: 8pt; line-height: 1.35; vertical-align: middle; background:#ffffff; border-bottom: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+    let logoBase64 = '';
+    let symbolBase64 = '';
+    try {
+      [logoBase64, symbolBase64] = await Promise.all([
+        fetchAsDataURL(nexaLogoAsset.url),
+        fetchAsDataURL(nexaSymbolAsset.url),
+      ]);
+    } catch (err) {
+      console.warn('Falha ao pré-carregar imagens da marca:', err);
+    }
 
-    const linhasHtml = ordenadas.map((u) => {
+    const body = ordenadas.map((u) => {
       const boxNumeros = (u as any).boxes?.map((b: any) => `${b.numero} (${b.tipo})`).join(', ') || '-';
-      return `<tr style="page-break-inside: avoid; break-inside: avoid;">` +
-        `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
-        `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
-        `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
-        `<td style="${tdBase}">${u.tipologia?.nome || '-'}</td>` +
-        `<td style="${tdBase} text-align:center;">${boxNumeros}</td>` +
-        `<td style="${tdBase} text-align:center;">${u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '-'}</td>` +
-        `<td style="${tdBase} text-align:right;">${formatarMoeda(u.valor)}</td>` +
-        `</tr>`;
-    }).join('');
+      return [
+        u.numero,
+        u.bloco?.nome || '-',
+        u.andar != null ? `${u.andar}º` : '-',
+        u.tipologia?.nome || '-',
+        boxNumeros,
+        u.area_privativa != null ? Number(u.area_privativa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-',
+        formatarMoeda(u.valor),
+      ];
+    });
 
-    const thBase = "padding: 6px; font-weight: 600; font-size: 8pt; line-height: 1.3; vertical-align: middle; background:#f3f4f6; border-bottom: 2px solid #333; color:#111;";
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pageWidth = doc.internal.pageSize.getWidth();   // 210
+    const pageHeight = doc.internal.pageSize.getHeight(); // 297
+    const marginX = 10;
 
-    const nexaLogoUrl = nexaLogoAsset.url;
-    const nexaSymbolUrl = nexaSymbolAsset.url;
+    const drawPageChrome = () => {
+      // Marca d'água centralizada
+      if (symbolBase64) {
+        try {
+          const anyDoc = doc as any;
+          anyDoc.saveGraphicsState();
+          anyDoc.setGState(new anyDoc.GState({ opacity: 0.06 }));
+          const wmSize = 110;
+          doc.addImage(symbolBase64, 'PNG', (pageWidth - wmSize) / 2, (pageHeight - wmSize) / 2, wmSize, wmSize);
+          anyDoc.restoreGraphicsState();
+        } catch (e) {
+          // silencioso
+        }
+      }
 
-    const htmlContent = `
-      <div style="position: relative; font-family: 'Helvetica','Arial',sans-serif; color: #333; box-sizing: border-box;">
-        <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 520px; opacity: 0.05; z-index: 0; pointer-events: none;">
-          <img src="${nexaSymbolUrl}" style="width: 100%; height: auto; display: block;" crossorigin="anonymous" />
-        </div>
+      // Cabeçalho — somente logo à esquerda
+      if (logoBase64) {
+        try {
+          doc.addImage(logoBase64, 'PNG', marginX, 8, 22, 10);
+        } catch (e) { /* noop */ }
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(110, 110, 110);
+      doc.text(empreendimento.nome, marginX, 22);
 
-        <div style="position: relative; z-index: 1;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <img src="${nexaLogoUrl}" style="height: 30px; width: auto; display: block;" crossorigin="anonymous" />
-              <div>
-                <div style="font-size: 13pt; font-weight: 700; letter-spacing: 0.5px; color:#111; line-height: 1.1;">NEXA</div>
-                <div style="font-size: 8.5pt; color:#666; line-height: 1.2;">${empreendimento.nome}</div>
-              </div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 11pt; font-weight: 600; color:#111;">Unidades Disponíveis</div>
-              <div style="font-size: 8pt; color:#777;">Gerado em ${dataGeracao}</div>
-            </div>
-          </div>
+      // Direita
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(17, 17, 17);
+      doc.text('Unidades Disponíveis', pageWidth - marginX, 12, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Gerado em ${dataGeracao}`, pageWidth - marginX, 17, { align: 'right' });
 
-          <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-            ${colGroup}
-            <thead style="display: table-header-group;">
-              <tr>
-                <th style="${thBase} text-align:center;">${unidLabel}</th>
-                <th style="${thBase} text-align:left;">${blocoLabel}</th>
-                <th style="${thBase} text-align:center;">Andar</th>
-                <th style="${thBase} text-align:left;">Tipologia</th>
-                <th style="${thBase} text-align:center;">Box</th>
-                <th style="${thBase} text-align:center;">Área (m²)</th>
-                <th style="${thBase} text-align:right;">Valor (R$)</th>
-              </tr>
-            </thead>
-            <tbody>${linhasHtml}</tbody>
-          </table>
+      // Divisor
+      doc.setDrawColor(230, 230, 230);
+      doc.setLineWidth(0.2);
+      doc.line(marginX, 25, pageWidth - marginX, 25);
+    };
 
-          <p style="margin: 12px 0 0; font-size: 9pt; color:#555; text-align: right;">
-            Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
-          </p>
+    autoTable(doc, {
+      startY: 30,
+      margin: { top: 30, right: marginX, bottom: 18, left: marginX },
+      head: [[unidLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área (m²)', 'Valor (R$)']],
+      body,
+      theme: 'plain',
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: { top: 1.2, bottom: 1.2, left: 2, right: 2 },
+        lineWidth: 0,
+        textColor: [40, 40, 40],
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fontStyle: 'bold',
+        fillColor: undefined as any,
+        textColor: [17, 17, 17],
+        lineWidth: { top: 0, right: 0, bottom: 0.2, left: 0 },
+        lineColor: [180, 180, 180],
+      },
+      columnStyles: {
+        0: { cellWidth: 18, halign: 'center' },
+        1: { cellWidth: 26 },
+        2: { cellWidth: 14, halign: 'center' },
+        3: { cellWidth: 42 },
+        4: { cellWidth: 26, halign: 'center' },
+        5: { cellWidth: 22, halign: 'center' },
+        6: { cellWidth: 42, halign: 'right' },
+      },
+      didDrawPage: () => {
+        drawPageChrome();
+      },
+    });
 
-          ${(empreendimento as any).texto_rodape_relatorio ? `
-          <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-            <p style="font-size: 7.5pt; color:#666; line-height: 1.6; white-space: pre-line;">${(empreendimento as any).texto_rodape_relatorio}</p>
-          </div>
-          ` : ''}
-          <div style="height: 20px;"></div>
-        </div>
-      </div>
-    `;
+    const finalY = (doc as any).lastAutoTable?.finalY ?? 30;
 
-    const container = document.createElement('div');
-    container.style.width = '780px';
-    container.style.background = 'white';
-    container.innerHTML = htmlContent;
+    // Total
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Total de unidades disponíveis: ${ordenadas.length}`, pageWidth - marginX, finalY + 6, { align: 'right' });
 
-    const nomeEmpreendimento = empreendimento.nome.replace(/[^a-zA-Z0-9À-ÿ ]/g, '').replace(/ /g, '_');
-    const dataHoje = format(new Date(), 'dd-MM-yyyy');
+    // Rodapé customizado (se houver)
+    const rodapeTexto = (empreendimento as any).texto_rodape_relatorio as string | undefined;
+    if (rodapeTexto) {
+      doc.setFontSize(7);
+      doc.setTextColor(110, 110, 110);
+      const linhas = doc.splitTextToSize(rodapeTexto, pageWidth - marginX * 2);
+      doc.text(linhas, marginX, finalY + 14);
+    }
+
+    // Paginação
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(140, 140, 140);
+      doc.text(`Página ${i} de ${totalPages}`, pageWidth - marginX, pageHeight - 6, { align: 'right' });
+    }
 
     try {
-      await (html2pdf() as any).set({
-        margin: 15,
-        filename: `Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 760, windowWidth: 760 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: 'tr' },
-      }).from(container).save();
+      doc.save(`Unidades_Disponiveis_${nomeEmpreendimento}_${dataHoje}.pdf`);
       toast.success(`${disponiveis.length} unidade(s) exportada(s) em PDF com sucesso.`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
