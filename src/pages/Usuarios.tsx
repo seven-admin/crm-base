@@ -963,36 +963,6 @@ export default function Usuarios() {
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Tipo de Vínculo</Label>
-                  <Select value={editTipoVinculo} onValueChange={(v) => setEditTipoVinculo(v as 'funcionario_seven' | 'terceiro')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="funcionario_seven">Funcionário Seven</SelectItem>
-                      <SelectItem value="terceiro">Terceiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Funcionários Seven podem receber bonificações
-                  </p>
-                </div>
-
-                {editTipoVinculo === 'funcionario_seven' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-cargo">Cargo</Label>
-                    <Input
-                      id="edit-cargo"
-                      value={editCargo}
-                      onChange={(e) => setEditCargo(e.target.value)}
-                      placeholder="Ex: Gestor de Produto, Coordenador"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Cargo do funcionário na Seven
-                    </p>
-                  </div>
-                )}
               </TabsContent>
 
               <TabsContent value="permissoes" className="pt-4">
