@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import logoImg from '@/assets/logo.png';
+import nexaLogoAsset from '@/assets/nexa-logo.png.asset.json';
+import nexaSymbolAsset from '@/assets/nexa-symbol.png.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText } from 'lucide-react';
