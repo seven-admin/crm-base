@@ -21,6 +21,10 @@ const NexaAgenda = lazy(() => import("./pages/nexa/NexaAgenda"));
 const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
 const NexaDisponibilidade = lazy(() => import("./pages/nexa/NexaDisponibilidade"));
 const NexaContratos = lazy(() => import("./pages/nexa/NexaContratos"));
+const NexaContratosVariaveis = lazy(() => import("./pages/nexa/NexaContratosVariaveis"));
+const NexaContratosTemplates = lazy(() => import("./pages/nexa/NexaContratosTemplates"));
+const NexaContratoTemplateEditor = lazy(() => import("./pages/nexa/NexaContratoTemplateEditor"));
+const NexaContratoNovo = lazy(() => import("./pages/nexa/NexaContratoNovo"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -108,6 +112,10 @@ const App = () => (
                 <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute><NexaVisitaDetalhe /></NexaProtectedRoute>} />
                 <Route path="/nexa/disponibilidade" element={<NexaProtectedRoute><NexaDisponibilidade /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos" element={<NexaProtectedRoute><NexaContratos /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/novo" element={<NexaProtectedRoute><NexaContratoNovo /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/variaveis" element={<NexaProtectedRoute><NexaContratosVariaveis /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute><NexaContratosTemplates /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
 
 
                 {/* Portal do Incorporador */}
