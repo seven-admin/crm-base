@@ -1,0 +1,222 @@
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Steps } from '@/components/ui/steps';
+import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
+import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf } from '@/hooks/useNexaContratos';
+import { useClientesSelect } from '@/hooks/useClientesSelect';
+import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
+import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml } from '@/lib/contratoVariaveis';
+import { toast } from 'sonner';
+
+export default function NexaContratoNovo() {
+  const nav = useNavigate();
+  const [params] = useSearchParams();
+  const { data: clientes } = useClientesSelect(undefined, true);
+  const { data: emps } = useEmpreendimentosAtivos();
+  const { data: templates } = useContratoTemplates();
+  const { data: variaveisCat } = useContratoVariaveis();
+  const saveContrato = useSaveContrato();
+  const uploadPdf = useUploadContratoPdf();
+
+  const [step, setStep] = useState(0);
+  const [clienteId, setClienteId] = useState<string>(params.get('cliente') || '');
+  const [empId, setEmpId] = useState<string>(params.get('empreendimento') || '');
+  const [unidadeId, setUnidadeId] = useState<string>('');
+  const [templateId, setTemplateId] = useState<string>('');
+  const [valor, setValor] = useState<string>('');
+  const [obs, setObs] = useState<string>('');
+  const [valores, setValores] = useState<Record<string, string>>({});
+  const [gerando, setGerando] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const { data: unidades } = useUnidadesDisponiveis(empId || undefined, ['disponivel', 'reservada']);
+  const template = templates?.find((t) => t.id === templateId);
+  const varsUsadas = useMemo(() => (template ? extrairVariaveis(template.conteudo_html) : []), [template]);
+
+  // resolver valores auto sempre que dados mudam
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      if (!templateId) return;
+      const auto = await resolverValoresAutomaticos({
+        clienteId: clienteId || null,
+        empreendimentoId: empId || null,
+        unidadeId: unidadeId || null,
+        valorContrato: valor ? Number(valor) : null,
+      });
+      if (!cancel) setValores((prev) => ({ ...auto, ...prev }));
+    })();
+    return () => { cancel = true; };
+  }, [templateId, clienteId, empId, unidadeId, valor]);
+
+  const previewHtml = useMemo(() => (template ? resolveVariaveis(template.conteudo_html, valores) : ''), [template, valores]);
+
+  const gerar = async () => {
+    if (!template || !previewRef.current) return;
+    setGerando(true);
+    try {
+      const contratoId = await saveContrato.mutateAsync({
+        template_id: templateId,
+        cliente_id: clienteId || null,
+        empreendimento_id: empId || null,
+        unidade_id: unidadeId || null,
+        valor_contrato: valor ? Number(valor) : null,
+        conteudo_html: previewHtml,
+        variaveis_valores: valores,
+        observacoes: obs || null,
+        status: 'em_geracao',
+      });
+      if (!contratoId) return;
+      const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`);
+      await uploadPdf.mutateAsync({ contratoId, blob });
+      toast.success('Contrato gerado com sucesso');
+      nav('/nexa/contratos');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao gerar contrato');
+    } finally {
+      setGerando(false);
+    }
+  };
+
+  const canNext = [
+    () => !!clienteId && !!empId,
+    () => !!templateId,
+    () => true,
+  ][step]?.();
+
+  return (
+    <MainLayout
+      title="Novo contrato"
+      actions={<Button variant="outline" onClick={() => nav('/nexa/contratos')}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
+    >
+      <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="flex items-center gap-2 text-sm">
+          {['Dados', 'Modelo', 'Preview & Gerar'].map((label, i) => (
+            <div key={i} className={`flex items-center gap-2 ${i === step ? 'font-semibold' : 'text-muted-foreground'}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${i <= step ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{i + 1}</span>
+              {label}
+              {i < 2 && <span className="mx-2">›</span>}
+            </div>
+          ))}
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            {step === 0 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Cliente *</Label>
+                    <Select value={clienteId} onValueChange={setClienteId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {clientes?.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Empreendimento *</Label>
+                    <Select value={empId} onValueChange={setEmpId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {emps?.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Unidade (opcional)</Label>
+                    <Select value={unidadeId || 'none'} onValueChange={(v) => setUnidadeId(v === 'none' ? '' : v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {unidades?.map((u: any) => (
+                          <SelectItem key={u.unidade_id} value={u.unidade_id}>
+                            {u.bloco ? `Bl.${u.bloco} · ` : ''}Und.{u.unidade}{u.tipologia ? ` · ${u.tipologia}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Valor do contrato (R$)</Label>
+                    <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <Label>Observações</Label>
+                  <Textarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Modelo de contrato *</Label>
+                  <Select value={templateId} onValueChange={setTemplateId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                    <SelectContent>
+                      {templates?.filter((t) => t.is_active && (!t.empreendimento_id || t.empreendimento_id === empId)).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {template && (
+                  <>
+                    <div className="text-sm text-muted-foreground">Variáveis usadas: {varsUsadas.length}</div>
+                    <div className="space-y-2 max-h-96 overflow-y-auto border rounded p-3">
+                      {varsUsadas.map((chave) => {
+                        const meta = variaveisCat?.find((v) => v.chave === chave);
+                        return (
+                          <div key={chave} className="grid grid-cols-[200px_1fr] gap-3 items-center">
+                            <Label className="font-mono text-xs">{meta?.label || chave}</Label>
+                            <Input
+                              value={valores[chave] || ''}
+                              onChange={(e) => setValores({ ...valores, [chave]: e.target.value })}
+                              placeholder={`[${chave}]`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground">Confira o conteúdo antes de gerar o PDF.</div>
+                <div ref={previewRef} className="border rounded bg-white p-8 prose max-w-none" style={{ minHeight: 400 }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
+            <ArrowLeft className="h-4 w-4 mr-2" />Anterior
+          </Button>
+          {step < 2 ? (
+            <Button onClick={() => setStep(step + 1)} disabled={!canNext}>Próximo<ArrowRight className="h-4 w-4 ml-2" /></Button>
+          ) : (
+            <Button onClick={gerar} disabled={gerando || !template}>
+              {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+              Gerar PDF
+            </Button>
+          )}
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
