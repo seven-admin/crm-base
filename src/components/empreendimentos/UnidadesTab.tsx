@@ -254,7 +254,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       (boxesData || []).forEach((b: any) => {
         if (!b.unidade_id) return;
         const arr = boxesPorUnidade.get(b.unidade_id) || [];
-        arr.push(`${b.numero}${b.tipo ? ` (${b.tipo})` : ''}`);
+        arr.push(`${b.numero}`);
         boxesPorUnidade.set(b.unidade_id, arr);
       });
     }
