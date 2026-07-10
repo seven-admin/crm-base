@@ -303,12 +303,6 @@ export default function EmpreendimentoDetalhe() {
             </TabsTrigger>
           )}
           {isAdminOrGestor && (
-            <TabsTrigger value="comercial" className="gap-2">
-              <Calculator className="h-4 w-4 hidden sm:block" />
-              Comercial
-            </TabsTrigger>
-          )}
-          {isAdminOrGestor && (
             <TabsTrigger value="historico" className="gap-2">
               <History className="h-4 w-4 hidden sm:block" />
               Histórico
