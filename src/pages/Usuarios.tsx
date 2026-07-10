@@ -1137,33 +1137,6 @@ export default function Usuarios() {
 
 
 
-              {/* Show base role selector when selected role might not have permissions */}
-              {!selectedRoleHasPermissions && (
-                <div className="space-y-2 p-3 border border-warning/50 rounded-lg bg-warning/5">
-                  <Label htmlFor="create-base-role" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-warning" />
-                    Copiar permissões de
-                  </Label>
-                  <Select value={createBaseRoleId} onValueChange={setCreateBaseRoleId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um perfil base..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rolesFromDb
-                        .filter(r => ['admin', 'gestor_produto', 'corretor', 'equipe_marketing'].includes(r.name))
-                        .map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.display_name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    O perfil selecionado não possui permissões configuradas. Escolha um perfil base para copiar as permissões.
-                  </p>
-                </div>
-              )}
-
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Usuário Ativo</Label>
@@ -1177,36 +1150,6 @@ export default function Usuarios() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Tipo de Vínculo</Label>
-                <Select value={createTipoVinculo} onValueChange={(v) => setCreateTipoVinculo(v as 'funcionario_seven' | 'terceiro')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="funcionario_seven">Funcionário Seven</SelectItem>
-                    <SelectItem value="terceiro">Terceiro</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Funcionários Seven podem receber bonificações
-                </p>
-              </div>
-
-              {createTipoVinculo === 'funcionario_seven' && (
-                <div className="space-y-2">
-                  <Label htmlFor="create-cargo">Cargo</Label>
-                  <Input
-                    id="create-cargo"
-                    value={createCargo}
-                    onChange={(e) => setCreateCargo(e.target.value)}
-                    placeholder="Ex: Gestor de Produto, Coordenador"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Cargo do funcionário na Seven
-                  </p>
-                </div>
-              )}
             </div>
 
             <DialogFooter>
