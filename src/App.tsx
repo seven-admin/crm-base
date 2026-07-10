@@ -16,6 +16,7 @@ const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
+const ArqoAdmin = lazy(() => import("./pages/arqo/ArqoAdmin"));
 
 const NexaAgenda = lazy(() => import("./pages/nexa/NexaAgenda"));
 const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
