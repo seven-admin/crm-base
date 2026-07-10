@@ -1,51 +1,31 @@
-## Reestruturação da Roleta Arqo + Kanban por usuário + nova página Admin
+## Refatorar layout do PDF "Exportar Disponíveis"
 
-### 1. Nova página: `/arqo/admin` (visão gerencial)
+Arquivo: `src/components/empreendimentos/UnidadesTab.tsx` (função `handleExportarDisponiveis`, linhas 188-296).
 
-Nova rota `ArqoAdmin.tsx` — dashboard consolidado para super_admin / arqo_admin / arqo_gestor:
+### 1. Assets Nexa
+Registrar como Lovable Assets a partir dos uploads:
+- `user-uploads://Ativo_20.png` → logotipo completo (símbolo + "nexa") → usado no cabeçalho do PDF.
+- `user-uploads://Ativo_29.png` → símbolo isolado → usado como marca d'água no fundo da página.
 
-- KPIs no topo: total de leads ativos, leads sem atribuição, leads em atendimento, ganhos/perdidos no mês, tempo médio de atendimento.
-- Tabela por grupo: nome, membros ativos, leads na fila, leads em atendimento, ganhos/perdidos.
-- Tabela por consultor: nome, lead ativo atual, total atendidos, taxa de conversão, última atividade.
-- Distribuição por etapa (mini funil) e por temperatura.
-- Reutiliza `useArqoLeads`, `useArqoGrupos`, `useArqoEtapas`; sem novos endpoints.
-- Registrada em `App.tsx` e no menu Arqo do `AppTopbar`, com gate por role/empresa.
+Salvar os JSONs em `src/assets/nexa-logo.png.asset.json` e `src/assets/nexa-symbol.png.asset.json` e importar no componente.
 
-### 2. Refatorar `/arqo/roleta` (visão operacional do consultor)
+### 2. Cabeçalho
+Substituir o bloco atual "CRM 360 – {empreendimento}" por:
+- Esquerda: `<img>` do logotipo Nexa (altura ~28px) + texto "NEXA" em caixa alta ao lado, com o nome do empreendimento como subtítulo menor.
+- Direita: mantém "Unidades Disponíveis" + data de geração.
+- Divisor inferior mais sutil (1px `#e5e7eb`).
 
-Página passa a mostrar SÓ o que é do próprio usuário:
+### 3. Marca d'água de fundo
+Envolver o conteúdo em wrapper `position: relative` e injetar o símbolo como `<div>` absoluto centralizado, `opacity: 0.05`, largura ~500px, `z-index: 0`. Conteúdo da tabela em `position: relative; z-index: 1`. Ajustar `html2canvas` para `backgroundColor: '#ffffff'` (já está) e converter a imagem para dataURL antes do render (evita CORS em html2canvas).
 
-- **Topo — mini dash de grupos do usuário**: cards horizontais, um por grupo do qual ele é membro ativo, mostrando `nome do grupo` + `nº de leads aguardando atendimento` (leads sem consultor no grupo). Sem listar os leads da fila.
-- Em cada card, botão **"Puxar próximo lead"** (chama `arqo_atribuir_lead_roleta` daquele grupo). Botão desabilitado se o usuário já tem lead ativo.
-- **Painel de atendimento** (só aparece quando `meuLeadAtivo` existe): dados do lead + ações — Sem resposta, mover etapa, Ganho, Perder, Liberar. 
-- **Novo campo obrigatório**: textarea **"Observação do atendimento"** acompanha cada ação (sem resposta / transição / ganho / perda / liberar). Enviado como `p_comentario` para as RPCs `arqo_registrar_tentativa` e `arqo_transicionar_status`, e como novo parâmetro em `arqo_liberar_consultor`.
-- Remove por completo o painel lateral "Fila do grupo" com os leads listados.
-- Remove o `<Select>` de grupo global — a interação passa a ser por card de grupo.
+### 4. Impedir quebra da lista
+- `<table>` recebe `table-layout: fixed` e larguras explícitas por coluna para não haver reflow.
+- `<thead>` com `display: table-header-group` para repetir em cada página.
+- Cada `<tr>` de dado com `page-break-inside: avoid; break-inside: avoid` (já existe, reforçar removendo o `rowSep` que insere `<tr>` extra e trocar por `border-bottom` direto na linha — o `<tr>` separador atual pode causar órfãos entre páginas).
+- `pagebreak.mode` mantido; adicionar `avoid: 'tr'`.
 
-**Sobre o botão "Liberar"**: hoje ele chama a RPC `arqo_liberar_consultor` que zera `consultor_id` do lead (devolvendo-o à fila do grupo) e registra evento `liberacao_consultor`. O lead NÃO muda de etapa nem é encerrado — volta a ficar disponível para outro consultor puxar. Vou manter o comportamento e apenas passar a exigir observação.
+### 5. Rodapé
+Mantido; ajustar cor para harmonizar com nova paleta (cinza `#666`).
 
-### 3. Kanban `/arqo/leads` filtrado por usuário
-
-- `useArqoLeads` já aceita `consultorId`. Em `ArqoLeadsKanban.tsx`, ler o usuário atual + suas roles:
-  - super_admin / admin / arqo_admin / arqo_gestor → sem filtro (vê todos).
-  - demais usuários → passa `consultorId = user.id`.
-- Botão "Importar CSV" continua visível só para perfis com permissão de criação.
-
-### Detalhes técnicos
-
-- Ajuste na RPC `arqo_liberar_consultor` (migration): aceitar `p_comentario text default null` e gravá-lo no evento.
-- Ajustes nos hooks `useLiberarConsultor` para receber `{ leadId, comentario }`.
-- Roles verificadas via `useAuth` + `useEmpresaAccess` já existentes.
-- Membros do grupo do usuário: query em `arqo_grupo_membros` filtrando `user_id = auth.uid()` + `is_active`.
-
-### Arquivos afetados
-
-```text
-NOVO  src/pages/arqo/ArqoAdmin.tsx
-EDIT  src/pages/arqo/ArqoRoleta.tsx        (reescrita)
-EDIT  src/pages/arqo/ArqoLeadsKanban.tsx   (filtro por consultor)
-EDIT  src/hooks/useArqo.ts                 (useLiberarConsultor + hook meus grupos)
-EDIT  src/App.tsx                          (rota /arqo/admin)
-EDIT  src/components/layout/AppTopbar.tsx  (item de menu Admin Arqo)
-SQL   arqo_liberar_consultor com p_comentario
-```
+### Escopo
+Somente frontend, apenas o método `handleExportarDisponiveis` e imports/assets novos. Nenhuma outra alteração no arquivo.
