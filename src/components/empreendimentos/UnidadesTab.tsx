@@ -274,16 +274,18 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         }
       }
 
-      // Cabeçalho — somente logo à esquerda
+      // Cabeçalho — somente logo à esquerda (proporção real ~3.98:1)
+      const logoH = 8;
+      const logoW = logoH * 3.98; // ~31.8mm
       if (logoBase64) {
         try {
-          doc.addImage(logoBase64, 'PNG', marginX, 8, 22, 10);
+          doc.addImage(logoBase64, 'PNG', marginX, 8, logoW, logoH);
         } catch (e) { /* noop */ }
       }
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(110, 110, 110);
-      doc.text(empreendimento.nome, marginX, 22);
+      doc.text(empreendimento.nome, marginX, 8 + logoH + 4);
 
       // Direita
       doc.setFont('helvetica', 'bold');
