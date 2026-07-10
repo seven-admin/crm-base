@@ -1,22 +1,51 @@
-## Problema
+## Reestruturação da Roleta Arqo + Kanban por usuário + nova página Admin
 
-Em `/arqo/config` → aba **Grupos** → "Membros do grupo", o seletor "Usuário" fica vazio porque busca por `profiles.empresa = 'arqo'`, mas **nenhum profile tem `empresa='arqo'`** hoje — todos estão como `seven`. A segmentação por empresa nunca foi preenchida para usuários Arqo.
+### 1. Nova página: `/arqo/admin` (visão gerencial)
 
-Por outro lado, já existem as roles corretas: `arqo_admin`, `arqo_gestor`, `arqo_consultor`, `arqo_closer`.
+Nova rota `ArqoAdmin.tsx` — dashboard consolidado para super_admin / arqo_admin / arqo_gestor:
 
-## Solução
+- KPIs no topo: total de leads ativos, leads sem atribuição, leads em atendimento, ganhos/perdidos no mês, tempo médio de atendimento.
+- Tabela por grupo: nome, membros ativos, leads na fila, leads em atendimento, ganhos/perdidos.
+- Tabela por consultor: nome, lead ativo atual, total atendidos, taxa de conversão, última atividade.
+- Distribuição por etapa (mini funil) e por temperatura.
+- Reutiliza `useArqoLeads`, `useArqoGrupos`, `useArqoEtapas`; sem novos endpoints.
+- Registrada em `App.tsx` e no menu Arqo do `AppTopbar`, com gate por role/empresa.
 
-Trocar o critério do seletor de membros para filtrar por **roles Arqo**, não por `empresa`.
+### 2. Refatorar `/arqo/roleta` (visão operacional do consultor)
 
-### Mudanças
+Página passa a mostrar SÓ o que é do próprio usuário:
 
-1. **`src/hooks/useFuncionariosSeven.ts`**
-   - Adicionar novo hook `useProfilesByRoles(roleNames: string[])` que consulta `profiles` fazendo join com `user_roles` + `roles`, retornando usuários ativos que possuam qualquer uma das roles informadas.
+- **Topo — mini dash de grupos do usuário**: cards horizontais, um por grupo do qual ele é membro ativo, mostrando `nome do grupo` + `nº de leads aguardando atendimento` (leads sem consultor no grupo). Sem listar os leads da fila.
+- Em cada card, botão **"Puxar próximo lead"** (chama `arqo_atribuir_lead_roleta` daquele grupo). Botão desabilitado se o usuário já tem lead ativo.
+- **Painel de atendimento** (só aparece quando `meuLeadAtivo` existe): dados do lead + ações — Sem resposta, mover etapa, Ganho, Perder, Liberar. 
+- **Novo campo obrigatório**: textarea **"Observação do atendimento"** acompanha cada ação (sem resposta / transição / ganho / perda / liberar). Enviado como `p_comentario` para as RPCs `arqo_registrar_tentativa` e `arqo_transicionar_status`, e como novo parâmetro em `arqo_liberar_consultor`.
+- Remove por completo o painel lateral "Fila do grupo" com os leads listados.
+- Remove o `<Select>` de grupo global — a interação passa a ser por card de grupo.
 
-2. **`src/components/arqo/ArqoGrupoMembros.tsx`**
-   - Substituir `useProfilesByEmpresa('arqo')` por `useProfilesByRoles(['arqo_admin','arqo_gestor','arqo_consultor','arqo_closer'])`.
-   - Se o super admin precisar aparecer também, incluir `super_admin` na lista (proponho incluir para não travar o cadastro em ambiente inicial).
+**Sobre o botão "Liberar"**: hoje ele chama a RPC `arqo_liberar_consultor` que zera `consultor_id` do lead (devolvendo-o à fila do grupo) e registra evento `liberacao_consultor`. O lead NÃO muda de etapa nem é encerrado — volta a ficar disponível para outro consultor puxar. Vou manter o comportamento e apenas passar a exigir observação.
 
-### Fora de escopo
-- Não vou popular retroativamente `profiles.empresa='arqo'` — a role já é a fonte de verdade correta para "quem é da Arqo".
-- Sem migration; mudança 100% frontend.
+### 3. Kanban `/arqo/leads` filtrado por usuário
+
+- `useArqoLeads` já aceita `consultorId`. Em `ArqoLeadsKanban.tsx`, ler o usuário atual + suas roles:
+  - super_admin / admin / arqo_admin / arqo_gestor → sem filtro (vê todos).
+  - demais usuários → passa `consultorId = user.id`.
+- Botão "Importar CSV" continua visível só para perfis com permissão de criação.
+
+### Detalhes técnicos
+
+- Ajuste na RPC `arqo_liberar_consultor` (migration): aceitar `p_comentario text default null` e gravá-lo no evento.
+- Ajustes nos hooks `useLiberarConsultor` para receber `{ leadId, comentario }`.
+- Roles verificadas via `useAuth` + `useEmpresaAccess` já existentes.
+- Membros do grupo do usuário: query em `arqo_grupo_membros` filtrando `user_id = auth.uid()` + `is_active`.
+
+### Arquivos afetados
+
+```text
+NOVO  src/pages/arqo/ArqoAdmin.tsx
+EDIT  src/pages/arqo/ArqoRoleta.tsx        (reescrita)
+EDIT  src/pages/arqo/ArqoLeadsKanban.tsx   (filtro por consultor)
+EDIT  src/hooks/useArqo.ts                 (useLiberarConsultor + hook meus grupos)
+EDIT  src/App.tsx                          (rota /arqo/admin)
+EDIT  src/components/layout/AppTopbar.tsx  (item de menu Admin Arqo)
+SQL   arqo_liberar_consultor com p_comentario
+```

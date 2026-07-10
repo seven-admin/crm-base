@@ -16,6 +16,7 @@ const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
+const ArqoAdmin = lazy(() => import("./pages/arqo/ArqoAdmin"));
 
 const NexaAgenda = lazy(() => import("./pages/nexa/NexaAgenda"));
 const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute><ArqoLeadDetail /></ArqoProtectedRoute>} />
                 <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
+                <Route path="/arqo/admin" element={<ArqoProtectedRoute><ArqoAdmin /></ArqoProtectedRoute>} />
 
                 {/* Nexa */}
                 <Route path="/nexa/agenda" element={<NexaProtectedRoute><NexaAgenda /></NexaProtectedRoute>} />

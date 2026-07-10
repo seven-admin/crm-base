@@ -68,6 +68,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
       { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
       { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
+      { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo', adminOnly: true },
       { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
     ],
   },
