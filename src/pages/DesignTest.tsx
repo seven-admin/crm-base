@@ -36,7 +36,7 @@ export default function DesignTest() {
         style={{ height: 64, background: '#FFFFFF', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
       >
         <div className="shrink-0">
-          <img src={logo} alt="SevenGroup" style={{ height: 28 }} />
+          <img src={logoAsset.url} alt="SevenGroup" style={{ height: 28 }} />
         </div>
 
         <div className="flex items-center gap-8">
