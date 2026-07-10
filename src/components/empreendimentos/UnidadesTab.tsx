@@ -306,7 +306,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 760, windowWidth: 760 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: 'tr' },
       }).from(container).save();
       toast.success(`${disponiveis.length} unidade(s) exportada(s) em PDF com sucesso.`);
     } catch (error) {
