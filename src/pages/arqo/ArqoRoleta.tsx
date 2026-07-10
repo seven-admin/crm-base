@@ -13,6 +13,7 @@ export default function ArqoRoleta() {
   const { user } = useAuth();
   const { data: grupos = [] } = useArqoGrupos();
   const [grupoId, setGrupoId] = useState<string>('');
+  const [importOpen, setImportOpen] = useState(false);
   const { data: allLeads = [], isLoading } = useArqoLeads();
   const { data: etapas = [] } = useArqoEtapas();
   const atribuir = useAtribuirRoleta();
