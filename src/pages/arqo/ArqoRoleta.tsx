@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useArqoGrupos, useArqoLeads, useAtribuirRoleta, useLiberarConsultor, useRegistrarTentativa, useTransicionarEtapa, useArqoEtapas } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Phone, Mail, UserCheck, PhoneOff, ArrowRight } from 'lucide-react';
+import { Loader2, Phone, Mail, UserCheck, PhoneOff, ArrowRight, Upload } from 'lucide-react';
+import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 
 export default function ArqoRoleta() {
   const { user } = useAuth();
