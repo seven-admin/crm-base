@@ -42,6 +42,7 @@ import { UnidadesMemorialTab } from '@/components/empreendimentos/UnidadesMemori
 import { HistoricoEmpreendimentoTab } from '@/components/empreendimentos/HistoricoEmpreendimentoTab';
 import { FachadasTab } from '@/components/empreendimentos/FachadasTab';
 import { BoxesTab } from '@/components/empreendimentos/BoxesTab';
+import { ValoresTab } from '@/components/empreendimentos/ValoresTab';
 import { BlocosTab } from '@/components/empreendimentos/BlocosTab';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -303,12 +304,6 @@ export default function EmpreendimentoDetalhe() {
             </TabsTrigger>
           )}
           {isAdminOrGestor && (
-            <TabsTrigger value="comercial" className="gap-2">
-              <Calculator className="h-4 w-4 hidden sm:block" />
-              Comercial
-            </TabsTrigger>
-          )}
-          {isAdminOrGestor && (
             <TabsTrigger value="historico" className="gap-2">
               <History className="h-4 w-4 hidden sm:block" />
               Histórico
@@ -345,6 +340,13 @@ export default function EmpreendimentoDetalhe() {
             <BoxesTab empreendimentoId={id!} />
           </TabsContent>
         )}
+
+        {isAdminOrGestor && (
+          <TabsContent value="valores">
+            <ValoresTab empreendimentoId={id!} />
+          </TabsContent>
+        )}
+
 
         {isAdminOrGestor && (
           <TabsContent value="memorial">
