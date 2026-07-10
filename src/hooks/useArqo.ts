@@ -187,14 +187,40 @@ export function useRegistrarTentativa() {
 export function useLiberarConsultor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (leadId: string) => {
-      const { error } = await supabase.rpc('arqo_liberar_consultor', { p_lead_id: leadId });
+    mutationFn: async ({ leadId, comentario }: { leadId: string; comentario?: string }) => {
+      const { error } = await supabase.rpc('arqo_liberar_consultor', {
+        p_lead_id: leadId,
+        p_comentario: comentario ?? null,
+      } as any);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['arqo', 'leads'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
+    },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
   });
 }
+
+// Grupos onde o usuário atual é membro ativo
+export function useMeusArqoGrupos(userId?: string) {
+  return useQuery({
+    queryKey: ['arqo', 'meus-grupos', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('arqo_grupo_membros')
+        .select('grupo_id, papel, grupo:grupo_id (id, nome, descricao, tipo, is_active)')
+        .eq('user_id', userId!)
+        .eq('is_active', true);
+      if (error) throw error;
+      return (data ?? [])
+        .map((m: any) => ({ ...m.grupo, papel: m.papel }))
+        .filter((g: any) => g && g.is_active) as Array<{ id: string; nome: string; descricao: string | null; tipo: string; is_active: boolean; papel: string }>;
+    },
+  });
+}
+
 
 export function useArqoLeadEvents(leadId?: string) {
   return useQuery({
