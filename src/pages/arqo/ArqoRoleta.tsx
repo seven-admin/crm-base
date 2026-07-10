@@ -32,7 +32,16 @@ export default function ArqoRoleta() {
   const etapaGanho = etapas.find(e => e.categoria === 'ganho');
 
   return (
-    <MainLayout title="Arqo — Roleta de Leads" subtitle="Distribuição bloqueante 1:1 por grupo de atendimento">
+    <MainLayout
+      title="Arqo — Roleta de Leads"
+      subtitle="Distribuição bloqueante 1:1 por grupo de atendimento"
+      actions={
+        <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" /> Importar leads
+        </Button>
+      }
+    >
+      <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
       <div className="mb-6 flex items-center gap-3">
         <div className="w-64">
           <Select value={grupoId} onValueChange={setGrupoId}>
@@ -52,6 +61,7 @@ export default function ArqoRoleta() {
           </Button>
         )}
       </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Meu lead ativo */}
