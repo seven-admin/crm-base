@@ -756,11 +756,6 @@ export default function Usuarios() {
                               {getRoleDisplayName(user.role)}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <Badge variant={user.tipo_vinculo === 'funcionario_seven' ? 'default' : 'outline'}>
-                              {user.tipo_vinculo === 'funcionario_seven' ? 'Seven' : 'Terceiro'}
-                            </Badge>
-                          </TableCell>
                           <TableCell className="text-muted-foreground hidden lg:table-cell">
                             {user.cargo || '-'}
                           </TableCell>
