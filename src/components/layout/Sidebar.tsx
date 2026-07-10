@@ -46,7 +46,7 @@ import { useSidebarColors } from '@/hooks/useSidebarColors';
 import { ROLE_LABELS } from '@/types/auth.types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-import logo from '@/assets/logo-full.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 interface MenuItem {
   icon: LucideIcon;

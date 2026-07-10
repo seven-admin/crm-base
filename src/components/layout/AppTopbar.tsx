@@ -19,7 +19,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
-import logo from '@/assets/logo-sevengroup.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 interface MenuItem {
   icon: LucideIcon;

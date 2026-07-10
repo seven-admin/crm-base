@@ -10,7 +10,7 @@ import {
   UserCog,
   CalendarDays,
 } from 'lucide-react';
-import logo from '@/assets/logo-full.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 const baseMenuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/portal-corretor' },

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import logoImg from '@/assets/logo.png';
+
 import nexaLogoAsset from '@/assets/nexa-logo.png.asset.json';
 import nexaSymbolAsset from '@/assets/nexa-symbol.png.asset.json';
 import { Button } from '@/components/ui/button';

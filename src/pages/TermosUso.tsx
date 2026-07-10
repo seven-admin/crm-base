@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useConfiguracao } from '@/hooks/useConfiguracoesSistema';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 const TermosUso = () => {
   const { data: config, isLoading } = useConfiguracao('termos_uso');

@@ -5,7 +5,7 @@ import { PortalIncorporadorFilterProvider, usePortalIncorporadorFilter } from '@
 import { ArrowLeft, LogOut, BarChart3, TrendingUp, Palette, ClipboardList, Map, FileText, Building2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import logo from '@/assets/logo-full.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 const routeTitles: Record<string, { title: string; subtitle?: string }> = {
   '/portal-incorporador': { 

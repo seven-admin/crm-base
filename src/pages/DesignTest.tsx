@@ -1,5 +1,5 @@
 import { Search, Bell, MessageSquare, Settings } from 'lucide-react';
-import logo from '@/assets/logo-sevengroup.png';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 import { TestHeroCard } from '@/components/design-test/TestHeroCard';
 import { TestProjectList } from '@/components/design-test/TestProjectList';
 import { TestTeamCard } from '@/components/design-test/TestTeamCard';
