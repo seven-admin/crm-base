@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import logoImg from '@/assets/logo.png';
+import nexaLogoAsset from '@/assets/nexa-logo.png.asset.json';
+import nexaSymbolAsset from '@/assets/nexa-symbol.png.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText } from 'lucide-react';
@@ -214,14 +216,15 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
     };
 
-    // Separadores de linha via div (evita artefatos de border-bottom/border-top no html2canvas)
-    const rowSep = `<tr style="page-break-inside: avoid; break-inside: avoid;"><td colspan="7" style="padding:0; height:1px; background:#cccccc; font-size:0; line-height:0;"></td></tr>`;
+    // Larguras fixas por coluna (soma = 100%) — evita reflow/quebra
+    const colWidths = ['10%', '14%', '8%', '22%', '14%', '12%', '20%'];
+    const colGroup = `<colgroup>${colWidths.map(w => `<col style="width:${w}">`).join('')}</colgroup>`;
 
-    const tdBase = "padding: 3px 6px; font-family: 'Courier New', Courier, monospace; font-size: 7.5pt; white-space: nowrap; line-height: 1.4; vertical-align: middle; background:#ffffff;";
+    const tdBase = "padding: 4px 6px; font-family: 'Helvetica','Arial',sans-serif; font-size: 8pt; line-height: 1.35; vertical-align: middle; background:#ffffff; border-bottom: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
 
     const linhasHtml = ordenadas.map((u) => {
       const boxNumeros = (u as any).boxes?.map((b: any) => `${b.numero} (${b.tipo})`).join(', ') || '-';
-      return `${rowSep}<tr style="background:#ffffff; page-break-inside: avoid; break-inside: avoid;">` +
+      return `<tr style="page-break-inside: avoid; break-inside: avoid;">` +
         `<td style="${tdBase} text-align:center;">${u.numero}</td>` +
         `<td style="${tdBase}">${u.bloco?.nome || '-'}</td>` +
         `<td style="${tdBase} text-align:center;">${u.andar != null ? u.andar + 'º' : '-'}</td>` +
@@ -232,42 +235,59 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         `</tr>`;
     }).join('');
 
+    const thBase = "padding: 6px; font-weight: 600; font-size: 8pt; line-height: 1.3; vertical-align: middle; background:#f3f4f6; border-bottom: 2px solid #333; color:#111;";
+
+    const nexaLogoUrl = nexaLogoAsset.url;
+    const nexaSymbolUrl = nexaSymbolAsset.url;
+
     const htmlContent = `
-      <div style="font-family: 'Helvetica', 'Arial', sans-serif; color: #333; box-sizing: border-box; padding-right: 30px;">
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #aaaaaa;">
-          <div>
-            <div style="font-size: 12pt; font-weight: bold; line-height: 1.3;">CRM 360 – ${empreendimento.nome}</div>
-            <div style="font-size: 8pt; color: #777;">Plataforma de Gestão Integrada</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12pt; font-weight: bold;">Unidades Disponíveis</div>
-            <div style="font-size: 8pt; color: #777;">Gerado em ${dataGeracao}</div>
-          </div>
+      <div style="position: relative; font-family: 'Helvetica','Arial',sans-serif; color: #333; box-sizing: border-box;">
+        <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 520px; opacity: 0.05; z-index: 0; pointer-events: none;">
+          <img src="${nexaSymbolUrl}" style="width: 100%; height: auto; display: block;" crossorigin="anonymous" />
         </div>
 
-        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
-          <thead>
-            <tr style="background: #e5e5e5;">
-              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">${unidLabel}</th>
-              <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">${blocoLabel}</th>
-              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Andar</th>
-              <th style="padding: 4px 6px; text-align: left;   font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Tipologia</th>
-              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Box</th>
-              <th style="padding: 4px 6px; text-align: center; font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Área (m²)</th>
-              <th style="padding: 4px 6px; text-align: right;  font-weight: bold; font-size: 8pt; line-height: 1.4; vertical-align: middle; border-bottom: 2px solid #555555;">Valor (R$)</th>
-            </tr>
-          </thead>
-          <tbody>${linhasHtml}</tbody>
-        </table>
-        <p style="margin: 12px 0 0; font-size: 9pt; color: #555; text-align: right; white-space: nowrap;">
-          Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
-        </p>
-        ${(empreendimento as any).texto_rodape_relatorio ? `
-        <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid #cccccc;">
-          <p style="font-size: 7.5pt; color: #555; line-height: 1.6; white-space: pre-line; font-family: 'Helvetica', 'Arial', sans-serif;">${(empreendimento as any).texto_rodape_relatorio}</p>
+        <div style="position: relative; z-index: 1;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img src="${nexaLogoUrl}" style="height: 30px; width: auto; display: block;" crossorigin="anonymous" />
+              <div>
+                <div style="font-size: 13pt; font-weight: 700; letter-spacing: 0.5px; color:#111; line-height: 1.1;">NEXA</div>
+                <div style="font-size: 8.5pt; color:#666; line-height: 1.2;">${empreendimento.nome}</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11pt; font-weight: 600; color:#111;">Unidades Disponíveis</div>
+              <div style="font-size: 8pt; color:#777;">Gerado em ${dataGeracao}</div>
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+            ${colGroup}
+            <thead style="display: table-header-group;">
+              <tr>
+                <th style="${thBase} text-align:center;">${unidLabel}</th>
+                <th style="${thBase} text-align:left;">${blocoLabel}</th>
+                <th style="${thBase} text-align:center;">Andar</th>
+                <th style="${thBase} text-align:left;">Tipologia</th>
+                <th style="${thBase} text-align:center;">Box</th>
+                <th style="${thBase} text-align:center;">Área (m²)</th>
+                <th style="${thBase} text-align:right;">Valor (R$)</th>
+              </tr>
+            </thead>
+            <tbody>${linhasHtml}</tbody>
+          </table>
+
+          <p style="margin: 12px 0 0; font-size: 9pt; color:#555; text-align: right;">
+            Total de unidades disponíveis: <strong>${ordenadas.length}</strong>
+          </p>
+
+          ${(empreendimento as any).texto_rodape_relatorio ? `
+          <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+            <p style="font-size: 7.5pt; color:#666; line-height: 1.6; white-space: pre-line;">${(empreendimento as any).texto_rodape_relatorio}</p>
+          </div>
+          ` : ''}
+          <div style="height: 20px;"></div>
         </div>
-        ` : ''}
-        <div style="height: 20px;"></div>
       </div>
     `;
 
@@ -286,7 +306,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', width: 760, windowWidth: 760 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: 'tr' },
       }).from(container).save();
       toast.success(`${disponiveis.length} unidade(s) exportada(s) em PDF com sucesso.`);
     } catch (error) {
