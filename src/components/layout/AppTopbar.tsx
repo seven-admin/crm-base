@@ -77,6 +77,8 @@ const menuGroups: MenuGroup[] = [
       { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
       { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
+      { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa' },
+      { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa' },
     ],
   },
   {
