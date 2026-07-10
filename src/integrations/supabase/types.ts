@@ -3045,10 +3045,12 @@ export type Database = {
         }
         Returns: string
       }
-      arqo_liberar_consultor: {
-        Args: { p_lead_id: string }
-        Returns: undefined
-      }
+      arqo_liberar_consultor:
+        | { Args: { p_lead_id: string }; Returns: undefined }
+        | {
+            Args: { p_comentario?: string; p_lead_id: string }
+            Returns: undefined
+          }
       arqo_registrar_tentativa: {
         Args: { p_canal?: string; p_comentario?: string; p_lead_id: string }
         Returns: undefined
