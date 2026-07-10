@@ -153,20 +153,39 @@ export function useImobiliariasAtivas() {
   });
 }
 
-export function useUnidadesDisponiveis(empreendimentoId?: string) {
+export function useUnidadesDisponiveis(empreendimentoId?: string, statuses?: string[]) {
   return useQuery({
-    queryKey: ['nexa', 'unidades-disp', empreendimentoId],
+    queryKey: ['nexa', 'unidades-disp', empreendimentoId, statuses?.join(',') ?? 'disp'],
     enabled: !!empreendimentoId,
     staleTime: 0,
     refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_unidades_disponiveis', {
         p_empreendimento_id: empreendimentoId,
-        p_status: ['disponivel'],
+        p_status: statuses ?? ['disponivel'],
       } as any);
       if (error) throw error;
       return data ?? [];
     },
+  });
+}
+
+export function useUpdateUnidadeStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ unidadeId, status }: { unidadeId: string; status: string }) => {
+      const { error } = await supabase
+        .from('seven_unidades')
+        .update({ status: status as any })
+        .eq('id', unidadeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'unidades-disp'] });
+      qc.invalidateQueries({ queryKey: ['nexa', 'boxes-disp'] });
+      toast.success('Status atualizado');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar status'),
   });
 }
 

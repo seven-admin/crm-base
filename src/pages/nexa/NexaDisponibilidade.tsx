@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,23 +7,41 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
+import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
+import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+const STATUS_OPTIONS = [
+  { value: 'disponivel', label: 'Disponível' },
+  { value: 'reservada', label: 'Reservada' },
+  { value: 'negociacao', label: 'Negociação' },
+  { value: 'contrato', label: 'Contrato' },
+  { value: 'vendida', label: 'Vendida' },
+  { value: 'bloqueada', label: 'Bloqueada' },
+];
+const ALL_STATUSES = STATUS_OPTIONS.map((s) => s.value);
+
 export default function NexaDisponibilidade() {
   const { data: emps } = useEmpreendimentosAtivos();
   const [empId, setEmpId] = useState<string | undefined>();
-  const { data: unidades, isLoading, refetch, isFetching } = useUnidadesDisponiveis(empId);
+  const { isNexa, isSeven } = useEmpresaAccess();
+  const { isAdmin, isSuperAdmin } = usePermissions();
+  const canEdit = (isNexa || isSeven) && (isAdmin() || isSuperAdmin());
+  const { data: unidades, isLoading, refetch, isFetching } = useUnidadesDisponiveis(
+    empId,
+    canEdit ? ALL_STATUSES : ['disponivel']
+  );
+  const updateStatus = useUpdateUnidadeStatus();
 
   return (
     <MainLayout
       title="Unidades disponíveis"
-      subtitle="Consulta em tempo real do banco. Recarregue para ver o status mais recente."
+      subtitle={canEdit ? 'Clique no status para alterá-lo.' : 'Consulta em tempo real do banco.'}
     >
       <div className="space-y-6">
-
       <div className="flex gap-3 items-end">
         <div className="flex-1 max-w-md">
           <label className="text-sm font-medium mb-1 block">Empreendimento</label>
@@ -47,7 +65,7 @@ export default function NexaDisponibilidade() {
       ) : isLoading ? (
         <Skeleton className="h-64" />
       ) : !unidades?.length ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma unidade disponível neste empreendimento.</CardContent></Card>
+        <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma unidade encontrada.</CardContent></Card>
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -60,7 +78,7 @@ export default function NexaDisponibilidade() {
                   <TableHead>Tipologia</TableHead>
                   <TableHead>Área</TableHead>
                   <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[180px]">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -72,7 +90,24 @@ export default function NexaDisponibilidade() {
                     <TableCell>{u.tipologia || '—'}</TableCell>
                     <TableCell>{u.area_privativa ? `${u.area_privativa} m²` : '—'}</TableCell>
                     <TableCell>{formatBRL(u.valor)}</TableCell>
-                    <TableCell><Badge variant="outline">{u.status}</Badge></TableCell>
+                    <TableCell>
+                      {canEdit ? (
+                        <Select
+                          value={u.status}
+                          onValueChange={(v) => updateStatus.mutate({ unidadeId: u.unidade_id, status: v })}
+                          disabled={updateStatus.isPending}
+                        >
+                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge variant="outline">{u.status}</Badge>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -84,4 +119,3 @@ export default function NexaDisponibilidade() {
     </MainLayout>
   );
 }
-
