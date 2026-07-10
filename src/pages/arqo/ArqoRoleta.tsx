@@ -94,16 +94,6 @@ export default function ArqoRoleta() {
     );
   };
 
-  const handlePuxar = (grupoId: string) => {
-    if (meuLeadAtivo) {
-      toast.error('Você já tem um lead ativo. Finalize ou libere antes de puxar outro.');
-      return;
-    }
-    atribuir.mutate({ grupoId, leadId: '' as any /* backend escolhe pela roleta */ }, {
-      // O RPC atual exige lead_id — mantemos comportamento: pega o primeiro sem consultor do grupo
-    });
-  };
-
   // Puxar próximo lead: pega o primeiro sem consultor do grupo e chama RPC
   const puxarProximo = (grupoId: string) => {
     if (meuLeadAtivo) {
