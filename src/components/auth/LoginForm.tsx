@@ -199,29 +199,6 @@ export function LoginForm() {
             >
               {loginLoading ? 'Entrando...' : 'Entrar'}
             </Button>
-
-            {(onRegisterImobiliaria || onRegisterCorretor) && (
-              <div className="text-center pt-2 space-y-1">
-                {onRegisterImobiliaria && (
-                  <button
-                    type="button"
-                    onClick={onRegisterImobiliaria}
-                    className="text-sm text-primary hover:underline block w-full"
-                  >
-                    Cadastrar Imobiliária
-                  </button>
-                )}
-                {onRegisterCorretor && (
-                  <button
-                    type="button"
-                    onClick={onRegisterCorretor}
-                    className="text-sm text-primary hover:underline block w-full"
-                  >
-                    Cadastrar Corretor
-                  </button>
-                )}
-              </div>
-            )}
           </form>
         </div>
 
