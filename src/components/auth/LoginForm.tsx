@@ -16,12 +16,7 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
 });
 
-interface LoginFormProps {
-  onRegisterImobiliaria?: () => void;
-  onRegisterCorretor?: () => void;
-}
-
-export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFormProps) {
+export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn } = useAuth();
