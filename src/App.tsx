@@ -107,6 +107,7 @@ const App = () => (
                 <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute><ArqoLeadDetail /></ArqoProtectedRoute>} />
                 <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
+                <Route path="/arqo/admin" element={<ArqoProtectedRoute><ArqoAdmin /></ArqoProtectedRoute>} />
 
                 {/* Nexa */}
                 <Route path="/nexa/agenda" element={<NexaProtectedRoute><NexaAgenda /></NexaProtectedRoute>} />
