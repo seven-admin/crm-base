@@ -42,6 +42,7 @@ import { UnidadesMemorialTab } from '@/components/empreendimentos/UnidadesMemori
 import { HistoricoEmpreendimentoTab } from '@/components/empreendimentos/HistoricoEmpreendimentoTab';
 import { FachadasTab } from '@/components/empreendimentos/FachadasTab';
 import { BoxesTab } from '@/components/empreendimentos/BoxesTab';
+import { ValoresTab } from '@/components/empreendimentos/ValoresTab';
 import { BlocosTab } from '@/components/empreendimentos/BlocosTab';
 import { useAuth } from '@/contexts/AuthContext';
 import {
