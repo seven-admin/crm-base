@@ -3019,6 +3019,13 @@ export type Database = {
         Args: { _role_id: string; _user_id: string }
         Returns: boolean
       }
+      higienizar_telefone_whatsapp: {
+        Args: never
+        Returns: {
+          etapa: string
+          registros_afetados: number
+        }[]
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_cliente_externo: { Args: { _user_id: string }; Returns: boolean }
       is_gestor_imobiliaria: { Args: { _user_id: string }; Returns: boolean }
