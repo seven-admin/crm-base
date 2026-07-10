@@ -69,7 +69,7 @@ export function ClientesTable({
               />
             </TableHead>
             <TableHead>Nome</TableHead>
-            <TableHead>Telefone</TableHead>
+            
             <TableHead>WhatsApp</TableHead>
             <TableHead>Cidade</TableHead>
             <TableHead>Estado</TableHead>
