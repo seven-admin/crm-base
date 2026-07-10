@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 
 import { useConfiguracoesSistema } from '@/hooks/useConfiguracoesSistema';
+import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -39,8 +40,6 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
     return configs.find(c => c.chave === chave)?.valor || fallback;
   };
 
-  const loginSubtitulo = getConfig('login_subtitulo', 'CRM Imobiliário');
-  const loginDescricao = getConfig('login_descricao', 'Plataforma completa para gestão de empreendimentos imobiliários');
   const copyright = getConfig('copyright_texto', '2024 Seven Group. Todos os direitos reservados.');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -102,179 +101,138 @@ export function LoginForm({ onRegisterImobiliaria, onRegisterCorretor }: LoginFo
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-        {/* Abstract decorative elements */}
-        <div className="absolute inset-0">
-          <div 
-            className="absolute top-1/4 -left-20 w-80 h-80 rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, hsl(207 55% 51%) 0%, transparent 70%)' }}
-          />
-          <div 
-            className="absolute bottom-1/4 right-10 w-96 h-96 rounded-full opacity-[0.05]"
-            style={{ background: 'radial-gradient(circle, hsl(207 55% 62%) 0%, transparent 70%)' }}
-          />
-          <div 
-            className="absolute top-10 right-1/4 w-40 h-40 rounded-full opacity-[0.04]"
-            style={{ background: 'radial-gradient(circle, hsl(207 55% 70%) 0%, transparent 70%)' }}
-          />
-          {/* Subtle grid */}
-          <div 
-            className="absolute inset-0 opacity-[0.02]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-              backgroundSize: '60px 60px'
-            }}
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-10">
+          <img
+            src={logoAsset.url}
+            alt="Seven Group"
+            className="h-10 w-auto object-contain"
           />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full px-12">
-          <p className="text-base text-slate-500 tracking-[0.3em] uppercase font-medium mb-3">
-            {loginSubtitulo}
-          </p>
-          <h1 className="text-5xl font-bold text-white text-center tracking-tight">
-            Seven Group 360
-          </h1>
-          <p className="text-slate-400 text-center mt-4 max-w-md text-base leading-relaxed">
-            {loginDescricao}
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 bg-background">
-        <div className="w-full max-w-sm">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex flex-col items-center mb-10">
-            <h2 className="text-xl font-bold text-foreground">Seven Group 360</h2>
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-foreground">Bem-vindo</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Entre com suas credenciais para acessar
+            </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="text-center lg:text-left">
-              <h2 className="text-2xl font-bold text-foreground">Bem-vindo</h2>
-              <p className="text-muted-foreground text-sm mt-1">
-                Entre com suas credenciais para acessar
-              </p>
+          <form onSubmit={handleLogin} className="space-y-5">
+            {loginError && (
+              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+                {loginError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+              <Input
+                id="login-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="h-11"
+                required
+              />
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
-              {loginError && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
-                  {loginError}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
-                <Input
-                  id="login-email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className="h-11"
-                  required
-                />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setForgotEmail(loginEmail);
+                    setLoginError('');
+                  }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </button>
               </div>
+              <Input
+                id="login-password"
+                type="password"
+                placeholder="••••••••"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="h-11"
+                required
+              />
+            </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+            {showForgotPassword && (
+              <div className="p-4 border border-border rounded-lg bg-muted/50 space-y-3">
+                <p className="text-sm text-foreground font-medium">Recuperar senha</p>
+                <p className="text-xs text-muted-foreground">
+                  Informe seu email para receber o link de recuperação.
+                </p>
+                <form onSubmit={handleForgotPassword} className="space-y-3">
+                  <Input
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="h-10"
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" disabled={forgotLoading} className="flex-1">
+                      {forgotLoading ? 'Enviando...' : 'Enviar Link'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowForgotPassword(false)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-sm font-semibold" 
+              disabled={loginLoading}
+            >
+              {loginLoading ? 'Entrando...' : 'Entrar'}
+            </Button>
+
+            {(onRegisterImobiliaria || onRegisterCorretor) && (
+              <div className="text-center pt-2 space-y-1">
+                {onRegisterImobiliaria && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowForgotPassword(true);
-                      setForgotEmail(loginEmail);
-                      setLoginError('');
-                    }}
-                    className="text-xs text-primary hover:underline"
+                    onClick={onRegisterImobiliaria}
+                    className="text-sm text-primary hover:underline block w-full"
                   >
-                    Esqueci minha senha
+                    Cadastrar Imobiliária
                   </button>
-                </div>
-                <Input
-                  id="login-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="h-11"
-                  required
-                />
+                )}
+                {onRegisterCorretor && (
+                  <button
+                    type="button"
+                    onClick={onRegisterCorretor}
+                    className="text-sm text-primary hover:underline block w-full"
+                  >
+                    Cadastrar Corretor
+                  </button>
+                )}
               </div>
-
-              {showForgotPassword && (
-                <div className="p-4 border border-border rounded-lg bg-muted/50 space-y-3">
-                  <p className="text-sm text-foreground font-medium">Recuperar senha</p>
-                  <p className="text-xs text-muted-foreground">
-                    Informe seu email para receber o link de recuperação.
-                  </p>
-                  <form onSubmit={handleForgotPassword} className="space-y-3">
-                    <Input
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      className="h-10"
-                      required
-                    />
-                    <div className="flex gap-2">
-                      <Button type="submit" size="sm" disabled={forgotLoading} className="flex-1">
-                        {forgotLoading ? 'Enviando...' : 'Enviar Link'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowForgotPassword(false)}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full h-11 text-sm font-semibold" 
-                disabled={loginLoading}
-              >
-                {loginLoading ? 'Entrando...' : 'Entrar'}
-              </Button>
-
-              {(onRegisterImobiliaria || onRegisterCorretor) && (
-                <div className="text-center pt-2 space-y-1">
-                  {onRegisterImobiliaria && (
-                    <button
-                      type="button"
-                      onClick={onRegisterImobiliaria}
-                      className="text-sm text-primary hover:underline block w-full"
-                    >
-                      Cadastrar Imobiliária
-                    </button>
-                  )}
-                  {onRegisterCorretor && (
-                    <button
-                      type="button"
-                      onClick={onRegisterCorretor}
-                      className="text-sm text-primary hover:underline block w-full"
-                    >
-                      Cadastrar Corretor
-                    </button>
-                  )}
-                </div>
-              )}
-            </form>
-          </div>
-
-          <p className="text-center text-xs text-muted-foreground mt-10">
-            © {copyright}
-          </p>
+            )}
+          </form>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-10">
+          © {copyright}
+        </p>
       </div>
     </div>
   );
