@@ -10,8 +10,18 @@ import { ArrowRight, Sparkles, Phone, Mail, Upload } from 'lucide-react';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
+
+const ARQO_ADMIN_ROLES = new Set(['super_admin', 'admin', 'arqo_admin', 'arqo_gestor']);
+
 export default function ArqoLeadsKanban() {
-  const { data: leads = [], isLoading } = useArqoLeads();
+  const { user, role } = useAuth();
+  const { isAdmin } = usePermissions();
+  const podeVerTudo = isAdmin() || (role ? ARQO_ADMIN_ROLES.has(role) : false);
+  const { data: leads = [], isLoading } = useArqoLeads(
+    podeVerTudo ? undefined : { consultorId: user?.id },
+  );
   const { data: etapas = [] } = useArqoEtapas();
   const transicionar = useTransicionarEtapa();
   const [dragging, setDragging] = useState<string | null>(null);
