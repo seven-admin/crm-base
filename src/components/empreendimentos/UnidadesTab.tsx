@@ -242,8 +242,25 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
       console.warn('Falha ao pré-carregar imagens da marca:', err);
     }
 
+    // Busca boxes vinculados às unidades disponíveis
+    const unidadeIds = ordenadas.map((u) => u.id);
+    const boxesPorUnidade = new Map<string, string[]>();
+    if (unidadeIds.length > 0) {
+      const { data: boxesData } = await supabase
+        .from('seven_boxes')
+        .select('numero, tipo, unidade_id')
+        .in('unidade_id', unidadeIds)
+        .eq('is_active', true);
+      (boxesData || []).forEach((b: any) => {
+        if (!b.unidade_id) return;
+        const arr = boxesPorUnidade.get(b.unidade_id) || [];
+        arr.push(`${b.numero}${b.tipo ? ` (${b.tipo})` : ''}`);
+        boxesPorUnidade.set(b.unidade_id, arr);
+      });
+    }
+
     const body = ordenadas.map((u) => {
-      const boxNumeros = (u as any).boxes?.map((b: any) => `${b.numero} (${b.tipo})`).join(', ') || '-';
+      const boxNumeros = boxesPorUnidade.get(u.id)?.join(', ') || '-';
       return [
         u.numero,
         u.bloco?.nome || '-',
