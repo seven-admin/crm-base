@@ -6,13 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Trash2, Plus, Loader2 } from 'lucide-react';
 import { useArqoGrupos, useArqoGrupoMembros, useUpsertArqoConfig, useDeleteArqoConfig } from '@/hooks/useArqo';
-import { useAllProfiles } from '@/hooks/useFuncionariosSeven';
+import { useProfilesByEmpresa } from '@/hooks/useFuncionariosSeven';
 
 export function ArqoGrupoMembros() {
   const { data: grupos = [] } = useArqoGrupos();
   const [grupoId, setGrupoId] = useState<string>('');
   const { data: membros = [] } = useArqoGrupoMembros(grupoId);
-  const { data: profiles = [] } = useAllProfiles();
+  const { data: profiles = [] } = useProfilesByEmpresa('arqo');
   const upsert = useUpsertArqoConfig('arqo_grupo_membros');
   const del = useDeleteArqoConfig('arqo_grupo_membros');
 
