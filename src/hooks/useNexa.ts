@@ -5,10 +5,10 @@ import type { NexaVisita, NexaVisitaWithRelations, NexaEvento, NexaVisitaStatus 
 
 const SELECT_VISITA = `
   *,
-  cliente:clientes(id, nome, telefone, email),
-  empreendimento:empreendimentos(id, nome),
-  imobiliaria:imobiliarias!nexa_visitas_imobiliaria_parceira_id_fkey(id, nome),
-  corretor:corretores(id, nome_completo)
+  cliente:seven_clientes(id, nome, telefone, email),
+  empreendimento:seven_empreendimentos(id, nome),
+  imobiliaria:seven_imobiliarias!nexa_visitas_imobiliaria_parceira_id_fkey(id, nome),
+  corretor:seven_corretores(id, nome_completo)
 `;
 
 // ============ Visitas ============
