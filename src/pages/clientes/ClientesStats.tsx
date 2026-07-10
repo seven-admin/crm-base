@@ -21,7 +21,7 @@ export function ClientesStats({ selectedFase, onSelectFase, stats }: Props) {
     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
       <Card
         className={cn(
-          'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20',
+          'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 flex flex-col items-center justify-center text-center',
           selectedFase === 'todos' && 'ring-2 ring-primary'
         )}
         onClick={() => onSelectFase('todos')}
@@ -34,7 +34,7 @@ export function ClientesStats({ selectedFase, onSelectFase, stats }: Props) {
         <Card
           key={fase}
           className={cn(
-            'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20',
+            'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 flex flex-col items-center justify-center text-center',
             selectedFase === fase && 'ring-2 ring-primary'
           )}
           onClick={() => onSelectFase(fase)}

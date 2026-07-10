@@ -69,7 +69,7 @@ export function ClientesTable({
               />
             </TableHead>
             <TableHead>Nome</TableHead>
-            <TableHead>Telefone</TableHead>
+            
             <TableHead>WhatsApp</TableHead>
             <TableHead>Cidade</TableHead>
             <TableHead>Estado</TableHead>
@@ -102,7 +102,7 @@ export function ClientesTable({
                   <p className="text-xs text-muted-foreground">{cliente.cnpj}</p>
                 )}
               </TableCell>
-              <TableCell>{cliente.telefone || '-'}</TableCell>
+              
               <TableCell>{cliente.whatsapp || '-'}</TableCell>
               <TableCell>{cliente.endereco_cidade || '-'}</TableCell>
               <TableCell>{cliente.endereco_uf || '-'}</TableCell>

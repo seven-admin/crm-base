@@ -684,9 +684,6 @@ export default function Usuarios() {
                         <Badge variant={getRoleBadgeVariant(user.role)}>
                           {getRoleDisplayName(user.role)}
                         </Badge>
-                        <Badge variant={user.tipo_vinculo === 'funcionario_seven' ? 'default' : 'outline'}>
-                          {user.tipo_vinculo === 'funcionario_seven' ? 'Seven' : 'Terceiro'}
-                        </Badge>
                         <Badge variant={user.is_active ? 'default' : 'secondary'}>
                           {user.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
@@ -714,7 +711,7 @@ export default function Usuarios() {
                         <TableHead>Usuário</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Perfil</TableHead>
-                        <TableHead>Vínculo</TableHead>
+                        
                         <TableHead className="hidden lg:table-cell">Cargo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="hidden lg:table-cell">Cadastro</TableHead>
@@ -754,11 +751,6 @@ export default function Usuarios() {
                           <TableCell>
                             <Badge variant={getRoleBadgeVariant(user.role)}>
                               {getRoleDisplayName(user.role)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.tipo_vinculo === 'funcionario_seven' ? 'default' : 'outline'}>
-                              {user.tipo_vinculo === 'funcionario_seven' ? 'Seven' : 'Terceiro'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-muted-foreground hidden lg:table-cell">
@@ -963,36 +955,6 @@ export default function Usuarios() {
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Tipo de Vínculo</Label>
-                  <Select value={editTipoVinculo} onValueChange={(v) => setEditTipoVinculo(v as 'funcionario_seven' | 'terceiro')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="funcionario_seven">Funcionário Seven</SelectItem>
-                      <SelectItem value="terceiro">Terceiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Funcionários Seven podem receber bonificações
-                  </p>
-                </div>
-
-                {editTipoVinculo === 'funcionario_seven' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-cargo">Cargo</Label>
-                    <Input
-                      id="edit-cargo"
-                      value={editCargo}
-                      onChange={(e) => setEditCargo(e.target.value)}
-                      placeholder="Ex: Gestor de Produto, Coordenador"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Cargo do funcionário na Seven
-                    </p>
-                  </div>
-                )}
               </TabsContent>
 
               <TabsContent value="permissoes" className="pt-4">
@@ -1053,7 +1015,7 @@ export default function Usuarios() {
 
         {/* Create User Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5" />
@@ -1137,33 +1099,6 @@ export default function Usuarios() {
 
 
 
-              {/* Show base role selector when selected role might not have permissions */}
-              {!selectedRoleHasPermissions && (
-                <div className="space-y-2 p-3 border border-warning/50 rounded-lg bg-warning/5">
-                  <Label htmlFor="create-base-role" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-warning" />
-                    Copiar permissões de
-                  </Label>
-                  <Select value={createBaseRoleId} onValueChange={setCreateBaseRoleId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um perfil base..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rolesFromDb
-                        .filter(r => ['admin', 'gestor_produto', 'corretor', 'equipe_marketing'].includes(r.name))
-                        .map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.display_name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    O perfil selecionado não possui permissões configuradas. Escolha um perfil base para copiar as permissões.
-                  </p>
-                </div>
-              )}
-
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Usuário Ativo</Label>
@@ -1177,36 +1112,6 @@ export default function Usuarios() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Tipo de Vínculo</Label>
-                <Select value={createTipoVinculo} onValueChange={(v) => setCreateTipoVinculo(v as 'funcionario_seven' | 'terceiro')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="funcionario_seven">Funcionário Seven</SelectItem>
-                    <SelectItem value="terceiro">Terceiro</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Funcionários Seven podem receber bonificações
-                </p>
-              </div>
-
-              {createTipoVinculo === 'funcionario_seven' && (
-                <div className="space-y-2">
-                  <Label htmlFor="create-cargo">Cargo</Label>
-                  <Input
-                    id="create-cargo"
-                    value={createCargo}
-                    onChange={(e) => setCreateCargo(e.target.value)}
-                    placeholder="Ex: Gestor de Produto, Coordenador"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Cargo do funcionário na Seven
-                  </p>
-                </div>
-              )}
             </div>
 
             <DialogFooter>
