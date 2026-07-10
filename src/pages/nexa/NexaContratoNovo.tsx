@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Steps } from '@/components/ui/steps';
+
 import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
 import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf } from '@/hooks/useNexaContratos';
 import { useClientesSelect } from '@/hooks/useClientesSelect';
