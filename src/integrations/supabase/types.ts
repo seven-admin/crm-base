@@ -644,35 +644,192 @@ export type Database = {
         }
         Relationships: []
       }
+      nexa_contrato_templates: {
+        Row: {
+          conteudo_html: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          updated_at: string
+          variaveis: Json
+        }
+        Insert: {
+          conteudo_html?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          updated_at?: string
+          variaveis?: Json
+        }
+        Update: {
+          conteudo_html?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          empreendimento_id?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          updated_at?: string
+          variaveis?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_contrato_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contrato_templates_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexa_contrato_variaveis: {
+        Row: {
+          chave: string
+          created_at: string
+          descricao: string | null
+          fonte_sugerida: string | null
+          id: string
+          is_active: boolean
+          is_sistema: boolean
+          label: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          fonte_sugerida?: string | null
+          id?: string
+          is_active?: boolean
+          is_sistema?: boolean
+          label: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          fonte_sugerida?: string | null
+          id?: string
+          is_active?: boolean
+          is_sistema?: boolean
+          label?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nexa_contratos: {
         Row: {
+          cliente_id: string | null
+          conteudo_html: string | null
           created_at: string
+          created_by: string | null
+          data_assinatura: string | null
+          data_geracao: string | null
+          empreendimento_id: string | null
           id: string
+          numero: string | null
+          observacoes: string | null
+          pdf_url: string | null
           status: string
+          template_id: string | null
           unidade_id: string | null
           updated_at: string
           valor: number | null
+          valor_contrato: number | null
+          variaveis_valores: Json | null
           visita_id: string | null
         }
         Insert: {
+          cliente_id?: string | null
+          conteudo_html?: string | null
           created_at?: string
+          created_by?: string | null
+          data_assinatura?: string | null
+          data_geracao?: string | null
+          empreendimento_id?: string | null
           id?: string
+          numero?: string | null
+          observacoes?: string | null
+          pdf_url?: string | null
           status?: string
+          template_id?: string | null
           unidade_id?: string | null
           updated_at?: string
           valor?: number | null
+          valor_contrato?: number | null
+          variaveis_valores?: Json | null
           visita_id?: string | null
         }
         Update: {
+          cliente_id?: string | null
+          conteudo_html?: string | null
           created_at?: string
+          created_by?: string | null
+          data_assinatura?: string | null
+          data_geracao?: string | null
+          empreendimento_id?: string | null
           id?: string
+          numero?: string | null
+          observacoes?: string | null
+          pdf_url?: string | null
           status?: string
+          template_id?: string | null
           unidade_id?: string | null
           updated_at?: string
           valor?: number | null
+          valor_contrato?: number | null
+          variaveis_valores?: Json | null
           visita_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "nexa_contratos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "seven_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "nexa_contrato_templates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "nexa_contratos_unidade_id_fkey"
             columns: ["unidade_id"]
