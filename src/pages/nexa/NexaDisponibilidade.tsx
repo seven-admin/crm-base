@@ -14,15 +14,16 @@ import { usePermissions } from '@/hooks/usePermissions';
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const STATUS_OPTIONS = [
-  { value: 'disponivel', label: 'Disponível' },
-  { value: 'reservada', label: 'Reservada' },
-  { value: 'negociacao', label: 'Negociação' },
-  { value: 'contrato', label: 'Contrato' },
-  { value: 'vendida', label: 'Vendida' },
-  { value: 'bloqueada', label: 'Bloqueada' },
+const STATUS_OPTIONS: { value: string; label: string; className: string }[] = [
+  { value: 'disponivel', label: 'Disponível', className: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600' },
+  { value: 'reservada', label: 'Reservada', className: 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600' },
+  { value: 'negociacao', label: 'Negociação', className: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600' },
+  { value: 'contrato', label: 'Contrato', className: 'bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-600' },
+  { value: 'vendida', label: 'Vendida', className: 'bg-rose-500 hover:bg-rose-600 text-white border-rose-600' },
+  { value: 'bloqueada', label: 'Bloqueada', className: 'bg-slate-500 hover:bg-slate-600 text-white border-slate-600' },
 ];
 const ALL_STATUSES = STATUS_OPTIONS.map((s) => s.value);
+const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 
 export default function NexaDisponibilidade() {
   const { data: emps } = useEmpreendimentosAtivos();
