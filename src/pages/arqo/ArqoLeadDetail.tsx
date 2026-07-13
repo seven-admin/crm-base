@@ -114,11 +114,6 @@ export default function ArqoLeadDetail() {
                   </span>
                 </div>
                 {ev.comentario && <p className="text-xs mt-1">{ev.comentario}</p>}
-                {ev.payload && Object.keys(ev.payload).length > 0 && (
-                  <pre className="text-[10px] mt-1 text-muted-foreground overflow-x-auto">
-                    {JSON.stringify(ev.payload, null, 0).slice(0, 200)}
-                  </pre>
-                )}
               </div>
             ))}
           </div>
