@@ -326,23 +326,31 @@ export default function Usuarios() {
         body: { user_id: userId }
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Erro ao excluir usuário');
+      // Extrai corpo do erro HTTP quando a function retornou não-2xx
+      let bodyError: string | undefined;
+      const ctx: any = (response.error as any)?.context;
+      if (ctx && typeof ctx.json === 'function') {
+        try { const b = await ctx.json(); bodyError = b?.error || b?.message; } catch {}
       }
 
-      if (response.data?.error) {
-        throw new Error(response.data.error);
+      if (response.error) {
+        throw new Error(bodyError || response.error.message || 'Erro ao excluir usuário');
       }
+
+      if (response.data?.error) throw new Error(response.data.error);
+      const failed = (response.data?.results ?? []).find((r: any) => !r.success);
+      if (failed) throw new Error(failed.error || 'Falha ao excluir usuário');
 
       toast.success('Usuário excluído com sucesso!');
       setIsEditDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error(sanitizeErrorMessage(error, 'excluir usuário'));
+      toast.error(error?.message ? `Erro: ${error.message}` : sanitizeErrorMessage(error, 'excluir usuário'));
     } finally {
       setIsDeletingUser(false);
     }
+
   };
 
   // Usuários internos (corretores e gestores de imobiliária são gerenciados em seus módulos)
@@ -428,17 +436,25 @@ export default function Usuarios() {
       const response = await supabase.functions.invoke('delete-user', {
         body: { user_ids: Array.from(selectedUsers) }
       });
-      if (response.error) throw new Error(response.error.message);
+      let bodyError: string | undefined;
+      const ctx: any = (response.error as any)?.context;
+      if (ctx && typeof ctx.json === 'function') {
+        try { const b = await ctx.json(); bodyError = b?.error || b?.message; } catch {}
+      }
+      if (response.error) throw new Error(bodyError || response.error.message);
       if (response.data?.error) throw new Error(response.data.error);
+      const failed = (response.data?.results ?? []).filter((r: any) => !r.success);
+      if (failed.length) throw new Error(failed.map((f: any) => f.error).filter(Boolean).join(' | ') || 'Falha ao excluir');
       toast.success(response.data?.message ?? 'Usuários excluídos');
       setSelectedUsers(new Set());
       fetchUsers();
     } catch (error: any) {
-      toast.error(sanitizeErrorMessage(error, 'excluir usuários'));
+      toast.error(error?.message ? `Erro: ${error.message}` : sanitizeErrorMessage(error, 'excluir usuários'));
     } finally {
       setIsBulkDeleting(false);
     }
   };
+
 
   const getRoleBadgeVariant = (role?: AppRole | null) => {
     switch (role) {
