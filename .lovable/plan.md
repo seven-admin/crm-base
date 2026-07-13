@@ -1,43 +1,30 @@
-## Problema
+## Diagnóstico
 
-Usuários novos com roles Arqo/Nexa caem em `/sem-acesso` porque essas roles têm 0 permissões em `sistema_role_permissions`. Além disso, há perfis legados sem uso que poluem o cadastro.
+O usuário `atendimento@nexaresolve.com.br` está ativo e possui vínculo com a role `nexa_gestor`. A role também tem permissões cadastradas no banco para `dashboard`, `agenda`, `contratos`, `empreendimentos`, `reservas` e `unidades`.
 
-## Escopo
+O problema está no frontend: `usePermissions.ts` busca permissões pelo relacionamento `roles -> sistema_role_permissions`, mas esse relacionamento antigo usa a coluna enum `role`. As novas roles como `nexa_gestor` não existem no enum `app_role`, então as permissões gravadas por `role_id` não entram no hook. Resultado: o sistema entende que o usuário não tem permissões e redireciona para `/sem-acesso`.
 
-### 1. Migration — remover perfis legados
+## Plano de correção
 
-Deletar da tabela `roles` (com cascade em `user_roles` e `sistema_role_permissions`):
+1. **Corrigir o hook de permissões**
+   - Alterar `src/hooks/usePermissions.ts` para buscar a role atual em `roles` pelo `name`.
+   - Buscar `sistema_role_permissions` diretamente por `role_id`, não pelo enum `role`.
+   - Manter os overrides por usuário em `sistema_user_module_permissions` com prioridade sobre a role.
 
-- **Sem usuários (inativos):** `diretor_de_marketing`, `supervisão_de_criação`, `incorporador`
-- **Sem usuários (ativo):** `gestor_produto`
-- **Com usuários vinculados (limpar antes):** `gestor_imobiliaria` (202 usuários) — remove `user_roles` correspondentes; os perfis dos usuários permanecem mas ficam sem role.
+2. **Corrigir funções auxiliares que ainda usam role enum**
+   - Revisar hooks de gerenciamento de roles/permissões que consultam ou salvam `sistema_role_permissions`.
+   - Padronizar novas permissões para sempre gravarem `role_id`.
+   - Não depender mais de `role::app_role` para roles novas como `nexa_gestor`, `arqo_consultor`, etc.
 
-Mantém: `admin`, `super_admin`, `arqo_admin`, `arqo_gestor`, `arqo_consultor`, `arqo_closer`, `nexa_admin`, `nexa_gestor`, `nexa_corretor`, `corretor` (mantido; 169 users, inativo — legado que ainda precisa aparecer para gestão).
+3. **Ajustar fallback da edge function `create-user`**
+   - Confirmar que o fallback já grava `role_id` no dashboard.
+   - Se necessário, manter compatibilidade sem tentar gravar a coluna enum `role` para roles que não existem no enum.
 
-### 2. Migration — semear permissões para Arqo/Nexa
+4. **Validar o caso real**
+   - Verificar que `atendimento@nexaresolve.com.br` passa a carregar permissões do `nexa_gestor`.
+   - Confirmar que o acesso inicial redireciona para `/nexa/agenda` em vez de `/sem-acesso`.
+   - Garantir que super_admin continua vendo todo o sistema.
 
-Insere em `sistema_role_permissions` (idempotente com `ON CONFLICT DO NOTHING`):
+## Resultado esperado
 
-**Módulos Arqo** (atividades, clientes, forecast, negociações, propostas, solicitacoes, dashboard):
-- `arqo_admin`, `arqo_gestor` → view + create + edit + delete, scope `all`
-- `arqo_consultor`, `arqo_closer` → view + create + edit, scope `own` (delete = false)
-
-**Módulos Nexa** (agenda, unidades, empreendimentos, contratos, contratos_templates, contratos_variaveis, contratos_tipos_parcela, dashboard, reservas):
-- `nexa_admin`, `nexa_gestor` → view + create + edit + delete, scope `all`
-- `nexa_corretor` → view + create + edit, scope `own` (delete = false)
-
-Módulos administrativos (`configuracoes`, `usuarios`, `auditoria`, `relatorios`) ficam restritos a `admin`/`super_admin` (já configurados).
-
-### 3. Retroativo — ativar usuários existentes
-
-`UPDATE profiles SET is_active = true` para os dois usuários já criados (`af6e4a8a-…` e `ada2428e-…`), garantindo que possam acessar imediatamente após as novas permissões.
-
-### 4. Edge Function `create-user` — fallback
-
-Ajustar `supabase/functions/create-user/index.ts`: se `permCount === 0` e não vier `base_role_id`, semear `can_view=true` no módulo `dashboard` para a role, evitando futuros usuários travados caso uma nova role seja criada sem configuração.
-
-## Detalhes técnicos
-
-- Migration única, ordem: (a) DELETE `user_roles` de `gestor_imobiliaria`, (b) DELETE roles legadas, (c) INSERT permissões Arqo/Nexa, (d) UPDATE profiles ativos.
-- Nenhuma alteração em RLS ou grants.
-- Após aprovação, os dois usuários já cadastrados poderão logar diretamente.
+Usuários criados com roles modernas (`nexa_*`, `arqo_*`, etc.) deixam de cair em “Acesso Pendente” quando já possuem permissões em `sistema_role_permissions.role_id`.

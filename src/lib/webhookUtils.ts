@@ -47,9 +47,9 @@ export async function getUsuarioLogado(): Promise<{ id: string; nome: string; te
 export async function isSuperAdmin(userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('id, roles!inner(name)')
     .eq('user_id', userId)
-    .eq('role', 'super_admin')
+    .eq('roles.name', 'super_admin')
     .maybeSingle();
 
   return !!data;
