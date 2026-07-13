@@ -19,7 +19,9 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
-import logoAsset from '@/assets/logo-sevengroup.png';
+import logoSeven from '@/assets/logo-sevengroup.png';
+import logoArqoAsset from '@/assets/logo-arqo.png.asset.json';
+import logoNexaAsset from '@/assets/logo-nexa.png.asset.json';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -110,7 +112,12 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin } = usePermissions();
-  const { canAccessGroup, isExterno } = useEmpresaAccess();
+  const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
+  const tenantLogo = empresa === 'arqo'
+    ? { src: logoArqoAsset.url, alt: 'Arqo', className: 'h-6' }
+    : empresa === 'nexa'
+    ? { src: logoNexaAsset.url, alt: 'Nexa', className: 'h-6' }
+    : { src: logoSeven, alt: 'SevenGroup', className: 'h-5' };
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
@@ -165,7 +172,7 @@ export function AppTopbar() {
       <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
         {/* Logo */}
         <Link to="/" className="shrink-0 flex items-center">
-          <img src={logoAsset} alt="SevenGroup" className="h-5" />
+          <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
         </Link>
 
         {/* Desktop nav (right aligned) */}
@@ -247,7 +254,7 @@ export function AppTopbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                <img src={logoAsset} alt="SevenGroup" className="h-5" />
+                <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
                 <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
