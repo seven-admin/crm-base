@@ -20,8 +20,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
 import logoSeven from '@/assets/logo-sevengroup.png';
-import logoArqoAsset from '@/assets/logo-arqo.png.asset.json';
-import logoNexaAsset from '@/assets/logo-nexa.png.asset.json';
+import logoArqo from '@/assets/logo-arqo.png';
+import logoNexa from '@/assets/logo-nexa.png';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -114,9 +114,9 @@ export function AppTopbar() {
   const { canAccessModule, isAdmin } = usePermissions();
   const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
-    ? { src: logoArqoAsset.url, alt: 'Arqo', className: 'h-6' }
+    ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
     : empresa === 'nexa'
-    ? { src: logoNexaAsset.url, alt: 'Nexa', className: 'h-6' }
+    ? { src: logoNexa, alt: 'Nexa', className: 'h-6' }
     : { src: logoSeven, alt: 'SevenGroup', className: 'h-5' };
   
   const [mobileOpen, setMobileOpen] = useState(false);
