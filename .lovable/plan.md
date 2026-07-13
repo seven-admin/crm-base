@@ -1,48 +1,42 @@
-## CRUD completo de Visitas Nexa
+## Objetivo
+Criar a página `/configuracoes` (ainda inexistente, apesar de o link já estar na Sidebar) com um sistema de abas, começando pela aba **Domínios Google permitidos** — CRUD completo da tabela `sistema_dominios_google_permitidos`, restrita a `super_admin`.
 
-### Objetivo
-Transformar `/nexa` (agenda) em uma listagem gerenciável com criar, editar, excluir e visualizar visitas, com hard delete restrito a `super_admin`.
+## Arquivos a criar
 
-### Mudanças
+1. **`src/pages/Configuracoes.tsx`**
+   - Layout `MainLayout` com título "Configurações" e subtítulo curto.
+   - Componente `Tabs` do shadcn sincronizado com a query string `?tab=...` (assim o link atual da Sidebar `?tab=perfil` continua válido).
+   - Abas iniciais:
+     - `perfil` — placeholder simples (link para `/meu-perfil`) para não quebrar o link atual.
+     - `dominios-google` — nova aba, só aparece se `isSuperAdmin()`.
+   - Deixa estrutura pronta para futuras abas (roles, notificações, cores, etc.).
 
-**1. Listagem em tabela — `src/pages/nexa/NexaAgenda.tsx`**
-- Substituir grid de cards por tabela com colunas: Data/Hora, Visitante, Empreendimento, Imobiliária, Corretor, Status, Ações.
-- Ações por linha: Ver detalhes, Editar, Excluir (excluir só aparece para `super_admin`).
-- Manter botão "Nova visita" no topo.
-- Filtros rápidos por status e empreendimento acima da tabela.
+2. **`src/components/configuracoes/DominiosGoogleTab.tsx`**
+   - Lista em tabela: colunas Domínio, Empresa, Ativo, Ações.
+   - Botão "Novo domínio" no topo abre `Dialog` de criação.
+   - Cada linha tem: `Switch` de ativo (toggle inline), botão Editar (abre dialog), botão Excluir (`AlertDialog` de confirmação).
+   - Formulário (novo/editar):
+     - `dominio` (input, obrigatório, salvo em lowercase, validação regex simples de domínio).
+     - `empresa_default` (select: seven, arqo, nexa, incorporador, externo).
+     - `descricao` (input opcional).
+     - `is_active` (switch, default true).
+   - Mensagens de erro amigáveis (ex.: domínio duplicado → "Este domínio já está cadastrado").
 
-**2. Dialog de edição — novo `src/components/nexa/VisitaFormDialog.tsx`**
-- Reaproveitar campos do `NovaVisitaDialog` (nome, telefone, email, empreendimento, imobiliária, data/hora, observações, status).
-- Modo criar e modo editar (recebe `visita?` como prop).
-- Refatorar `NovaVisitaDialog` para usar este componente compartilhado (ou substituí-lo).
+3. **`src/hooks/useDominiosGoogle.ts`**
+   - `useDominiosGoogle()` — `select *` da tabela ordenado por `dominio`.
+   - `useUpsertDominioGoogle()` — insert/update com `onSuccess` invalidando a query e mostrando toast.
+   - `useDeleteDominioGoogle()` — delete + toast.
+   - `useToggleDominioGoogleAtivo()` — update apenas `is_active` para o switch inline.
 
-**3. Hard delete — hook + RLS**
-- Adicionar `useDeleteVisita` em `src/hooks/useNexa.ts` que apaga `nexa_visitas_eventos` da visita e depois `nexa_visitas`.
-- Migration para políticas RLS:
-  - `nexa_visitas` DELETE: apenas `super_admin`.
-  - `nexa_visitas_eventos` DELETE: apenas `super_admin` (a trigger `nexa_eventos_readonly` bloqueia hoje — desabilitar temporariamente na função do hook via RPC, ou criar RPC `nexa_delete_visita(p_id uuid)` security definer que desabilita a trigger, apaga eventos e visita, e reabilita).
-- Preferido: criar RPC `nexa_delete_visita` (padrão semelhante a `arqo_delete_leads_bulk`), verificando `is_super_admin(auth.uid())` internamente.
+## Segurança
+- Aba escondida no frontend via `usePermissions().isSuperAdmin()`.
+- RLS existente da tabela já restringe escrita a `super_admin` (política `Somente super_admin gerencia dominios`), então a proteção real está no banco — o gate do frontend é apenas UX.
+- Leitura é pública (necessário para o fluxo de login Google validar o domínio antes de autenticar).
 
-**4. Confirmação de exclusão**
-- `AlertDialog` com aviso de que a ação é irreversível e apaga todos os eventos da visita.
+## Ajustes menores
+- **`src/App.tsx`**: registrar a rota `/configuracoes` → `Configuracoes` dentro de `ProtectedRoute`.
+- **`src/components/layout/Sidebar.tsx`**: manter o item existente; opcionalmente adicionar um subitem "Domínios Google" visível só para super_admin apontando para `/configuracoes?tab=dominios-google`.
 
-**5. Limpeza de timeline (bônus do plano anterior)**
-- `src/components/nexa/VisitaTimeline.tsx`: remover `<pre>{JSON.stringify(payload)}</pre>`, exibir apenas label da ação, data e (se disponível) nome do usuário.
-- Mesma limpeza em `src/components/empreendimentos/HistoricoEmpreendimentoTab.tsx`.
-
-### Detalhes técnicos
-- RPC sugerida:
-  ```sql
-  CREATE FUNCTION public.nexa_delete_visita(p_id uuid) RETURNS void
-  LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-  BEGIN
-    IF NOT public.is_super_admin(auth.uid()) THEN
-      RAISE EXCEPTION 'Somente super_admin pode excluir visitas';
-    END IF;
-    ALTER TABLE public.nexa_visitas_eventos DISABLE TRIGGER trg_nexa_eventos_readonly;
-    DELETE FROM public.nexa_visitas_eventos WHERE visita_id = p_id;
-    ALTER TABLE public.nexa_visitas_eventos ENABLE TRIGGER trg_nexa_eventos_readonly;
-    DELETE FROM public.nexa_visitas WHERE id = p_id;
-  END; $$;
-  ```
-- Botão de exclusão visível via `useAuth`/`isSuperAdmin` já existente no projeto.
+## Observações
+- Nenhuma migration necessária — a tabela e as políticas já existem.
+- Os três domínios padrão (`sevengroup360.com.br`, `nexaresolve.com.br`, `arqoimob.com.br`) continuam pré-cadastrados e passam a ser editáveis pela UI.
