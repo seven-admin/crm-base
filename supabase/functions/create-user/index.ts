@@ -249,7 +249,42 @@ Deno.serve(async (req) => {
         await copyPermissionsFromBaseRole(supabaseAdmin, base_role_id, roleData.id)
       } catch (copyError) {
         console.error('Failed to copy permissions:', copyError)
-        // Continue anyway - user will just have no permissions
+        // Continue anyway - fallback below
+      }
+    }
+
+    // Fallback: se ainda não houver permissões para a role, garantir pelo menos
+    // view no módulo 'dashboard' para o usuário não travar em /sem-acesso
+    const { count: permCountAfter } = await supabaseAdmin
+      .from('sistema_role_permissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('role_id', roleData.id)
+
+    if (permCountAfter === 0 || permCountAfter === null) {
+      const { data: dashModule } = await supabaseAdmin
+        .from('sistema_modules')
+        .select('id')
+        .eq('name', 'dashboard')
+        .maybeSingle()
+
+      if (dashModule?.id) {
+        const { error: seedError } = await supabaseAdmin
+          .from('sistema_role_permissions')
+          .upsert({
+            role_id: roleData.id,
+            module_id: dashModule.id,
+            can_view: true,
+            can_create: false,
+            can_edit: false,
+            can_delete: false,
+            scope: 'proprio'
+          }, { onConflict: 'role_id,module_id' })
+
+        if (seedError) {
+          console.error('Failed to seed default dashboard permission:', seedError)
+        } else {
+          console.log(`Seeded default dashboard view permission for role ${role}`)
+        }
       }
     }
 
