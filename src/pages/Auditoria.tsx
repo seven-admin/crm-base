@@ -91,38 +91,70 @@ export default function Auditoria() {
     }
   };
 
+  const IGNORE_FIELDS = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by']);
+
+  const formatValue = (v: unknown): string => {
+    if (v === null || v === undefined || v === '') return '—';
+    if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+    if (typeof v === 'string') {
+      // ISO date
+      if (/^\d{4}-\d{2}-\d{2}T/.test(v)) {
+        try { return format(new Date(v), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { /* noop */ }
+      }
+      return v;
+    }
+    if (typeof v === 'number') return String(v);
+    return '—';
+  };
+
+  const renderFieldsList = (data: Record<string, unknown> | null) => {
+    if (!data) return null;
+    const entries = Object.entries(data).filter(([k, v]) => {
+      if (IGNORE_FIELDS.has(k)) return false;
+      if (v === null || v === undefined || v === '') return false;
+      if (typeof v === 'object') return false;
+      return true;
+    });
+    if (!entries.length) return <p className="text-sm text-muted-foreground">Sem informações adicionais.</p>;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+        {entries.map(([k, v]) => (
+          <div key={k} className="text-sm">
+            <span className="text-muted-foreground">{k}: </span>
+            <span className="font-medium">{formatValue(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderDiff = (log: AuditLogDetail) => {
     if (log.action === 'create') {
       return (
-        <div>
-          <h4 className="font-medium mb-2 text-green-600">Dados Criados:</h4>
-          <pre className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-sm overflow-auto">
-            {JSON.stringify(log.new_data, null, 2)}
-          </pre>
+        <div className="space-y-2">
+          <h4 className="font-medium text-emerald-600">Dados criados</h4>
+          {renderFieldsList(log.new_data)}
         </div>
       );
     }
 
     if (log.action === 'delete') {
       return (
-        <div>
-          <h4 className="font-medium mb-2 text-red-600">Dados Excluídos:</h4>
-          <pre className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-sm overflow-auto">
-            {JSON.stringify(log.old_data, null, 2)}
-          </pre>
+        <div className="space-y-2">
+          <h4 className="font-medium text-red-600">Dados excluídos</h4>
+          {renderFieldsList(log.old_data)}
         </div>
       );
     }
 
     if (log.action === 'update') {
-      // Encontrar campos alterados
       const changes: { field: string; old: unknown; new: unknown }[] = [];
       const allKeys = new Set([
         ...Object.keys(log.old_data || {}),
         ...Object.keys(log.new_data || {}),
       ]);
-
       allKeys.forEach((key) => {
+        if (IGNORE_FIELDS.has(key)) return;
         const oldVal = log.old_data?.[key];
         const newVal = log.new_data?.[key];
         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
@@ -131,32 +163,19 @@ export default function Auditoria() {
       });
 
       return (
-        <div className="space-y-4">
-          <h4 className="font-medium">Alterações:</h4>
+        <div className="space-y-3">
+          <h4 className="font-medium">Alterações</h4>
           {changes.length === 0 ? (
-            <p className="text-muted-foreground">Nenhuma alteração detectada</p>
+            <p className="text-muted-foreground text-sm">Nenhuma alteração relevante</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {changes.map((change, idx) => (
-                <div key={idx} className="border rounded-lg p-3">
-                  <p className="font-medium text-sm mb-2">{change.field}</p>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                      <span className="text-red-600 font-medium">Antes:</span>
-                      <pre className="mt-1 text-xs overflow-auto">
-                        {typeof change.old === 'object'
-                          ? JSON.stringify(change.old, null, 2)
-                          : String(change.old ?? 'null')}
-                      </pre>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                      <span className="text-green-600 font-medium">Depois:</span>
-                      <pre className="mt-1 text-xs overflow-auto">
-                        {typeof change.new === 'object'
-                          ? JSON.stringify(change.new, null, 2)
-                          : String(change.new ?? 'null')}
-                      </pre>
-                    </div>
+                <div key={idx} className="border rounded-lg p-3 text-sm">
+                  <p className="font-medium mb-1">{change.field}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-muted-foreground line-through">{formatValue(change.old)}</span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="font-medium">{formatValue(change.new)}</span>
                   </div>
                 </div>
               ))}
@@ -168,6 +187,7 @@ export default function Auditoria() {
 
     return null;
   };
+
 
   return (
     <MainLayout title="Auditoria" subtitle="Log completo de alterações do sistema">
