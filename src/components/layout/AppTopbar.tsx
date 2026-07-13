@@ -114,9 +114,9 @@ export function AppTopbar() {
   const { canAccessModule, isAdmin } = usePermissions();
   const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
-    ? { src: logoArqoAsset.url, alt: 'Arqo', className: 'h-6' }
+    ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
     : empresa === 'nexa'
-    ? { src: logoNexaAsset.url, alt: 'Nexa', className: 'h-6' }
+    ? { src: logoNexa, alt: 'Nexa', className: 'h-6' }
     : { src: logoSeven, alt: 'SevenGroup', className: 'h-5' };
   
   const [mobileOpen, setMobileOpen] = useState(false);
