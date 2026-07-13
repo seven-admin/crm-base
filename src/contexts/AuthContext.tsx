@@ -52,6 +52,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
     }
   };
+  const validateGoogleDomain = async (u: User) => {
+    const email = u.email?.toLowerCase();
+    if (!email) return;
+    const domain = email.split('@')[1];
+    if (!domain) return;
+    const { data } = await supabase
+      .from('sistema_dominios_google_permitidos' as any)
+      .select('empresa_default')
+      .eq('dominio', domain)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!data) {
+      await supabase.auth.signOut();
+      // toast dinâmico para evitar deps circulares
+      const { toast } = await import('@/hooks/use-toast');
+      toast.toast({
+        title: 'Domínio não autorizado',
+        description: `O domínio @${domain} não está autorizado para acesso via Google.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Atualiza empresa do profile se ainda não foi definida
+    const empresa = (data as any).empresa_default;
+    if (empresa) {
+      await supabase
+        .from('profiles')
+        .update({ empresa, is_active: true } as any)
+        .eq('id', u.id)
+        .is('empresa', null);
+    }
+  };
+
 
   useEffect(() => {
     let isMounted = true;
