@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -14,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Users, UserCheck, Clock, TrendingUp, AlertCircle, Award, XCircle,
 } from 'lucide-react';
+import { ArqoGerenciarLeads } from './ArqoGerenciarLeads';
 
 function KpiCard({ label, value, icon: Icon, hint }: any) {
   return (
