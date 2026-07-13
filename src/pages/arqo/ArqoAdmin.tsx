@@ -292,6 +292,12 @@ export default function ArqoAdmin() {
           </Card>
         </>
       )}
+        </TabsContent>
+
+        <TabsContent value="leads">
+          <ArqoGerenciarLeads />
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 }
