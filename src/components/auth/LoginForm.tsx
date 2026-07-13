@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 
 import { useConfiguracoesSistema } from '@/hooks/useConfiguracoesSistema';
-import logoAsset from '@/assets/logo-sevengroup.png';
+
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
