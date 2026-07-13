@@ -25,6 +25,7 @@ export default function NexaContratoTemplateEditor() {
   const isNew = id === 'novo';
   const { data: template } = useContratoTemplate(isNew ? undefined : id);
   const { data: variaveis } = useContratoVariaveis();
+  const { data: blocos } = useContratoBlocos();
   const { data: emps } = useEmpreendimentosAtivos();
   const save = useSaveContratoTemplate();
 
