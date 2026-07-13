@@ -24,30 +24,36 @@ interface UserPermissionsTabProps {
 
 // Category labels for grouping with icons
 const CATEGORY_LABELS: Record<string, string> = {
-  comercial: '🎯 Vendas e Relacionamento',
-  contratos: '📄 Contratos e Documentos',
-  empreendimentos: '🏗️ Empreendimentos',
-  marketing: '📢 Marketing e Comunicação',
-  administrativo: '⚙️ Administração',
-  portal: '🌐 Portais Externos',
-  financeiro: '💰 Financeiro',
-  mercado: '🏢 Parceiros Comerciais',
-  outros: '📁 Outros'
+  seven: 'Seven',
+  arqo: 'Arqo',
+  nexa: 'Nexa',
+  sistema: 'Sistema',
+  portal: 'Portal Incorporador',
+  outros: 'Outros'
 };
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  comercial: 'Módulos relacionados ao processo de vendas, negociações e atendimento ao cliente',
-  contratos: 'Gestão de contratos, templates, parcelas e documentação',
-  empreendimentos: 'Cadastro e configuração de empreendimentos e unidades',
-  marketing: 'Projetos, campanhas, briefings e materiais de marketing',
-  administrativo: 'Configurações do sistema, usuários e auditoria',
-  portal: 'Acesso aos portais externos para corretores e clientes',
-  financeiro: 'Comissões, fluxo de caixa, DRE e bonificações',
-  mercado: 'Cadastro de corretores, imobiliárias e incorporadoras parceiras',
-  outros: 'Outros módulos do sistema'
+  seven: 'Empreendimentos, disponibilidade, clientes e parceiros Seven',
+  arqo: 'Roleta, kanban, forecast e administração de leads Arqo',
+  nexa: 'Agenda, disponibilidade e contratos Nexa',
+  sistema: 'Usuários, perfis de acesso e auditoria',
+  portal: 'Acesso ao portal do incorporador',
+  outros: 'Outros módulos ativos do sistema'
 };
 
-const CATEGORY_ORDER = ['comercial', 'contratos', 'empreendimentos', 'financeiro', 'marketing', 'mercado', 'administrativo', 'portal', 'outros'];
+const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'portal', 'outros'];
+
+const getModuleCategory = (module: ModuleWithPermission) => {
+  if (module.name.startsWith('arqo_')) return 'arqo';
+  if (module.name.startsWith('nexa_')) return 'nexa';
+  if (module.name.startsWith('portal_')) return 'portal';
+  if (['usuarios', 'auditoria'].includes(module.name)) return 'sistema';
+  if (['empreendimentos', 'unidades', 'clientes', 'incorporadoras', 'imobiliarias', 'corretores'].includes(module.name)) return 'seven';
+  const rawCategory = ((module as any).category || '').toString().toLowerCase();
+  if (['empreendimentos', 'comercial', 'mercado', 'parceiros'].includes(rawCategory)) return 'seven';
+  if (rawCategory === 'administrativo') return 'sistema';
+  return rawCategory || 'outros';
+};
 
 // Enhanced scope configuration with icons and explanations
 const SCOPE_CONFIG: Record<ScopeType, {
@@ -106,7 +112,7 @@ export function UserPermissionsTab({ userId, userRole }: UserPermissionsTabProps
     const groups: Record<string, ModuleWithPermission[]> = {};
     
     filtered.forEach(module => {
-      const category = (module as any).category || 'outros';
+      const category = getModuleCategory(module);
       if (!groups[category]) {
         groups[category] = [];
       }
@@ -194,7 +200,7 @@ export function UserPermissionsTab({ userId, userRole }: UserPermissionsTabProps
             <span className="font-medium">Perfil Base: </span>
             <Badge variant="outline">
               <Shield className="mr-1 h-3 w-3" />
-              {userRole ? ROLE_LABELS[userRole] : 'Sem perfil'}
+              {userRole ? (ROLE_LABELS[userRole] || userRole) : 'Sem perfil'}
             </Badge>
             <span className="text-muted-foreground">
               Personalize abaixo para sobrescrever as permissões do perfil.

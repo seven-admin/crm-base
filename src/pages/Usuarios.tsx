@@ -10,6 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -74,6 +84,10 @@ export default function Usuarios() {
     };
   }, [rolesFromDb]);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    userIds: string[];
+    email?: string;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState('dados');
   const [pageTab, setPageTab] = useState('usuarios');
   
@@ -316,10 +330,6 @@ export default function Usuarios() {
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
-    if (!confirm(`ATENÇÃO: Tem certeza que deseja EXCLUIR PERMANENTEMENTE o usuário ${email}?\n\nEsta ação não pode ser desfeita!`)) {
-      return;
-    }
-
     setIsDeletingUser(true);
     try {
       const response = await supabase.functions.invoke('delete-user', {
@@ -342,6 +352,7 @@ export default function Usuarios() {
       if (failed) throw new Error(failed.error || 'Falha ao excluir usuário');
 
       toast.success('Usuário excluído com sucesso!');
+      setDeleteConfirmation(null);
       setIsEditDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -428,13 +439,12 @@ export default function Usuarios() {
 
   // Excluir em lote (super admin)
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const handleBulkDelete = async () => {
-    if (selectedUsers.size === 0) return;
-    if (!confirm(`ATENÇÃO: Excluir PERMANENTEMENTE ${selectedUsers.size} usuário(s)? Esta ação não pode ser desfeita.`)) return;
+  const handleBulkDelete = async (userIds = Array.from(selectedUsers)) => {
+    if (userIds.length === 0) return;
     setIsBulkDeleting(true);
     try {
       const response = await supabase.functions.invoke('delete-user', {
-        body: { user_ids: Array.from(selectedUsers) }
+        body: { user_ids: userIds }
       });
       let bodyError: string | undefined;
       const ctx: any = (response.error as any)?.context;
@@ -446,6 +456,7 @@ export default function Usuarios() {
       const failed = (response.data?.results ?? []).filter((r: any) => !r.success);
       if (failed.length) throw new Error(failed.map((f: any) => f.error).filter(Boolean).join(' | ') || 'Falha ao excluir');
       toast.success(response.data?.message ?? 'Usuários excluídos');
+      setDeleteConfirmation(null);
       setSelectedUsers(new Set());
       fetchUsers();
     } catch (error: any) {
@@ -650,7 +661,7 @@ export default function Usuarios() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={handleBulkDelete}
+                          onClick={() => setDeleteConfirmation({ userIds: Array.from(selectedUsers) })}
                       disabled={isBulkDeleting}
                       className="gap-2"
                     >
@@ -808,7 +819,7 @@ export default function Usuarios() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDeleteUser(user.id, user.email)}
+                                  onClick={() => setDeleteConfirmation({ userIds: [user.id], email: user.email })}
                                   disabled={isDeletingUser}
                                   title="Excluir usuário"
                                 >
@@ -994,7 +1005,7 @@ export default function Usuarios() {
             <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2">
               <Button 
                 variant="destructive" 
-                onClick={() => editingUser && handleDeleteUser(editingUser.id, editingUser.email)}
+                onClick={() => editingUser && setDeleteConfirmation({ userIds: [editingUser.id], email: editingUser.email })}
                 disabled={isDeletingUser}
                 className="w-full sm:w-auto"
               >
@@ -1147,6 +1158,39 @@ export default function Usuarios() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!deleteConfirmation} onOpenChange={(open) => !open && setDeleteConfirmation(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {deleteConfirmation?.userIds.length === 1 ? 'Excluir usuário?' : 'Excluir usuários selecionados?'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteConfirmation?.userIds.length === 1 && deleteConfirmation.email
+                  ? `O usuário ${deleteConfirmation.email} será excluído permanentemente. Esta ação não pode ser desfeita.`
+                  : `${deleteConfirmation?.userIds.length ?? 0} usuário(s) serão excluídos permanentemente. Esta ação não pode ser desfeita.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingUser || isBulkDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async (event) => {
+                  event.preventDefault();
+                  if (!deleteConfirmation) return;
+                  if (deleteConfirmation.userIds.length === 1) {
+                    await handleDeleteUser(deleteConfirmation.userIds[0], deleteConfirmation.email ?? '');
+                  } else {
+                    await handleBulkDelete(deleteConfirmation.userIds);
+                  }
+                }}
+                disabled={isDeletingUser || isBulkDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {(isDeletingUser || isBulkDeleting) ? 'Excluindo...' : 'Excluir definitivamente'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         </TabsContent>
 
 

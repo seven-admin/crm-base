@@ -105,23 +105,23 @@ const App = () => (
 
 
                 {/* Arqo */}
-                <Route path="/arqo/roleta" element={<ArqoProtectedRoute><ArqoRoleta /></ArqoProtectedRoute>} />
-                <Route path="/arqo/leads" element={<ArqoProtectedRoute><ArqoLeadsKanban /></ArqoProtectedRoute>} />
-                <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute><ArqoLeadDetail /></ArqoProtectedRoute>} />
-                <Route path="/arqo/forecast" element={<ArqoProtectedRoute><ArqoForecast /></ArqoProtectedRoute>} />
-                <Route path="/arqo/config" element={<ArqoProtectedRoute><ArqoConfig /></ArqoProtectedRoute>} />
-                <Route path="/arqo/admin" element={<ArqoProtectedRoute><ArqoAdmin /></ArqoProtectedRoute>} />
+                <Route path="/arqo/roleta" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoRoleta /></ArqoProtectedRoute>} />
+                <Route path="/arqo/leads" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadsKanban /></ArqoProtectedRoute>} />
+                <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadDetail /></ArqoProtectedRoute>} />
+                <Route path="/arqo/forecast" element={<ArqoProtectedRoute moduleName="arqo_forecast"><ArqoForecast /></ArqoProtectedRoute>} />
+                <Route path="/arqo/config" element={<ArqoProtectedRoute moduleName="arqo_config"><ArqoConfig /></ArqoProtectedRoute>} />
+                <Route path="/arqo/admin" element={<ArqoProtectedRoute moduleName="arqo_admin"><ArqoAdmin /></ArqoProtectedRoute>} />
 
                 {/* Nexa */}
-                <Route path="/nexa/agenda" element={<NexaProtectedRoute><NexaAgenda /></NexaProtectedRoute>} />
-                <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute><NexaVisitaDetalhe /></NexaProtectedRoute>} />
-                <Route path="/nexa/disponibilidade" element={<NexaProtectedRoute><NexaDisponibilidade /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos" element={<NexaProtectedRoute><NexaContratos /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos/novo" element={<NexaProtectedRoute><NexaContratoNovo /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos/variaveis" element={<NexaProtectedRoute><NexaContratosVariaveis /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos/blocos" element={<NexaProtectedRoute><NexaContratosBlocos /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute><NexaContratosTemplates /></NexaProtectedRoute>} />
-                <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
+                <Route path="/nexa/agenda" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaAgenda /></NexaProtectedRoute>} />
+                <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaVisitaDetalhe /></NexaProtectedRoute>} />
+                <Route path="/nexa/disponibilidade" element={<NexaProtectedRoute moduleName="nexa_disponibilidade"><NexaDisponibilidade /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos" element={<NexaProtectedRoute moduleName="nexa_contratos"><NexaContratos /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/novo" element={<NexaProtectedRoute moduleName="nexa_contratos"><NexaContratoNovo /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/variaveis" element={<NexaProtectedRoute moduleName="nexa_contratos_variaveis"><NexaContratosVariaveis /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/blocos" element={<NexaProtectedRoute moduleName="nexa_contratos_blocos"><NexaContratosBlocos /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratosTemplates /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
 
 
                 {/* Portal do Incorporador */}
