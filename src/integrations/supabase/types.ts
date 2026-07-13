@@ -3270,6 +3270,7 @@ export type Database = {
       is_nexa_user: { Args: { _user_id: string }; Returns: boolean }
       is_seven_team: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      nexa_delete_visita: { Args: { p_id: string }; Returns: undefined }
       user_has_empreendimento_access: {
         Args: { _empreendimento_id: string; _user_id: string }
         Returns: boolean
