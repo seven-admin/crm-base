@@ -94,20 +94,35 @@ export default function NexaDisponibilidade() {
                     <TableCell>{formatBRL(u.valor)}</TableCell>
                     <TableCell>
                       {canEdit ? (
-                        <Select
-                          value={u.status}
-                          onValueChange={(v) => updateStatus.mutate({ unidadeId: u.unidade_id, status: v })}
-                          disabled={updateStatus.isPending}
-                        >
-                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((s) => (
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={updateStatus.isPending}
+                              className={`inline-flex items-center justify-center rounded-md border px-3 h-8 text-xs font-medium transition-colors disabled:opacity-50 ${STATUS_MAP[u.status]?.className ?? 'bg-muted text-foreground border-border'}`}
+                            >
+                              {STATUS_MAP[u.status]?.label ?? u.status}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-2" align="start">
+                            <div className="flex flex-col gap-1">
+                              {STATUS_OPTIONS.map((s) => (
+                                <button
+                                  key={s.value}
+                                  type="button"
+                                  onClick={() => updateStatus.mutate({ unidadeId: u.unidade_id, status: s.value })}
+                                  className={`inline-flex items-center justify-start rounded-md border px-3 h-8 text-xs font-medium transition-colors ${s.className} ${u.status === s.value ? 'ring-2 ring-offset-1 ring-foreground/30' : ''}`}
+                                >
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       ) : (
-                        <Badge variant="outline">{u.status}</Badge>
+                        <Badge variant="outline" className={STATUS_MAP[u.status]?.className}>
+                          {STATUS_MAP[u.status]?.label ?? u.status}
+                        </Badge>
                       )}
                     </TableCell>
                   </TableRow>
