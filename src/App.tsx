@@ -27,6 +27,7 @@ const NexaContratosTemplates = lazy(() => import("./pages/nexa/NexaContratosTemp
 const NexaContratoTemplateEditor = lazy(() => import("./pages/nexa/NexaContratoTemplateEditor"));
 const NexaContratoNovo = lazy(() => import("./pages/nexa/NexaContratoNovo"));
 const NexaContratosBlocos = lazy(() => import("./pages/nexa/NexaContratosBlocos"));
+const NexaRenderVithoria = lazy(() => import("./pages/nexa/NexaRenderVithoria"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -122,6 +123,7 @@ const App = () => (
                 <Route path="/nexa/contratos/blocos" element={<NexaProtectedRoute moduleName="nexa_contratos_blocos"><NexaContratosBlocos /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratosTemplates /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
+                <Route path="/nexa/render-vithoria" element={<NexaProtectedRoute><NexaRenderVithoria /></NexaProtectedRoute>} />
 
 
                 {/* Portal do Incorporador */}
