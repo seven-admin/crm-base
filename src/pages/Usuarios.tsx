@@ -1166,8 +1166,8 @@ export default function Usuarios() {
                 {deleteConfirmation?.userIds.length === 1 ? 'Excluir usuário?' : 'Excluir usuários selecionados?'}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {deleteConfirmation?.userIds.length === 1
-                  ? `O usuário ${deleteConfirmation.email ?? ''} será excluído permanentemente. Esta ação não pode ser desfeita.`
+                {deleteConfirmation?.userIds.length === 1 && deleteConfirmation.email
+                  ? `O usuário ${deleteConfirmation.email} será excluído permanentemente. Esta ação não pode ser desfeita.`
                   : `${deleteConfirmation?.userIds.length ?? 0} usuário(s) serão excluídos permanentemente. Esta ação não pode ser desfeita.`}
               </AlertDialogDescription>
             </AlertDialogHeader>
