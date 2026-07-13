@@ -16,7 +16,7 @@ export function usePermissions() {
   const { user, role, isAuthenticated } = useAuth();
   const [permissions, setPermissions] = useState<ModulePermission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const cacheRef = useRef<{ role: string | null; permissions: ModulePermission[] } | null>(null);
+  const cacheRef = useRef<{ userId: string; role: string; permissions: ModulePermission[] } | null>(null);
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -31,27 +31,32 @@ export function usePermissions() {
         return;
       }
 
-      // Use cache if role hasn't changed
-      if (cacheRef.current && cacheRef.current.role === role) {
+      // Use cache only for the same user + role, because user overrides can differ
+      if (cacheRef.current && cacheRef.current.userId === user.id && cacheRef.current.role === role) {
         setPermissions(cacheRef.current.permissions);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Parallel fetch: modules + role (with permissions) + user overrides
+        // Parallel fetch: modules + role id + user overrides
         const [
           { data: modules },
           { data: roleData },
           { data: userPerms },
         ] = await Promise.all([
           supabase.from('sistema_modules').select('*').eq('is_active', true),
-          supabase.from('roles').select('id, sistema_role_permissions(*)').eq('name', role).maybeSingle(),
+          supabase.from('roles').select('id').eq('name', role).maybeSingle(),
           supabase.from('sistema_user_module_permissions').select('*').eq('user_id', user.id),
         ]);
 
-        // Role permissions come from the joined query — no extra round-trip
-        const rolePerms = (roleData as any)?.role_permissions || [];
+        // Dynamic roles (arqo_*, nexa_*, etc.) are stored by role_id, not by the legacy enum column.
+        const { data: rolePerms } = roleData?.id
+          ? await supabase
+              .from('sistema_role_permissions')
+              .select('*')
+              .eq('role_id', roleData.id)
+          : { data: [] };
 
         const userPermsMap = (userPerms || []).reduce((acc, perm) => {
           acc[perm.module_id] = perm;
@@ -83,7 +88,7 @@ export function usePermissions() {
             };
           });
           setPermissions(mappedPermissions);
-          cacheRef.current = { role, permissions: mappedPermissions };
+          cacheRef.current = { userId: user.id, role, permissions: mappedPermissions };
         }
       } catch (error) {
         console.error('Error fetching permissions:', error);
