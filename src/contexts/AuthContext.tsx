@@ -66,9 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!data) {
       await supabase.auth.signOut();
-      // toast dinâmico para evitar deps circulares
       const { toast } = await import('@/hooks/use-toast');
-      toast.toast({
+      toast({
         title: 'Domínio não autorizado',
         description: `O domínio @${domain} não está autorizado para acesso via Google.`,
         variant: 'destructive',
