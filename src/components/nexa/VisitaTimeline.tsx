@@ -33,11 +33,6 @@ export function VisitaTimeline({ eventos }: { eventos: NexaEvento[] }) {
               <div className="text-xs text-muted-foreground">
                 {format(new Date(e.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
               </div>
-              {e.payload && Object.keys(e.payload).length > 0 && (
-                <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
-                  {JSON.stringify(e.payload, null, 2)}
-                </pre>
-              )}
             </div>
           </div>
         );
