@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Download, FileText, Settings2, Variable } from 'lucide-react';
+import { Plus, Download, FileText, Settings2, Variable, Blocks } from 'lucide-react';
 import { useContratos, downloadContratoPdf } from '@/hooks/useNexaContratos';
 
 export default function NexaContratos() {
@@ -17,6 +17,7 @@ export default function NexaContratos() {
       actions={
         <div className="flex gap-2">
           <Button variant="outline" asChild><Link to="/nexa/contratos/variaveis"><Variable className="h-4 w-4 mr-2" />Variáveis</Link></Button>
+          <Button variant="outline" asChild><Link to="/nexa/contratos/blocos"><Blocks className="h-4 w-4 mr-2" />Blocos</Link></Button>
           <Button variant="outline" asChild><Link to="/nexa/contratos/modelos"><Settings2 className="h-4 w-4 mr-2" />Modelos</Link></Button>
           <Button asChild><Link to="/nexa/contratos/novo"><Plus className="h-4 w-4 mr-2" />Novo contrato</Link></Button>
         </div>

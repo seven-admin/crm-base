@@ -80,6 +80,7 @@ const menuGroupsDef = [
       { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
       { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
       { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
+      { icon: BarChart2, label: 'Admin & Leads', path: '/arqo/admin', moduleName: 'arqo', adminOnly: true },
       { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
     ],
   },
@@ -90,6 +91,9 @@ const menuGroupsDef = [
       { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
       { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
+      { icon: FileSignature, label: 'Modelos', path: '/nexa/contratos/modelos', moduleName: 'nexa' },
+      { icon: BookOpen, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa' },
+      { icon: Variable, label: 'Variáveis', path: '/nexa/contratos/variaveis', moduleName: 'nexa' },
     ],
   },
   {

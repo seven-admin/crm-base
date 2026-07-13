@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -14,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Users, UserCheck, Clock, TrendingUp, AlertCircle, Award, XCircle,
 } from 'lucide-react';
+import { ArqoGerenciarLeads } from './ArqoGerenciarLeads';
 
 function KpiCard({ label, value, icon: Icon, hint }: any) {
   return (
@@ -142,13 +144,20 @@ export default function ArqoAdmin() {
   return (
     <MainLayout
       title="Arqo — Admin"
-      subtitle="Visão gerencial dos atendimentos e da roleta"
+      subtitle="Visão gerencial e gestão de leads importados"
     >
-      {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-24" />)}
-        </div>
-      ) : (
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="leads">Gerenciar Leads</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard">
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-24" />)}
+            </div>
+          ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
             <KpiCard label="Leads ativos" value={kpis.totalAtivos} icon={Users} />
@@ -283,6 +292,12 @@ export default function ArqoAdmin() {
           </Card>
         </>
       )}
+        </TabsContent>
+
+        <TabsContent value="leads">
+          <ArqoGerenciarLeads />
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 }
