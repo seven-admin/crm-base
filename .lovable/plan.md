@@ -1,25 +1,20 @@
-# Login textual + Logo multi-tenant no topo
+## Nova página Nexa: "Render Vithória"
 
-## 1. Tela de Login (`src/pages/Auth.tsx`)
-- Remover o `<img>` da logo Seven.
-- Substituir por um bloco textual centralizado: **"SVN CRM"** (tipografia display, tracking apertado, mesma cor do texto principal do tema).
-- Manter o restante do layout (form centralizado, botão Google, etc.).
+Página simples dentro do módulo Nexa que apenas embarca (via iframe fullscreen) o sistema externo `https://render.sistemasvn.com.br/empreendimento/vithoria-do-sol`. Aberta a todos os usuários Nexa (`nexa_admin`, `nexa_gestor`, `nexa_corretor`), sem restrição extra por permissão de módulo.
 
-## 2. Assets das logos por tenant
-Criar pointers Lovable Assets a partir dos uploads:
-- `src/assets/logo-arqo.png.asset.json` ← `user-uploads://Logo_Preferencial_•_Arqo_1.png`
-- `src/assets/logo-nexa.png.asset.json` ← `user-uploads://Ativo_20-3.png`
-- Seven continua usando `logo-sevengroup.png` já existente.
+### 1. Nova página
+- Criar `src/pages/nexa/NexaRenderVithoria.tsx`
+- Layout: header curto com título "Render Vithória" + `<iframe>` ocupando o restante da altura útil (`h-[calc(100vh-...)]`, `w-full`, sem borda, `allow="fullscreen"`, `allowFullScreen`).
 
-## 3. Seleção da logo no topo (`src/components/layout/AppTopbar.tsx`)
-- Importar os 3 assets.
-- Usar `useEmpresaAccess()` (já disponível) para ler `empresa` do profile.
-- Mapear:
-  - `seven` (e default/`externo`/`incorporador`) → logo Seven
-  - `arqo` → logo Arqo
-  - `nexa` → logo Nexa
-- Aplicar nas duas ocorrências (desktop linha 168 e mobile linha 250).
-- Ajustar `alt` conforme a empresa e manter `className="h-5"` (ou `h-6` se a proporção da Arqo/Nexa exigir — verificado no render).
+### 2. Rota
+- Em `src/App.tsx`, adicionar rota `/nexa/render-vithoria` envolvida por `<NexaProtectedRoute>` **sem** `moduleName` (assim libera para qualquer role Nexa, sem depender de módulo cadastrado em `sistema_modules`).
 
-## Fora de escopo
-- Nenhuma alteração em permissões, rotas, cores ou dados. Apenas troca visual condicionada ao vínculo `profile.empresa` que já existe.
+### 3. Menu no topo (AppTopbar)
+- Em `src/components/layout/AppTopbar.tsx`, dentro do grupo "Nexa", incluir novo item:
+  - label: `Render Vithória`
+  - path: `/nexa/render-vithoria`
+  - `moduleName: '__self__'` (mesmo truque do "Meu Perfil") para o filtro `filterItems` não bloquear pela ausência de módulo cadastrado — o gate já é feito pelo `NexaProtectedRoute` + `canAccessGroup('nexa')`.
+  - ícone: `ExternalLink` (lucide).
+
+### Fora de escopo
+- Nada de banco de dados, RLS, permissões novas ou tratamento de SSO para o sistema externo. Se o site externo bloquear iframes via `X-Frame-Options`/CSP, será necessário liberar do lado deles — mencionarei isso ao entregar.
