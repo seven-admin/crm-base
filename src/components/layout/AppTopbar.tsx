@@ -83,6 +83,7 @@ const menuGroups: MenuGroup[] = [
       { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa_contratos_modelos' },
       { icon: FileText, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa_contratos_blocos' },
       { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa_contratos_variaveis' },
+      { icon: ExternalLink, label: 'Render Vithória', path: '/nexa/render-vithoria', moduleName: '__self__' },
     ],
   },
   {
