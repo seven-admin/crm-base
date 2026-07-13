@@ -101,30 +101,33 @@ export default function NexaDisponibilidade() {
                             <button
                               type="button"
                               disabled={updateStatus.isPending}
-                              className={`inline-flex items-center justify-center rounded-md border px-3 h-8 text-xs font-medium transition-colors disabled:opacity-50 ${STATUS_MAP[u.status]?.className ?? 'bg-muted text-foreground border-border'}`}
+                              className="inline-flex items-center gap-2 h-7 px-2 -mx-2 rounded-md text-xs text-foreground/80 hover:bg-muted/60 transition-colors disabled:opacity-50"
                             >
-                              {STATUS_MAP[u.status]?.label ?? u.status}
+                              <span className={`h-2 w-2 rounded-full ${STATUS_MAP[u.status]?.dot ?? 'bg-muted-foreground'}`} />
+                              <span>{STATUS_MAP[u.status]?.label ?? u.status}</span>
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-48 p-2" align="start">
-                            <div className="flex flex-col gap-1">
+                          <PopoverContent className="w-44 p-1" align="start">
+                            <div className="flex flex-col">
                               {STATUS_OPTIONS.map((s) => (
                                 <button
                                   key={s.value}
                                   type="button"
                                   onClick={() => updateStatus.mutate({ unidadeId: u.unidade_id, status: s.value })}
-                                  className={`inline-flex items-center justify-start rounded-md border px-3 h-8 text-xs font-medium transition-colors ${s.className} ${u.status === s.value ? 'ring-2 ring-offset-1 ring-foreground/30' : ''}`}
+                                  className={`flex items-center gap-2 h-8 px-2 rounded-md text-xs text-left hover:bg-muted transition-colors ${u.status === s.value ? 'bg-muted font-medium' : ''}`}
                                 >
-                                  {s.label}
+                                  <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                                  <span>{s.label}</span>
                                 </button>
                               ))}
                             </div>
                           </PopoverContent>
                         </Popover>
                       ) : (
-                        <Badge variant="outline" className={STATUS_MAP[u.status]?.className}>
+                        <span className="inline-flex items-center gap-2 text-xs text-foreground/80">
+                          <span className={`h-2 w-2 rounded-full ${STATUS_MAP[u.status]?.dot ?? 'bg-muted-foreground'}`} />
                           {STATUS_MAP[u.status]?.label ?? u.status}
-                        </Badge>
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
