@@ -436,17 +436,25 @@ export default function Usuarios() {
       const response = await supabase.functions.invoke('delete-user', {
         body: { user_ids: Array.from(selectedUsers) }
       });
-      if (response.error) throw new Error(response.error.message);
+      let bodyError: string | undefined;
+      const ctx: any = (response.error as any)?.context;
+      if (ctx && typeof ctx.json === 'function') {
+        try { const b = await ctx.json(); bodyError = b?.error || b?.message; } catch {}
+      }
+      if (response.error) throw new Error(bodyError || response.error.message);
       if (response.data?.error) throw new Error(response.data.error);
+      const failed = (response.data?.results ?? []).filter((r: any) => !r.success);
+      if (failed.length) throw new Error(failed.map((f: any) => f.error).filter(Boolean).join(' | ') || 'Falha ao excluir');
       toast.success(response.data?.message ?? 'Usuários excluídos');
       setSelectedUsers(new Set());
       fetchUsers();
     } catch (error: any) {
-      toast.error(sanitizeErrorMessage(error, 'excluir usuários'));
+      toast.error(error?.message ? `Erro: ${error.message}` : sanitizeErrorMessage(error, 'excluir usuários'));
     } finally {
       setIsBulkDeleting(false);
     }
   };
+
 
   const getRoleBadgeVariant = (role?: AppRole | null) => {
     switch (role) {
