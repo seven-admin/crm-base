@@ -66,6 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Google sign-in: validar domínio corporativo
+          const provider = session.user.app_metadata?.provider;
+          if (event === 'SIGNED_IN' && provider === 'google') {
+            setTimeout(() => validateGoogleDomain(session.user), 0);
+          }
+
           // Defer Supabase calls with setTimeout to avoid deadlock
           setTimeout(() => {
             if (isMounted) {
