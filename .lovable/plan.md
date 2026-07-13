@@ -1,30 +1,39 @@
-## Diagnóstico
+## Problema 1 — `comercial@nexaresolve.com.br` não altera status de unidades
 
-O usuário `atendimento@nexaresolve.com.br` está ativo e possui vínculo com a role `nexa_gestor`. A role também tem permissões cadastradas no banco para `dashboard`, `agenda`, `contratos`, `empreendimentos`, `reservas` e `unidades`.
+O usuário tem role `nexa_gestor` (empresa `nexa`, ativo). Em `src/pages/nexa/NexaDisponibilidade.tsx` a regra é:
 
-O problema está no frontend: `usePermissions.ts` busca permissões pelo relacionamento `roles -> sistema_role_permissions`, mas esse relacionamento antigo usa a coluna enum `role`. As novas roles como `nexa_gestor` não existem no enum `app_role`, então as permissões gravadas por `role_id` não entram no hook. Resultado: o sistema entende que o usuário não tem permissões e redireciona para `/sem-acesso`.
+```
+canEdit = (isNexa || isSeven) && (isAdmin() || isSuperAdmin())
+```
 
-## Plano de correção
+`isAdmin()` só retorna `true` para `admin`/`super_admin`, então `nexa_gestor` cai no modo somente leitura (filtra apenas `disponivel` e mostra Badge, sem popover).
 
-1. **Corrigir o hook de permissões**
-   - Alterar `src/hooks/usePermissions.ts` para buscar a role atual em `roles` pelo `name`.
-   - Buscar `sistema_role_permissions` diretamente por `role_id`, não pelo enum `role`.
-   - Manter os overrides por usuário em `sistema_user_module_permissions` com prioridade sobre a role.
+**Correção:** liberar edição também para `nexa_gestor` (e manter admin/super_admin Seven). Nova regra:
 
-2. **Corrigir funções auxiliares que ainda usam role enum**
-   - Revisar hooks de gerenciamento de roles/permissões que consultam ou salvam `sistema_role_permissions`.
-   - Padronizar novas permissões para sempre gravarem `role_id`.
-   - Não depender mais de `role::app_role` para roles novas como `nexa_gestor`, `arqo_consultor`, etc.
+```
+canEdit = isSuperAdmin() || isAdmin() || (isNexa && role === 'nexa_gestor')
+```
 
-3. **Ajustar fallback da edge function `create-user`**
-   - Confirmar que o fallback já grava `role_id` no dashboard.
-   - Se necessário, manter compatibilidade sem tentar gravar a coluna enum `role` para roles que não existem no enum.
+- Também remover o filtro `['disponivel']` quando `canEdit=true` (já está correto).
+- Verificar rapidamente RLS de `seven_unidades` UPDATE — se hoje só admin passa, adicionar policy que permite `nexa_gestor` atualizar `status` (via `has_role(auth.uid(),'nexa_gestor')`). Confirmar via `supabase--read_query` antes de decidir se precisa de migration.
 
-4. **Validar o caso real**
-   - Verificar que `atendimento@nexaresolve.com.br` passa a carregar permissões do `nexa_gestor`.
-   - Confirmar que o acesso inicial redireciona para `/nexa/agenda` em vez de `/sem-acesso`.
-   - Garantir que super_admin continua vendo todo o sistema.
+## Problema 2 — Módulos antigos poluindo `/usuarios` (perfis e edição individual)
 
-## Resultado esperado
+`sistema_modules` hoje tem 34 módulos ativos, mas o app real usa apenas 10 rotas com `moduleName`:
 
-Usuários criados com roles modernas (`nexa_*`, `arqo_*`, etc.) deixam de cair em “Acesso Pendente” quando já possuem permissões em `sistema_role_permissions.role_id`.
+**Manter (ativos):**
+`dashboard`, `empreendimentos`, `unidades`, `clientes`, `usuarios`, `incorporadoras`, `imobiliarias`, `corretores`, `auditoria`, `portal_incorporador`
+
+**Desativar (não existem mais no código):**
+`agenda`, `atividades`, `bonificacoes`, `comissoes`, `contratos`, `contratos_templates`, `contratos_tipos_parcela`, `contratos_variaveis`, `empreendimentos_comissoes`, `empreendimentos_config`, `financeiro_dre`, `financeiro_fluxo`, `forecast`, `negociacoes`, `negociacoes_config`, `portal_cliente`, `portal_corretor`, `propostas`, `relatorios`, `relatorios_financeiros`, `reservas`, `solicitacoes`, `configuracoes` (não é gated por módulo), `config_negociacoes` (já inativo)
+
+Arqo e Nexa não usam `sistema_modules` (têm `ArqoProtectedRoute` / `NexaProtectedRoute` por empresa+role), portanto não precisam entrar na lista.
+
+**Ação:** migration marcando `is_active=false` nos módulos obsoletos (não apagar para preservar histórico de permissões). Isso já esconde eles automaticamente em `/usuarios?tab=perfis` e na edição individual, pois ambos consultam `sistema_modules` com `is_active=true`.
+
+## Passos
+
+1. Editar `src/pages/nexa/NexaDisponibilidade.tsx`: expandir `canEdit` para incluir `nexa_gestor`.
+2. Confirmar via `supabase--read_query` a policy de UPDATE em `seven_unidades`; se restringir apenas admin, criar migration adicionando policy para `nexa_gestor`.
+3. Migration: `UPDATE sistema_modules SET is_active=false WHERE name IN (...lista acima)`.
+4. Verificar que `/usuarios?tab=perfis` mostra apenas os 10 módulos ativos.

@@ -11,6 +11,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -31,7 +32,8 @@ export default function NexaDisponibilidade() {
   const [empId, setEmpId] = useState<string | undefined>();
   const { isNexa, isSeven } = useEmpresaAccess();
   const { isAdmin, isSuperAdmin } = usePermissions();
-  const canEdit = (isNexa || isSeven) && (isAdmin() || isSuperAdmin());
+  const { role } = useAuth();
+  const canEdit = isSuperAdmin() || isAdmin() || (isNexa && role === 'nexa_gestor');
   const { data: unidades, isLoading, refetch, isFetching } = useUnidadesDisponiveis(
     empId,
     canEdit ? ALL_STATUSES : ['disponivel']
