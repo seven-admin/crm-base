@@ -19,7 +19,7 @@ const loginSchema = z.object({
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const { data: configs, isError } = useConfiguracoesSistema();
 
   const [loginEmail, setLoginEmail] = useState('');
