@@ -16,13 +16,13 @@ import { useAuth } from '@/contexts/AuthContext';
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const STATUS_OPTIONS: { value: string; label: string; className: string }[] = [
-  { value: 'disponivel', label: 'Disponível', className: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600' },
-  { value: 'reservada', label: 'Reservada', className: 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600' },
-  { value: 'negociacao', label: 'Negociação', className: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600' },
-  { value: 'contrato', label: 'Contrato', className: 'bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-600' },
-  { value: 'vendida', label: 'Vendida', className: 'bg-rose-500 hover:bg-rose-600 text-white border-rose-600' },
-  { value: 'bloqueada', label: 'Bloqueada', className: 'bg-slate-500 hover:bg-slate-600 text-white border-slate-600' },
+const STATUS_OPTIONS: { value: string; label: string; dot: string }[] = [
+  { value: 'disponivel', label: 'Disponível', dot: 'bg-emerald-500' },
+  { value: 'reservada',  label: 'Reservada',  dot: 'bg-amber-500' },
+  { value: 'negociacao', label: 'Negociação', dot: 'bg-blue-500' },
+  { value: 'contrato',   label: 'Contrato',   dot: 'bg-indigo-500' },
+  { value: 'vendida',    label: 'Vendida',    dot: 'bg-rose-500' },
+  { value: 'bloqueada',  label: 'Bloqueada',  dot: 'bg-slate-400' },
 ];
 const ALL_STATUSES = STATUS_OPTIONS.map((s) => s.value);
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
