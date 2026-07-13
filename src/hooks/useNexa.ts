@@ -104,6 +104,37 @@ export function useUpdateVisitaStatus() {
   });
 }
 
+export function useUpdateVisita() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<NexaVisita> }) => {
+      const { error } = await supabase.from('nexa_visitas').update(patch as any).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'visitas'] });
+      qc.invalidateQueries({ queryKey: ['nexa', 'visita', vars.id] });
+      toast.success('Visita atualizada');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar visita'),
+  });
+}
+
+export function useDeleteVisita() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc('nexa_delete_visita' as any, { p_id: id } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'visitas'] });
+      toast.success('Visita excluída');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir visita'),
+  });
+}
+
 // ============ Cliente lookup / criação ============
 export async function buscarClientePorTelefone(telefone: string) {
   const clean = telefone.replace(/\D/g, '');
