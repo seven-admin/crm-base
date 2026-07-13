@@ -123,6 +123,7 @@ const App = () => (
                 <Route path="/nexa/contratos/blocos" element={<NexaProtectedRoute moduleName="nexa_contratos_blocos"><NexaContratosBlocos /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratosTemplates /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
+                <Route path="/nexa/render-vithoria" element={<NexaProtectedRoute><NexaRenderVithoria /></NexaProtectedRoute>} />
 
 
                 {/* Portal do Incorporador */}
