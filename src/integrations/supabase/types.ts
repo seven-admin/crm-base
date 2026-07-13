@@ -644,6 +644,50 @@ export type Database = {
         }
         Relationships: []
       }
+      nexa_contrato_blocos: {
+        Row: {
+          categoria: string
+          conteudo_html: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          is_active: boolean
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          conteudo_html?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          conteudo_html?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexa_contrato_blocos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nexa_contrato_templates: {
         Row: {
           conteudo_html: string
@@ -2713,6 +2757,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_dominios_google_permitidos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          dominio: string
+          empresa_default: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          dominio: string
+          empresa_default?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          dominio?: string
+          empresa_default?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sistema_modules: {
         Row: {
           category: string | null
@@ -3044,6 +3118,10 @@ export type Database = {
           p_tipo_atribuicao?: string
         }
         Returns: string
+      }
+      arqo_delete_leads_bulk: {
+        Args: { p_delete_lead_clients?: boolean; p_lead_ids: string[] }
+        Returns: number
       }
       arqo_liberar_consultor:
         | { Args: { p_lead_id: string }; Returns: undefined }
