@@ -5,7 +5,7 @@ import { PortalIncorporadorFilterProvider, usePortalIncorporadorFilter } from '@
 import { ArrowLeft, LogOut, BarChart3, TrendingUp, Palette, ClipboardList, Map, FileText, Building2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
+import logoAsset from '@/assets/logo-sevengroup.png';
 
 const routeTitles: Record<string, { title: string; subtitle?: string }> = {
   '/portal-incorporador': { 
@@ -78,7 +78,7 @@ export function PortalIncorporadorLayout() {
           <div className="container flex h-20 items-center justify-between">
             {/* Logo + Title */}
             <Link to="/portal-incorporador" className="flex flex-col">
-              <img src={logoAsset.url} alt="Logo" className="h-8 brightness-0" />
+              <img src={logoAsset} alt="Logo" className="h-8 brightness-0" />
               <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
                 Portal do Incorporador
               </span>

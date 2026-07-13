@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 
 import { useConfiguracoesSistema } from '@/hooks/useConfiguracoesSistema';
-import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
+import logoAsset from '@/assets/logo-sevengroup.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -100,7 +100,7 @@ export function LoginForm() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-10">
           <img
-            src={logoAsset.url}
+            src={logoAsset}
             alt="Seven Group"
             className="h-10 w-auto object-contain"
           />

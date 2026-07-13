@@ -46,7 +46,7 @@ import { useSidebarColors } from '@/hooks/useSidebarColors';
 import { ROLE_LABELS } from '@/types/auth.types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
+import logoAsset from '@/assets/logo-sevengroup.png';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -280,7 +280,7 @@ export function Sidebar() {
     <>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4">
-        <img src={logoAsset.url} alt="Seven Group" className="h-6 object-contain brightness-0 invert" />
+        <img src={logoAsset} alt="Seven Group" className="h-6 object-contain brightness-0 invert" />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
@@ -312,7 +312,7 @@ export function Sidebar() {
       >
         {/* Logo - Desktop only */}
         <div className="hidden lg:flex items-center justify-center h-16 px-4 border-b border-sidebar-border">
-          <img src={logoAsset.url} alt="Seven Group" className="h-8 object-contain brightness-0 invert" />
+          <img src={logoAsset} alt="Seven Group" className="h-8 object-contain brightness-0 invert" />
         </div>
 
         {/* Navigation */}
