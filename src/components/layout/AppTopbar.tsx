@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake, User as UserIcon,
+  Home, Handshake, User as UserIcon, ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
