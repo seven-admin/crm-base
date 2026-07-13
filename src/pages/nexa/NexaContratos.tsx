@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Download, FileText, Settings2, Variable } from 'lucide-react';
+import { Plus, Download, FileText, Settings2, Variable, Blocks } from 'lucide-react';
 import { useContratos, downloadContratoPdf } from '@/hooks/useNexaContratos';
 
 export default function NexaContratos() {
