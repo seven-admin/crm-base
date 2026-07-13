@@ -48,6 +48,7 @@ const SemAcesso = lazy(() => import("./pages/SemAcesso"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const DesignTest = lazy(() => import("./pages/DesignTest"));
 const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
+const Configuracoes = lazy(() => import("./pages/Configuracoes"));
 
 
 // Portal Incorporador
@@ -100,6 +101,7 @@ const App = () => (
                <Route path="/corretores" element={<ProtectedRoute moduleName="corretores"><Corretores /></ProtectedRoute>} />
                 <Route path="/auditoria" element={<ProtectedRoute moduleName="auditoria" adminOnly><Auditoria /></ProtectedRoute>} />
                 <Route path="/meu-perfil" element={<ProtectedRoute><MeuPerfil /></ProtectedRoute>} />
+                <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
 
 
                 {/* Arqo */}
