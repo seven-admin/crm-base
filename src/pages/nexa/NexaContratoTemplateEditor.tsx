@@ -128,29 +128,58 @@ export default function NexaContratoTemplateEditor() {
 
         <Card className="h-fit sticky top-4">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Variáveis disponíveis</CardTitle>
-            <p className="text-xs text-muted-foreground">Clique para inserir no cursor.</p>
+            <CardTitle className="text-sm">Inserir no contrato</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[500px] p-3">
-              <div className="space-y-1">
-                {variaveis?.map((v) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    onClick={() => insertIntoTipTap(`{{${v.chave}}}`)}
-                    className="w-full text-left p-2 rounded hover:bg-muted text-sm border"
-                  >
-                    <div className="font-mono text-xs text-primary">{`{{${v.chave}}}`}</div>
-                    <div className="text-xs text-muted-foreground">{v.label}</div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
+            <Tabs defaultValue="vars" className="w-full">
+              <TabsList className="w-full grid grid-cols-2 rounded-none">
+                <TabsTrigger value="vars">Variáveis</TabsTrigger>
+                <TabsTrigger value="blocos">Blocos</TabsTrigger>
+              </TabsList>
+              <TabsContent value="vars" className="m-0">
+                <ScrollArea className="h-[440px] p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Clique para inserir no cursor.</p>
+                  <div className="space-y-1">
+                    {variaveis?.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => insertIntoTipTap(`{{${v.chave}}}`)}
+                        className="w-full text-left p-2 rounded hover:bg-muted text-sm border"
+                      >
+                        <div className="font-mono text-xs text-primary">{`{{${v.chave}}}`}</div>
+                        <div className="text-xs text-muted-foreground">{v.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+              <TabsContent value="blocos" className="m-0">
+                <ScrollArea className="h-[440px] p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Clique para inserir o bloco.</p>
+                  {(!blocos || blocos.length === 0) && (
+                    <p className="text-xs text-muted-foreground italic">Nenhum bloco cadastrado.</p>
+                  )}
+                  <div className="space-y-1">
+                    {blocos?.filter((b) => b.is_active).map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => insertHtmlIntoTipTap(b.conteudo_html)}
+                        className="w-full text-left p-2 rounded hover:bg-muted text-sm border"
+                      >
+                        <div className="text-xs font-medium">{b.nome}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">{b.categoria}</div>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </CardContent>
           {varsUsadas.length > 0 && (
             <CardContent className="border-t pt-3">
-              <div className="text-xs font-medium mb-2">Usadas neste modelo ({varsUsadas.length})</div>
+              <div className="text-xs font-medium mb-2">Variáveis usadas ({varsUsadas.length})</div>
               <div className="flex flex-wrap gap-1">
                 {varsUsadas.map((v) => <Badge key={v} variant="outline" className="font-mono text-xs">{v}</Badge>)}
               </div>
