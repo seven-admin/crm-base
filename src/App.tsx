@@ -117,6 +117,7 @@ const App = () => (
                 <Route path="/nexa/contratos" element={<NexaProtectedRoute><NexaContratos /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/novo" element={<NexaProtectedRoute><NexaContratoNovo /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/variaveis" element={<NexaProtectedRoute><NexaContratosVariaveis /></NexaProtectedRoute>} />
+                <Route path="/nexa/contratos/blocos" element={<NexaProtectedRoute><NexaContratosBlocos /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute><NexaContratosTemplates /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
 
