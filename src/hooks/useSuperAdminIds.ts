@@ -11,8 +11,8 @@ export function useSuperAdminIds() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('user_id, role')
-        .eq('role', 'super_admin');
+        .select('user_id, roles!inner(name)')
+        .eq('roles.name', 'super_admin');
 
       if (error) throw error;
       return new Set((data || []).map((r: any) => r.user_id as string));

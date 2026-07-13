@@ -338,14 +338,6 @@ export function useUpdateRolePermission() {
   });
 }
 
-// Legacy enum roles for backward compatibility
-const LEGACY_ENUM_ROLES = [
-  'admin', 'super_admin', 'gestor_produto', 'corretor', 
-  'incorporador', 'cliente_externo', 'equipe_marketing',
-  'supervisor_relacionamento', 'supervisor_render', 
-  'supervisor_criacao', 'supervisor_video'
-];
-
 // Bulk update role permissions
 export function useBulkUpdateRolePermissions() {
   const queryClient = useQueryClient();
@@ -365,18 +357,6 @@ export function useBulkUpdateRolePermissions() {
         scope: string;
       }>;
     }) => {
-      // Get role info to determine if it exists in legacy enum
-      const { data: roleInfo } = await supabase
-        .from('roles')
-        .select('name')
-        .eq('id', roleId)
-        .single();
-
-      // Check if role exists in legacy enum
-      const legacyRole = roleInfo && LEGACY_ENUM_ROLES.includes(roleInfo.name) 
-        ? roleInfo.name 
-        : null;
-
       for (const perm of permissions) {
         const { data: existing } = await supabase
           .from('sistema_role_permissions')
@@ -401,7 +381,6 @@ export function useBulkUpdateRolePermissions() {
             .from('sistema_role_permissions')
             .insert({
               role_id: roleId,
-              role: legacyRole, // NULL for dynamic roles, value for legacy roles
               module_id: perm.moduleId,
               can_view: perm.can_view,
               can_create: perm.can_create,
