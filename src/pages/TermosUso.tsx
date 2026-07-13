@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useConfiguracao } from '@/hooks/useConfiguracoesSistema';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
+import logoAsset from '@/assets/logo-sevengroup.png';
 
 const TermosUso = () => {
   const { data: config, isLoading } = useConfiguracao('termos_uso');
@@ -57,7 +57,7 @@ const TermosUso = () => {
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            <img src={logoAsset.url} alt="Logo" className="w-10 h-10 object-contain brightness-0 invert" />
+            <img src={logoAsset} alt="Logo" className="w-10 h-10 object-contain brightness-0 invert" />
             <span className="font-semibold text-lg">Seven Group 360</span>
           </div>
         </div>

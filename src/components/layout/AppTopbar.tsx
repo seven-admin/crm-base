@@ -19,7 +19,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
-import logoAsset from '@/assets/logo-sevengroup.png.asset.json';
+import logoAsset from '@/assets/logo-sevengroup.png';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -169,7 +169,7 @@ export function AppTopbar() {
       <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
         {/* Logo */}
         <Link to="/" className="shrink-0 flex items-center">
-          <img src={logoAsset.url} alt="SevenGroup" className="h-5" />
+          <img src={logoAsset} alt="SevenGroup" className="h-5" />
         </Link>
 
         {/* Desktop nav (right aligned) */}
@@ -251,7 +251,7 @@ export function AppTopbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                <img src={logoAsset.url} alt="SevenGroup" className="h-5" />
+                <img src={logoAsset} alt="SevenGroup" className="h-5" />
                 <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
