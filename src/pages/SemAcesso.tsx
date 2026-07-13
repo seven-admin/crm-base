@@ -2,11 +2,20 @@ import { ShieldOff, LogOut, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useDefaultRoute } from '@/hooks/useDefaultRoute';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Navigate } from 'react-router-dom';
 
 export default function SemAcesso() {
   const { user } = useAuth();
+  const { permissions, isLoading, isAdmin } = usePermissions();
+  const { getDefaultRoute } = useDefaultRoute();
+
+  if (!isLoading && (isAdmin() || permissions.some((permission) => permission.can_view))) {
+    return <Navigate to={getDefaultRoute()} replace />;
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
