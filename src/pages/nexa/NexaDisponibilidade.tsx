@@ -11,6 +11,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
