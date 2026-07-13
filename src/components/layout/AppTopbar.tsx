@@ -254,7 +254,7 @@ export function AppTopbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                <img src={logoAsset} alt="SevenGroup" className="h-5" />
+                <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
                 <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
