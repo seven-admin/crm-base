@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,15 +15,16 @@ import { usePermissions } from '@/hooks/usePermissions';
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const STATUS_OPTIONS = [
-  { value: 'disponivel', label: 'Disponível' },
-  { value: 'reservada', label: 'Reservada' },
-  { value: 'negociacao', label: 'Negociação' },
-  { value: 'contrato', label: 'Contrato' },
-  { value: 'vendida', label: 'Vendida' },
-  { value: 'bloqueada', label: 'Bloqueada' },
+const STATUS_OPTIONS: { value: string; label: string; className: string }[] = [
+  { value: 'disponivel', label: 'Disponível', className: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600' },
+  { value: 'reservada', label: 'Reservada', className: 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600' },
+  { value: 'negociacao', label: 'Negociação', className: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600' },
+  { value: 'contrato', label: 'Contrato', className: 'bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-600' },
+  { value: 'vendida', label: 'Vendida', className: 'bg-rose-500 hover:bg-rose-600 text-white border-rose-600' },
+  { value: 'bloqueada', label: 'Bloqueada', className: 'bg-slate-500 hover:bg-slate-600 text-white border-slate-600' },
 ];
 const ALL_STATUSES = STATUS_OPTIONS.map((s) => s.value);
+const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 
 export default function NexaDisponibilidade() {
   const { data: emps } = useEmpreendimentosAtivos();
@@ -92,20 +94,35 @@ export default function NexaDisponibilidade() {
                     <TableCell>{formatBRL(u.valor)}</TableCell>
                     <TableCell>
                       {canEdit ? (
-                        <Select
-                          value={u.status}
-                          onValueChange={(v) => updateStatus.mutate({ unidadeId: u.unidade_id, status: v })}
-                          disabled={updateStatus.isPending}
-                        >
-                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((s) => (
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={updateStatus.isPending}
+                              className={`inline-flex items-center justify-center rounded-md border px-3 h-8 text-xs font-medium transition-colors disabled:opacity-50 ${STATUS_MAP[u.status]?.className ?? 'bg-muted text-foreground border-border'}`}
+                            >
+                              {STATUS_MAP[u.status]?.label ?? u.status}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-2" align="start">
+                            <div className="flex flex-col gap-1">
+                              {STATUS_OPTIONS.map((s) => (
+                                <button
+                                  key={s.value}
+                                  type="button"
+                                  onClick={() => updateStatus.mutate({ unidadeId: u.unidade_id, status: s.value })}
+                                  className={`inline-flex items-center justify-start rounded-md border px-3 h-8 text-xs font-medium transition-colors ${s.className} ${u.status === s.value ? 'ring-2 ring-offset-1 ring-foreground/30' : ''}`}
+                                >
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       ) : (
-                        <Badge variant="outline">{u.status}</Badge>
+                        <Badge variant="outline" className={STATUS_MAP[u.status]?.className}>
+                          {STATUS_MAP[u.status]?.label ?? u.status}
+                        </Badge>
                       )}
                     </TableCell>
                   </TableRow>
