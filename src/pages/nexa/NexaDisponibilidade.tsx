@@ -30,10 +30,10 @@ const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 export default function NexaDisponibilidade() {
   const { data: emps } = useEmpreendimentosAtivos();
   const [empId, setEmpId] = useState<string | undefined>();
-  const { isNexa, isSeven } = useEmpresaAccess();
-  const { isAdmin, isSuperAdmin } = usePermissions();
+  const { isNexa } = useEmpresaAccess();
+  const { isAdmin, isSuperAdmin, canAccessModule } = usePermissions();
   const { role } = useAuth();
-  const canEdit = isSuperAdmin() || isAdmin() || (isNexa && role === 'nexa_gestor');
+  const canEdit = isSuperAdmin() || isAdmin() || (isNexa && role === 'nexa_gestor' && canAccessModule('nexa_disponibilidade', 'edit'));
   const { data: unidades, isLoading, refetch, isFetching } = useUnidadesDisponiveis(
     empId,
     canEdit ? ALL_STATUSES : ['disponivel']

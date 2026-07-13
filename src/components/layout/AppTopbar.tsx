@@ -65,21 +65,22 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Arqo', icon: Target,
     items: [
-      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo' },
-      { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo' },
-      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo' },
-      { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo', adminOnly: true },
-      { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo' },
+      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo_roleta' },
+      { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo_leads' },
+      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo_forecast' },
+      { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo_admin' },
+      { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo_config' },
     ],
   },
   {
     label: 'Nexa', icon: CalendarDays,
     items: [
-      { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa' },
-      { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa' },
-      { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa' },
-      { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa' },
-      { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa' },
+      { icon: CalendarDays, label: 'Agenda de Visitas', path: '/nexa/agenda', moduleName: 'nexa_agenda' },
+      { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa_disponibilidade' },
+      { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa_contratos' },
+      { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa_contratos_modelos' },
+      { icon: FileText, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa_contratos_blocos' },
+      { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa_contratos_variaveis' },
     ],
   },
   {
@@ -108,21 +109,16 @@ export function AppTopbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
-  const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
+  const { canAccessModule, isAdmin } = usePermissions();
   const { canAccessGroup, isExterno } = useEmpresaAccess();
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
-  const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
-  const NEXA_ROLES = ['nexa_admin', 'nexa_gestor', 'nexa_corretor'];
-
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
       if (item.moduleName === '__self__') return true;
       if (item.adminOnly) return isAdmin();
-      if (item.moduleName === 'arqo') return isAdmin() || (role && ARQO_ROLES.includes(role));
-      if (item.moduleName === 'nexa') return isAdmin() || (role && NEXA_ROLES.includes(role));
       return canAccessModule(item.moduleName);
     });
 

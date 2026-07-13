@@ -6,9 +6,9 @@ import { Loader2 } from 'lucide-react';
 
 const ARQO_ROLES = ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'];
 
-export function ArqoProtectedRoute({ children }: { children: ReactNode }) {
+export function ArqoProtectedRoute({ children, moduleName }: { children: ReactNode; moduleName?: string }) {
   const { isAuthenticated, isLoading, role } = useAuth();
-  const { isAdmin, isLoading: permLoading } = usePermissions();
+  const { isAdmin, isLoading: permLoading, canAccessModule } = usePermissions();
 
   if (isLoading || permLoading) {
     return (
@@ -19,7 +19,8 @@ export function ArqoProtectedRoute({ children }: { children: ReactNode }) {
   }
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
 
-  const hasAccess = isAdmin() || (role && ARQO_ROLES.includes(role));
+  const hasModuleAccess = moduleName ? canAccessModule(moduleName) : true;
+  const hasAccess = isAdmin() || Boolean(role && ARQO_ROLES.includes(role) && hasModuleAccess);
   if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

@@ -5,9 +5,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
 import { NEXA_ROLES } from '@/types/nexa.types';
 
-export function NexaProtectedRoute({ children }: { children: ReactNode }) {
+export function NexaProtectedRoute({ children, moduleName }: { children: ReactNode; moduleName?: string }) {
   const { isAuthenticated, isLoading, role } = useAuth();
-  const { isAdmin, isLoading: permLoading } = usePermissions();
+  const { isAdmin, isLoading: permLoading, canAccessModule } = usePermissions();
 
   if (isLoading || permLoading) {
     return (
@@ -18,7 +18,8 @@ export function NexaProtectedRoute({ children }: { children: ReactNode }) {
   }
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
 
-  const hasAccess = isAdmin() || (role && (NEXA_ROLES as readonly string[]).includes(role));
+  const hasModuleAccess = moduleName ? canAccessModule(moduleName) : true;
+  const hasAccess = isAdmin() || Boolean(role && (NEXA_ROLES as readonly string[]).includes(role) && hasModuleAccess);
   if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
