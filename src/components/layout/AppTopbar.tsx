@@ -112,7 +112,12 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin } = usePermissions();
-  const { canAccessGroup, isExterno } = useEmpresaAccess();
+  const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
+  const tenantLogo = empresa === 'arqo'
+    ? { src: logoArqoAsset.url, alt: 'Arqo', className: 'h-6' }
+    : empresa === 'nexa'
+    ? { src: logoNexaAsset.url, alt: 'Nexa', className: 'h-6' }
+    : { src: logoSeven, alt: 'SevenGroup', className: 'h-5' };
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
