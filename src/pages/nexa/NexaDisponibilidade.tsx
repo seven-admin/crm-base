@@ -16,13 +16,13 @@ import { useAuth } from '@/contexts/AuthContext';
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const STATUS_OPTIONS: { value: string; label: string; className: string }[] = [
-  { value: 'disponivel', label: 'Disponível', className: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600' },
-  { value: 'reservada', label: 'Reservada', className: 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600' },
-  { value: 'negociacao', label: 'Negociação', className: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600' },
-  { value: 'contrato', label: 'Contrato', className: 'bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-600' },
-  { value: 'vendida', label: 'Vendida', className: 'bg-rose-500 hover:bg-rose-600 text-white border-rose-600' },
-  { value: 'bloqueada', label: 'Bloqueada', className: 'bg-slate-500 hover:bg-slate-600 text-white border-slate-600' },
+const STATUS_OPTIONS: { value: string; label: string; dot: string }[] = [
+  { value: 'disponivel', label: 'Disponível', dot: 'bg-emerald-500' },
+  { value: 'reservada',  label: 'Reservada',  dot: 'bg-amber-500' },
+  { value: 'negociacao', label: 'Negociação', dot: 'bg-blue-500' },
+  { value: 'contrato',   label: 'Contrato',   dot: 'bg-indigo-500' },
+  { value: 'vendida',    label: 'Vendida',    dot: 'bg-rose-500' },
+  { value: 'bloqueada',  label: 'Bloqueada',  dot: 'bg-slate-400' },
 ];
 const ALL_STATUSES = STATUS_OPTIONS.map((s) => s.value);
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
@@ -101,30 +101,33 @@ export default function NexaDisponibilidade() {
                             <button
                               type="button"
                               disabled={updateStatus.isPending}
-                              className={`inline-flex items-center justify-center rounded-md border px-3 h-8 text-xs font-medium transition-colors disabled:opacity-50 ${STATUS_MAP[u.status]?.className ?? 'bg-muted text-foreground border-border'}`}
+                              className="inline-flex items-center gap-2 h-7 px-2 -mx-2 rounded-md text-xs text-foreground/80 hover:bg-muted/60 transition-colors disabled:opacity-50"
                             >
-                              {STATUS_MAP[u.status]?.label ?? u.status}
+                              <span className={`h-2 w-2 rounded-full ${STATUS_MAP[u.status]?.dot ?? 'bg-muted-foreground'}`} />
+                              <span>{STATUS_MAP[u.status]?.label ?? u.status}</span>
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-48 p-2" align="start">
-                            <div className="flex flex-col gap-1">
+                          <PopoverContent className="w-44 p-1" align="start">
+                            <div className="flex flex-col">
                               {STATUS_OPTIONS.map((s) => (
                                 <button
                                   key={s.value}
                                   type="button"
                                   onClick={() => updateStatus.mutate({ unidadeId: u.unidade_id, status: s.value })}
-                                  className={`inline-flex items-center justify-start rounded-md border px-3 h-8 text-xs font-medium transition-colors ${s.className} ${u.status === s.value ? 'ring-2 ring-offset-1 ring-foreground/30' : ''}`}
+                                  className={`flex items-center gap-2 h-8 px-2 rounded-md text-xs text-left hover:bg-muted transition-colors ${u.status === s.value ? 'bg-muted font-medium' : ''}`}
                                 >
-                                  {s.label}
+                                  <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                                  <span>{s.label}</span>
                                 </button>
                               ))}
                             </div>
                           </PopoverContent>
                         </Popover>
                       ) : (
-                        <Badge variant="outline" className={STATUS_MAP[u.status]?.className}>
+                        <span className="inline-flex items-center gap-2 text-xs text-foreground/80">
+                          <span className={`h-2 w-2 rounded-full ${STATUS_MAP[u.status]?.dot ?? 'bg-muted-foreground'}`} />
                           {STATUS_MAP[u.status]?.label ?? u.status}
-                        </Badge>
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
