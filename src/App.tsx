@@ -27,6 +27,7 @@ const NexaContratosTemplates = lazy(() => import("./pages/nexa/NexaContratosTemp
 const NexaContratoTemplateEditor = lazy(() => import("./pages/nexa/NexaContratoTemplateEditor"));
 const NexaContratoNovo = lazy(() => import("./pages/nexa/NexaContratoNovo"));
 const NexaContratosBlocos = lazy(() => import("./pages/nexa/NexaContratosBlocos"));
+const NexaRenderVithoria = lazy(() => import("./pages/nexa/NexaRenderVithoria"));
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
