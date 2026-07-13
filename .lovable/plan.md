@@ -1,39 +1,25 @@
-## Problema 1 — `comercial@nexaresolve.com.br` não altera status de unidades
+# Login textual + Logo multi-tenant no topo
 
-O usuário tem role `nexa_gestor` (empresa `nexa`, ativo). Em `src/pages/nexa/NexaDisponibilidade.tsx` a regra é:
+## 1. Tela de Login (`src/pages/Auth.tsx`)
+- Remover o `<img>` da logo Seven.
+- Substituir por um bloco textual centralizado: **"SVN CRM"** (tipografia display, tracking apertado, mesma cor do texto principal do tema).
+- Manter o restante do layout (form centralizado, botão Google, etc.).
 
-```
-canEdit = (isNexa || isSeven) && (isAdmin() || isSuperAdmin())
-```
+## 2. Assets das logos por tenant
+Criar pointers Lovable Assets a partir dos uploads:
+- `src/assets/logo-arqo.png.asset.json` ← `user-uploads://Logo_Preferencial_•_Arqo_1.png`
+- `src/assets/logo-nexa.png.asset.json` ← `user-uploads://Ativo_20-3.png`
+- Seven continua usando `logo-sevengroup.png` já existente.
 
-`isAdmin()` só retorna `true` para `admin`/`super_admin`, então `nexa_gestor` cai no modo somente leitura (filtra apenas `disponivel` e mostra Badge, sem popover).
+## 3. Seleção da logo no topo (`src/components/layout/AppTopbar.tsx`)
+- Importar os 3 assets.
+- Usar `useEmpresaAccess()` (já disponível) para ler `empresa` do profile.
+- Mapear:
+  - `seven` (e default/`externo`/`incorporador`) → logo Seven
+  - `arqo` → logo Arqo
+  - `nexa` → logo Nexa
+- Aplicar nas duas ocorrências (desktop linha 168 e mobile linha 250).
+- Ajustar `alt` conforme a empresa e manter `className="h-5"` (ou `h-6` se a proporção da Arqo/Nexa exigir — verificado no render).
 
-**Correção:** liberar edição também para `nexa_gestor` (e manter admin/super_admin Seven). Nova regra:
-
-```
-canEdit = isSuperAdmin() || isAdmin() || (isNexa && role === 'nexa_gestor')
-```
-
-- Também remover o filtro `['disponivel']` quando `canEdit=true` (já está correto).
-- Verificar rapidamente RLS de `seven_unidades` UPDATE — se hoje só admin passa, adicionar policy que permite `nexa_gestor` atualizar `status` (via `has_role(auth.uid(),'nexa_gestor')`). Confirmar via `supabase--read_query` antes de decidir se precisa de migration.
-
-## Problema 2 — Módulos antigos poluindo `/usuarios` (perfis e edição individual)
-
-`sistema_modules` hoje tem 34 módulos ativos, mas o app real usa apenas 10 rotas com `moduleName`:
-
-**Manter (ativos):**
-`dashboard`, `empreendimentos`, `unidades`, `clientes`, `usuarios`, `incorporadoras`, `imobiliarias`, `corretores`, `auditoria`, `portal_incorporador`
-
-**Desativar (não existem mais no código):**
-`agenda`, `atividades`, `bonificacoes`, `comissoes`, `contratos`, `contratos_templates`, `contratos_tipos_parcela`, `contratos_variaveis`, `empreendimentos_comissoes`, `empreendimentos_config`, `financeiro_dre`, `financeiro_fluxo`, `forecast`, `negociacoes`, `negociacoes_config`, `portal_cliente`, `portal_corretor`, `propostas`, `relatorios`, `relatorios_financeiros`, `reservas`, `solicitacoes`, `configuracoes` (não é gated por módulo), `config_negociacoes` (já inativo)
-
-Arqo e Nexa não usam `sistema_modules` (têm `ArqoProtectedRoute` / `NexaProtectedRoute` por empresa+role), portanto não precisam entrar na lista.
-
-**Ação:** migration marcando `is_active=false` nos módulos obsoletos (não apagar para preservar histórico de permissões). Isso já esconde eles automaticamente em `/usuarios?tab=perfis` e na edição individual, pois ambos consultam `sistema_modules` com `is_active=true`.
-
-## Passos
-
-1. Editar `src/pages/nexa/NexaDisponibilidade.tsx`: expandir `canEdit` para incluir `nexa_gestor`.
-2. Confirmar via `supabase--read_query` a policy de UPDATE em `seven_unidades`; se restringir apenas admin, criar migration adicionando policy para `nexa_gestor`.
-3. Migration: `UPDATE sistema_modules SET is_active=false WHERE name IN (...lista acima)`.
-4. Verificar que `/usuarios?tab=perfis` mostra apenas os 10 módulos ativos.
+## Fora de escopo
+- Nenhuma alteração em permissões, rotas, cores ou dados. Apenas troca visual condicionada ao vínculo `profile.empresa` que já existe.
