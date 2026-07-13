@@ -172,7 +172,7 @@ export function AppTopbar() {
       <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
         {/* Logo */}
         <Link to="/" className="shrink-0 flex items-center">
-          <img src={logoAsset} alt="SevenGroup" className="h-5" />
+          <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
         </Link>
 
         {/* Desktop nav (right aligned) */}
