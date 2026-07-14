@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
+import { useQuery } from '@tanstack/react-query';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +44,28 @@ export default function NexaDisponibilidade() {
   );
   const updateStatus = useUpdateUnidadeStatus();
   const [isExporting, setIsExporting] = useState(false);
+
+  const { data: boxesVinculados } = useQuery({
+    queryKey: ['nexa', 'boxes-vinculados', empId],
+    enabled: !!empId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('seven_boxes')
+        .select('numero, unidade_id, tipo, coberto')
+        .eq('empreendimento_id', empId!)
+        .not('unidade_id', 'is', null)
+        .eq('is_active', true)
+        .order('numero');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const boxesPorUnidade = (boxesVinculados ?? []).reduce<Record<string, string[]>>((acc, b: any) => {
+    if (!b.unidade_id) return acc;
+    (acc[b.unidade_id] ||= []).push(String(b.numero));
+    return acc;
+  }, {});
 
   const handleExportPdf = async () => {
     if (!empId) return;
@@ -142,6 +165,7 @@ export default function NexaDisponibilidade() {
                   <TableHead>Unidade</TableHead>
                   <TableHead>Tipologia</TableHead>
                   <TableHead>Área</TableHead>
+                  <TableHead>Box(es)</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead className="w-[180px]">Status</TableHead>
                 </TableRow>
@@ -154,6 +178,7 @@ export default function NexaDisponibilidade() {
                     <TableCell className="font-medium">{u.unidade}</TableCell>
                     <TableCell>{u.tipologia || '—'}</TableCell>
                     <TableCell>{u.area_privativa ? `${u.area_privativa} m²` : '—'}</TableCell>
+                    <TableCell>{boxesPorUnidade[u.unidade_id]?.join(', ') || '—'}</TableCell>
                     <TableCell>{formatBRL(u.valor)}</TableCell>
                     <TableCell>
                       {canEdit ? (
