@@ -159,6 +159,25 @@ export function RolesManager() {
     m.display_name.toLowerCase().includes(moduleSearch.toLowerCase())
   ) || [];
 
+  // Group filtered modules by category (Seven, Arqo, Nexa, Sistema, Portal, Outros)
+  const groupedModules = useMemo(() => {
+    const groups: Record<string, typeof filteredModules> = {};
+    filteredModules.forEach(m => {
+      const cat = getModuleCategory(m);
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(m);
+    });
+    return groups;
+  }, [filteredModules]);
+
+  const sortedCategories = useMemo(
+    () => CATEGORY_ORDER.filter(cat => groupedModules[cat]?.length > 0),
+    [groupedModules]
+  );
+
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(CATEGORY_ORDER);
+
+
   const initializePermissions = () => {
     if (!modules) return;
     
