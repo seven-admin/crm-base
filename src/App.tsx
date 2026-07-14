@@ -18,7 +18,7 @@ const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
 const ArqoAdmin = lazy(() => import("./pages/arqo/ArqoAdmin"));
 
-const NexaAgenda = lazy(() => import("./pages/nexa/NexaAgenda"));
+const NexaAtividades = lazy(() => import("./pages/nexa/NexaAtividades"));
 const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
 const NexaDisponibilidade = lazy(() => import("./pages/nexa/NexaDisponibilidade"));
 const NexaContratos = lazy(() => import("./pages/nexa/NexaContratos"));
@@ -114,7 +114,7 @@ const App = () => (
                 <Route path="/arqo/admin" element={<ArqoProtectedRoute moduleName="arqo_admin"><ArqoAdmin /></ArqoProtectedRoute>} />
 
                 {/* Nexa */}
-                <Route path="/nexa/agenda" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaAgenda /></NexaProtectedRoute>} />
+                <Route path="/nexa/agenda" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaAtividades /></NexaProtectedRoute>} />
                 <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaVisitaDetalhe /></NexaProtectedRoute>} />
                 <Route path="/nexa/disponibilidade" element={<NexaProtectedRoute moduleName="nexa_disponibilidade"><NexaDisponibilidade /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos" element={<NexaProtectedRoute moduleName="nexa_contratos"><NexaContratos /></NexaProtectedRoute>} />

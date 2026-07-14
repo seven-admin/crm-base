@@ -1049,6 +1049,42 @@ export type Database = {
           },
         ]
       }
+      nexa_whatsapp_atividades: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data: string
+          historico: string | null
+          id: string
+          nome: string
+          proximas_atividades: string | null
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data?: string
+          historico?: string | null
+          id?: string
+          nome: string
+          proximas_atividades?: string | null
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data?: string
+          historico?: string | null
+          id?: string
+          nome?: string
+          proximas_atividades?: string | null
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

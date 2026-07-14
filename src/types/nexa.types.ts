@@ -35,6 +35,18 @@ export interface NexaEvento {
   created_at: string;
 }
 
+export interface NexaWhatsappAtividade {
+  id: string;
+  nome: string;
+  whatsapp: string;
+  data: string;
+  historico: string | null;
+  categoria: string | null;
+  proximas_atividades: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const NEXA_ROLES = ['nexa_admin', 'nexa_gestor', 'nexa_corretor'] as const;
 
 export const STATUS_LABELS: Record<NexaVisitaStatus, string> = {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { NexaVisita, NexaVisitaWithRelations, NexaEvento, NexaVisitaStatus } from '@/types/nexa.types';
+import type { NexaVisita, NexaVisitaWithRelations, NexaEvento, NexaVisitaStatus, NexaWhatsappAtividade } from '@/types/nexa.types';
 
 const SELECT_VISITA = `
   *,
@@ -320,5 +320,54 @@ export function useAcaoUnidade() {
       }
     },
     onError: (e: any) => toast.error(e.message || 'Erro na operação'),
+  });
+}
+
+// ============ WhatsApp — Atividades (gerado por automação n8n) ============
+export function useNexaWhatsappAtividades(filters?: { search?: string; categoria?: string; dateFrom?: string; dateTo?: string }) {
+  return useQuery({
+    queryKey: ['nexa', 'whatsapp-atividades', filters],
+    queryFn: async () => {
+      let q = supabase.from('nexa_whatsapp_atividades').select('*').order('data', { ascending: false });
+      if (filters?.categoria) q = q.eq('categoria', filters.categoria);
+      if (filters?.dateFrom) q = q.gte('data', filters.dateFrom);
+      if (filters?.dateTo) q = q.lte('data', filters.dateTo);
+      if (filters?.search) q = q.or(`nome.ilike.%${filters.search}%,whatsapp.ilike.%${filters.search}%`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as NexaWhatsappAtividade[];
+    },
+  });
+}
+
+export function useNexaWhatsappCategorias() {
+  return useQuery({
+    queryKey: ['nexa', 'whatsapp-atividades-categorias'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('nexa_whatsapp_atividades')
+        .select('categoria')
+        .not('categoria', 'is', null)
+        .limit(5000);
+      if (error) throw error;
+      const set = new Set<string>();
+      (data ?? []).forEach((r) => { if (r.categoria) set.add(r.categoria); });
+      return Array.from(set).sort();
+    },
+  });
+}
+
+export function useDeleteNexaWhatsappAtividade() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('nexa_whatsapp_atividades').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'whatsapp-atividades'] });
+      toast.success('Registro excluído');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir'),
   });
 }
