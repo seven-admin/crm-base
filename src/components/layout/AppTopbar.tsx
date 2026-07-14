@@ -113,7 +113,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin } = usePermissions();
-  const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
+  const { isExterno, empresa } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
     ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
     : empresa === 'nexa'
