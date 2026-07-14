@@ -1,14 +1,38 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { useContratoTemplates, useDeleteContratoTemplate } from '@/hooks/useNexaContratos';
+import { useContratoTemplates, useDeleteContratoTemplate, contarContratosPorTemplate, type ContratoTemplate } from '@/hooks/useNexaContratos';
+import { toast } from 'sonner';
 
 export default function NexaContratosTemplates() {
   const { data: templates, isLoading } = useContratoTemplates();
   const del = useDeleteContratoTemplate();
+  const [alvoExclusao, setAlvoExclusao] = useState<ContratoTemplate | null>(null);
+  const [verificandoUso, setVerificandoUso] = useState(false);
+
+  const pedirExclusao = async (t: ContratoTemplate) => {
+    setVerificandoUso(true);
+    try {
+      const emUso = await contarContratosPorTemplate(t.id);
+      if (emUso > 0) {
+        toast.error(`Este modelo já foi usado em ${emUso} contrato(s) e não pode ser excluído. Desative-o em vez disso.`);
+        return;
+      }
+      setAlvoExclusao(t);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao verificar uso do modelo');
+    } finally {
+      setVerificandoUso(false);
+    }
+  };
 
   return (
     <MainLayout
@@ -48,7 +72,7 @@ export default function NexaContratosTemplates() {
                     <Button size="icon" variant="ghost" asChild>
                       <Link to={`/nexa/contratos/modelos/${t.id}`}><Pencil className="h-4 w-4" /></Link>
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => confirm('Remover modelo?') && del.mutate(t.id)}>
+                    <Button size="icon" variant="ghost" disabled={verificandoUso} onClick={() => pedirExclusao(t)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -58,6 +82,25 @@ export default function NexaContratosTemplates() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!alvoExclusao} onOpenChange={(open) => !open && setAlvoExclusao(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir modelo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{alvoExclusao?.nome}" será removido permanentemente. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (alvoExclusao) del.mutate(alvoExclusao.id); setAlvoExclusao(null); }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

@@ -6,6 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Trash2, Lock } from 'lucide-react';
@@ -20,6 +24,7 @@ export default function NexaContratosVariaveis() {
 
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<ContratoVariavel> | null>(null);
+  const [alvoExclusao, setAlvoExclusao] = useState<ContratoVariavel | null>(null);
 
   const openNew = () => { setEdit({ chave: '', label: '', tipo: 'texto', is_active: true }); setOpen(true); };
   const openEdit = (v: ContratoVariavel) => { setEdit(v); setOpen(true); };
@@ -63,7 +68,7 @@ export default function NexaContratosVariaveis() {
                   <div className="flex gap-1">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
                     {!v.is_sistema && (
-                      <Button size="icon" variant="ghost" onClick={() => confirm('Remover variável?') && del.mutate(v.id)}>
+                      <Button size="icon" variant="ghost" onClick={() => setAlvoExclusao(v)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
@@ -119,6 +124,25 @@ export default function NexaContratosVariaveis() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!alvoExclusao} onOpenChange={(open) => !open && setAlvoExclusao(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir variável?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <code>{`{{${alvoExclusao?.chave}}}`}</code> será removida permanentemente. Modelos que já usam essa variável passarão a exibir <code>[{alvoExclusao?.chave}]</code> no lugar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (alvoExclusao) del.mutate(alvoExclusao.id); setAlvoExclusao(null); }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

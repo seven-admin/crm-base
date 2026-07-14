@@ -211,7 +211,8 @@ export function useSaveContrato() {
         payload.created_by = u.user?.id ?? null;
         payload.data_geracao = new Date().toISOString();
         if (!payload.numero) {
-          payload.numero = `CT-${Date.now().toString(36).toUpperCase()}`;
+          const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+          payload.numero = `CT-${Date.now().toString(36).toUpperCase()}-${rand}`;
         }
         if (!payload.status) payload.status = 'em_geracao';
         const { data, error } = await supabase.from('nexa_contratos' as any).insert(payload).select('id').single();
@@ -255,4 +256,63 @@ export async function downloadContratoPdf(path: string) {
   const { data, error } = await supabase.storage.from('nexa-contratos-pdf').createSignedUrl(path, 60);
   if (error) throw error;
   window.open(data.signedUrl, '_blank');
+}
+
+export function useUpdateContratoStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const payload: any = { status };
+      if (status === 'assinado') payload.data_assinatura = new Date().toISOString();
+      const { error } = await supabase.from('nexa_contratos' as any).update(payload).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'contratos'] });
+      toast.success('Status do contrato atualizado');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar status'),
+  });
+}
+
+export function useDeleteContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('nexa_contratos' as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['nexa', 'contratos'] });
+      toast.success('Contrato removido');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao remover contrato'),
+  });
+}
+
+/** Quantos contratos já usam um modelo — usado para bloquear exclusão de modelos em uso. */
+export async function contarContratosPorTemplate(templateId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('nexa_contratos' as any)
+    .select('id', { count: 'exact', head: true })
+    .eq('template_id', templateId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/**
+ * Marca a unidade como "em contrato" ao gerar um contrato para ela, evitando que
+ * duas pessoas gerem contratos para a mesma unidade sem aviso. Só aplica a mudança
+ * se a unidade ainda estiver disponível/reservada (update condicional, sem lock).
+ * Retorna false se houve conflito (outro usuário já moveu a unidade adiante).
+ */
+export async function marcarUnidadeEmContrato(unidadeId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('seven_unidades')
+    .update({ status: 'contrato' as any })
+    .eq('id', unidadeId)
+    .in('status', ['disponivel', 'reservada'])
+    .select('id');
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
 }

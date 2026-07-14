@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 
 import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
-import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf } from '@/hooks/useNexaContratos';
+import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf, marcarUnidadeEmContrato } from '@/hooks/useNexaContratos';
 import { useClientesSelect } from '@/hooks/useClientesSelect';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
 import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml } from '@/lib/contratoVariaveis';
@@ -41,6 +41,7 @@ export default function NexaContratoNovo() {
   const varsUsadas = useMemo(() => (template ? extrairVariaveis(template.conteudo_html) : []), [template]);
 
   // resolver valores auto sempre que dados mudam
+  const selecaoAnteriorRef = useRef<string>('');
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -51,7 +52,14 @@ export default function NexaContratoNovo() {
         unidadeId: unidadeId || null,
         valorContrato: valor ? Number(valor) : null,
       });
-      if (!cancel) setValores((prev) => ({ ...auto, ...prev }));
+      if (cancel) return;
+      // Se cliente/empreendimento/unidade mudaram, os valores auto atuais (nome,
+      // cpf, endereço etc.) substituem os anteriores — senão o merge manteria os
+      // dados da seleção antiga (ex: nome do cliente errado no contrato).
+      const chaveSelecao = `${clienteId}|${empId}|${unidadeId}`;
+      const selecaoMudou = chaveSelecao !== selecaoAnteriorRef.current;
+      selecaoAnteriorRef.current = chaveSelecao;
+      setValores((prev) => (selecaoMudou ? { ...prev, ...auto } : { ...auto, ...prev }));
     })();
     return () => { cancel = true; };
   }, [templateId, clienteId, empId, unidadeId, valor]);
@@ -76,6 +84,12 @@ export default function NexaContratoNovo() {
       if (!contratoId) return;
       const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`);
       await uploadPdf.mutateAsync({ contratoId, blob });
+      if (unidadeId) {
+        const travada = await marcarUnidadeEmContrato(unidadeId);
+        if (!travada) {
+          toast.warning('Contrato gerado, mas a unidade já não estava mais disponível/reservada — confira o status dela.');
+        }
+      }
       toast.success('Contrato gerado com sucesso');
       nav('/nexa/contratos');
     } catch (e: any) {
