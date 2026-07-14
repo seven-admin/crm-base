@@ -1,20 +1,19 @@
-## Nova página Nexa: "Render Vithória"
+## Objetivo
+Adicionar em `/nexa/disponibilidade` a mesma exportação em PDF de "Unidades Disponíveis" que existe em Empreendimentos › aba Unidades, disponível para todos os usuários Nexa.
 
-Página simples dentro do módulo Nexa que apenas embarca (via iframe fullscreen) o sistema externo `https://render.sistemasvn.com.br/empreendimento/vithoria-do-sol`. Aberta a todos os usuários Nexa (`nexa_admin`, `nexa_gestor`, `nexa_corretor`), sem restrição extra por permissão de módulo.
+## Escopo
 
-### 1. Nova página
-- Criar `src/pages/nexa/NexaRenderVithoria.tsx`
-- Layout: header curto com título "Render Vithória" + `<iframe>` ocupando o restante da altura útil (`h-[calc(100vh-...)]`, `w-full`, sem borda, `allow="fullscreen"`, `allowFullScreen`).
+### 1. Extrair a lógica de exportação para um util compartilhado
+Criar `src/lib/exportUnidadesDisponiveisPdf.ts` contendo a função `exportUnidadesDisponiveisPdf({ empreendimento, unidades, isLoteamento })` — mesma implementação de `handleExportarDisponiveis` hoje em `src/components/empreendimentos/UnidadesTab.tsx` (logo Nexa, marca d'água, colunas, boxes vinculados, rodapé customizado, paginação, nome do arquivo).
 
-### 2. Rota
-- Em `src/App.tsx`, adicionar rota `/nexa/render-vithoria` envolvida por `<NexaProtectedRoute>` **sem** `moduleName` (assim libera para qualquer role Nexa, sem depender de módulo cadastrado em `sistema_modules`).
+### 2. Refatorar `UnidadesTab.tsx`
+Substituir o corpo de `handleExportarDisponiveis` por uma chamada ao novo util, mantendo o item de menu "Exportar Disponíveis (PDF)" idêntico.
 
-### 3. Menu no topo (AppTopbar)
-- Em `src/components/layout/AppTopbar.tsx`, dentro do grupo "Nexa", incluir novo item:
-  - label: `Render Vithória`
-  - path: `/nexa/render-vithoria`
-  - `moduleName: '__self__'` (mesmo truque do "Meu Perfil") para o filtro `filterItems` não bloquear pela ausência de módulo cadastrado — o gate já é feito pelo `NexaProtectedRoute` + `canAccessGroup('nexa')`.
-  - ícone: `ExternalLink` (lucide).
+### 3. Botão de exportação em `NexaDisponibilidade.tsx`
+- Adicionar botão "Exportar PDF" ao lado de "Atualizar", habilitado somente quando um empreendimento estiver selecionado.
+- No clique: buscar o empreendimento (por id, via `seven_empreendimentos`) e as unidades com status `disponivel` do empreendimento (com joins de bloco e tipologia em `seven_unidades`) e chamar `exportUnidadesDisponiveisPdf`.
+- Sem restrição de role — visível a qualquer usuário Nexa que acessa a página (a rota já é protegida pelo grupo Nexa).
 
-### Fora de escopo
-- Nada de banco de dados, RLS, permissões novas ou tratamento de SSO para o sistema externo. Se o site externo bloquear iframes via `X-Frame-Options`/CSP, será necessário liberar do lado deles — mencionarei isso ao entregar.
+## Fora de escopo
+- Não altera permissões, RLS, layout da tabela nem o fluxo de edição de status.
+- Não cria exportação em Excel/CSV; mantém o mesmo formato PDF do módulo Empreendimentos.

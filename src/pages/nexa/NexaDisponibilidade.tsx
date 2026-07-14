@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, FileDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
+import { exportUnidadesDisponiveisPdf } from '@/lib/exportUnidadesDisponiveisPdf';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
 
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -39,6 +42,55 @@ export default function NexaDisponibilidade() {
     canEdit ? ALL_STATUSES : ['disponivel']
   );
   const updateStatus = useUpdateUnidadeStatus();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPdf = async () => {
+    if (!empId) return;
+    setIsExporting(true);
+    try {
+      const { data: emp, error: empErr } = await supabase
+        .from('seven_empreendimentos')
+        .select('nome, tipo, texto_rodape_relatorio')
+        .eq('id', empId)
+        .maybeSingle();
+      if (empErr) throw empErr;
+      if (!emp) {
+        toast.error('Empreendimento não encontrado.');
+        return;
+      }
+
+      const { data: unis, error: uniErr } = await supabase
+        .from('seven_unidades')
+        .select('id, numero, andar, area_privativa, valor, bloco:seven_blocos(nome), tipologia:seven_tipologias(nome)')
+        .eq('empreendimento_id', empId)
+        .eq('status', 'disponivel')
+        .eq('is_active', true);
+      if (uniErr) throw uniErr;
+
+      const isLoteamento = emp.tipo === 'loteamento' || emp.tipo === 'condominio';
+      await exportUnidadesDisponiveisPdf({
+        empreendimento: {
+          nome: emp.nome,
+          texto_rodape_relatorio: (emp as any).texto_rodape_relatorio ?? null,
+        },
+        unidades: (unis ?? []).map((u: any) => ({
+          id: u.id,
+          numero: u.numero,
+          andar: u.andar,
+          area_privativa: u.area_privativa,
+          valor: u.valor,
+          bloco: u.bloco ? { nome: u.bloco.nome } : null,
+          tipologia: u.tipologia ? { nome: u.tipologia.nome } : null,
+        })),
+        isLoteamento,
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || 'Erro ao exportar PDF.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <MainLayout
@@ -62,7 +114,16 @@ export default function NexaDisponibilidade() {
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
+        <Button variant="outline" onClick={handleExportPdf} disabled={!empId || isExporting}>
+          {isExporting ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4 mr-2" />
+          )}
+          Exportar PDF
+        </Button>
       </div>
+
 
       {!empId ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione um empreendimento acima.</CardContent></Card>
