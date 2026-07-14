@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
+import { useQuery } from '@tanstack/react-query';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
