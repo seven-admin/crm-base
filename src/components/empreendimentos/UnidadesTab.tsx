@@ -47,6 +47,8 @@ import { buildUnitLabel, type LabelFormatElement } from '@/lib/mapaUtils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { exportUnidadesDisponiveisPdf } from '@/lib/exportUnidadesDisponiveisPdf';
+
 
 const TIPOLOGIA_COLORS = [
   'bg-indigo-400', 'bg-pink-400', 'bg-teal-400',
