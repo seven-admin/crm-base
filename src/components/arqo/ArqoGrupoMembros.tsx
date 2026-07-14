@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,17 @@ export function ArqoGrupoMembros() {
 
   const disponiveis = profiles.filter(p => !membros.some(m => m.user_id === p.id));
 
+  // Próximo número da roleta = maior ordem atual do grupo + 1, mas o campo
+  // continua editável para quem quiser reordenar manualmente.
+  const proximaOrdem = useMemo(
+    () => membros.reduce((max, m) => Math.max(max, m.ordem_roleta), 0) + 1,
+    [membros],
+  );
+
+  useEffect(() => {
+    setNovaOrdem(proximaOrdem);
+  }, [grupoId, proximaOrdem]);
+
   const adicionar = () => {
     if (!grupoId || !novoUser) return;
     upsert.mutate({
@@ -33,7 +44,6 @@ export function ArqoGrupoMembros() {
     }, {
       onSuccess: () => {
         setNovoUser('');
-        setNovaOrdem(0);
       }
     });
   };
