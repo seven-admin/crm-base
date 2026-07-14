@@ -45,6 +45,28 @@ export default function NexaDisponibilidade() {
   const updateStatus = useUpdateUnidadeStatus();
   const [isExporting, setIsExporting] = useState(false);
 
+  const { data: boxesVinculados } = useQuery({
+    queryKey: ['nexa', 'boxes-vinculados', empId],
+    enabled: !!empId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('seven_boxes')
+        .select('numero, unidade_id, tipo, coberto')
+        .eq('empreendimento_id', empId!)
+        .not('unidade_id', 'is', null)
+        .eq('is_active', true)
+        .order('numero');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const boxesPorUnidade = (boxesVinculados ?? []).reduce<Record<string, string[]>>((acc, b: any) => {
+    if (!b.unidade_id) return acc;
+    (acc[b.unidade_id] ||= []).push(String(b.numero));
+    return acc;
+  }, {});
+
   const handleExportPdf = async () => {
     if (!empId) return;
     setIsExporting(true);
