@@ -46,6 +46,7 @@ export default function ArqoConfig() {
     { name: 'ordem', label: 'Ordem', type: 'number', default: 0 },
     { name: 'cor', label: 'Cor', type: 'color', default: '#6b7280' },
     { name: 'is_encerramento', label: 'É encerramento?', type: 'switch', default: false },
+    { name: 'bloqueia_roleta', label: 'Bloqueia roleta (impede puxar novo lead enquanto ativo aqui)', type: 'switch', default: true },
     { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
   ];
 
@@ -114,6 +115,7 @@ export default function ArqoConfig() {
                   <span className="font-medium">{e.nome}</span>
                   <Badge variant="outline">{e.categoria}</Badge>
                   <Badge variant="secondary">peso {e.peso}</Badge>
+                  {!e.bloqueia_roleta && <Badge variant="outline" className="text-amber-600 border-amber-300">não bloqueia roleta</Badge>}
                   <span className="text-xs text-muted-foreground ml-auto">#{e.ordem}</span>
                 </div>
               )}

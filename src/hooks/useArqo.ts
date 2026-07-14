@@ -93,7 +93,7 @@ export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string;
       let q = supabase.from('arqo_leads').select(`
         *,
         cliente:cliente_id (id, nome, telefone, email, nivel_cadastro),
-        etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento),
+        etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento, bloqueia_roleta),
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
         consultor:consultor_id (id, full_name, email),
@@ -328,7 +328,7 @@ export function useArqoLead(id?: string) {
       const { data, error } = await supabase.from('arqo_leads').select(`
         *,
         cliente:cliente_id (id, nome, telefone, email, cpf, nivel_cadastro, profissao, renda_mensal),
-        etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento),
+        etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento, bloqueia_roleta),
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
         consultor:consultor_id (id, full_name, email),

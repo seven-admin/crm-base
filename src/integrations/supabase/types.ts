@@ -83,6 +83,7 @@ export type Database = {
       }
       arqo_funil_etapas: {
         Row: {
+          bloqueia_roleta: boolean
           categoria: string
           cor: string
           created_at: string
@@ -96,6 +97,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bloqueia_roleta?: boolean
           categoria?: string
           cor?: string
           created_at?: string
@@ -109,6 +111,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bloqueia_roleta?: boolean
           categoria?: string
           cor?: string
           created_at?: string

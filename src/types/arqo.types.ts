@@ -6,6 +6,7 @@ export interface ArqoTemperatura { id: string; nome: string; peso: number; cor: 
 export interface ArqoFunilEtapa {
   id: string; nome: string; descricao: string | null; ordem: number; peso: number;
   categoria: ArqoEtapaCategoria; is_encerramento: boolean; cor: string; is_active: boolean;
+  bloqueia_roleta: boolean;
 }
 export interface ArqoGrupo { id: string; nome: string; descricao: string | null; tipo: 'consultor'|'closer'|'misto'; is_active: boolean; }
 export interface ArqoGrupoMembro { id: string; grupo_id: string; user_id: string; papel: 'consultor'|'closer'; is_active: boolean; ordem_roleta: number; }

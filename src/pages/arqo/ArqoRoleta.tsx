@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import {
 } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Loader2, Phone, Mail, PhoneOff, ArrowRight, Upload, Users,
+  Loader2, Phone, Mail, PhoneOff, ArrowRight, Upload, Users, Clock,
 } from 'lucide-react';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 import { toast } from 'sonner';
@@ -34,8 +35,15 @@ export default function ArqoRoleta() {
   const tentar = useRegistrarTentativa();
   const transicionar = useTransicionarEtapa();
 
+  // Leads em etapas com bloqueia_roleta=false (ex: Aguardando Followup, Reagendar) ficam
+  // vinculados ao consultor como pendência, mas não impedem puxar um novo lead.
   const meuLeadAtivo = useMemo(
-    () => allLeads.find(l => l.consultor_id === user?.id && !l.fechado_em),
+    () => allLeads.find(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta !== false),
+    [allLeads, user],
+  );
+
+  const minhasPendencias = useMemo(
+    () => allLeads.filter(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta === false),
     [allLeads, user],
   );
 
@@ -272,6 +280,34 @@ export default function ArqoRoleta() {
           </Card>
         )}
       </section>
+
+      {/* Pendências: leads em followup/reagendamento — não bloqueiam novos leads */}
+      {minhasPendencias.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide flex items-center gap-2">
+            <Clock className="h-4 w-4" /> Pendências ({minhasPendencias.length})
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {minhasPendencias.map(l => (
+              <Link key={l.id} to={`/arqo/leads/${l.id}`}>
+                <Card className="p-4 hover:shadow-md transition-shadow h-full">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="font-medium text-sm truncate">{l.cliente?.nome ?? '—'}</span>
+                    <Badge style={{ backgroundColor: l.etapa?.cor, color: '#fff' }} className="text-xs shrink-0">
+                      {l.etapa?.nome}
+                    </Badge>
+                  </div>
+                  {l.cliente?.telefone && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3" /> {l.cliente.telefone}
+                    </div>
+                  )}
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </MainLayout>
   );
 }
