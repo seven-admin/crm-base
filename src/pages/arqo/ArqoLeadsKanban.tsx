@@ -27,17 +27,28 @@ export default function ArqoLeadsKanban() {
   const [dragging, setDragging] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
-  const etapasAtivas = useMemo(() => etapas.filter(e => e.categoria === 'ativa'), [etapas]);
-
+  // Mostra todas as etapas cadastradas (ativa/ganho/perda/descartado) como
+  // colunas, na mesma ordem do cadastro — antes só "ativa" aparecia, então
+  // leads em Ganho/Perdido/Descartado ficavam sem coluna e somem da visão.
   const grouped = useMemo(() => {
     const map = new Map<string, ArqoLeadWithRelations[]>();
-    etapasAtivas.forEach(e => map.set(e.id, []));
+    etapas.forEach(e => map.set(e.id, []));
     leads.forEach(l => {
       const arr = map.get(l.etapa_id);
       if (arr) arr.push(l);
     });
     return map;
-  }, [leads, etapasAtivas]);
+  }, [leads, etapas]);
+
+  const moverParaEtapa = (leadId: string, etapa: (typeof etapas)[number]) => {
+    if (etapa.categoria === 'perda') {
+      const motivo = window.prompt('Motivo da perda:');
+      if (!motivo) return;
+      transicionar.mutate({ leadId, etapaPara: etapa.id, motivoPerda: motivo });
+    } else {
+      transicionar.mutate({ leadId, etapaPara: etapa.id });
+    }
+  };
 
   return (
     <MainLayout
@@ -54,29 +65,29 @@ export default function ArqoLeadsKanban() {
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-96" />)}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {etapasAtivas.map(etapa => {
+        <div className="flex gap-4 overflow-x-auto pb-4 max-h-[calc(100vh-240px)] min-h-[420px]">
+          {etapas.map(etapa => {
             const items = grouped.get(etapa.id) ?? [];
             return (
               <div
                 key={etapa.id}
-                className="flex-shrink-0 w-72"
+                className="flex-shrink-0 w-80 flex flex-col"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => {
                   if (dragging) {
-                    transicionar.mutate({ leadId: dragging, etapaPara: etapa.id });
+                    moverParaEtapa(dragging, etapa);
                     setDragging(null);
                   }
                 }}
               >
-                <div className="flex items-center justify-between mb-3 sticky top-0">
+                <div className="flex items-center justify-between mb-3 shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: etapa.cor }} />
                     <h3 className="font-semibold text-sm">{etapa.nome}</h3>
                   </div>
                   <Badge variant="secondary">{items.length}</Badge>
                 </div>
-                <div className="space-y-2 min-h-[200px]">
+                <div className="space-y-2 min-h-[200px] flex-1 overflow-y-auto pr-1">
                   {items.map(l => (
                     <Card
                       key={l.id}

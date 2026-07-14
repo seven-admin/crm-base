@@ -38,7 +38,6 @@ import {
   Key,
   Trash2,
   Building2,
-  UserCheck,
   Clock
 } from 'lucide-react';
 import { UserPermissionsTab } from '@/components/usuarios/UserPermissionsTabNew';
@@ -46,7 +45,6 @@ import { UserEmpreendimentosTab } from '@/components/usuarios/UserEmpreendimento
 
 import { RolesManager } from '@/components/configuracoes/RolesManager';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useActivateCorretor, useBulkActivateCorretores } from '@/hooks/useActivateCorretor';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sanitizeErrorMessage } from '@/lib/errorHandler';
 
@@ -70,10 +68,6 @@ export default function Usuarios() {
   
   // Buscar roles dinâmicos do banco
   const { data: rolesFromDb = [] } = useRoles();
-  
-  // Hooks de ativação
-  const activateCorretor = useActivateCorretor();
-  const bulkActivate = useBulkActivateCorretores();
   
   // Helper para obter display_name do role
   const getRoleDisplayName = useMemo(() => {
@@ -401,40 +395,9 @@ export default function Usuarios() {
     });
   };
 
-  // Selecionar todos os pendentes visíveis
-  const selectAllPendentes = () => {
-    const pendentesIds = filteredUsers.filter(u => !u.is_active).map(u => u.id);
-    setSelectedUsers(new Set(pendentesIds));
-  };
-
   // Limpar seleção
   const clearSelection = () => {
     setSelectedUsers(new Set());
-  };
-
-  // Ativar usuário individual
-  const handleActivateUser = async (user: UserWithRole) => {
-    await activateCorretor.mutateAsync({
-      userId: user.id,
-      email: user.email,
-      nome: user.full_name
-    });
-    fetchUsers();
-  };
-
-  // Ativar em lote
-  const handleBulkActivate = async () => {
-    if (selectedUsers.size === 0) return;
-    const usersToActivate = users
-      .filter(u => selectedUsers.has(u.id))
-      .map(u => ({
-        userId: u.id,
-        email: u.email,
-        nome: u.full_name
-      }));
-    await bulkActivate.mutateAsync(usersToActivate);
-    setSelectedUsers(new Set());
-    fetchUsers();
   };
 
   // Excluir em lote (super admin)
@@ -617,43 +580,7 @@ export default function Usuarios() {
                   )}
                 </Button>
 
-                {showOnlyPendentes && filteredUsers.length > 0 && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={selectAllPendentes}
-                    >
-                      Selecionar Todos
-                    </Button>
-                    {selectedUsers.size > 0 && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={clearSelection}
-                        >
-                          Limpar ({selectedUsers.size})
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleBulkActivate}
-                          disabled={bulkActivate.isPending}
-                          className="gap-2"
-                        >
-                          {bulkActivate.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <UserCheck className="h-4 w-4" />
-                          )}
-                          Ativar Selecionados ({selectedUsers.size})
-                        </Button>
-                      </>
-                    )}
-                  </>
-                )}
-
-                {isSuperAdmin() && !showOnlyPendentes && selectedUsers.size > 0 && (
+                {isSuperAdmin() && selectedUsers.size > 0 && (
                   <>
                     <Button variant="outline" size="sm" onClick={clearSelection}>
                       Limpar ({selectedUsers.size})
@@ -732,7 +659,7 @@ export default function Usuarios() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        {(showOnlyPendentes || isSuperAdmin()) && (
+                        {isSuperAdmin() && (
                           <TableHead className="w-12"></TableHead>
                         )}
                         <TableHead>Usuário</TableHead>
@@ -752,12 +679,11 @@ export default function Usuarios() {
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => handleEditUser(user)}
                         >
-                          {(showOnlyPendentes || isSuperAdmin()) && (
+                          {isSuperAdmin() && (
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <Checkbox
                                 checked={selectedUsers.has(user.id)}
                                 onCheckedChange={() => toggleUserSelection(user.id)}
-                                disabled={showOnlyPendentes && user.is_active}
                               />
                             </TableCell>
                           )}
@@ -793,21 +719,6 @@ export default function Usuarios() {
                           </TableCell>
                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
-                              {!user.is_active && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleActivateUser(user)}
-                                  disabled={activateCorretor.isPending}
-                                  title="Ativar usuário"
-                                >
-                                  {activateCorretor.isPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <UserCheck className="h-4 w-4 text-success" />
-                                  )}
-                                </Button>
-                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -832,7 +743,7 @@ export default function Usuarios() {
                       ))}
                       {filteredUsers.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={(showOnlyPendentes || isSuperAdmin()) ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={isSuperAdmin() ? 9 : 8} className="text-center py-8 text-muted-foreground">
                             Nenhum usuário encontrado
                           </TableCell>
                         </TableRow>

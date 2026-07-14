@@ -83,7 +83,7 @@ const menuGroups: MenuGroup[] = [
       { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa_contratos_modelos' },
       { icon: FileText, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa_contratos_blocos' },
       { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa_contratos_variaveis' },
-      { icon: ExternalLink, label: 'Render Vithória', path: '/nexa/render-vithoria', moduleName: '__self__' },
+      { icon: ExternalLink, label: 'Render Vithória', path: '/nexa/render-vithoria', moduleName: '__nexa_only__' },
     ],
   },
   {
@@ -113,7 +113,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin } = usePermissions();
-  const { isExterno, empresa } = useEmpresaAccess();
+  const { isExterno, empresa, canAccessGroup } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
     ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
     : empresa === 'nexa'
@@ -126,6 +126,10 @@ export function AppTopbar() {
   const filterItems = (items: MenuItem[]) =>
     items.filter((item) => {
       if (item.moduleName === '__self__') return true;
+      // Não depende de módulo cadastrado (ex: iframe "Render Vithória"), mas só
+      // deve aparecer para quem realmente tem vínculo com o grupo Nexa/Seven —
+      // '__self__' era universal demais e vazava pra usuários Arqo.
+      if (item.moduleName === '__nexa_only__') return isAdmin() || canAccessGroup('nexa');
       if (item.adminOnly) return isAdmin();
       return canAccessModule(item.moduleName);
     });

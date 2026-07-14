@@ -11,7 +11,7 @@ import {
 } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Loader2, Phone, Mail, UserCheck, PhoneOff, ArrowRight, Upload, Users,
+  Loader2, Phone, Mail, PhoneOff, ArrowRight, Upload, Users,
 } from 'lucide-react';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 import { toast } from 'sonner';
@@ -51,8 +51,6 @@ export default function ArqoRoleta() {
     return map;
   }, [allLeads, meusGrupos]);
 
-  const etapaPerdido = etapas.find(e => e.categoria === 'perda');
-  const etapaGanho = etapas.find(e => e.categoria === 'ganho');
   const etapasAtivasDisponiveis = etapas.filter(
     e => e.categoria === 'ativa' && e.id !== meuLeadAtivo?.etapa_id,
   );
@@ -78,10 +76,10 @@ export default function ArqoRoleta() {
     );
   };
 
-  const handleTransicao = (etapaPara: string, motivoPerda?: string) => {
+  const handleTransicao = (etapaPara: string) => {
     if (!meuLeadAtivo || !exigeObservacao()) return;
     transicionar.mutate(
-      { leadId: meuLeadAtivo.id, etapaPara, comentario: observacao, motivoPerda },
+      { leadId: meuLeadAtivo.id, etapaPara, comentario: observacao },
       { onSuccess: limparObs },
     );
   };
@@ -262,20 +260,6 @@ export default function ArqoRoleta() {
                 </Button>
               </div>
 
-              {etapaGanho && (
-                <Button size="sm" onClick={() => handleTransicao(etapaGanho.id)}>
-                  <UserCheck className="h-4 w-4 mr-2" /> Marcar como Ganho
-                </Button>
-              )}
-              {etapaPerdido && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleTransicao(etapaPerdido.id, observacao)}
-                >
-                  Marcar como Perdido
-                </Button>
-              )}
               <Button variant="ghost" size="sm" onClick={handleLiberar} disabled={liberar.isPending}>
                 Liberar lead
               </Button>

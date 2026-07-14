@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
@@ -9,6 +10,13 @@ import { ArrowLeft, Phone, Mail, Sparkles, PhoneOff, User, Building, Loader2 } f
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+const EVENTO_LABELS: Record<string, string> = {
+  transicao_etapa: 'Mudança de etapa',
+  atribuicao: 'Atribuição via roleta',
+  tentativa_sem_resposta: 'Sem resposta',
+  liberacao_consultor: 'Liberado para fila',
+};
+
 export default function ArqoLeadDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: lead, isLoading } = useArqoLead(id);
@@ -17,6 +25,8 @@ export default function ArqoLeadDetail() {
   const transicionar = useTransicionarEtapa();
   const qualificar = useQualificarIA();
   const tentar = useRegistrarTentativa();
+
+  const nomePorEtapaId = useMemo(() => new Map(etapas.map(e => [e.id, e.nome])), [etapas]);
 
   if (isLoading || !lead) {
     return (
@@ -108,12 +118,17 @@ export default function ArqoLeadDetail() {
             {events.map((ev: any) => (
               <div key={ev.id} className="border-l-2 border-primary pl-3 pb-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{ev.tipo}</Badge>
+                  <Badge variant="outline" className="text-xs">{EVENTO_LABELS[ev.tipo] ?? ev.tipo}</Badge>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(ev.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
                   </span>
                 </div>
-                {ev.comentario && <p className="text-xs mt-1">{ev.comentario}</p>}
+                {ev.tipo === 'transicao_etapa' && (
+                  <p className="text-xs mt-1 font-medium">
+                    {nomePorEtapaId.get(ev.etapa_de) ?? '—'} → {nomePorEtapaId.get(ev.etapa_para) ?? '—'}
+                  </p>
+                )}
+                {ev.comentario && <p className="text-xs mt-1 text-muted-foreground">{ev.comentario}</p>}
               </div>
             ))}
           </div>
