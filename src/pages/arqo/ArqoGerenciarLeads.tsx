@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Trash2, Search, X } from 'lucide-react';
-import { useArqoLeadsAdmin, useDeleteArqoLeadsBulk } from '@/hooks/useArqoLeadsAdmin';
-import { useArqoEtapas, useArqoSources } from '@/hooks/useArqo';
+import { Trash2, Search, X, Users } from 'lucide-react';
+import { useArqoLeadsAdmin, useDeleteArqoLeadsBulk, useAssignGrupoLeadsBulk } from '@/hooks/useArqoLeadsAdmin';
+import { useArqoEtapas, useArqoSources, useArqoGrupos } from '@/hooks/useArqo';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -20,18 +20,22 @@ export function ArqoGerenciarLeads() {
   const [sourceId, setSourceId] = useState<string>('all');
   const [etapaId, setEtapaId] = useState<string>('all');
   const [consultorId, setConsultorId] = useState<string>('all');
+  const [grupoId, setGrupoId] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [alsoDeleteClients, setAlsoDeleteClients] = useState(false);
+  const [grupoDestinoId, setGrupoDestinoId] = useState<string>('');
 
   const filters = {
     search: search.trim() || undefined,
     source_id: sourceId === 'all' ? undefined : sourceId,
     etapa_id: etapaId === 'all' ? undefined : etapaId,
     consultor_id: consultorId === 'all' ? undefined : consultorId,
+    semGrupo: grupoId === '__none__',
+    grupo_id: grupoId === 'all' || grupoId === '__none__' ? undefined : grupoId,
     dateFrom: dateFrom ? new Date(dateFrom).toISOString() : undefined,
     dateTo: dateTo ? new Date(dateTo + 'T23:59:59').toISOString() : undefined,
   };
@@ -39,7 +43,9 @@ export function ArqoGerenciarLeads() {
   const { data: leads = [], isLoading } = useArqoLeadsAdmin(filters);
   const { data: etapas = [] } = useArqoEtapas();
   const { data: sources = [] } = useArqoSources();
+  const { data: grupos = [] } = useArqoGrupos();
   const del = useDeleteArqoLeadsBulk();
+  const assignGrupo = useAssignGrupoLeadsBulk();
 
   const { data: consultores = [] } = useQuery({
     queryKey: ['arqo', 'consultores-list'],
@@ -67,7 +73,7 @@ export function ArqoGerenciarLeads() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setSourceId('all'); setEtapaId('all'); setConsultorId('all');
+    setSearch(''); setSourceId('all'); setEtapaId('all'); setConsultorId('all'); setGrupoId('all');
     setDateFrom(''); setDateTo('');
   };
 
@@ -78,6 +84,13 @@ export function ArqoGerenciarLeads() {
     setConfirmOpen(false);
     setConfirmText('');
     setAlsoDeleteClients(false);
+  };
+
+  const handleAssignGrupo = async () => {
+    if (!grupoDestinoId) return;
+    await assignGrupo.mutateAsync({ ids: Array.from(selected), grupoId: grupoDestinoId });
+    setSelected(new Set());
+    setGrupoDestinoId('');
   };
 
   return (
@@ -122,6 +135,17 @@ export function ArqoGerenciarLeads() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs">Grupo</Label>
+            <Select value={grupoId} onValueChange={setGrupoId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="__none__">— Sem grupo</SelectItem>
+                {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs">De</Label>
@@ -142,14 +166,34 @@ export function ArqoGerenciarLeads() {
               {leads.length} lead(s) · {selected.size} selecionado(s)
             </p>
           </div>
-          <Button
-            variant="destructive"
-            disabled={selected.size === 0}
-            onClick={() => setConfirmOpen(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir selecionados ({selected.size})
-          </Button>
+          <div className="flex items-center gap-2">
+            {selected.size > 0 && (
+              <>
+                <Select value={grupoDestinoId} onValueChange={setGrupoDestinoId}>
+                  <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Atribuir a grupo..." /></SelectTrigger>
+                  <SelectContent>
+                    {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  disabled={!grupoDestinoId || assignGrupo.isPending}
+                  onClick={handleAssignGrupo}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Atribuir ({selected.size})
+                </Button>
+              </>
+            )}
+            <Button
+              variant="destructive"
+              disabled={selected.size === 0}
+              onClick={() => setConfirmOpen(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir selecionados ({selected.size})
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -168,13 +212,14 @@ export function ArqoGerenciarLeads() {
               <TableHead>Origem</TableHead>
               <TableHead>Etapa</TableHead>
               <TableHead>Consultor</TableHead>
+              <TableHead>Grupo</TableHead>
               <TableHead>Criado em</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-6">Carregando…</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-6">Carregando…</TableCell></TableRow>}
             {!isLoading && leads.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 Nenhum lead encontrado.
               </TableCell></TableRow>
             )}
@@ -203,6 +248,9 @@ export function ArqoGerenciarLeads() {
                 </TableCell>
                 <TableCell className="text-xs">
                   {l.consultor?.full_name || <span className="text-muted-foreground italic">sem consultor</span>}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {l.grupo?.nome || <span className="text-muted-foreground italic">sem grupo</span>}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {format(new Date(l.created_at), 'dd/MM/yyyy HH:mm')}

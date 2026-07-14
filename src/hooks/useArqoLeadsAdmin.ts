@@ -15,6 +15,7 @@ export interface ArqoLeadAdminRow {
   etapa?: { id: string; nome: string; cor: string; categoria: string } | null;
   source?: { id: string; nome: string } | null;
   consultor?: { id: string; full_name: string; email: string } | null;
+  grupo?: { id: string; nome: string } | null;
 }
 
 interface Filters {
@@ -22,6 +23,8 @@ interface Filters {
   source_id?: string;
   etapa_id?: string;
   consultor_id?: string;
+  grupo_id?: string;
+  semGrupo?: boolean;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -38,7 +41,8 @@ export function useArqoLeadsAdmin(filters: Filters = {}) {
           cliente:seven_clientes(id, nome, telefone, email, nivel_cadastro),
           etapa:arqo_funil_etapas(id, nome, cor, categoria),
           source:arqo_lead_sources(id, nome),
-          consultor:profiles!arqo_leads_consultor_id_fkey(id, full_name, email)
+          consultor:profiles!arqo_leads_consultor_id_fkey(id, full_name, email),
+          grupo:arqo_grupos_atendimento(id, nome)
         `)
         .order('created_at', { ascending: false })
         .limit(2000);
@@ -46,6 +50,8 @@ export function useArqoLeadsAdmin(filters: Filters = {}) {
       if (filters.source_id) q = q.eq('source_id', filters.source_id);
       if (filters.etapa_id) q = q.eq('etapa_id', filters.etapa_id);
       if (filters.consultor_id) q = q.eq('consultor_id', filters.consultor_id);
+      if (filters.semGrupo) q = q.is('grupo_id', null);
+      else if (filters.grupo_id) q = q.eq('grupo_id', filters.grupo_id);
       if (filters.dateFrom) q = q.gte('created_at', filters.dateFrom);
       if (filters.dateTo) q = q.lte('created_at', filters.dateTo);
 
@@ -63,6 +69,25 @@ export function useArqoLeadsAdmin(filters: Filters = {}) {
       }
       return rows;
     },
+  });
+}
+
+export function useAssignGrupoLeadsBulk() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, grupoId }: { ids: string[]; grupoId: string }) => {
+      const { error } = await supabase
+        .from('arqo_leads')
+        .update({ grupo_id: grupoId })
+        .in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ['arqo'] });
+      toast.success(`${count} lead(s) atribuído(s) ao grupo`);
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao atribuir grupo'),
   });
 }
 
