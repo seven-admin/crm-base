@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,42 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Loader2, Shield, Save, Plus, MoreVertical, Edit, Trash2, Lock, Copy, Search, Eye, FileText, Briefcase, HelpCircle, Zap, Globe, Building2, User, Info } from 'lucide-react';
+
+// Category labels & grouping (mesmo padrão de Usuários > Permissões)
+const CATEGORY_LABELS: Record<string, string> = {
+  seven: 'Seven',
+  arqo: 'Arqo',
+  nexa: 'Nexa',
+  sistema: 'Sistema',
+  portal: 'Portal Incorporador',
+  outros: 'Outros',
+};
+
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  seven: 'Empreendimentos, disponibilidade, clientes e parceiros Seven',
+  arqo: 'Roleta, kanban, forecast e administração de leads Arqo',
+  nexa: 'Agenda, disponibilidade e contratos Nexa',
+  sistema: 'Usuários, perfis de acesso e auditoria',
+  portal: 'Acesso ao portal do incorporador',
+  outros: 'Outros módulos ativos do sistema',
+};
+
+const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'portal', 'outros'];
+
+const getModuleCategory = (module: any) => {
+  const name: string = module?.name || '';
+  if (name.startsWith('arqo_')) return 'arqo';
+  if (name.startsWith('nexa_')) return 'nexa';
+  if (name.startsWith('portal_')) return 'portal';
+  if (['usuarios', 'auditoria'].includes(name)) return 'sistema';
+  if (['empreendimentos', 'unidades', 'clientes', 'incorporadoras', 'imobiliarias', 'corretores'].includes(name)) return 'seven';
+  const rawCategory = (module?.category || '').toString().toLowerCase();
+  if (['empreendimentos', 'comercial', 'mercado', 'parceiros'].includes(rawCategory)) return 'seven';
+  if (rawCategory === 'administrativo') return 'sistema';
+  return rawCategory || 'outros';
+};
 import { 
   useRoles,
   useAllRoles,
