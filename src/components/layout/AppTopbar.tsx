@@ -198,7 +198,7 @@ export function AppTopbar() {
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[240px] rounded-xl border-border shadow-popover">
+                <DropdownMenuContent align="end" className="min-w-[240px]">
                   <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
                     {group.label}
                   </DropdownMenuLabel>

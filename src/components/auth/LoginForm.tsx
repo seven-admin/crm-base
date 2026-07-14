@@ -8,9 +8,6 @@ import { Label } from '@/components/ui/label';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 
-import { useConfiguracoesSistema } from '@/hooks/useConfiguracoesSistema';
-
-
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
@@ -20,7 +17,6 @@ export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, signInWithGoogle } = useAuth();
-  const { data: configs, isError } = useConfiguracoesSistema();
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -29,13 +25,6 @@ export function LoginForm() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
-
-  const getConfig = (chave: string, fallback: string) => {
-    if (isError || !configs) return fallback;
-    return configs.find(c => c.chave === chave)?.valor || fallback;
-  };
-
-  const copyright = getConfig('copyright_texto', '2024 Seven Group. Todos os direitos reservados.');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,26 +85,27 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+    <div className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-gradient-to-br from-[hsl(208,91%,95%)] via-[hsl(220,20%,97%)] to-[hsl(28,100%,95%)] dark:from-[hsl(220,26%,9%)] dark:via-[hsl(220,26%,11%)] dark:to-[hsl(217,33%,14%)]">
+      {/* Floating color blobs */}
+      <div className="blob h-[30rem] w-[30rem] bg-primary/30 -top-40 -left-40" />
+      <div className="blob h-[26rem] w-[26rem] bg-accent/25 top-1/4 -right-32" style={{ animationDelay: '4s' }} />
+      <div className="blob h-[24rem] w-[24rem] bg-success/20 -bottom-32 left-1/4" style={{ animationDelay: '8s' }} />
+
+      <div className="relative z-10 w-full max-w-sm liquid-glass rounded-[2rem] p-8 sm:p-10">
+        <div className="relative flex flex-col items-center mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             SVN <span className="text-primary">CRM</span>
           </h1>
+          <p className="text-muted-foreground text-sm mt-2">
+            Entre com suas credenciais para acessar
+          </p>
         </div>
 
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground">Bem-vindo</h2>
-            <p className="text-muted-foreground text-sm mt-1">
-              Entre com suas credenciais para acessar
-            </p>
-          </div>
-
+        <div className="relative space-y-7">
           <Button
             type="button"
             variant="outline"
-            className="w-full h-11 text-sm font-medium"
+            className="w-full h-12 rounded-xl text-sm font-medium liquid-input hover:bg-white/70 dark:hover:bg-white/10"
             onClick={async () => {
               setLoginError('');
               const { error } = await signInWithGoogle();
@@ -133,10 +123,10 @@ export function LoginForm() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-white/60 dark:border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">ou</span>
+              <span className="liquid-input px-2 py-0.5 rounded-full text-muted-foreground">ou</span>
             </div>
           </div>
 
@@ -148,21 +138,21 @@ export function LoginForm() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+              <Label htmlFor="login-email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">Email</Label>
               <Input
                 id="login-email"
                 type="email"
                 placeholder="seu@email.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="h-11"
+                className="h-12 rounded-xl liquid-input"
                 required
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
+                <Label htmlFor="login-password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">Senha</Label>
                 <button
                   type="button"
                   onClick={() => {
@@ -181,13 +171,13 @@ export function LoginForm() {
                 placeholder="••••••••"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="h-11"
+                className="h-12 rounded-xl liquid-input"
                 required
               />
             </div>
 
             {showForgotPassword && (
-              <div className="p-4 border border-border rounded-lg bg-muted/50 space-y-3">
+              <div className="p-4 border border-white/60 dark:border-white/10 rounded-xl liquid-input space-y-3">
                 <p className="text-sm text-foreground font-medium">Recuperar senha</p>
                 <p className="text-xs text-muted-foreground">
                   Informe seu email para receber o link de recuperação.
@@ -198,17 +188,18 @@ export function LoginForm() {
                     placeholder="seu@email.com"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    className="h-10"
+                    className="h-10 rounded-xl liquid-input"
                     required
                   />
                   <div className="flex gap-2">
-                    <Button type="submit" size="sm" disabled={forgotLoading} className="flex-1">
+                    <Button type="submit" size="sm" disabled={forgotLoading} className="flex-1 rounded-xl">
                       {forgotLoading ? 'Enviando...' : 'Enviar Link'}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="liquid-input rounded-xl"
                       onClick={() => setShowForgotPassword(false)}
                     >
                       Cancelar
@@ -218,9 +209,9 @@ export function LoginForm() {
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full h-11 text-sm font-semibold" 
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl text-sm font-semibold shadow-lg shadow-primary/25"
               disabled={loginLoading}
             >
               {loginLoading ? 'Entrando...' : 'Entrar'}
@@ -228,8 +219,8 @@ export function LoginForm() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-10">
-          © {copyright}
+        <p className="relative text-center text-xs text-muted-foreground mt-10">
+          © 2026 SVN - CRM. Todos os direitos reservados.
         </p>
       </div>
     </div>

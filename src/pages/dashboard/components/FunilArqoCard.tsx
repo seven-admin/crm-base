@@ -15,7 +15,7 @@ export function FunilArqoCard() {
   const conversaoTotal = novo > 0 ? (ganho / novo) * 100 : 0;
 
   return (
-    <div className="bg-card rounded-2xl shadow-card p-6">
+    <div className="bg-card rounded-2xl border border-border/60 shadow-card p-6">
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Funil Arqo</h2>
@@ -35,7 +35,7 @@ export function FunilArqoCard() {
 
             const barColor =
               etapa.tipo === 'ganho'
-                ? 'bg-[hsl(142_71%_45%)]'
+                ? 'bg-success'
                 : etapa.tipo === 'perdido'
                   ? 'bg-destructive'
                   : 'bg-primary';

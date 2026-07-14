@@ -132,10 +132,8 @@
     @apply border-border;
   }
   body {
-    @apply text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%);
-    background-attachment: fixed;
     min-height: 100vh;
   }
   h1, h2, h3, h4 {
@@ -218,6 +216,67 @@
   /* Glass effect */
   .glass-effect {
     @apply bg-card/80 backdrop-blur-sm border border-border/50;
+  }
+
+  /* Liquid glass panel - translucent, blurred, specular highlight */
+  /* Note: does not set `position` itself - the consumer must already be
+     positioned (relative/fixed/absolute) so the ::before sheen can anchor to it. */
+  .liquid-glass {
+    background: hsl(0 0% 100% / 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid hsl(0 0% 100% / 0.55);
+    box-shadow:
+      0 24px 64px -12px hsl(220 26% 14% / 0.25),
+      0 1px 0 0 hsl(0 0% 100% / 0.6) inset,
+      0 0 0 1px hsl(0 0% 100% / 0.15) inset;
+    overflow: hidden;
+  }
+
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.55) 0%, transparent 45%);
+    pointer-events: none;
+  }
+
+  .dark .liquid-glass {
+    background: hsl(220 26% 14% / 0.68);
+    border-color: hsl(0 0% 100% / 0.1);
+    box-shadow:
+      0 24px 64px -12px hsl(220 26% 5% / 0.5),
+      0 1px 0 0 hsl(0 0% 100% / 0.06) inset;
+  }
+
+  .dark .liquid-glass::before {
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.08) 0%, transparent 45%);
+  }
+
+  .liquid-input {
+    @apply bg-white/50 border-white/60 placeholder:text-foreground/40 backdrop-blur-md transition-all;
+  }
+
+  .liquid-input:focus-visible {
+    @apply bg-white/70;
+  }
+
+  .dark .liquid-input {
+    background: hsl(0 0% 100% / 0.06);
+    border-color: hsl(0 0% 100% / 0.12);
+  }
+
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    animation: blob-float 20s ease-in-out infinite;
+  }
+
+  @keyframes blob-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(5%, -7%) scale(1.1); }
+    66% { transform: translate(-4%, 5%) scale(0.92); }
   }
   /* Gradient subtle background */
   .gradient-subtle {

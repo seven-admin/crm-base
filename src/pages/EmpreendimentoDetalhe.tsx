@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { KPICard } from '@/components/dashboard/KPICard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +14,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Building2,
   MapPin,
@@ -30,9 +35,12 @@ import {
   DollarSign,
   History,
   AlertTriangle,
+  CheckCircle2,
+  TrendingUp,
+  MoreVertical,
+  Power,
 } from 'lucide-react';
 import { useEmpreendimento, useDeleteEmpreendimento, useUpdateEmpreendimento } from '@/hooks/useEmpreendimentos';
-import { Switch } from '@/components/ui/switch';
 import { EmpreendimentoForm } from '@/components/empreendimentos/EmpreendimentoForm';
 import { UnidadesTab } from '@/components/empreendimentos/UnidadesTab';
 import { TipologiasTab } from '@/components/empreendimentos/TipologiasTab';
@@ -56,6 +64,7 @@ export default function EmpreendimentoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { role } = useAuth();
 
   const isAdminOrGestor = role === 'super_admin' || role === 'admin' || role === 'gestor_produto';
@@ -117,56 +126,66 @@ export default function EmpreendimentoDetalhe() {
     (empreendimento.unidades_negociacao || 0);
 
   const headerActions = (
-    <div className="flex items-center gap-3">
-      {canDelete && (
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={empreendimento.is_active}
-            onCheckedChange={(checked) => {
-              updateEmpreendimento.mutate({ id: id!, data: { is_active: checked } as any });
-            }}
-          />
-          <span className="text-sm text-muted-foreground">
-            {empreendimento.is_active ? 'Ativo' : 'Inativo'}
-          </span>
-        </div>
-      )}
+    <div className="flex items-center gap-2">
       <Button onClick={() => setFormOpen(true)}>
         <Edit className="h-4 w-4 mr-2" />
         Editar
       </Button>
-      
+
       {canDelete && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="icon">
-              <Trash2 className="h-4 w-4" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <MoreVertical className="h-4 w-4" />
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir Empreendimento</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir o empreendimento "{empreendimento?.nome}"? 
-                Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleteEmpreendimento.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Excluir'
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => {
+                updateEmpreendimento.mutate({
+                  id: id!,
+                  data: { is_active: !empreendimento.is_active } as any,
+                });
+              }}
+            >
+              <Power className="h-4 w-4 mr-2" />
+              {empreendimento.is_active ? 'Desativar' : 'Ativar'}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setDeleteDialogOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Empreendimento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o empreendimento "{empreendimento?.nome}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteEmpreendimento.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Excluir'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 
@@ -204,107 +223,79 @@ export default function EmpreendimentoDetalhe() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Unidades
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{totalUnidades}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Disponíveis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-emerald-500">
-              {empreendimento.unidades_disponiveis}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              VGV Total
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              {formatCurrency(empreendimento.valor_total)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              VGV Vendido
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-500">
-              {formatCurrency(empreendimento.valor_vendido)}
-            </p>
-          </CardContent>
-        </Card>
+        <KPICard
+          title="Total de Unidades"
+          value={totalUnidades.toLocaleString('pt-BR')}
+          icon={Home}
+          iconColor="blue"
+        />
+        <KPICard
+          title="Disponíveis"
+          value={empreendimento.unidades_disponiveis.toLocaleString('pt-BR')}
+          icon={CheckCircle2}
+          iconColor="green"
+        />
+        <KPICard
+          title="VGV Total"
+          value={formatCurrency(empreendimento.valor_total)}
+          icon={DollarSign}
+          iconColor="orange"
+        />
+        <KPICard
+          title="VGV Vendido"
+          value={formatCurrency(empreendimento.valor_vendido)}
+          icon={TrendingUp}
+          iconColor="purple"
+        />
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="unidades" className="space-y-4">
-        <TabsList className={cn(
-          "grid w-full lg:w-auto lg:inline-grid",
-          isPredio && isAdminOrGestor ? "grid-cols-11" : isAdminOrGestor ? "grid-cols-10" : "grid-cols-6"
-        )}>
-          <TabsTrigger value="unidades" className="gap-2">
+        <TabsList className="w-full flex justify-start overflow-x-auto scrollbar-thin h-auto p-1">
+          <TabsTrigger value="unidades" className="gap-2 shrink-0">
             <Home className="h-4 w-4 hidden sm:block" />
             Unidades
           </TabsTrigger>
-          <TabsTrigger value="blocos" className="gap-2">
+          <TabsTrigger value="blocos" className="gap-2 shrink-0">
             <Building2 className="h-4 w-4 hidden sm:block" />
             {empreendimento.tipo === 'loteamento' || empreendimento.tipo === 'condominio' ? 'Quadras' : 'Blocos'}
           </TabsTrigger>
-          <TabsTrigger value="tipologias" className="gap-2">
+          <TabsTrigger value="tipologias" className="gap-2 shrink-0">
             <LayoutGrid className="h-4 w-4 hidden sm:block" />
             Tipologias
           </TabsTrigger>
-          <TabsTrigger value="fachadas" className="gap-2">
-            <Image className="h-4 w-4 hidden sm:block" />
-            Fachadas
-          </TabsTrigger>
-          <TabsTrigger value="documentos" className="gap-2">
-            <FileText className="h-4 w-4 hidden sm:block" />
-            Documentos
-          </TabsTrigger>
-          <TabsTrigger value="midias" className="gap-2">
-            <Image className="h-4 w-4 hidden sm:block" />
-            Mídias
-          </TabsTrigger>
-          {isPredio && isAdminOrGestor && (
-            <TabsTrigger value="boxes" className="gap-2">
-              <Home className="h-4 w-4 hidden sm:block" />
-              Boxes
-            </TabsTrigger>
-          )}
           {isAdminOrGestor && (
-            <TabsTrigger value="valores" className="gap-2">
+            <TabsTrigger value="valores" className="gap-2 shrink-0">
               <DollarSign className="h-4 w-4 hidden sm:block" />
               Valores
             </TabsTrigger>
           )}
+          {isPredio && isAdminOrGestor && (
+            <TabsTrigger value="boxes" className="gap-2 shrink-0">
+              <Home className="h-4 w-4 hidden sm:block" />
+              Boxes
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="fachadas" className="gap-2 shrink-0">
+            <Image className="h-4 w-4 hidden sm:block" />
+            Fachadas
+          </TabsTrigger>
+          <TabsTrigger value="documentos" className="gap-2 shrink-0">
+            <FileText className="h-4 w-4 hidden sm:block" />
+            Documentos
+          </TabsTrigger>
+          <TabsTrigger value="midias" className="gap-2 shrink-0">
+            <Image className="h-4 w-4 hidden sm:block" />
+            Mídias
+          </TabsTrigger>
           {isAdminOrGestor && (
-            <TabsTrigger value="memorial" className="gap-2">
+            <TabsTrigger value="memorial" className="gap-2 shrink-0">
               <FileText className="h-4 w-4 hidden sm:block" />
               Memorial
             </TabsTrigger>
           )}
           {isAdminOrGestor && (
-            <TabsTrigger value="historico" className="gap-2">
+            <TabsTrigger value="historico" className="gap-2 shrink-0">
               <History className="h-4 w-4 hidden sm:block" />
               Histórico
             </TabsTrigger>

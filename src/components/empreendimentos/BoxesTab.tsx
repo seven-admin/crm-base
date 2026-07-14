@@ -35,7 +35,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X, Pencil } from 'lucide-react';
+import { Loader2, Plus, Trash2, Car, Link2, Link2Off, X, Pencil, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useBoxes, useDeleteBox, useVincularBoxUnidade, useDeleteBoxesBatch, useVincularBoxesBatch } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useUnidades } from '@/hooks/useUnidades';
@@ -321,14 +327,27 @@ export function BoxesTab({ empreendimentoId }: BoxesTabProps) {
             </>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={() => setSelectionMode('vincular')}>
-                <Link2 className="h-4 w-4 mr-2" />
-                Vincular em Lote
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setSelectionMode('excluir')}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir em Lote
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="h-4 w-4 mr-2" />
+                    Mais ações
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onClick={() => setSelectionMode('vincular')}>
+                    <Link2 className="h-4 w-4 mr-2" />
+                    Vincular em Lote
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectionMode('excluir')}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir em Lote
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" onClick={() => setFormIndividualOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Box

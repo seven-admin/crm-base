@@ -7,6 +7,7 @@ import { TopEmpreendimentosTable } from './components/TopEmpreendimentosTable';
 import { useDashboardKPIs } from './useDashboardData';
 import { formatarMoedaCompacta } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 function variacao(atual: number, anterior: number): { label: string; type: 'positive' | 'negative' | 'neutral' } {
   if (anterior === 0) return { label: atual > 0 ? 'Sem base anterior' : 'Sem dados', type: 'neutral' };
@@ -17,13 +18,25 @@ function variacao(atual: number, anterior: number): { label: string; type: 'posi
   };
 }
 
+function saudacao(): string {
+  const hora = new Date().getHours();
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 export function DashboardHome() {
   const periodoMock = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   const { data: kpis, isLoading } = useDashboardKPIs();
+  const { profile } = useAuth();
+  const primeiroNome = profile?.full_name?.split(' ')[0];
 
   return (
     <MainLayout>
-      <PageHeader title="Visão Geral" subtitle={`Resumo executivo · ${periodoMock}`} />
+      <PageHeader
+        title={primeiroNome ? `${saudacao()}, ${primeiroNome}` : 'Visão Geral'}
+        subtitle={`Resumo executivo · ${periodoMock}`}
+      />
 
       <div className="p-4 md:p-6 space-y-6">
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

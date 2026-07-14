@@ -47,7 +47,7 @@ export function SevenMegaMenu({ categories, hasActive }: SevenMegaMenuProps) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[640px] max-w-[calc(100vw-2rem)] p-4 rounded-xl border-border shadow-popover bg-card"
+        className="w-[640px] max-w-[calc(100vw-2rem)] p-4"
       >
         <div className={cn('grid gap-4', visible.length === 3 ? 'grid-cols-3' : visible.length === 2 ? 'grid-cols-2' : 'grid-cols-1')}>
           {visible.map((cat) => (

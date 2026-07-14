@@ -4,7 +4,15 @@ import nexaLogoAsset from '@/assets/nexa-logo.png';
 import nexaSymbolAsset from '@/assets/nexa-symbol.png';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText } from 'lucide-react';
+import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText, MoreHorizontal, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -65,6 +73,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const [statusLoteOpen, setStatusLoteOpen] = useState(false);
   const [tipologiaLoteOpen, setTipologiaLoteOpen] = useState(false);
   const [selectedUnidade, setSelectedUnidade] = useState<Unidade | null>(null);
+  const [legendaTipologiasOpen, setLegendaTipologiasOpen] = useState(false);
   
   // Estado para seleção de unidades
   const [selectionMode, setSelectionMode] = useState<'venda' | 'delete' | 'status' | 'tipologia' | false>(false);
@@ -505,38 +514,53 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     </Toggle>
                   </div>
                 )}
-                <Button variant="outline" size="sm" onClick={handleExportarDisponiveis}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Exportar Disponíveis (PDF)
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectionMode('tipologia')}>
-                  <Layers className="h-4 w-4 mr-2" />
-                  Alterar Tipologia
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectionMode('status')}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Alterar Status
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectionMode('delete')}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir em Lote
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectionMode('venda')}>
-                  <History className="h-4 w-4 mr-2" />
-                  Venda Histórica
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setBlocoFormOpen(true)}>
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Nov{isLoteamento ? 'a' : 'o'} {agrupamentoLabel}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Importar Excel
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setBulkFormOpen(true)}>
-                  <Layers className="h-4 w-4 mr-2" />
-                  Adicionar em Lote
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="h-4 w-4 mr-2" />
+                      Mais ações
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={handleExportarDisponiveis}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Exportar Disponíveis (PDF)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Importar Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
+                      <Layers className="h-4 w-4 mr-2" />
+                      Adicionar em Lote
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setBlocoFormOpen(true)}>
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Nov{isLoteamento ? 'a' : 'o'} {agrupamentoLabel}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setSelectionMode('tipologia')}>
+                      <Layers className="h-4 w-4 mr-2" />
+                      Alterar Tipologia
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSelectionMode('status')}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Alterar Status
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSelectionMode('venda')}>
+                      <History className="h-4 w-4 mr-2" />
+                      Venda Histórica
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setSelectionMode('delete')}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir em Lote
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button size="sm" onClick={handleNewUnidade}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nov{isLoteamento ? 'o' : 'a'} {unidadeLabel}
@@ -575,15 +599,20 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
             </div>
 
             {tipologias && tipologias.length > 0 && (
-              <div className="flex flex-wrap gap-4 mb-6">
-                <span className="text-sm font-medium text-muted-foreground">Tipologias:</span>
-                {tipologias.map((tip) => (
-                  <div key={tip.id} className="flex items-center gap-1.5">
-                    <div className={cn('w-2.5 h-2.5 rounded-full', tipologiaColorMap.get(tip.id))} />
-                    <span className="text-sm">{tip.nome}</span>
-                  </div>
-                ))}
-              </div>
+              <Collapsible open={legendaTipologiasOpen} onOpenChange={setLegendaTipologiasOpen} className="mb-6">
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+                  Tipologias ({tipologias.length})
+                  <ChevronDown className={cn('h-4 w-4 transition-transform', legendaTipologiasOpen && 'rotate-180')} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="flex flex-wrap gap-4 pt-3">
+                  {tipologias.map((tip) => (
+                    <div key={tip.id} className="flex items-center gap-1.5">
+                      <div className={cn('w-2.5 h-2.5 rounded-full', tipologiaColorMap.get(tip.id))} />
+                      <span className="text-sm">{tip.nome}</span>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
             )}
 
             {unidades && unidades.length > 0 ? (
@@ -593,14 +622,14 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                   const isPredioOuComercial = empreendimento?.tipo === 'predio' || empreendimento?.tipo === 'comercial';
 
                   // Sub-agrupar por andar para prédios/comerciais
-                  // Cores pastel para cards (local, sem alterar o type global)
+                  // Tinta leve + contorno fino na cor do status (mesmas cores da legenda/UNIDADE_STATUS_COLORS)
                   const CARD_STATUS_COLORS: Record<string, string> = {
-                    disponivel: 'bg-emerald-100',
-                    reservada: 'bg-yellow-100',
-                    negociacao: 'bg-blue-100',
-                    contrato: 'bg-purple-100',
-                    vendida: 'bg-red-100',
-                    bloqueada: 'bg-gray-200',
+                    disponivel: 'bg-emerald-500/10 border border-emerald-500/30',
+                    reservada: 'bg-yellow-500/10 border border-yellow-500/30',
+                    negociacao: 'bg-blue-500/10 border border-blue-500/30',
+                    contrato: 'bg-purple-500/10 border border-purple-500/30',
+                    vendida: 'bg-red-500/10 border border-red-500/30',
+                    bloqueada: 'bg-gray-500/10 border border-gray-500/30',
                   };
 
                   const renderUnidadeButton = (unidade: Unidade) => {
@@ -637,10 +666,10 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                         title={`${label} - ${UNIDADE_STATUS_LABELS[unidade.status]}${tipologiaNome ? ` | ${tipologiaNome}` : ''}${areaPrivativa ? ` | ${areaPrivativa}m²` : ''}`}
                         disabled={selectionMode === 'venda' && !isDisponivel}
                       >
-                        <span className="text-xs font-semibold leading-tight">{label}</span>
                         {unidade.tipologia_id && tipologiaColorMap.has(unidade.tipologia_id) && (
-                          <div className={cn('h-[2px] w-full rounded-full mt-1', tipologiaColorMap.get(unidade.tipologia_id))} />
+                          <div className={cn('absolute top-1.5 right-1.5 w-2 h-2 rounded-full', tipologiaColorMap.get(unidade.tipologia_id))} />
                         )}
+                        <span className="text-xs font-semibold leading-tight">{label}</span>
                         {tipologiaNome && (
                           <span className="text-[10px] leading-tight text-slate-600 mt-0.5 truncate max-w-full">{tipologiaNome}</span>
                         )}
@@ -663,7 +692,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                             andares.get(andar)!.push(u);
                           });
                           const sortedAndares = Array.from(andares.entries()).sort((a, b) => a[0] - b[0]);
-                          
+
                           return (
                             <div className="space-y-4 ml-4">
                               {sortedAndares.map(([andar, units]) => (

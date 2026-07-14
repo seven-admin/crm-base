@@ -8,7 +8,7 @@ export function TopEmpreendimentosTable() {
   const { data: rows = [], isLoading } = useTopEmpreendimentosReal();
 
   return (
-    <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border/60 shadow-card overflow-hidden">
       <div className="px-6 py-5 border-b border-border">
         <h2 className="text-base font-semibold text-foreground">Top empreendimentos</h2>
         <p className="text-xs text-muted-foreground mt-0.5">Ordenado por VGV em negociação</p>

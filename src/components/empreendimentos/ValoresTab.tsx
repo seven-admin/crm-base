@@ -7,10 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useUnidades, useUpdateUnidadesBulk } from '@/hooks/useUnidades';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useTipologias } from '@/hooks/useTipologias';
-import { Save, RotateCcw, Percent, Ruler, Copy } from 'lucide-react';
+import { Save, RotateCcw, Percent, Ruler, Copy, ChevronDown, SlidersHorizontal, Wand2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface ValoresTabProps {
@@ -43,6 +45,8 @@ export function ValoresTab({ empreendimentoId }: ValoresTabProps) {
   const [filtroTipologia, setFiltroTipologia] = useState<string>('all');
   const [filtroStatus, setFiltroStatus] = useState<string>('all');
   const [busca, setBusca] = useState('');
+  const [filtrosOpen, setFiltrosOpen] = useState(false);
+  const [acoesOpen, setAcoesOpen] = useState(false);
 
   // Ações em massa
   const [percentual, setPercentual] = useState('');
@@ -63,6 +67,12 @@ export function ValoresTab({ empreendimentoId }: ValoresTabProps) {
       return true;
     });
   }, [unidades, filtroBloco, filtroTipologia, filtroStatus, busca]);
+
+  const filtrosAtivos =
+    (filtroBloco !== 'all' ? 1 : 0) +
+    (filtroTipologia !== 'all' ? 1 : 0) +
+    (filtroStatus !== 'all' ? 1 : 0) +
+    (busca ? 1 : 0);
 
   const alteracoesPendentes = useMemo(() => {
     return Object.entries(novosValores).filter(([id, v]) => {
@@ -162,91 +172,119 @@ export function ValoresTab({ empreendimentoId }: ValoresTabProps) {
     <div className="space-y-4">
       {/* Filtros */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div>
-            <Label className="text-xs">Bloco</Label>
-            <Select value={filtroBloco} onValueChange={setFiltroBloco}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {blocos?.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Tipologia</Label>
-            <Select value={filtroTipologia} onValueChange={setFiltroTipologia}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {tipologias?.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Status</Label>
-            <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Buscar por número</Label>
-            <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: 101" />
-          </div>
-        </CardContent>
+        <Collapsible open={filtrosOpen} onOpenChange={setFiltrosOpen}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="pb-3 cursor-pointer select-none">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                  Filtros
+                  {filtrosAtivos > 0 && (
+                    <Badge variant="secondary">{filtrosAtivos} ativo{filtrosAtivos > 1 ? 's' : ''}</Badge>
+                  )}
+                </span>
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', filtrosOpen && 'rotate-180')} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <Label className="text-xs">Bloco</Label>
+                <Select value={filtroBloco} onValueChange={setFiltroBloco}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {blocos?.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Tipologia</Label>
+                <Select value={filtroTipologia} onValueChange={setFiltroTipologia}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {tipologias?.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Buscar por número</Label>
+                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: 101" />
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       {/* Ações em massa */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Ações em massa (aplica às linhas filtradas)</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Label className="text-xs">Reajuste percentual (%)</Label>
-              <Input
-                value={percentual}
-                onChange={(e) => setPercentual(e.target.value)}
-                placeholder="Ex.: 5 ou -3,5"
-              />
-            </div>
-            <Button variant="outline" onClick={aplicarPercentual} className="gap-1">
-              <Percent className="h-4 w-4" />Aplicar
-            </Button>
-          </div>
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Label className="text-xs">Valor por m² (R$)</Label>
-              <Input
-                value={valorM2}
-                onChange={(e) => setValorM2(e.target.value)}
-                placeholder="Ex.: 12000"
-              />
-            </div>
-            <Button variant="outline" onClick={aplicarValorM2} className="gap-1">
-              <Ruler className="h-4 w-4" />Aplicar
-            </Button>
-          </div>
-          <div className="flex items-end">
-            <Button variant="outline" onClick={copiarValorBaseTipologia} className="gap-1 w-full">
-              <Copy className="h-4 w-4" />Copiar valor base da tipologia
-            </Button>
-          </div>
-        </CardContent>
+        <Collapsible open={acoesOpen} onOpenChange={setAcoesOpen}>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="pb-3 cursor-pointer select-none">
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Wand2 className="h-4 w-4 text-muted-foreground" />
+                  Ações em massa
+                  <span className="text-xs font-normal text-muted-foreground">(aplica às linhas filtradas)</span>
+                </span>
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', acoesOpen && 'rotate-180')} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs">Reajuste percentual (%)</Label>
+                  <Input
+                    value={percentual}
+                    onChange={(e) => setPercentual(e.target.value)}
+                    placeholder="Ex.: 5 ou -3,5"
+                  />
+                </div>
+                <Button variant="outline" onClick={aplicarPercentual} className="gap-1">
+                  <Percent className="h-4 w-4" />Aplicar
+                </Button>
+              </div>
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs">Valor por m² (R$)</Label>
+                  <Input
+                    value={valorM2}
+                    onChange={(e) => setValorM2(e.target.value)}
+                    placeholder="Ex.: 12000"
+                  />
+                </div>
+                <Button variant="outline" onClick={aplicarValorM2} className="gap-1">
+                  <Ruler className="h-4 w-4" />Aplicar
+                </Button>
+              </div>
+              <div className="flex items-end">
+                <Button variant="outline" onClick={copiarValorBaseTipologia} className="gap-1 w-full">
+                  <Copy className="h-4 w-4" />Copiar valor base da tipologia
+                </Button>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       {/* Tabela */}
