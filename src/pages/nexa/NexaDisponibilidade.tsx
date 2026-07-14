@@ -165,6 +165,7 @@ export default function NexaDisponibilidade() {
                   <TableHead>Unidade</TableHead>
                   <TableHead>Tipologia</TableHead>
                   <TableHead>Área</TableHead>
+                  <TableHead>Box(es)</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead className="w-[180px]">Status</TableHead>
                 </TableRow>
@@ -177,6 +178,7 @@ export default function NexaDisponibilidade() {
                     <TableCell className="font-medium">{u.unidade}</TableCell>
                     <TableCell>{u.tipologia || '—'}</TableCell>
                     <TableCell>{u.area_privativa ? `${u.area_privativa} m²` : '—'}</TableCell>
+                    <TableCell>{boxesPorUnidade[u.unidade_id]?.join(', ') || '—'}</TableCell>
                     <TableCell>{formatBRL(u.valor)}</TableCell>
                     <TableCell>
                       {canEdit ? (
