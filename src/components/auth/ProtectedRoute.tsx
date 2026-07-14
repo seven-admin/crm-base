@@ -77,9 +77,16 @@ export function ProtectedRoute({
   }
 
   // Restrição por empresa (ortogonal ao role). Admins Seven passam.
+  // Se o usuário tiver permissão explícita no módulo alvo, deixamos passar
+  // (permite Super Admin conceder acesso cruzado entre Seven/Arqo/Nexa).
   const path = location.pathname;
   const isSelfPath = path === '/meu-perfil' || path === '/sem-acesso';
-  if (!isSelfPath && !isAdmin()) {
+  const hasExplicitModuleAccess = moduleName
+    ? canAccessModule(moduleName, requiredAction) ||
+      (alternativeModules?.some((m) => canAccessModule(m, requiredAction)) ?? false)
+    : false;
+
+  if (!isSelfPath && !isAdmin() && !hasExplicitModuleAccess) {
     if (empresa === 'externo') {
       return <Navigate to="/sem-acesso" replace />;
     }

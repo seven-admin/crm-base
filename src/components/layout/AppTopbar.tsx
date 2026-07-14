@@ -113,7 +113,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
   const { canAccessModule, isAdmin } = usePermissions();
-  const { canAccessGroup, isExterno, empresa } = useEmpresaAccess();
+  const { isExterno, empresa } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
     ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
     : empresa === 'nexa'
@@ -131,21 +131,21 @@ export function AppTopbar() {
     });
 
 
+  // Visibilidade baseada em permissões efetivas (canAccessModule).
+  // O vínculo de empresa (empresa) define apenas o default de permissões via role,
+  // mas permissões customizadas em outros grupos passam a exibir o menu correspondente.
   const visibleGroups = menuGroups
     .map((g) => ({ ...g, items: filterItems(g.items) }))
     .filter((g) => g.items.length > 0)
     .filter((g) => {
-      if (g.label === 'Arqo') return canAccessGroup('arqo');
-      if (g.label === 'Nexa') return canAccessGroup('nexa');
-      if (g.label === 'Sistema') return canAccessGroup('sistema') && !isExterno;
+      // "Sistema" continua bloqueado para vínculos externos (sem sistema algum).
+      if (g.label === 'Sistema') return !isExterno;
       return true;
     });
 
-  const sevenVisible: SevenMenuCategory[] = canAccessGroup('seven')
-    ? sevenCategories
-        .map((c) => ({ ...c, items: filterItems(c.items) }))
-        .filter((c) => c.items.length > 0)
-    : [];
+  const sevenVisible: SevenMenuCategory[] = sevenCategories
+    .map((c) => ({ ...c, items: filterItems(c.items) }))
+    .filter((c) => c.items.length > 0);
   const sevenHasActive = sevenVisible.some((c) =>
     c.items.some((i) => isPathActive(i, location.pathname, location.search)),
   );
