@@ -507,110 +507,153 @@ export function RolesManager() {
                   </p>
                 </div>
 
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[200px]">Módulo</TableHead>
-                        <TableHead className="text-center w-20">Ver</TableHead>
-                        <TableHead className="text-center w-20">Criar</TableHead>
-                        <TableHead className="text-center w-20">Editar</TableHead>
-                        <TableHead className="text-center w-20">Excluir</TableHead>
-                        <TableHead className="w-[180px]">Escopo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredModules.map(module => {
-                      const perm = localPermissions[module.id] || {
-                        can_view: false,
-                        can_create: false,
-                        can_edit: false,
-                        can_delete: false,
-                        scope: 'proprio',
-                      };
-
-                      return (
-                        <TableRow key={module.id}>
-                          <TableCell className="font-medium text-sm">
+                <Accordion
+                  type="multiple"
+                  value={expandedCategories}
+                  onValueChange={setExpandedCategories}
+                  className="space-y-2"
+                >
+                  {sortedCategories.map((category) => {
+                    const categoryModules = groupedModules[category] || [];
+                    return (
+                      <AccordionItem
+                        key={category}
+                        value={category}
+                        className="border rounded-lg px-3"
+                      >
+                        <AccordionTrigger className="hover:no-underline py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium">{CATEGORY_LABELS[category] || category}</span>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
-                                  {module.display_name}
-                                </span>
+                                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                               </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-xs">
-                                <p className="text-sm">{(module as any).description || 'Módulo do sistema'}</p>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-sm">{CATEGORY_DESCRIPTIONS[category] || 'Módulos do sistema'}</p>
                               </TooltipContent>
                             </Tooltip>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={perm.can_view}
-                              onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_view', !!checked)}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={perm.can_create}
-                              onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_create', !!checked)}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={perm.can_edit}
-                              onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_edit', !!checked)}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={perm.can_delete}
-                              onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_delete', !!checked)}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={perm.scope}
-                              onValueChange={(value) => handlePermissionChange(module.id, 'scope', value)}
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                {(() => {
-                                  const selectedScope = SCOPE_OPTIONS.find(s => s.value === perm.scope);
-                                  if (selectedScope) {
-                                    const Icon = selectedScope.icon;
-                                    return (
-                                      <span className="flex items-center gap-1.5">
-                                        <Icon className="h-3.5 w-3.5" />
-                                        {selectedScope.shortLabel}
-                                      </span>
-                                    );
-                                  }
-                                  return <SelectValue />;
-                                })()}
-                              </SelectTrigger>
-                              <SelectContent className="w-80">
-                                {SCOPE_OPTIONS.map(opt => {
-                                  const Icon = opt.icon;
+                            <Badge variant="outline" className="text-xs">
+                              {categoryModules.length} módulo{categoryModules.length !== 1 ? 's' : ''}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="border rounded-lg overflow-hidden mb-2">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-[200px]">Módulo</TableHead>
+                                  <TableHead className="text-center w-20">Ver</TableHead>
+                                  <TableHead className="text-center w-20">Criar</TableHead>
+                                  <TableHead className="text-center w-20">Editar</TableHead>
+                                  <TableHead className="text-center w-20">Excluir</TableHead>
+                                  <TableHead className="w-[180px]">Escopo</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {categoryModules.map(module => {
+                                  const perm = localPermissions[module.id] || {
+                                    can_view: false,
+                                    can_create: false,
+                                    can_edit: false,
+                                    can_delete: false,
+                                    scope: 'proprio',
+                                  };
+
                                   return (
-                                    <SelectItem key={opt.value} value={opt.value} className="py-2">
-                                      <div className="flex items-start gap-2">
-                                        <Icon className={`h-4 w-4 mt-0.5 shrink-0`} />
-                                        <div className="min-w-0">
-                                          <p className="font-medium text-sm">{opt.label}</p>
-                                          <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
-                                        </div>
-                                      </div>
-                                    </SelectItem>
+                                    <TableRow key={module.id}>
+                                      <TableCell className="font-medium text-sm">
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+                                              {module.display_name}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right" className="max-w-xs">
+                                            <p className="text-sm">{(module as any).description || 'Módulo do sistema'}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Checkbox
+                                          checked={perm.can_view}
+                                          onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_view', !!checked)}
+                                        />
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Checkbox
+                                          checked={perm.can_create}
+                                          onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_create', !!checked)}
+                                        />
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Checkbox
+                                          checked={perm.can_edit}
+                                          onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_edit', !!checked)}
+                                        />
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Checkbox
+                                          checked={perm.can_delete}
+                                          onCheckedChange={(checked) => handlePermissionChange(module.id, 'can_delete', !!checked)}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Select
+                                          value={perm.scope}
+                                          onValueChange={(value) => handlePermissionChange(module.id, 'scope', value)}
+                                        >
+                                          <SelectTrigger className="h-8 text-xs">
+                                            {(() => {
+                                              const selectedScope = SCOPE_OPTIONS.find(s => s.value === perm.scope);
+                                              if (selectedScope) {
+                                                const Icon = selectedScope.icon;
+                                                return (
+                                                  <span className="flex items-center gap-1.5">
+                                                    <Icon className="h-3.5 w-3.5" />
+                                                    {selectedScope.shortLabel}
+                                                  </span>
+                                                );
+                                              }
+                                              return <SelectValue />;
+                                            })()}
+                                          </SelectTrigger>
+                                          <SelectContent className="w-80">
+                                            {SCOPE_OPTIONS.map(opt => {
+                                              const Icon = opt.icon;
+                                              return (
+                                                <SelectItem key={opt.value} value={opt.value} className="py-2">
+                                                  <div className="flex items-start gap-2">
+                                                    <Icon className={`h-4 w-4 mt-0.5 shrink-0`} />
+                                                    <div className="min-w-0">
+                                                      <p className="font-medium text-sm">{opt.label}</p>
+                                                      <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                                                    </div>
+                                                  </div>
+                                                </SelectItem>
+                                              );
+                                            })}
+                                          </SelectContent>
+                                        </Select>
+                                      </TableCell>
+                                    </TableRow>
                                   );
                                 })}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    </TableBody>
-                  </Table>
-                </div>
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+
+                {sortedCategories.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Nenhum módulo encontrado
+                  </div>
+                )}
+
               </div>
               </TooltipProvider>
             )}
