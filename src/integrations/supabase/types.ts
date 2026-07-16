@@ -448,6 +448,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_etapa_id_fkey"
             columns: ["etapa_id"]
             isOneToOne: false
@@ -480,6 +487,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "vw_unidades_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -743,6 +757,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "nexa_contrato_templates_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       nexa_contrato_variaveis: {
@@ -871,6 +892,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "nexa_contratos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "nexa_contratos_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
@@ -882,6 +910,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_contratos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "vw_unidades_publico"
             referencedColumns: ["id"]
           },
           {
@@ -989,6 +1024,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "nexa_visitas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "nexa_visitas_imobiliaria_parceira_id_fkey"
             columns: ["imobiliaria_parceira_id"]
             isOneToOne: false
@@ -1031,6 +1073,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nexa_visitas_eventos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "vw_unidades_publico"
             referencedColumns: ["id"]
           },
           {
@@ -1202,6 +1251,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "blocos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seven_boxes: {
@@ -1266,10 +1322,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "boxes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "boxes_unidade_id_fkey"
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boxes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "vw_unidades_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -1306,6 +1376,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centro_custo_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -1626,6 +1703,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clientes_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "clientes_gestor_id_fkey"
             columns: ["gestor_id"]
             isOneToOne: false
@@ -1702,6 +1786,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: true
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuracao_comercial_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -1818,6 +1909,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_corretores_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seven_empreendimento_documentos: {
@@ -1866,6 +1964,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "empreendimento_documentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seven_empreendimento_imobiliarias: {
@@ -1906,6 +2011,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_imobiliarias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
           {
@@ -1954,6 +2066,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimento_midias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -2073,6 +2192,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "vw_incorporadoras_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "empreendimentos_responsavel_comercial_id_fkey"
             columns: ["responsavel_comercial_id"]
             isOneToOne: false
@@ -2118,6 +2244,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fachadas_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -2401,6 +2534,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lancamentos_financeiros_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lancamentos_financeiros_recorrencia_pai_id_fkey"
             columns: ["recorrencia_pai_id"]
             isOneToOne: false
@@ -2443,6 +2583,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: true
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_empreendimento_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: true
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -2589,6 +2736,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tipologias_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seven_unidade_historico_precos: {
@@ -2631,6 +2785,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "seven_unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidade_historico_precos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "vw_unidades_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -2709,6 +2870,13 @@ export type Database = {
             columns: ["empreendimento_id"]
             isOneToOne: false
             referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
             referencedColumns: ["id"]
           },
           {
@@ -2987,6 +3155,13 @@ export type Database = {
             referencedRelation: "seven_empreendimentos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_empreendimentos_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sistema_user_module_permissions: {
@@ -3126,6 +3301,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arqo_leads_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arqo_leads_etapa_id_fkey"
             columns: ["etapa_id"]
             isOneToOne: false
@@ -3144,6 +3326,124 @@ export type Database = {
             columns: ["temperatura_id"]
             isOneToOne: false
             referencedRelation: "arqo_temperaturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_empreendimentos_publico: {
+        Row: {
+          id: string | null
+          incorporadora_id: string | null
+          nome: string | null
+        }
+        Insert: {
+          id?: string | null
+          incorporadora_id?: string | null
+          nome?: string | null
+        }
+        Update: {
+          id?: string | null
+          incorporadora_id?: string | null
+          nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "seven_incorporadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empreendimentos_incorporadora_id_fkey"
+            columns: ["incorporadora_id"]
+            isOneToOne: false
+            referencedRelation: "vw_incorporadoras_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_incorporadoras_publico: {
+        Row: {
+          id: string | null
+          nome: string | null
+        }
+        Insert: {
+          id?: string | null
+          nome?: string | null
+        }
+        Update: {
+          id?: string | null
+          nome?: string | null
+        }
+        Relationships: []
+      }
+      vw_unidades_publico: {
+        Row: {
+          andar: number | null
+          area_privativa: number | null
+          banheiros: number | null
+          bloco_id: string | null
+          bloco_nome: string | null
+          created_at: string | null
+          data_venda: string | null
+          descricao: string | null
+          empreendimento_id: string | null
+          fachada_descricao: string | null
+          fachada_id: string | null
+          fachada_nome: string | null
+          id: string | null
+          is_active: boolean | null
+          numero: string | null
+          observacoes: string | null
+          polygon_coords: Json | null
+          posicao: string | null
+          quartos: number | null
+          status: Database["public"]["Enums"]["unidade_status"] | null
+          suites: number | null
+          tipologia_categoria:
+            | Database["public"]["Enums"]["tipologia_categoria"]
+            | null
+          tipologia_id: string | null
+          tipologia_nome: string | null
+          updated_at: string | null
+          vagas: number | null
+          valor: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidades_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "seven_blocos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "seven_empreendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_empreendimento_id_fkey"
+            columns: ["empreendimento_id"]
+            isOneToOne: false
+            referencedRelation: "vw_empreendimentos_publico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_fachada_id_fkey"
+            columns: ["fachada_id"]
+            isOneToOne: false
+            referencedRelation: "seven_fachadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidades_tipologia_id_fkey"
+            columns: ["tipologia_id"]
+            isOneToOne: false
+            referencedRelation: "seven_tipologias"
             referencedColumns: ["id"]
           },
         ]
@@ -3310,6 +3610,14 @@ export type Database = {
       is_seven_team: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       nexa_delete_visita: { Args: { p_id: string }; Returns: undefined }
+      reservar_unidade: {
+        Args: { p_unidade_id: string }
+        Returns: {
+          id: string
+          numero: string
+          status: string
+        }[]
+      }
       user_has_empreendimento_access: {
         Args: { _empreendimento_id: string; _user_id: string }
         Returns: boolean
