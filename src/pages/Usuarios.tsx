@@ -251,8 +251,13 @@ export default function Usuarios() {
 
     setIsSaving(true);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.access_token) {
+        toast.error('Sua sessão expirou. Faça login novamente para criar usuários.');
+        setIsSaving(false);
+        return;
+      }
+
       const response = await supabase.functions.invoke('create-user', {
         body: {
           email: createEmail,
@@ -264,12 +269,19 @@ export default function Usuarios() {
           cargo: createTipoVinculo === 'funcionario_seven' ? createCargo || null : null,
           base_role_id: !selectedRoleHasPermissions && createBaseRoleId ? createBaseRoleId : null,
           empresa: createEmpresa,
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
       });
 
 
       if (response.error) {
-        throw new Error(response.error.message || 'Erro ao criar usuário');
+        const msg = String(response.error.message || '');
+        if (msg.includes('Auth session missing') || msg.includes('Unauthorized') || msg.toLowerCase().includes('401')) {
+          throw new Error('Sessão expirada. Faça login novamente.');
+        }
+        throw new Error(msg || 'Erro ao criar usuário');
       }
 
       if (response.data?.error) {
