@@ -3622,6 +3622,15 @@ export type Database = {
         Args: { _empreendimento_id: string; _user_id: string }
         Returns: boolean
       }
+      vender_unidade: {
+        Args: { p_unidade_id: string }
+        Returns: {
+          data_venda: string
+          id: string
+          numero: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role:
