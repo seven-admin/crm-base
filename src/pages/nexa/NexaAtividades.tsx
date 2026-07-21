@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AgendaVisitasTab } from '@/components/nexa/AgendaVisitasTab';
-import { WhatsAppAtividadesTab } from '@/components/nexa/WhatsAppAtividadesTab';
+import { WhatsAppAtividadesTab } from '@/components/shared/WhatsAppAtividadesTab';
 
 export default function NexaAtividades() {
   return (

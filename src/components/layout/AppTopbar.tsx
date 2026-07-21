@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
-  Home, Handshake, User as UserIcon, ExternalLink,
+  Home, Handshake, User as UserIcon, ExternalLink, MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -69,6 +69,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo_roleta' },
       { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo_leads' },
+      { icon: MessageSquare, label: 'Atividades', path: '/arqo/atividades', moduleName: 'arqo_atividades' },
       { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo_forecast' },
       { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo_admin' },
       { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo_config' },
