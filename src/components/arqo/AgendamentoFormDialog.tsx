@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useArqoLeads, useCreateArqoAgendamento, useUpdateArqoAgendamento } from '@/hooks/useArqo';
-import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { ArqoAgendamentoStatus, ArqoAgendamentoTipo, ArqoAgendamentoWithRelations } from '@/types/arqo.types';
 import { AGENDAMENTO_TIPO_LABELS, AGENDAMENTO_STATUS_LABELS } from '@/types/arqo.types';
@@ -24,10 +24,10 @@ function toLocalInput(iso: string) {
 }
 
 export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props) {
+  const { user } = useAuth();
   const create = useCreateArqoAgendamento();
   const update = useUpdateArqoAgendamento();
   const { data: leads } = useArqoLeads();
-  const { data: responsaveis } = useProfilesByRoles(['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer']);
   const isEdit = !!agendamento;
 
   const [leadId, setLeadId] = useState('');
@@ -35,7 +35,6 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
   const [dataHora, setDataHora] = useState('');
   const [duracaoMin, setDuracaoMin] = useState(30);
   const [local, setLocal] = useState('');
-  const [responsavelId, setResponsavelId] = useState('');
   const [obs, setObs] = useState('');
   const [status, setStatus] = useState<ArqoAgendamentoStatus>('agendado');
   const [saving, setSaving] = useState(false);
@@ -48,12 +47,11 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
       setDataHora(toLocalInput(agendamento.data_hora));
       setDuracaoMin(agendamento.duracao_min);
       setLocal(agendamento.local || '');
-      setResponsavelId(agendamento.responsavel_id || '');
       setObs(agendamento.observacoes || '');
       setStatus(agendamento.status);
     } else {
       setLeadId(''); setTipo('visita'); setDataHora(''); setDuracaoMin(30);
-      setLocal(''); setResponsavelId(''); setObs(''); setStatus('agendado');
+      setLocal(''); setObs(''); setStatus('agendado');
     }
   }, [open, agendamento]);
 
@@ -72,7 +70,6 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
             data_hora: new Date(dataHora).toISOString(),
             duracao_min: duracaoMin,
             local: local || null,
-            responsavel_id: responsavelId || null,
             observacoes: obs || null,
             status,
           },
@@ -84,7 +81,7 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
           data_hora: new Date(dataHora).toISOString(),
           duracao_min: duracaoMin,
           local: local || null,
-          responsavel_id: responsavelId || null,
+          responsavel_id: user?.id ?? null,
           observacoes: obs || null,
         });
       }
@@ -130,33 +127,6 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Responsável</Label>
-              <Select value={responsavelId} onValueChange={setResponsavelId}>
-                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                <SelectContent>
-                  {responsaveis?.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Data e hora *</Label>
-              <Input type="datetime-local" value={dataHora} onChange={(e) => setDataHora(e.target.value)} />
-            </div>
-            <div>
-              <Label>Duração (min)</Label>
-              <Input type="number" min={5} step={5} value={duracaoMin} onChange={(e) => setDuracaoMin(Number(e.target.value))} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Local (opcional)</Label>
-              <Input value={local} onChange={(e) => setLocal(e.target.value)} />
-            </div>
             {isEdit && (
               <div>
                 <Label>Status</Label>
@@ -170,6 +140,22 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
                 </Select>
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Data e hora *</Label>
+              <Input type="datetime-local" value={dataHora} onChange={(e) => setDataHora(e.target.value)} />
+            </div>
+            <div>
+              <Label>Duração (min)</Label>
+              <Input type="number" min={5} step={5} value={duracaoMin} onChange={(e) => setDuracaoMin(Number(e.target.value))} />
+            </div>
+          </div>
+
+          <div>
+            <Label>Local (opcional)</Label>
+            <Input value={local} onChange={(e) => setLocal(e.target.value)} />
           </div>
 
           <div>
