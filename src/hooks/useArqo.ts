@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import type {
   ArqoLead, ArqoLeadWithRelations, ArqoFunilEtapa, ArqoTemperatura,
   ArqoLeadSource, ArqoGrupo, ArqoGrupoMembro, ArqoSlaRegra, ArqoReguaReengajamento,
+  ArqoAgendamento, ArqoAgendamentoWithRelations, ArqoAgendamentoStatus,
 } from '@/types/arqo.types';
 
 // ============ Config queries ============
@@ -337,5 +338,75 @@ export function useArqoLead(id?: string) {
       if (error) throw error;
       return data as unknown as ArqoLeadWithRelations;
     },
+  });
+}
+
+// ============ Agenda de Atendimentos ============
+const SELECT_AGENDAMENTO = `
+  *,
+  lead:lead_id (
+    id,
+    cliente:cliente_id (id, nome, telefone, email),
+    empreendimento:empreendimento_id (id, nome)
+  ),
+  responsavel:responsavel_id (id, full_name)
+`;
+
+export function useArqoAgendamentos(filters?: { status?: ArqoAgendamentoStatus }) {
+  return useQuery({
+    queryKey: ['arqo', 'agendamentos', filters],
+    queryFn: async () => {
+      let q = supabase.from('arqo_agendamentos').select(SELECT_AGENDAMENTO).order('data_hora', { ascending: false });
+      if (filters?.status) q = q.eq('status', filters.status);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoAgendamentoWithRelations[];
+    },
+  });
+}
+
+export function useCreateArqoAgendamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: Partial<ArqoAgendamento> & { lead_id: string; tipo: ArqoAgendamento['tipo']; data_hora: string }) => {
+      const { data, error } = await supabase.from('arqo_agendamentos').insert(payload as any).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
+      toast.success('Atendimento agendado');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao agendar'),
+  });
+}
+
+export function useUpdateArqoAgendamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<ArqoAgendamento> }) => {
+      const { error } = await supabase.from('arqo_agendamentos').update(patch as any).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
+      toast.success('Agendamento atualizado');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar agendamento'),
+  });
+}
+
+export function useDeleteArqoAgendamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('arqo_agendamentos').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
+      toast.success('Agendamento excluído');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir agendamento'),
   });
 }

@@ -51,3 +51,53 @@ export interface ArqoLeadWithRelations extends ArqoLead {
   consultor?: { id: string; full_name: string; email: string } | null;
   empreendimento?: { id: string; nome: string } | null;
 }
+
+export type ArqoAgendamentoTipo = 'visita' | 'reuniao' | 'ligacao' | 'outro';
+export type ArqoAgendamentoStatus = 'agendado' | 'confirmado' | 'realizado' | 'cancelado' | 'no_show';
+
+export interface ArqoAgendamento {
+  id: string;
+  lead_id: string;
+  tipo: ArqoAgendamentoTipo;
+  data_hora: string;
+  duracao_min: number;
+  local: string | null;
+  observacoes: string | null;
+  status: ArqoAgendamentoStatus;
+  google_event_id: string | null;
+  responsavel_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArqoAgendamentoWithRelations extends ArqoAgendamento {
+  lead?: {
+    id: string;
+    cliente?: { id: string; nome: string; telefone: string | null; email: string | null } | null;
+    empreendimento?: { id: string; nome: string } | null;
+  } | null;
+  responsavel?: { id: string; full_name: string } | null;
+}
+
+export const AGENDAMENTO_TIPO_LABELS: Record<ArqoAgendamentoTipo, string> = {
+  visita: 'Visita',
+  reuniao: 'Reunião',
+  ligacao: 'Ligação',
+  outro: 'Outro',
+};
+
+export const AGENDAMENTO_STATUS_LABELS: Record<ArqoAgendamentoStatus, string> = {
+  agendado: 'Agendado',
+  confirmado: 'Confirmado',
+  realizado: 'Realizado',
+  cancelado: 'Cancelado',
+  no_show: 'No-show',
+};
+
+export const AGENDAMENTO_STATUS_COLORS: Record<ArqoAgendamentoStatus, string> = {
+  agendado: 'bg-blue-100 text-blue-800',
+  confirmado: 'bg-purple-100 text-purple-800',
+  realizado: 'bg-green-100 text-green-800',
+  cancelado: 'bg-red-100 text-red-800',
+  no_show: 'bg-yellow-100 text-yellow-800',
+};
