@@ -153,9 +153,9 @@ export function useTransicionarEtapa() {
 export function useAtribuirRoleta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ grupoId, leadId, tipo = 'roleta' }: { grupoId: string; leadId: string; tipo?: string }) => {
+    mutationFn: async ({ grupoId, leadId, tipo = 'roleta' }: { grupoId: string; leadId?: string | null; tipo?: string }) => {
       const { data, error } = await supabase.rpc('arqo_atribuir_lead_roleta', {
-        p_grupo_id: grupoId, p_lead_id: leadId, p_tipo_atribuicao: tipo,
+        p_grupo_id: grupoId, p_lead_id: leadId ?? null, p_tipo_atribuicao: tipo,
       });
       if (error) throw error;
       return data as string;
