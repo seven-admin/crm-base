@@ -15,7 +15,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { exportUnidadesDisponiveisPdf } from '@/lib/exportUnidadesDisponiveisPdf';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+import type { UnidadeStatus } from '@/types/empreendimentos.types';
 
+type NexaUnidadeDisponivel = Database['public']['Functions']['get_unidades_disponiveis']['Returns'][number];
 
 const formatBRL = (v: number | null) =>
   v == null ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -61,7 +64,7 @@ export default function NexaDisponibilidade() {
     },
   });
 
-  const boxesPorUnidade = (boxesVinculados ?? []).reduce<Record<string, string[]>>((acc, b: any) => {
+  const boxesPorUnidade = (boxesVinculados ?? []).reduce<Record<string, string[]>>((acc, b) => {
     if (!b.unidade_id) return acc;
     (acc[b.unidade_id] ||= []).push(String(b.numero));
     return acc;
@@ -84,7 +87,7 @@ export default function NexaDisponibilidade() {
 
       const { data: unis, error: uniErr } = await supabase
         .from('seven_unidades')
-        .select('id, numero, andar, area_privativa, valor, bloco:seven_blocos(nome), tipologia:seven_tipologias(nome)')
+        .select('id, numero, andar, area_privativa, valor, status, bloco:seven_blocos(nome), tipologia:seven_tipologias(nome)')
         .eq('empreendimento_id', empId)
         .eq('status', 'disponivel')
         .eq('is_active', true);
@@ -94,22 +97,25 @@ export default function NexaDisponibilidade() {
       await exportUnidadesDisponiveisPdf({
         empreendimento: {
           nome: emp.nome,
-          texto_rodape_relatorio: (emp as any).texto_rodape_relatorio ?? null,
+          texto_rodape_relatorio: emp.texto_rodape_relatorio ?? null,
         },
-        unidades: (unis ?? []).map((u: any) => ({
+        unidades: (unis ?? []).map((u) => ({
           id: u.id,
           numero: u.numero,
           andar: u.andar,
           area_privativa: u.area_privativa,
           valor: u.valor,
+          status: u.status as UnidadeStatus,
           bloco: u.bloco ? { nome: u.bloco.nome } : null,
           tipologia: u.tipologia ? { nome: u.tipologia.nome } : null,
         })),
         isLoteamento,
+        marca: 'nexa',
+        escopo: 'disponiveis',
       });
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || 'Erro ao exportar PDF.');
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao exportar PDF.');
     } finally {
       setIsExporting(false);
     }
@@ -171,7 +177,7 @@ export default function NexaDisponibilidade() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {unidades.map((u: any) => (
+                {(unidades as NexaUnidadeDisponivel[]).map((u) => (
                   <TableRow key={u.unidade_id}>
                     <TableCell>{u.bloco || '—'}</TableCell>
                     <TableCell>{u.andar ?? '—'}</TableCell>

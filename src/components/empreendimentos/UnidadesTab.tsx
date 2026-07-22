@@ -42,7 +42,7 @@ import { buildUnitLabel, type LabelFormatElement } from '@/lib/mapaUtils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { exportUnidadesDisponiveisPdf } from '@/lib/exportUnidadesDisponiveisPdf';
+import { exportUnidadesPdf, type ExportUnidadesEscopo } from '@/lib/exportUnidadesDisponiveisPdf';
 
 
 const TIPOLOGIA_COLORS = [
@@ -69,6 +69,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const [vendaHistoricaOpen, setVendaHistoricaOpen] = useState(false);
   const [statusLoteOpen, setStatusLoteOpen] = useState(false);
   const [tipologiaLoteOpen, setTipologiaLoteOpen] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [selectedUnidade, setSelectedUnidade] = useState<Unidade | null>(null);
   const [legendaTipologiasOpen, setLegendaTipologiasOpen] = useState(false);
   
@@ -195,25 +196,35 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     handleExitSelectionMode();
   };
 
-  const handleExportarDisponiveis = async () => {
+  const handleExportarPdf = async (escopo: ExportUnidadesEscopo) => {
     if (!unidades || !empreendimento) return;
-    const disponiveis = unidades.filter((u) => u.status === 'disponivel');
-    await exportUnidadesDisponiveisPdf({
-      empreendimento: {
-        nome: empreendimento.nome,
-        texto_rodape_relatorio: (empreendimento as any).texto_rodape_relatorio ?? null,
-      },
-      unidades: disponiveis.map((u) => ({
-        id: u.id,
-        numero: u.numero,
-        andar: u.andar,
-        area_privativa: u.area_privativa,
-        valor: u.valor,
-        bloco: u.bloco ? { nome: u.bloco.nome } : null,
-        tipologia: u.tipologia ? { nome: u.tipologia.nome } : null,
-      })),
-      isLoteamento,
-    });
+    setIsExportingPdf(true);
+    try {
+      const unitsToExport = escopo === 'completo'
+        ? unidades
+        : unidades.filter((unit) => unit.status === 'disponivel');
+      await exportUnidadesPdf({
+        empreendimento: {
+          nome: empreendimento.nome,
+          texto_rodape_relatorio: empreendimento.texto_rodape_relatorio ?? null,
+        },
+        unidades: unitsToExport.map((unit) => ({
+          id: unit.id,
+          numero: unit.numero,
+          andar: unit.andar,
+          area_privativa: unit.area_privativa,
+          valor: unit.valor,
+          status: unit.status,
+          bloco: unit.bloco ? { nome: unit.bloco.nome } : null,
+          tipologia: unit.tipologia ? { nome: unit.tipologia.nome } : null,
+        })),
+        isLoteamento,
+        escopo,
+        marca: 'seven',
+      });
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
 
@@ -338,10 +349,15 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={handleExportarDisponiveis}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exportar Disponíveis (PDF)
+                    <DropdownMenuItem onClick={() => handleExportarPdf('completo')} disabled={isExportingPdf || !unidades?.length}>
+                      {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                      Exportar lista completa (PDF)
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportarPdf('disponiveis')} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Exportar disponíveis (PDF)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
                       <Upload className="h-4 w-4 mr-2" />
                       Importar Excel
