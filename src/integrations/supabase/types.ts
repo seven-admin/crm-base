@@ -3450,6 +3450,22 @@ export type Database = {
       }
     }
     Functions: {
+      arqo_criar_lead_manual: {
+        Args: {
+          p_cpf?: string
+          p_email?: string
+          p_empreendimento_id?: string
+          p_etapa_id: string
+          p_grupo_id?: string
+          p_nome: string
+          p_observacoes?: string
+          p_source_id?: string
+          p_telefone?: string
+          p_temperatura_id?: string
+          p_valor_estimado?: number
+        }
+        Returns: string
+      }
       arqo_atribuir_lead_roleta: {
         Args: {
           p_grupo_id: string

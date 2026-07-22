@@ -9,13 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Trash2, Search, X, Users } from 'lucide-react';
+import { Trash2, Search, X, Users, UserPlus } from 'lucide-react';
 import { useArqoLeadsAdmin, useDeleteArqoLeadsBulk, useAssignGrupoLeadsBulk } from '@/hooks/useArqoLeadsAdmin';
 import { useArqoEtapas, useArqoSources, useArqoGrupos } from '@/hooks/useArqo';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArqoNovoLeadDialog } from '@/components/arqo/ArqoNovoLeadDialog';
 
 export function ArqoGerenciarLeads() {
+  const { role } = useAuth();
+  const [newLeadOpen, setNewLeadOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [sourceId, setSourceId] = useState<string>('all');
   const [etapaId, setEtapaId] = useState<string>('all');
@@ -96,7 +100,15 @@ export function ArqoGerenciarLeads() {
   return (
     <div className="space-y-4">
       <Card className="p-4 sm:p-5">
-        <p className="mb-4 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Filtros e ações em lote</p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Filtros e ações em lote</p>
+          {role === 'super_admin' && (
+            <Button onClick={() => setNewLeadOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Novo lead
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
           <div className="lg:col-span-2">
             <Label className="text-xs">Busca (nome, telefone, email)</Label>
@@ -292,6 +304,10 @@ export function ArqoGerenciarLeads() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {role === 'super_admin' && (
+        <ArqoNovoLeadDialog open={newLeadOpen} onOpenChange={setNewLeadOpen} />
+      )}
     </div>
   );
 }
