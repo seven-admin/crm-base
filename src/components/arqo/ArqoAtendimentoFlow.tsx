@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useArqoAtendimentoOpcoes, useArqoTemperaturas, useConcluirArqoAtendimento } from '@/hooks/useArqo';
 import type { ArqoAtendimentoAcaoFinal, ArqoAtendimentoGrupo, ArqoFunilEtapa, ArqoLeadWithRelations } from '@/types/arqo.types';
 import { LeadIndicadoDialog } from '@/components/arqo/LeadIndicadoDialog';
+import { ArqoCallDialog } from '@/components/arqo/ArqoCallDialog';
 
 interface ArqoAtendimentoFlowProps {
   lead: ArqoLeadWithRelations;
@@ -207,9 +208,12 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{lead.cliente?.nome ?? 'Lead'}</h2>
           <p className="mt-1 text-sm text-white/50">{lead.cliente?.telefone ?? 'Telefone não informado'} · {lead.etapa?.nome ?? 'Sem etapa'}</p>
         </div>
-        <Button variant="outline" size="sm" className="border-white/15 bg-white/[.06] text-white hover:bg-white/[.12] hover:text-white" onClick={reset}>
-          <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar respostas
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ArqoCallDialog lead={lead} />
+          <Button variant="outline" size="sm" className="border-white/15 bg-white/[.06] text-white hover:bg-white/[.12] hover:text-white" onClick={reset}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar respostas
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden rounded-[1.75rem] border-black/[.07] bg-[#fffdfa] shadow-none">

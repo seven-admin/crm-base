@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.arqo-reengajamento]
 verify_jwt = false
+
+[functions.arqo-calls]
+verify_jwt = true
