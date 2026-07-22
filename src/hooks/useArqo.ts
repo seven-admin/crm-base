@@ -143,6 +143,7 @@ export function useTransicionarEtapa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'forecast'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
@@ -183,6 +184,7 @@ export function useRegistrarTentativa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
@@ -201,6 +203,7 @@ export function useLiberarConsultor() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),

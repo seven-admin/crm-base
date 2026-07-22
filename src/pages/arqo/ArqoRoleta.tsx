@@ -105,7 +105,7 @@ export default function ArqoRoleta() {
     if (!meuLeadAtivo || !exigeObservacao()) return;
     liberar.mutate(
       { leadId: meuLeadAtivo.id, comentario: observacao },
-      { onSuccess: limparObs },
+      { onSuccess: () => { limparObs(); setLeadEmTratamentoId(null); } },
     );
   };
 
@@ -190,7 +190,7 @@ export default function ArqoRoleta() {
         <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
           Atendimento em andamento
         </h2>
-        {isLoading ? (
+        {isLoading || loadingLeadEmTratamento ? (
           <Card className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></Card>
         ) : !meuLeadAtivo ? (
           <Card className="p-8 text-center text-muted-foreground">

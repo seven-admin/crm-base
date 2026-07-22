@@ -33,7 +33,11 @@ Deno.serve(async (req) => {
 
       if (regra.acao_expiracao === "reatribuir" && lead.grupo_id) {
         await supabase.from("arqo_leads").update({ consultor_id: null }).eq("id", lead.id);
-        await supabase.rpc("arqo_atribuir_lead_roleta", { p_grupo_id: lead.grupo_id, p_lead_id: lead.id, p_tipo_atribuicao: "sla_reatribuicao" });
+        await supabase.from("arqo_lead_events").insert({
+          lead_id: lead.id,
+          tipo: "liberacao_consultor",
+          payload: { motivo: "sla_reatribuicao", grupo_id: lead.grupo_id },
+        });
       }
       acted++;
     }
