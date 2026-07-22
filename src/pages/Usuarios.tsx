@@ -47,11 +47,13 @@ import { RolesManager } from '@/components/configuracoes/RolesManager';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sanitizeErrorMessage } from '@/lib/errorHandler';
+import { configureArqoCallSessionForUser, getArqoCallSessionBindings } from '@/lib/arqoCalls';
 
 interface UserWithRole extends Profile {
   role?: AppRole | null;
   tipo_vinculo?: 'funcionario_seven' | 'terceiro' | null;
   cargo?: string | null;
+  arqo_call_webhook_url?: string | null;
 }
 
 export default function Usuarios() {
@@ -95,6 +97,7 @@ export default function Usuarios() {
   const [editTipoVinculo, setEditTipoVinculo] = useState<'funcionario_seven' | 'terceiro'>('terceiro');
   const [editCargo, setEditCargo] = useState('');
   const [editEmpresa, setEditEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
+  const [editArqoCallWebhook, setEditArqoCallWebhook] = useState('');
 
   // Create form state
   const [createEmail, setCreateEmail] = useState('');
@@ -106,6 +109,7 @@ export default function Usuarios() {
   const [createCargo, setCreateCargo] = useState('');
   const [createBaseRoleId, setCreateBaseRoleId] = useState<string>('');
   const [createEmpresa, setCreateEmpresa] = useState<'seven' | 'arqo' | 'nexa' | 'incorporador' | 'externo'>('seven');
+  const [createArqoCallWebhook, setCreateArqoCallWebhook] = useState('');
 
 
   // Check if selected role has permissions
@@ -134,6 +138,16 @@ export default function Usuarios() {
 
       if (rolesError) throw rolesError;
 
+      let callSessions: Awaited<ReturnType<typeof getArqoCallSessionBindings>> = [];
+      try {
+        callSessions = await getArqoCallSessionBindings();
+      } catch (callSessionError) {
+        console.warn('Não foi possível carregar os vínculos do AstraCalls:', callSessionError);
+      }
+      const callSessionByUser = new Map(
+        callSessions.map((session) => [session.user_id, session.chatwoot_webhook_url]),
+      );
+
       // Merge profiles with roles (using roles.name from joined table)
       const usersWithRoles: UserWithRole[] = (profiles || []).map(profile => {
         const userRole = roles?.find(r => r.user_id === profile.id);
@@ -142,7 +156,8 @@ export default function Usuarios() {
           ...profile as Profile,
           role: roleName ?? null,
           tipo_vinculo: (profile as any).tipo_vinculo as 'funcionario_seven' | 'terceiro' | null,
-          cargo: (profile as any).cargo as string | null
+          cargo: (profile as any).cargo as string | null,
+          arqo_call_webhook_url: callSessionByUser.get(profile.id) ?? null,
         };
       });
 
@@ -168,6 +183,7 @@ export default function Usuarios() {
     setEditTipoVinculo(user.tipo_vinculo || 'terceiro');
     setEditCargo(user.cargo || '');
     setEditEmpresa(((user as any).empresa as any) || 'seven');
+    setEditArqoCallWebhook(user.arqo_call_webhook_url || '');
     setActiveTab('dados');
     setIsEditDialogOpen(true);
 
@@ -232,6 +248,11 @@ export default function Usuarios() {
         if (roleError) throw roleError;
       }
 
+      await configureArqoCallSessionForUser(
+        editingUser.id,
+        editEmpresa === 'arqo' ? editArqoCallWebhook : '',
+      );
+
       toast.success('Usuário atualizado com sucesso');
       setIsEditDialogOpen(false);
       fetchUsers();
@@ -288,6 +309,16 @@ export default function Usuarios() {
         throw new Error(response.data.error);
       }
 
+      if (createEmpresa === 'arqo' && createArqoCallWebhook.trim() && response.data?.user_id) {
+        try {
+          await configureArqoCallSessionForUser(response.data.user_id, createArqoCallWebhook);
+        } catch (callError) {
+          toast.warning(callError instanceof Error
+            ? `Usuário criado, mas a conta de chamadas não foi vinculada: ${callError.message}`
+            : 'Usuário criado, mas a conta de chamadas não foi vinculada.');
+        }
+      }
+
       toast.success(response.data?.message || 'Usuário criado com sucesso');
       setIsCreateDialogOpen(false);
       setCreateEmail('');
@@ -298,6 +329,7 @@ export default function Usuarios() {
       setCreateTipoVinculo('terceiro');
       setCreateCargo('');
       setCreateBaseRoleId('');
+      setCreateArqoCallWebhook('');
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -864,6 +896,22 @@ export default function Usuarios() {
                   </p>
                 </div>
 
+                {editEmpresa === 'arqo' && (
+                  <div className="space-y-2 rounded-xl border border-border/70 bg-muted/30 p-4">
+                    <Label htmlFor="edit-arqo-call-webhook">Webhook da conta AstraCalls</Label>
+                    <Input
+                      id="edit-arqo-call-webhook"
+                      type="url"
+                      value={editArqoCallWebhook}
+                      onChange={(event) => setEditArqoCallWebhook(event.target.value)}
+                      placeholder="https://call.sevengroup360sys.com.br/api/sessions/.../chatwoot/webhook"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Cole o webhook exibido na conta do AstraCalls. O CRM usará o identificador da sessão para as ligações deste usuário.
+                    </p>
+                  </div>
+                )}
+
 
 
 
@@ -1042,6 +1090,22 @@ export default function Usuarios() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {createEmpresa === 'arqo' && (
+                <div className="space-y-2 rounded-xl border border-border/70 bg-muted/30 p-4">
+                  <Label htmlFor="create-arqo-call-webhook">Webhook da conta AstraCalls</Label>
+                  <Input
+                    id="create-arqo-call-webhook"
+                    type="url"
+                    value={createArqoCallWebhook}
+                    onChange={(event) => setCreateArqoCallWebhook(event.target.value)}
+                    placeholder="https://call.sevengroup360sys.com.br/api/sessions/.../chatwoot/webhook"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Opcional no cadastro. Pode ser informado ou alterado depois na edição do usuário.
+                  </p>
+                </div>
+              )}
 
 
 

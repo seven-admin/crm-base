@@ -110,7 +110,6 @@ export default function NexaDisponibilidade() {
           tipologia: u.tipologia ? { nome: u.tipologia.nome } : null,
         })),
         isLoteamento,
-        marca: 'nexa',
         escopo: 'disponiveis',
       });
     } catch (error) {

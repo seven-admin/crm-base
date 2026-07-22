@@ -7,6 +7,7 @@ interface CallSessionRow {
   id: string;
   user_id: string;
   external_session_id: string;
+  chatwoot_webhook_url: string | null;
   display_name: string;
   whatsapp_jid: string | null;
   state: SessionState;
@@ -21,7 +22,7 @@ interface AstraSession {
   paired: boolean;
 }
 
-const ASTRA_URL = (Deno.env.get("ASTRACALLS_URL") || "https://calls.sevengroup360sys.com.br").replace(/\/$/, "");
+const ASTRA_URL = (Deno.env.get("ASTRACALLS_URL") || "https://call.sevengroup360sys.com.br").replace(/\/$/, "");
 const ASTRA_KEY = Deno.env.get("ASTRACALLS_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -89,7 +90,7 @@ async function astraJson<T>(path: string, init: RequestInit = {}): Promise<T> {
 async function callSession(userId: string): Promise<CallSessionRow | null> {
   const { data, error } = await admin
     .from("arqo_call_sessions")
-    .select("id, user_id, external_session_id, display_name, whatsapp_jid, state, paired")
+    .select("id, user_id, external_session_id, chatwoot_webhook_url, display_name, whatsapp_jid, state, paired")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -118,7 +119,7 @@ async function syncSession(row: CallSessionRow): Promise<CallSessionRow | null> 
     .from("arqo_call_sessions")
     .update(updates)
     .eq("id", row.id)
-    .select("id, user_id, external_session_id, display_name, whatsapp_jid, state, paired")
+    .select("id, user_id, external_session_id, chatwoot_webhook_url, display_name, whatsapp_jid, state, paired")
     .single();
   if (error) throw error;
   return data as CallSessionRow;
@@ -142,78 +143,6 @@ async function openAstraEvents(clientId: string, signal?: AbortSignal): Promise<
   const url = new URL(`${ASTRA_URL}/api/events`);
   url.searchParams.set("clientId", clientId);
   return await astraFetch(`${url.pathname}${url.search}`, { signal });
-}
-
-async function waitForQr(reader: ReadableStreamDefaultReader<Uint8Array>, sessionId: string): Promise<string | null> {
-  const decoder = new TextDecoder();
-  let buffer = "";
-  const deadline = Date.now() + 30_000;
-  while (Date.now() < deadline) {
-    const remaining = deadline - Date.now();
-    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), remaining));
-    let chunk: ReadableStreamReadResult<Uint8Array>;
-    try {
-      chunk = await Promise.race([reader.read(), timeout]);
-    } catch {
-      return null;
-    }
-    if (chunk.done) return null;
-    buffer += decoder.decode(chunk.value, { stream: true });
-    const blocks = buffer.split(/\r?\n\r?\n/);
-    buffer = blocks.pop() || "";
-    for (const block of blocks) {
-      const event = parseSseBlock(block);
-      if (!event || event.sessionId !== sessionId) continue;
-      if ((event.type === "session-qr" || event.type === "auth-state") && typeof event.qr === "string") {
-        return event.qr;
-      }
-    }
-  }
-  return null;
-}
-
-async function beginPairing(user: User, existing?: CallSessionRow): Promise<{ session: CallSessionRow; qr: string | null }> {
-  const abort = new AbortController();
-  const events = await openAstraEvents(`crm-pair-${user.id}-${crypto.randomUUID()}`, abort.signal);
-  if (!events.ok || !events.body) throw new HttpError(503, "Não foi possível abrir os eventos do AstraCalls");
-  const reader = events.body.getReader();
-
-  try {
-    let row = existing;
-    if (!row) {
-      const { data: profile } = await admin.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle();
-      const name = `CRM · ${profile?.full_name || profile?.email || user.email || user.id}`;
-      const created = await astraJson<{ id: string }>("/api/sessions", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-      const { data, error } = await admin
-        .from("arqo_call_sessions")
-        .insert({ user_id: user.id, external_session_id: created.id, display_name: name, state: "connecting" })
-        .select("id, user_id, external_session_id, display_name, whatsapp_jid, state, paired")
-        .single();
-      if (error) {
-        await astraFetch(`/api/sessions/${encodeURIComponent(created.id)}`, { method: "DELETE" }).catch(() => undefined);
-        throw error;
-      }
-      row = data as CallSessionRow;
-    } else {
-      await astraJson<void>(`/api/sessions/${encodeURIComponent(row.external_session_id)}/pair`, {
-        method: "POST",
-        body: "{}",
-      });
-    }
-
-    const qr = await waitForQr(reader, row.external_session_id);
-    if (qr) {
-      await admin.from("arqo_call_sessions").update({ state: "qr", paired: false }).eq("id", row.id);
-      row = { ...row, state: "qr", paired: false };
-    }
-    return { session: row, qr };
-  } finally {
-    abort.abort();
-    await reader.cancel().catch(() => undefined);
-  }
 }
 
 function filteredEvent(event: JsonRecord, sessionId: string): JsonRecord | null {
@@ -326,6 +255,74 @@ async function authorizedLeadPhone(userId: string, leadId: string): Promise<stri
   return normalizedBrazilianPhone(cliente.telefone);
 }
 
+async function assertAdmin(userId: string): Promise<void> {
+  const { data, error } = await admin
+    .from("user_roles")
+    .select("roles!inner(name)")
+    .eq("user_id", userId);
+  if (error) throw error;
+  const allowed = (data ?? []).some((item) => {
+    const role = item.roles as unknown as { name?: string } | null;
+    return role?.name === "admin" || role?.name === "super_admin";
+  });
+  if (!allowed) throw new HttpError(403, "Somente administradores podem configurar contas do AstraCalls");
+}
+
+function sessionIdFromChatwootWebhook(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new HttpError(400, "Webhook do AstraCalls inválido");
+  }
+  if (url.protocol !== "https:") throw new HttpError(400, "O webhook do AstraCalls deve usar HTTPS");
+  const match = url.pathname.match(/^\/api\/sessions\/([^/]+)\/chatwoot\/webhook\/?$/);
+  if (!match) throw new HttpError(400, "Use o webhook /api/sessions/{sessão}/chatwoot/webhook do AstraCalls");
+  const sessionId = decodeURIComponent(match[1]);
+  if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) throw new HttpError(400, "Identificador da sessão AstraCalls inválido");
+  return sessionId;
+}
+
+async function configureUserSession(targetUserId: string, webhookUrl: string): Promise<CallSessionRow | null> {
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("id", targetUserId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (!profile) throw new HttpError(404, "Usuário não encontrado");
+
+  if (!webhookUrl) {
+    const { error } = await admin.from("arqo_call_sessions").delete().eq("user_id", targetUserId);
+    if (error) throw error;
+    return null;
+  }
+
+  const externalSessionId = sessionIdFromChatwootWebhook(webhookUrl);
+  const existing = await callSession(targetUserId);
+  const displayName = `CRM · ${profile.full_name || profile.email || targetUserId}`;
+  const values = {
+    user_id: targetUserId,
+    external_session_id: externalSessionId,
+    chatwoot_webhook_url: webhookUrl,
+    display_name: displayName,
+    ...(existing?.external_session_id === externalSessionId
+      ? {}
+      : { whatsapp_jid: null, state: "connecting" as SessionState, paired: false }),
+  };
+  const query = existing
+    ? admin.from("arqo_call_sessions").update(values).eq("id", existing.id)
+    : admin.from("arqo_call_sessions").insert(values);
+  const { data, error } = await query
+    .select("id, user_id, external_session_id, chatwoot_webhook_url, display_name, whatsapp_jid, state, paired")
+    .single();
+  if (error) {
+    if (error.code === "23505") throw new HttpError(409, "Esta conta do AstraCalls já está vinculada a outro usuário");
+    throw error;
+  }
+  return data as CallSessionRow;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
@@ -336,36 +333,33 @@ Deno.serve(async (req) => {
     const route = parts.slice(functionIndex + 1);
     let row = await callSession(user.id);
 
+    if (req.method === "POST" && route.join("/") === "admin/session") {
+      await assertAdmin(user.id);
+      const body = await req.json() as { userId?: string; webhookUrl?: string };
+      if (!body.userId) throw new HttpError(400, "userId obrigatório");
+      const session = await configureUserSession(body.userId, body.webhookUrl?.trim() || "");
+      return json(req, { session });
+    }
+
+    if (req.method === "GET" && route.join("/") === "admin/sessions") {
+      await assertAdmin(user.id);
+      const { data, error } = await admin
+        .from("arqo_call_sessions")
+        .select("user_id, chatwoot_webhook_url")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return json(req, { sessions: data ?? [] });
+    }
+
     if (req.method === "GET" && route.join("/") === "session") {
       if (row) row = await syncSession(row);
       return json(req, { session: row });
     }
 
-    if (req.method === "POST" && route.join("/") === "session") {
-      if (row) return json(req, { session: await syncSession(row), qr: null });
-      return json(req, await beginPairing(user));
-    }
-
-    if (!row) throw new HttpError(409, "Vincule sua conta do WhatsApp no perfil antes de ligar");
+    if (!row) throw new HttpError(409, "A conta AstraCalls deste usuário ainda não foi configurada pelo administrador");
 
     if (req.method === "GET" && route.join("/") === "events") {
       return await eventsResponse(req, user, row);
-    }
-
-    if (req.method === "POST" && route.join("/") === "session/pair") {
-      return json(req, await beginPairing(user, row));
-    }
-
-    if (req.method === "POST" && route.join("/") === "session/logout") {
-      await astraJson<void>(`/api/sessions/${encodeURIComponent(row.external_session_id)}/logout`, { method: "POST", body: "{}" });
-      await admin.from("arqo_call_sessions").update({ state: "logged_out", paired: false, whatsapp_jid: null }).eq("id", row.id);
-      return json(req, { ok: true });
-    }
-
-    if (req.method === "DELETE" && route.join("/") === "session") {
-      await astraJson<void>(`/api/sessions/${encodeURIComponent(row.external_session_id)}`, { method: "DELETE" });
-      await admin.from("arqo_call_sessions").delete().eq("id", row.id);
-      return new Response(null, { status: 204, headers: corsHeaders(req) });
     }
 
     if (req.method === "POST" && route.join("/") === "calls") {

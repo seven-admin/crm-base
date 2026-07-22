@@ -220,7 +220,6 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
         })),
         isLoteamento,
         escopo,
-        marca: 'seven',
       });
     } finally {
       setIsExportingPdf(false);

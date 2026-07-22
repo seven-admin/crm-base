@@ -4,7 +4,6 @@ import autoTable, { type CellHookData } from 'jspdf-autotable';
 import { toast } from 'sonner';
 
 import nexaLogoAsset from '@/assets/nexa-logo.png';
-import sevenLogoAsset from '@/assets/logo-sevengroup.png';
 import spaceGroteskRegularAsset from '@/assets/fonts/SpaceGrotesk-Regular.ttf';
 import spaceGroteskBoldAsset from '@/assets/fonts/SpaceGrotesk-Bold.ttf';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,14 +26,11 @@ export interface ExportEmpreendimentoInput {
 }
 
 export type ExportUnidadesEscopo = 'disponiveis' | 'completo';
-export type ExportUnidadesMarca = 'seven' | 'nexa';
-
 export interface ExportUnidadesDisponiveisPdfOptions {
   empreendimento: ExportEmpreendimentoInput;
   unidades: ExportUnidadeInput[];
   isLoteamento?: boolean;
   escopo?: ExportUnidadesEscopo;
-  marca?: ExportUnidadesMarca;
   download?: boolean;
   /** Uso interno em testes de renderização fora do navegador. */
   logoDataUrl?: string;
@@ -88,7 +84,6 @@ export async function exportUnidadesPdf({
   unidades,
   isLoteamento = false,
   escopo = 'disponiveis',
-  marca = 'nexa',
   download = true,
   logoDataUrl,
   fontRegularDataUrl,
@@ -118,7 +113,7 @@ export async function exportUnidadesPdf({
   let logoBase64 = logoDataUrl ?? '';
   if (!logoBase64) {
     try {
-      logoBase64 = await fetchAsDataURL(marca === 'seven' ? sevenLogoAsset : nexaLogoAsset);
+      logoBase64 = await fetchAsDataURL(nexaLogoAsset);
     } catch (error) {
       console.warn('Falha ao pré-carregar a marca do PDF:', error);
     }
@@ -189,8 +184,12 @@ export async function exportUnidadesPdf({
   const drawHeader = (showSummary: boolean) => {
     if (logoBase64) {
       try {
-        const logoHeight = marca === 'seven' ? 7 : 8;
-        const logoWidth = marca === 'seven' ? 30 : 32;
+        const properties = doc.getImageProperties(logoBase64);
+        const aspectRatio = properties.width / properties.height;
+        const maxLogoWidth = 32;
+        const maxLogoHeight = 8;
+        const logoWidth = Math.min(maxLogoWidth, maxLogoHeight * aspectRatio);
+        const logoHeight = logoWidth / aspectRatio;
         doc.addImage(logoBase64, 'PNG', marginX, 10, logoWidth, logoHeight);
       } catch {
         // O relatório continua legível mesmo que o navegador não aceite a imagem.

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Loader2, Mic, MicOff, PhoneCall, PhoneOff, Settings } from 'lucide-react';
+import { Loader2, Mic, MicOff, PhoneCall, PhoneOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -217,10 +216,7 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
 
         {!isLoadingSession && !connected && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Vincule e conecte sua conta do WhatsApp antes da primeira ligação.
-            <Button asChild variant="outline" size="sm" className="mt-3 w-full bg-white">
-              <Link to="/meu-perfil"><Settings className="mr-2 h-4 w-4" /> Abrir meu perfil</Link>
-            </Button>
+            Sua conta AstraCalls ainda não está conectada. Solicite ao administrador que informe o webhook da sua conta no cadastro de usuários.
           </div>
         )}
         {error && <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}

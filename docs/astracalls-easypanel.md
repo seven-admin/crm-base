@@ -7,7 +7,7 @@ Esta integração mantém o AstraCalls como serviço separado do CRM. O navegado
 Crie um serviço no EasyPanel para o domínio:
 
 ```text
-calls.sevengroup360sys.com.br
+call.sevengroup360sys.com.br
 ```
 
 Use a imagem publicada pelo projeto AstraCalls ou faça o build do repositório `AstraOnlineWeb/AstraCalls`. Para produção, fixe a imagem por versão/digest depois da homologação; não mantenha uma tag flutuante sem controle.
@@ -47,7 +47,7 @@ Não publique o PostgreSQL. Não execute o AstraCalls sem `WACALLS_API_KEY`.
 Cadastre no projeto Supabase:
 
 ```dotenv
-ASTRACALLS_URL=https://calls.sevengroup360sys.com.br
+ASTRACALLS_URL=https://call.sevengroup360sys.com.br
 ASTRACALLS_API_KEY=A_MESMA_CHAVE_DO_EASYPANEL
 CRM_ALLOWED_ORIGINS=https://crm.sevengroup360sys.com.br,http://localhost:8080
 ```
@@ -60,21 +60,20 @@ npx supabase functions deploy arqo-calls
 
 ## 3. Banco do CRM
 
-Aplique a migration `20260722222000_arqo_calls_integration.sql`. Ela cria:
+Aplique as migrations `20260722222000_arqo_calls_integration.sql` e `20260722233000_arqo_calls_admin_session_binding.sql`. Elas criam:
 
-- `arqo_call_sessions`: vínculo exclusivo entre usuário e sessão WhatsApp.
+- `arqo_call_sessions`: vínculo exclusivo entre usuário e sessão WhatsApp, incluindo o webhook administrativo.
 - `arqo_calls`: histórico das chamadas associado ao usuário e ao lead.
 
 As tabelas usam RLS. Usuários consultam apenas a própria sessão e as próprias chamadas; todas as gravações são feitas pelo gateway com `service_role`.
 
 ## 4. Homologação
 
-1. Abra **Meu perfil → WhatsApp para ligações**.
-2. Clique em **Vincular meu WhatsApp** e escaneie o QR Code.
-3. Confirme que o estado muda para **Conectado**.
-4. Puxe um lead da roleta e abra o atendimento.
-5. Clique em **Ligar** e permita o microfone.
-6. Valide áudio nos dois sentidos usando primeiro uma máquina externa à rede da VPS.
-7. Encerre a chamada e confira o registro em `arqo_calls`.
+1. Crie e pareie a conta do usuário diretamente no AstraCalls.
+2. No CRM, abra **Usuários**, edite o usuário Arqo e cole o webhook Chatwoot da sessão.
+3. Puxe um lead da roleta e abra o atendimento com esse usuário.
+4. Clique em **Ligar** e permita o microfone.
+5. Valide áudio nos dois sentidos usando primeiro uma máquina externa à rede da VPS.
+6. Encerre a chamada e confira o registro em `arqo_calls`.
 
 Gravação de chamadas permanece desabilitada (`record: false`).

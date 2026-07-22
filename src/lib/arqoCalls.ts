@@ -6,10 +6,16 @@ export type ArqoCallStatus = 'starting' | 'ringing' | 'connected' | 'ended' | 'f
 export interface ArqoCallSession {
   id: string;
   external_session_id: string;
+  chatwoot_webhook_url: string | null;
   display_name: string;
   whatsapp_jid: string | null;
   state: ArqoCallSessionState;
   paired: boolean;
+}
+
+export interface ArqoCallSessionBinding {
+  user_id: string;
+  chatwoot_webhook_url: string | null;
 }
 
 export interface ArqoCallsEvent {
@@ -22,11 +28,6 @@ export interface ArqoCallsEvent {
   qr?: string;
   reason?: string;
   sessions?: Array<{ id: string; name: string; jid: string; state: ArqoCallSessionState; paired: boolean }>;
-}
-
-interface PairingResponse {
-  session: ArqoCallSession;
-  qr: string | null;
 }
 
 export interface OpenArqoCall {
@@ -54,7 +55,12 @@ async function gateway<T>(path: string, init: RequestInit = {}): Promise<T> {
   headers.set('Authorization', `Bearer ${token}`);
   headers.set('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-  const response = await fetch(`${gatewayUrl}${path}`, { ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${gatewayUrl}${path}`, { ...init, headers });
+  } catch {
+    throw new Error('Não foi possível acessar o serviço de chamadas. Verifique a configuração do AstraCalls.');
+  }
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: string } | null;
     throw new Error(payload?.error || `Serviço de chamadas: erro ${response.status}`);
@@ -68,20 +74,16 @@ export async function getArqoCallSession(): Promise<ArqoCallSession | null> {
   return result.session;
 }
 
-export function createArqoCallSession(): Promise<PairingResponse> {
-  return gateway<PairingResponse>('/session', { method: 'POST', body: '{}' });
+export function configureArqoCallSessionForUser(userId: string, webhookUrl: string): Promise<{ session: ArqoCallSession | null }> {
+  return gateway<{ session: ArqoCallSession | null }>('/admin/session', {
+    method: 'POST',
+    body: JSON.stringify({ userId, webhookUrl: webhookUrl.trim() }),
+  });
 }
 
-export function pairArqoCallSession(): Promise<PairingResponse> {
-  return gateway<PairingResponse>('/session/pair', { method: 'POST', body: '{}' });
-}
-
-export function logoutArqoCallSession(): Promise<void> {
-  return gateway<void>('/session/logout', { method: 'POST', body: '{}' });
-}
-
-export function deleteArqoCallSession(): Promise<void> {
-  return gateway<void>('/session', { method: 'DELETE' });
+export async function getArqoCallSessionBindings(): Promise<ArqoCallSessionBinding[]> {
+  const result = await gateway<{ sessions: ArqoCallSessionBinding[] }>('/admin/sessions');
+  return result.sessions;
 }
 
 export function subscribeArqoCallEvents(onEvent: (event: ArqoCallsEvent) => void): () => void {

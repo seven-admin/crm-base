@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Camera, KeyRound, Loader2, Trash2, User as UserIcon } from 'lucide-react';
 import { EMPRESA_LABELS, ROLE_LABELS } from '@/types/auth.types';
-import { ArqoCallSessionCard } from '@/components/arqo/ArqoCallSessionCard';
 
 export default function MeuPerfil() {
   const { profile, user, role, refreshProfile } = useAuth();
@@ -273,8 +272,6 @@ export default function MeuPerfil() {
             </div>
           </CardContent>
         </Card>
-
-        <ArqoCallSessionCard />
 
         <Card>
           <CardHeader>
