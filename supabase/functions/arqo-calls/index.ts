@@ -28,30 +28,12 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-function corsHeaders(req: Request): HeadersInit {
-  const configured = Deno.env.get("CRM_ALLOWED_ORIGINS")
-    || "https://crm.sevengroup360sys.com.br,http://localhost:8080";
-  const allowed = configured.split(",").map((item) => item.trim());
-  const origin = req.headers.get("Origin") || allowed[0];
-  let trustedOrigin = allowed.includes(origin);
-  if (!trustedOrigin) {
-    try {
-      const parsed = new URL(origin);
-      const isLocal = parsed.protocol === "http:"
-        && (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1");
-      const isSevenDomain = parsed.protocol === "https:"
-        && (parsed.hostname === "sevengroup360sys.com.br" || parsed.hostname.endsWith(".sevengroup360sys.com.br"));
-      trustedOrigin = isLocal || isSevenDomain;
-    } catch {
-      trustedOrigin = false;
-    }
-  }
+function corsHeaders(_req: Request): HeadersInit {
   return {
-    "Access-Control-Allow-Origin": trustedOrigin ? origin : allowed[0],
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
   };
 }
 
