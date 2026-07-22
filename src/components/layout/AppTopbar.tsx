@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SevenMegaMenu, type SevenMenuCategory } from './SevenMegaMenu';
 import logoSeven from '@/assets/logo-sevengroup.png';
 import logoArqo from '@/assets/logo-arqo.png';
@@ -164,6 +165,7 @@ export function AppTopbar() {
 
   const userName = profile?.full_name || 'Usuário';
   const userRole = role ? ROLE_LABELS[role] : '';
+  const userInitials = userName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase();
 
 
 
@@ -232,9 +234,10 @@ export function AppTopbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-2 pr-3 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7417]/60 lg:flex" aria-label="Abrir menu do usuário">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff7417] text-xs font-bold text-[#21150d]">
-                {userName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={profile?.avatar_url || undefined} alt={`Foto de ${userName}`} />
+                <AvatarFallback className="bg-[#ff7417] text-xs font-bold text-[#21150d]">{userInitials}</AvatarFallback>
+              </Avatar>
               <span className="min-w-0 max-w-36">
                 <span className="block truncate text-xs font-semibold text-white">{userName}</span>
                 <span className="block truncate text-[10px] text-white/40">{userRole}</span>
