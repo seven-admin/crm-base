@@ -135,11 +135,6 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
           .single();
         if (lErr || !lead) throw lErr ?? new Error('lead');
 
-        if (grupoId !== 'none') {
-          await supabase.rpc('arqo_atribuir_lead_roleta', {
-            p_grupo_id: grupoId, p_lead_id: lead.id, p_tipo_atribuicao: 'roleta',
-          });
-        }
         ok++;
       } catch (e) {
         console.error('import row failed', row, e);
