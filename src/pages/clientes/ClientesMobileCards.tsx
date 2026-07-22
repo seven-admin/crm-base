@@ -77,7 +77,7 @@ export function ClientesMobileCards({
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" aria-label={`Abrir ações de ${cliente.nome}`}>
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

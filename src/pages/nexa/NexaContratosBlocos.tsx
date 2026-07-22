@@ -68,7 +68,7 @@ export default function NexaContratosBlocos() {
 
   return (
     <MainLayout
-      title="Blocos de Texto"
+      title="Blocos de texto"
       subtitle="Biblioteca de cláusulas reutilizáveis para os contratos."
       actions={
         <div className="flex gap-2 items-center">
@@ -94,10 +94,10 @@ export default function NexaContratosBlocos() {
         <div className="space-y-6">
           {grupos.map(([cat, items]) => (
             <div key={cat}>
-              <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">{cat}</h3>
+              <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[.16em] text-primary">{cat}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {items.map((b) => (
-                  <Card key={b.id} className={!b.is_active ? 'opacity-60' : ''}>
+                  <Card key={b.id} className={`shadow-none transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card ${!b.is_active ? 'opacity-60' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div>
@@ -107,7 +107,7 @@ export default function NexaContratosBlocos() {
                         {!b.is_active && <Badge variant="outline">inativo</Badge>}
                       </div>
                       <div
-                        className="text-xs text-muted-foreground line-clamp-3 border rounded p-2 bg-muted/30"
+                        className="line-clamp-3 rounded-xl border border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground"
                         dangerouslySetInnerHTML={{ __html: b.conteudo_html }}
                       />
                       <div className="flex justify-end gap-1 mt-3">

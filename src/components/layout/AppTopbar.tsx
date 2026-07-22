@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2, Users, Map, Settings, LogOut, Menu, X, FileText,
+  Building2, Users, Map, Settings, LogOut, Menu, FileText,
   UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
   Home, Handshake, User as UserIcon, ExternalLink,
   type LucideIcon,
@@ -174,28 +174,26 @@ export function AppTopbar() {
   }, [location.pathname, location.search]);
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-card shadow-topbar border-b border-border">
-      <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[.06] bg-[#171411]/95 text-white shadow-topbar backdrop-blur-xl">
+      <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-4 px-4 md:px-6 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="shrink-0 flex items-center">
+        <Link to="/" className="flex shrink-0 items-center rounded-full bg-[#f7f3ed] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7417]/60" aria-label="Ir para a página inicial">
           <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
         </Link>
 
         {/* Desktop nav (right aligned) */}
-        <nav className="hidden lg:flex items-center gap-1 ml-auto overflow-x-auto">
-          <SevenMegaMenu categories={sevenVisible} hasActive={sevenHasActive} />
-          {visibleGroups.map((group) => {
+        <nav className="ml-auto hidden items-center gap-1 overflow-x-auto lg:flex" aria-label="Navegação principal">
+          <SevenMegaMenu categories={sevenVisible} hasActive={sevenHasActive} dark />
+          {visibleGroups.filter((group) => group.label !== 'Sistema').map((group) => {
             const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
-            const isSistema = group.label === 'Sistema';
             return (
               <DropdownMenu key={group.label}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
-                      'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap uppercase tracking-wide',
-                      hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      'inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors outline-none whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring/40',
+                      hasActive ? 'bg-white/10 text-white' : 'text-white/55 hover:bg-white/[.07] hover:text-white'
                     )}
-                    style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
                   >
                     <span className="flex items-center gap-1.5">
                       {group.label}
@@ -219,33 +217,40 @@ export function AppTopbar() {
                             active && 'bg-primary-soft text-primary font-medium'
                           )}
                         >
-                          <item.icon className="h-4 w-4 text-muted-foreground" />
                           <span>{item.label}</span>
                         </Link>
                       </DropdownMenuItem>
                     );
                   })}
-                  {isSistema && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <div className="px-3 py-2">
-                        <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{userRole}</p>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        className="text-destructive focus:text-destructive cursor-pointer"
-                      >
-                        <LogOut className="h-4 w-4 mr-2" /> Sair
-                      </DropdownMenuItem>
-                    </>
-                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
           })}
         </nav>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-2 pr-3 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7417]/60 lg:flex" aria-label="Abrir menu do usuário">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff7417] text-xs font-bold text-[#21150d]">
+                {userName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+              <span className="min-w-0 max-w-36">
+                <span className="block truncate text-xs font-semibold text-white">{userName}</span>
+                <span className="block truncate text-[10px] text-white/40">{userRole}</span>
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild><Link to="/meu-perfil"><UserIcon className="mr-2 h-4 w-4" />Meu perfil</Link></DropdownMenuItem>
+            {isAdmin() && <DropdownMenuItem asChild><Link to="/usuarios"><UserCog className="mr-2 h-4 w-4" />Usuários</Link></DropdownMenuItem>}
+            {isAdmin() && <DropdownMenuItem asChild><Link to="/configuracoes"><Settings className="mr-2 h-4 w-4" />Configurações</Link></DropdownMenuItem>}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" />Sair</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Right actions (mobile only) */}
         <div className="flex items-center gap-2 shrink-0 lg:hidden">
@@ -254,16 +259,13 @@ export function AppTopbar() {
           {/* Mobile trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <button className="lg:hidden h-9 w-9 rounded-lg bg-secondary flex items-center justify-center text-secondary-foreground">
+              <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white lg:hidden" aria-label="Abrir menu de navegação">
                 <Menu className="h-4 w-4" />
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
-              <div className="flex items-center justify-between h-16 px-4 border-b border-border">
+              <div className="flex h-16 items-center border-b border-border px-4 pr-16">
                 <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
-                <button onClick={() => setMobileOpen(false)} className="h-9 w-9 rounded-lg hover:bg-secondary flex items-center justify-center">
-                  <X className="h-4 w-4" />
-                </button>
               </div>
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
                 {sevenVisible.length > 0 && (

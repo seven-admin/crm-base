@@ -21,7 +21,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   arqo: 'Arqo',
   nexa: 'Nexa',
   sistema: 'Sistema',
-  portal: 'Portal Incorporador',
   outros: 'Outros',
 };
 
@@ -30,17 +29,20 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   arqo: 'Roleta, kanban, forecast e administração de leads Arqo',
   nexa: 'Agenda, disponibilidade e contratos Nexa',
   sistema: 'Usuários, perfis de acesso e auditoria',
-  portal: 'Acesso ao portal do incorporador',
   outros: 'Outros módulos ativos do sistema',
 };
 
-const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'portal', 'outros'];
+const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'outros'];
 
-const getModuleCategory = (module: any) => {
+type CategorizedModule = {
+  name: string;
+  category?: string | null;
+};
+
+const getModuleCategory = (module: CategorizedModule) => {
   const name: string = module?.name || '';
   if (name.startsWith('arqo_')) return 'arqo';
   if (name.startsWith('nexa_')) return 'nexa';
-  if (name.startsWith('portal_')) return 'portal';
   if (['usuarios', 'auditoria'].includes(name)) return 'sistema';
   if (['empreendimentos', 'unidades', 'clientes', 'incorporadoras', 'imobiliarias', 'corretores'].includes(name)) return 'seven';
   const rawCategory = (module?.category || '').toString().toLowerCase();
@@ -155,11 +157,12 @@ export function RolesManager() {
   const isLoading = modulesLoading || permissionsLoading;
 
   // Filter modules by search
-  const filteredModules = modules?.filter(m => 
+  const filteredModules = modules?.filter(m =>
+    !m.name.startsWith('portal_') &&
     m.display_name.toLowerCase().includes(moduleSearch.toLowerCase())
   ) || [];
 
-  // Group filtered modules by category (Seven, Arqo, Nexa, Sistema, Portal, Outros)
+  // Group filtered modules by category (Seven, Arqo, Nexa, Sistema, Outros)
   const groupedModules = useMemo(() => {
     const groups: Record<string, typeof filteredModules> = {};
     filteredModules.forEach(m => {
@@ -570,7 +573,7 @@ export function RolesManager() {
                                             </span>
                                           </TooltipTrigger>
                                           <TooltipContent side="right" className="max-w-xs">
-                                            <p className="text-sm">{(module as any).description || 'Módulo do sistema'}</p>
+                                            <p className="text-sm">{module.description || 'Módulo do sistema'}</p>
                                           </TooltipContent>
                                         </Tooltip>
                                       </TableCell>

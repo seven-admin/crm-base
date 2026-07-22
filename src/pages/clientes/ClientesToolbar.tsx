@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download, Edit, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { Edit, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 
 type GestorOption = {
   id: string;
@@ -40,9 +40,9 @@ export function ClientesToolbar({
   gestores,
 }: Props) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-      <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
-        <div className="relative flex-1 sm:w-64">
+    <div className="page-toolbar mb-6">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <div className="relative min-w-52 flex-1 sm:w-72 sm:flex-none">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar cliente..."
@@ -52,7 +52,7 @@ export function ClientesToolbar({
           />
         </div>
         <Select value={gestorId} onValueChange={onGestorChange}>
-          <SelectTrigger className="w-48 bg-card">
+          <SelectTrigger className="w-full sm:w-52">
             <SelectValue placeholder="Gestor de Produto" />
           </SelectTrigger>
           <SelectContent>
@@ -65,7 +65,7 @@ export function ClientesToolbar({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
         {selectedCount > 0 && (
           <Button 
             variant="outline" 
@@ -86,11 +86,7 @@ export function ClientesToolbar({
             Excluir {selectedCount}
           </Button>
         )}
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
-        </Button>
-        <Button onClick={onNew}>
+        <Button onClick={onNew} className="ml-auto sm:ml-0">
           <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
         </Button>

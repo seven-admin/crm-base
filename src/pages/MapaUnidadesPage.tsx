@@ -43,7 +43,7 @@ const MapaUnidadesPage = () => {
       title="Disponibilidade"
       subtitle="Visualize a disponibilidade de unidades por empreendimento"
     >
-      <div className="flex items-center gap-4 mb-6">
+      <div className="page-toolbar mb-6 flex items-center gap-4">
         <Select value={empId} onValueChange={setSelectedEmpId}>
           <SelectTrigger className="w-72 bg-card">
             <SelectValue placeholder="Selecione o empreendimento" />

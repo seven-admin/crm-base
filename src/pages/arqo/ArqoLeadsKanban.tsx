@@ -52,26 +52,30 @@ export default function ArqoLeadsKanban() {
 
   return (
     <MainLayout
-      title="Arqo — Kanban de Leads"
-      subtitle="Pipeline visual de leads e oportunidades"
+      title="Pipeline de leads"
+      subtitle="Acompanhe o fluxo comercial e mova oportunidades entre etapas"
       actions={
-        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+        <Button variant="outline" size="sm" className="bg-card" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4 mr-2" /> Importar CSV
         </Button>
       }
     >
+      <div className="mb-4 flex items-center justify-between rounded-[1.25rem] border border-border/70 bg-card px-4 py-3 text-xs text-muted-foreground shadow-card">
+        <span className="font-semibold uppercase tracking-[.14em] text-primary">Pipeline Arqo</span>
+        <span>{leads.length} oportunidades · {etapas.length} etapas</span>
+      </div>
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-96" />)}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4 max-h-[calc(100vh-240px)] min-h-[420px]">
+        <div className="flex min-h-[480px] max-h-[calc(100vh-250px)] gap-3 overflow-x-auto pb-4">
           {etapas.map(etapa => {
             const items = grouped.get(etapa.id) ?? [];
             return (
               <div
                 key={etapa.id}
-                className="flex-shrink-0 w-80 flex flex-col"
+                className="flex w-80 flex-shrink-0 flex-col rounded-[1.6rem] border border-black/[.05] bg-[#eae5df] p-3"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => {
                   if (dragging) {
@@ -80,21 +84,21 @@ export default function ArqoLeadsKanban() {
                   }
                 }}
               >
-                <div className="flex items-center justify-between mb-3 shrink-0">
+                <div className="mb-3 flex shrink-0 items-center justify-between px-1 py-1">
                   <div className="flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: etapa.cor }} />
-                    <h3 className="font-semibold text-sm">{etapa.nome}</h3>
+                    <h3 className="text-sm font-semibold tracking-[-0.02em]">{etapa.nome}</h3>
                   </div>
                   <Badge variant="secondary">{items.length}</Badge>
                 </div>
-                <div className="space-y-2 min-h-[200px] flex-1 overflow-y-auto pr-1">
+                <div className="min-h-[200px] flex-1 space-y-2 overflow-y-auto pr-1">
                   {items.map(l => (
                     <Card
                       key={l.id}
                       draggable
                       onDragStart={() => setDragging(l.id)}
                       onDragEnd={() => setDragging(null)}
-                      className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                      className="cursor-grab rounded-[1.25rem] border-white/80 bg-[#fffdfa] p-4 shadow-none transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card active:cursor-grabbing"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Link to={`/arqo/leads/${l.id}`} className="font-medium text-sm hover:underline flex-1 truncate">
@@ -125,7 +129,7 @@ export default function ArqoLeadsKanban() {
                     </Card>
                   ))}
                   {items.length === 0 && (
-                    <div className="text-center text-xs text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                    <div className="rounded-[1.2rem] border border-dashed border-black/15 py-8 text-center text-xs text-muted-foreground">
                       Solte um lead aqui
                     </div>
                   )}

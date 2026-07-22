@@ -468,8 +468,6 @@ export default function Usuarios() {
       .toUpperCase();
   };
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
   return (
     <MainLayout 
       title="Usuários" 
@@ -486,11 +484,11 @@ export default function Usuarios() {
     >
       {/* Page Level Tabs */}
       <Tabs value={pageTab} onValueChange={setPageTab} className="space-y-6">
-        <div className="border-b border-border overflow-x-auto">
-          <TabsList className="inline-flex w-full md:w-auto justify-start bg-transparent rounded-none h-auto p-0 gap-0 min-w-max">
+        <div className="overflow-x-auto">
+          <TabsList className="inline-flex w-full min-w-max justify-start md:w-auto">
             <TabsTrigger 
               value="usuarios"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+              className="px-4"
             >
               <Users className="h-4 w-4 mr-2" />
               Usuários
@@ -498,7 +496,7 @@ export default function Usuarios() {
             {(isSuperAdmin() || isAdmin()) && (
               <TabsTrigger 
                 value="perfis"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground data-[state=active]:text-foreground"
+                className="px-4"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Perfis de Acesso
@@ -510,7 +508,7 @@ export default function Usuarios() {
         {/* Users Tab Content */}
         <TabsContent value="usuarios" className="space-y-6">
           {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid grid-cols-2 overflow-hidden rounded-[1.75rem] border border-border/70 bg-card md:grid-cols-4 [&>*]:rounded-none [&>*]:border-0 [&>*]:border-b [&>*]:border-r [&>*]:border-border/70 [&>*]:shadow-none">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
@@ -622,7 +620,7 @@ export default function Usuarios() {
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-3">
                   {filteredUsers.map((user) => (
-                    <Card key={user.id} className="p-4 cursor-pointer hover:bg-muted/50" onClick={() => handleEditUser(user)}>
+                    <Card key={user.id} className="cursor-pointer p-4 hover:bg-primary-soft/35" onClick={() => handleEditUser(user)}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
@@ -667,7 +665,7 @@ export default function Usuarios() {
                 </div>
 
                 {/* Desktop Table View */}
-                <div className="hidden md:block rounded-lg border">
+                <div className="hidden overflow-hidden rounded-[1.5rem] border border-border/70 md:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -688,7 +686,7 @@ export default function Usuarios() {
                       {filteredUsers.map((user) => (
                         <TableRow 
                           key={user.id}
-                          className="cursor-pointer hover:bg-muted/50"
+                          className="cursor-pointer hover:bg-primary-soft/35"
                           onClick={() => handleEditUser(user)}
                         >
                           {isSuperAdmin() && (
@@ -858,7 +856,6 @@ export default function Usuarios() {
                       <SelectItem value="seven">Seven</SelectItem>
                       <SelectItem value="arqo">Arqo</SelectItem>
                       <SelectItem value="nexa">Nexa</SelectItem>
-                      <SelectItem value="incorporador">Incorporador</SelectItem>
                       <SelectItem value="externo">Externo</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1041,7 +1038,6 @@ export default function Usuarios() {
                     <SelectItem value="seven">Seven</SelectItem>
                     <SelectItem value="arqo">Arqo</SelectItem>
                     <SelectItem value="nexa">Nexa</SelectItem>
-                    <SelectItem value="incorporador">Incorporador</SelectItem>
                     <SelectItem value="externo">Externo</SelectItem>
                   </SelectContent>
                 </Select>

@@ -28,7 +28,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   arqo: 'Arqo',
   nexa: 'Nexa',
   sistema: 'Sistema',
-  portal: 'Portal Incorporador',
   outros: 'Outros'
 };
 
@@ -37,19 +36,17 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   arqo: 'Roleta, kanban, forecast e administração de leads Arqo',
   nexa: 'Agenda, disponibilidade e contratos Nexa',
   sistema: 'Usuários, perfis de acesso e auditoria',
-  portal: 'Acesso ao portal do incorporador',
   outros: 'Outros módulos ativos do sistema'
 };
 
-const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'portal', 'outros'];
+const CATEGORY_ORDER = ['seven', 'arqo', 'nexa', 'sistema', 'outros'];
 
 const getModuleCategory = (module: ModuleWithPermission) => {
   if (module.name.startsWith('arqo_')) return 'arqo';
   if (module.name.startsWith('nexa_')) return 'nexa';
-  if (module.name.startsWith('portal_')) return 'portal';
   if (['usuarios', 'auditoria'].includes(module.name)) return 'sistema';
   if (['empreendimentos', 'unidades', 'clientes', 'incorporadoras', 'imobiliarias', 'corretores'].includes(module.name)) return 'seven';
-  const rawCategory = ((module as any).category || '').toString().toLowerCase();
+  const rawCategory = (module.category || '').toLowerCase();
   if (['empreendimentos', 'comercial', 'mercado', 'parceiros'].includes(rawCategory)) return 'seven';
   if (rawCategory === 'administrativo') return 'sistema';
   return rawCategory || 'outros';
@@ -105,9 +102,10 @@ export function UserPermissionsTab({ userId, userRole }: UserPermissionsTabProps
   const groupedModules = useMemo(() => {
     if (!modules) return {};
     
-    const filtered = search 
-      ? modules.filter(m => m.display_name.toLowerCase().includes(search.toLowerCase()))
-      : modules;
+    const visibleModules = modules.filter((module) => !module.name.startsWith('portal_'));
+    const filtered = search
+      ? visibleModules.filter(m => m.display_name.toLowerCase().includes(search.toLowerCase()))
+      : visibleModules;
     
     const groups: Record<string, ModuleWithPermission[]> = {};
     
@@ -324,7 +322,7 @@ interface ModuleRowProps {
 function ModuleRow({ module, isPending, onToggleFullAccess, onTogglePermission, onRevert }: ModuleRowProps) {
   const { effective_permission, role_permission } = module;
   const isCustom = effective_permission.is_custom;
-  const moduleDescription = (module as any).description;
+  const moduleDescription = module.description;
   const scopeConfig = SCOPE_CONFIG[effective_permission.scope as ScopeType] || SCOPE_CONFIG.proprio;
   const ScopeIcon = scopeConfig.icon;
   

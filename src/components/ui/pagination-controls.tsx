@@ -12,7 +12,7 @@ export function PaginationControls({ page, totalPages, totalItems, onPageChange 
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+    <div className="mt-4 flex items-center justify-between rounded-[1.25rem] border border-border/70 bg-card px-4 py-3 shadow-card">
       <p className="text-sm text-muted-foreground">
         Página {page} de {totalPages}
         {totalItems !== undefined && ` • ${totalItems} registros`}

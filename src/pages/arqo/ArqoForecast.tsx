@@ -35,30 +35,31 @@ export default function ArqoForecast() {
   const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
   return (
-    <MainLayout title="Arqo — Forecast" subtitle="VGV bruto e ponderado (temperatura × peso da etapa)">
+    <MainLayout title="Forecast comercial" subtitle="VGV bruto e ponderado por temperatura e etapa">
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Carregando…</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="p-6">
-              <div className="text-xs text-muted-foreground uppercase">Volume real (bruto)</div>
-              <div className="text-3xl font-bold mt-2">{fmt(totalBruto)}</div>
-              <div className="text-xs text-muted-foreground mt-1">Soma sem ponderação — para volume comercial</div>
-            </Card>
-            <Card className="p-6">
-              <div className="text-xs text-muted-foreground uppercase">Forecast ponderado</div>
-              <div className="text-3xl font-bold mt-2">{fmt(totalPond)}</div>
-              <div className="text-xs text-muted-foreground mt-1">Temperatura × peso da etapa</div>
-            </Card>
-            <Card className="p-6">
-              <div className="text-xs text-muted-foreground uppercase">Leads ativos</div>
-              <div className="text-3xl font-bold mt-2">{rows.length}</div>
-            </Card>
+          <div className="mb-6 grid grid-cols-1 overflow-hidden rounded-[1.75rem] border border-black/[.06] bg-[#fffdfa] md:grid-cols-3">
+            <div className="border-b border-border/70 p-6 md:border-b-0 md:border-r">
+              <div className="text-[10px] font-bold uppercase tracking-[.15em] text-primary">Volume real</div>
+              <div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{fmt(totalBruto)}</div>
+              <div className="mt-2 text-xs text-muted-foreground">Soma sem ponderação</div>
+            </div>
+            <div className="border-b border-border/70 bg-[#201a17] p-6 text-white md:border-b-0 md:border-r">
+              <div className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ff8a39]">Forecast ponderado</div>
+              <div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{fmt(totalPond)}</div>
+              <div className="mt-2 text-xs text-white/45">Temperatura × peso da etapa</div>
+            </div>
+            <div className="p-6">
+              <div className="text-[10px] font-bold uppercase tracking-[.15em] text-primary">Leads ativos</div>
+              <div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{rows.length}</div>
+            </div>
           </div>
 
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Por etapa</h3>
+          <Card className="p-6 sm:p-7">
+            <p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Distribuição</p>
+            <h3 className="mb-5 mt-2 text-xl font-semibold tracking-[-0.035em]">Valor por etapa</h3>
             <div className="space-y-3">
               {porEtapa.map(e => (
                 <div key={e.id} className="flex items-center gap-3">

@@ -1,4 +1,3 @@
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { ClienteFase } from '@/types/clientes.types';
 import { CLIENTE_FASE_LABELS } from '@/types/clientes.types';
@@ -17,31 +16,32 @@ type Props = {
 };
 
 export function ClientesStats({ selectedFase, onSelectFase, stats }: Props) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-      <Card
-        className={cn(
-          'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 flex flex-col items-center justify-center text-center',
-          selectedFase === 'todos' && 'ring-2 ring-primary'
-        )}
-        onClick={() => onSelectFase('todos')}
-      >
-        <p className="text-xs text-muted-foreground">Todos</p>
-        <p className="text-2xl font-bold">{stats?.total || 0}</p>
-      </Card>
+  const cards: { fase: ClienteFase | 'todos'; label: string; value: number }[] = [
+    { fase: 'todos', label: 'Todos os clientes', value: stats?.total || 0 },
+    ...(['prospecto', 'qualificado', 'negociando', 'comprador', 'perdido'] as ClienteFase[]).map((fase) => ({
+      fase,
+      label: CLIENTE_FASE_LABELS[fase],
+      value: stats?.[fase] || 0,
+    })),
+  ];
 
-      {(['prospecto', 'qualificado', 'negociando', 'comprador', 'perdido'] as ClienteFase[]).map((fase) => (
-        <Card
+  return (
+    <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card md:grid-cols-3 xl:grid-cols-6" aria-label="Filtrar clientes por fase">
+      {cards.map(({ fase, label, value }) => (
+        <button
+          type="button"
+          aria-pressed={selectedFase === fase}
           key={fase}
           className={cn(
-            'p-3 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 flex flex-col items-center justify-center text-center',
-            selectedFase === fase && 'ring-2 ring-primary'
+            'group relative min-h-28 border-b border-r border-border/70 p-4 text-left transition-colors hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/40 md:p-5',
+            selectedFase === fase && 'bg-primary-soft/75'
           )}
           onClick={() => onSelectFase(fase)}
         >
-          <p className="text-xs text-muted-foreground">{CLIENTE_FASE_LABELS[fase]}</p>
-          <p className="text-2xl font-bold">{(stats as any)?.[fase] || 0}</p>
-        </Card>
+          <p className="text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{label}</p>
+          <p className="mt-4 text-3xl font-semibold tracking-[-0.05em] tabular-nums">{value}</p>
+          <span className={cn('absolute inset-x-4 bottom-0 h-0.5 origin-left bg-primary transition-transform', selectedFase === fase ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')} />
+        </button>
       ))}
     </div>
   );

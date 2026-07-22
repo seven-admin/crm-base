@@ -5,9 +5,9 @@ import { WhatsAppAtividadesTab } from '@/components/shared/WhatsAppAtividadesTab
 
 export default function ArqoAtividades() {
   return (
-    <MainLayout title="Arqo — Atividades" subtitle="Agenda de atendimentos e histórico de conversas do WhatsApp">
+    <MainLayout title="Atividades Arqo" subtitle="Agenda de atendimentos e histórico de conversas do WhatsApp">
       <Tabs defaultValue="agenda">
-        <TabsList className="mb-4">
+        <TabsList className="mb-5">
           <TabsTrigger value="agenda">Agenda Atendimentos</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
         </TabsList>

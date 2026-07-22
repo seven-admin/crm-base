@@ -110,18 +110,17 @@ export default function NexaContratoNovo() {
       title="Novo contrato"
       actions={<Button variant="outline" onClick={() => nav('/nexa/contratos')}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
     >
-      <div className="space-y-6 max-w-5xl mx-auto">
-        <div className="flex items-center gap-2 text-sm">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="grid grid-cols-3 overflow-hidden rounded-full border border-border/70 bg-card p-1 text-sm shadow-card">
           {['Dados', 'Modelo', 'Preview & Gerar'].map((label, i) => (
-            <div key={i} className={`flex items-center gap-2 ${i === step ? 'font-semibold' : 'text-muted-foreground'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${i <= step ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{i + 1}</span>
-              {label}
-              {i < 2 && <span className="mx-2">›</span>}
+            <div key={i} className={`flex min-w-0 items-center justify-center gap-2 rounded-full px-3 py-2.5 ${i === step ? 'bg-primary font-semibold text-primary-foreground' : 'text-muted-foreground'}`}>
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${i <= step ? 'bg-[#201a17] text-white' : 'bg-muted'}`}>{i + 1}</span>
+              <span className="truncate">{label}</span>
             </div>
           ))}
         </div>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="pt-6">
             {step === 0 && (
               <div className="space-y-4">
@@ -188,7 +187,7 @@ export default function NexaContratoNovo() {
                 {template && (
                   <>
                     <div className="text-sm text-muted-foreground">Variáveis usadas: {varsUsadas.length}</div>
-                    <div className="space-y-2 max-h-96 overflow-y-auto border rounded p-3">
+                    <div className="max-h-96 space-y-2 overflow-y-auto rounded-[1.25rem] border border-border/70 bg-muted/20 p-3">
                       {varsUsadas.map((chave) => {
                         const meta = variaveisCat?.find((v) => v.chave === chave);
                         return (
@@ -211,7 +210,7 @@ export default function NexaContratoNovo() {
             {step === 2 && (
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">Confira o conteúdo antes de gerar o PDF.</div>
-                <div ref={previewRef} className="border rounded bg-white p-8 prose max-w-none" style={{ minHeight: 400 }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div ref={previewRef} className="prose max-w-none rounded-[1.25rem] border border-border/70 bg-white p-8 shadow-sm" style={{ minHeight: 400 }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </div>
             )}
           </CardContent>

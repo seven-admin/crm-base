@@ -7,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ArqoProtectedRoute } from "@/components/arqo/ArqoProtectedRoute";
 import { NexaProtectedRoute } from "@/components/nexa/NexaProtectedRoute";
-import { PortalIncorporadorLayout } from "@/components/portal-incorporador/PortalIncorporadorLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import React, { Suspense, lazy } from "react";
 
@@ -48,13 +47,9 @@ const TermosUso = lazy(() => import("./pages/TermosUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const SemAcesso = lazy(() => import("./pages/SemAcesso"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const DesignTest = lazy(() => import("./pages/DesignTest"));
 const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
 const Configuracoes = lazy(() => import("./pages/Configuracoes"));
 
-
-// Portal Incorporador
-const PortalIncorporadorDisponibilidade = lazy(() => import("./pages/portal-incorporador/PortalIncorporadorDisponibilidade"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,7 +84,6 @@ const App = () => (
                 <Route path="/privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/sem-acesso" element={<SemAcesso />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/design-test" element={<DesignTest />} />
 
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -126,20 +120,6 @@ const App = () => (
                 <Route path="/nexa/contratos/modelos" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratosTemplates /></NexaProtectedRoute>} />
                 <Route path="/nexa/contratos/modelos/:id" element={<NexaProtectedRoute moduleName="nexa_contratos_modelos"><NexaContratoTemplateEditor /></NexaProtectedRoute>} />
                 <Route path="/nexa/render-vithoria" element={<NexaProtectedRoute><NexaRenderVithoria /></NexaProtectedRoute>} />
-
-
-                {/* Portal do Incorporador */}
-                <Route
-                  path="/portal-incorporador"
-                  element={
-                    <ProtectedRoute moduleName="portal_incorporador">
-                      <PortalIncorporadorLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<PortalIncorporadorDisponibilidade />} />
-                  <Route path="disponibilidade" element={<PortalIncorporadorDisponibilidade />} />
-                </Route>
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />

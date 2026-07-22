@@ -12,21 +12,23 @@ import { useUpsertArqoConfig, useDeleteArqoConfig } from '@/hooks/useArqo';
 export type ConfigField = {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'color' | 'switch' | 'select';
+  type: 'text' | 'textarea' | 'number' | 'color' | 'switch' | 'select' | 'date';
   options?: { value: string; label: string }[];
   required?: boolean;
   default?: any;
+  immutable?: boolean;
 };
 
 interface ArqoConfigCrudProps {
-  table: 'arqo_lead_sources' | 'arqo_temperaturas' | 'arqo_funil_etapas' | 'arqo_grupos_atendimento' | 'arqo_sla_regras' | 'arqo_regua_reengajamento';
+  table: 'arqo_lead_sources' | 'arqo_temperaturas' | 'arqo_funil_etapas' | 'arqo_grupos_atendimento' | 'arqo_sla_regras' | 'arqo_regua_reengajamento' | 'arqo_atendimento_opcoes' | 'arqo_metas_atendimento' | 'arqo_performance_config';
   items: any[];
   fields: ConfigField[];
   renderRow: (item: any) => React.ReactNode;
   title: string;
+  allowDelete?: boolean;
 }
 
-export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoConfigCrudProps) {
+export function ArqoConfigCrud({ table, items, fields, renderRow, title, allowDelete = true }: ArqoConfigCrudProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const upsert = useUpsertArqoConfig(table);
@@ -48,7 +50,7 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
     // Normaliza sentinel "__none__" -> null (para FKs opcionais como temperatura_id)
     const payload = { ...editing };
     Object.keys(payload).forEach((k) => {
-      if (payload[k] === '__none__') payload[k] = null;
+      if (payload[k] === '__none__' || payload[k] === '') payload[k] = null;
     });
     upsert.mutate(payload, { onSuccess: () => setOpen(false) });
   };
@@ -66,9 +68,11 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
           <div key={item.id} className="flex items-center gap-3 p-2 border rounded-lg">
             <div className="flex-1">{renderRow(item)}</div>
             <Button size="icon" variant="ghost" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={() => confirm('Remover?') && del.mutate(item.id)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            {allowDelete && (
+              <Button size="icon" variant="ghost" onClick={() => confirm('Remover?') && del.mutate(item.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
           </div>
         ))}
       </div>
@@ -98,8 +102,9 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title }: ArqoC
                   </Select>
                 ) : (
                   <Input
-                    type={f.type === 'number' ? 'number' : f.type === 'color' ? 'color' : 'text'}
+                    type={f.type === 'number' ? 'number' : f.type === 'color' ? 'color' : f.type === 'date' ? 'date' : 'text'}
                     step={f.type === 'number' ? 'any' : undefined}
+                    disabled={!!editing?.id && f.immutable}
                     value={editing?.[f.name] ?? ''}
                     onChange={e => setEditing({
                       ...editing,

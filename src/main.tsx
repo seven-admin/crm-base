@@ -1,9 +1,5 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
 import "./index.css";
 
 // Após um novo deploy, abas já abertas ainda referenciam os nomes de chunk

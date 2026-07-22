@@ -121,18 +121,18 @@ export default function NexaContratoTemplateEditor() {
               <TipTapEditor value={conteudo} onChange={setConteudo} />
             </TabsContent>
             <TabsContent value="preview">
-              <div className="border rounded-md bg-white p-6 prose max-w-none" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              <div className="prose max-w-none rounded-[1.25rem] border border-border/70 bg-white p-6" dangerouslySetInnerHTML={{ __html: previewHtml }} />
             </TabsContent>
           </Tabs>
         </div>
 
-        <Card className="h-fit sticky top-4">
+        <Card className="sticky top-20 h-fit overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Inserir no contrato</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Tabs defaultValue="vars" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 rounded-none">
+              <TabsList className="mx-3 grid w-[calc(100%-1.5rem)] grid-cols-2">
                 <TabsTrigger value="vars">Variáveis</TabsTrigger>
                 <TabsTrigger value="blocos">Blocos</TabsTrigger>
               </TabsList>
@@ -145,7 +145,7 @@ export default function NexaContratoTemplateEditor() {
                         key={v.id}
                         type="button"
                         onClick={() => insertIntoTipTap(`{{${v.chave}}}`)}
-                        className="w-full text-left p-2 rounded hover:bg-muted text-sm border"
+                        className="w-full rounded-xl border border-border/70 p-2 text-left text-sm transition-colors hover:bg-primary-soft/50"
                       >
                         <div className="font-mono text-xs text-primary">{`{{${v.chave}}}`}</div>
                         <div className="text-xs text-muted-foreground">{v.label}</div>
@@ -166,7 +166,7 @@ export default function NexaContratoTemplateEditor() {
                         key={b.id}
                         type="button"
                         onClick={() => insertHtmlIntoTipTap(b.conteudo_html)}
-                        className="w-full text-left p-2 rounded hover:bg-muted text-sm border"
+                        className="w-full rounded-xl border border-border/70 p-2 text-left text-sm transition-colors hover:bg-primary-soft/50"
                       >
                         <div className="text-xs font-medium">{b.nome}</div>
                         <div className="text-[10px] uppercase text-muted-foreground">{b.categoria}</div>

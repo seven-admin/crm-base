@@ -13,8 +13,9 @@ export default function SemAcesso() {
   const { permissions, isLoading, isAdmin } = usePermissions();
   const { getDefaultRoute } = useDefaultRoute();
 
-  if (!isLoading && (isAdmin() || permissions.some((permission) => permission.can_view))) {
-    return <Navigate to={getDefaultRoute()} replace />;
+  const defaultRoute = getDefaultRoute();
+  if (!isLoading && defaultRoute !== '/sem-acesso' && (isAdmin() || permissions.some((permission) => permission.can_view))) {
+    return <Navigate to={defaultRoute} replace />;
   }
 
   const handleLogout = async () => {
@@ -23,8 +24,8 @@ export default function SemAcesso() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="max-w-md w-full">
+    <div className="login-canvas relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0d0c0a] p-4">
+      <Card className="relative z-10 w-full max-w-md border-white/50 bg-[#f7f3ed]/95 backdrop-blur-xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
             <ShieldOff className="h-8 w-8 text-warning" />
@@ -35,7 +36,7 @@ export default function SemAcesso() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
+          <div className="rounded-[1.25rem] bg-muted p-4 text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-2">O que fazer?</p>
             <ul className="list-disc list-inside space-y-1">
               <li>Entre em contato com o administrador do sistema</li>

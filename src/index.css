@@ -3,25 +3,25 @@
 @tailwind utilities;
 @layer base {
   :root {
-    /* Neutros suaves + azul institucional + laranja como accent */
-    --background: 240 14% 98%;             /* #f8f8fa */
-    --foreground: 220 26% 14%;             /* #1b2330 */
-    --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
-    --primary: 208 91% 53%;                /* #198EF4 */
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 208 90% 94%;           /* #e2f0fd */
-    --primary-soft-foreground: 208 100% 22%;
-    --secondary: 220 14% 96%;              /* #f1f3f5 */
-    --secondary-foreground: 220 26% 20%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;       /* labels acinzentados */
-    --accent: 28 91% 54%;                  /* #F5941E laranja accent */
-    --accent-foreground: 0 0% 100%;
-    --accent-soft: 28 100% 94%;            /* #ffe6cc */
-    --accent-soft-foreground: 28 91% 34%;
+    /* Seven Editorial OS — papel quente, tinta e laranja como assinatura */
+    --background: 36 24% 95%;
+    --foreground: 30 13% 9%;
+    --card: 38 35% 99%;
+    --card-foreground: 30 13% 9%;
+    --popover: 38 35% 99%;
+    --popover-foreground: 30 13% 9%;
+    --primary: 25 100% 55%;
+    --primary-foreground: 24 42% 12%;
+    --primary-soft: 27 100% 93%;
+    --primary-soft-foreground: 24 82% 37%;
+    --secondary: 35 18% 92%;
+    --secondary-foreground: 30 13% 16%;
+    --muted: 35 18% 92%;
+    --muted-foreground: 30 7% 43%;
+    --accent: 25 100% 55%;
+    --accent-foreground: 24 42% 12%;
+    --accent-soft: 27 100% 92%;
+    --accent-soft-foreground: 24 82% 37%;
     --destructive: 0 78% 60%;              /* #ea5455 coral suave */
     --destructive-foreground: 0 0% 100%;
     --success: 168 76% 42%;                /* #17bfa8 teal */
@@ -30,21 +30,21 @@
     --warning-foreground: 0 0% 100%;
     --info: 208 91% 53%;
     --info-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 88%;
-    --input-bg: 0 0% 100%;
-    --ring: 208 91% 53%;
-    --radius: 1rem;
+    --border: 34 13% 85%;
+    --input: 34 13% 81%;
+    --input-bg: 38 35% 99%;
+    --ring: 25 100% 55%;
+    --radius: 0.875rem;
     /* Card escuro (tipo Status Summary da referência) */
-    --surface-dark: 217 33% 17%;           /* #1e293b */
-    --surface-dark-foreground: 210 40% 96%;
+    --surface-dark: 24 12% 11%;
+    --surface-dark-foreground: 36 33% 96%;
     /* Tabelas — divisórias sutis, sem zebra pesada */
-    --table-row: 0 0% 100%;
-    --table-row-alt: 220 20% 98%;
-    --table-row-hover: 220 20% 96%;
-    --table-border: 220 13% 93%;
-    --table-header: 0 0% 100%;
-    --table-header-foreground: 215 16% 45%;
+    --table-row: 38 35% 99%;
+    --table-row-alt: 36 24% 97%;
+    --table-row-hover: 28 50% 96%;
+    --table-border: 34 13% 89%;
+    --table-header: 38 35% 99%;
+    --table-header-foreground: 30 7% 43%;
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 26% 14%;
@@ -79,10 +79,10 @@
     --nav-eventos: 208 91% 53%;
     --nav-sistema: 208 91% 53%;
     /* Elevation — muito sutil */
-    --shadow-card: 0 1px 3px rgb(20 29 38 / 0.04), 0 1px 2px rgb(20 29 38 / 0.03);
-    --shadow-topbar: 0 1px 2px rgb(20 29 38 / 0.04);
-    --shadow-popover: 0 10px 30px rgb(20 29 38 / 0.10), 0 2px 6px rgb(20 29 38 / 0.05);
-    --gradient-primary: linear-gradient(135deg, hsl(208 91% 53%) 0%, hsl(208 100% 32%) 100%);
+    --shadow-card: 0 1px 2px rgb(45 31 19 / 0.03), 0 16px 36px -28px rgb(45 31 19 / 0.28);
+    --shadow-topbar: 0 1px 0 rgb(0 0 0 / 0.16);
+    --shadow-popover: 0 22px 55px -22px rgb(45 31 19 / 0.35), 0 4px 12px rgb(45 31 19 / 0.08);
+    --gradient-primary: linear-gradient(135deg, hsl(25 100% 55%) 0%, hsl(17 92% 48%) 100%);
   }
   .dark {
     --background: 220 26% 9%;              /* #0f1620 */
@@ -133,17 +133,20 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: "cv11", "ss01", "tnum";
     min-height: 100vh;
   }
   h1, h2, h3, h4 {
-    @apply font-display tracking-tight;
+    @apply font-sans tracking-tight;
+  }
+  ::selection {
+    @apply bg-primary/15 text-foreground;
   }
 }
 
 @layer components {
   .card-elevated {
-    @apply bg-card rounded-lg border border-border;
+    @apply rounded-[1.5rem] border border-border/70 bg-card shadow-card;
   }
   .status-badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
@@ -161,10 +164,10 @@
     @apply bg-muted text-muted-foreground;
   }
   .kpi-card {
-    @apply card-elevated p-6 transition-all duration-200;
+    @apply card-elevated p-5 transition-all duration-200;
   }
   .kpi-card:hover {
-    @apply -translate-y-0.5;
+    @apply border-primary/20 shadow-popover;
   }
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
@@ -293,6 +296,12 @@
   .icon-container-purple { @apply bg-chart-5/10 text-[hsl(262,83%,58%)]; }
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
+  }
+  .page-section {
+    @apply rounded-[1.5rem] border border-border/70 bg-card shadow-card;
+  }
+  .page-toolbar {
+    @apply flex flex-col gap-3 rounded-[1.5rem] border border-border/70 bg-card p-3 shadow-card sm:flex-row sm:items-center sm:justify-between;
   }
   @keyframes fadeIn {
     from {
@@ -474,4 +483,41 @@
   .animation-delay-600 { animation-delay: 600ms; }
   .animation-delay-700 { animation-delay: 700ms; }
   .animation-delay-800 { animation-delay: 800ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.login-canvas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 110%, rgb(255 116 23 / 0.55), transparent 32%),
+    radial-gradient(circle at -5% 5%, rgb(255 255 255 / 0.12), transparent 31%),
+    linear-gradient(118deg, #171512 0%, #080807 48%, #0d0906 100%);
+}
+
+.login-canvas::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.17;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 1023px) {
+  .login-canvas::before {
+    background:
+      radial-gradient(circle at 50% 110%, rgb(255 116 23 / 0.42), transparent 36%),
+      linear-gradient(145deg, #191613 0%, #090908 100%);
+  }
 }

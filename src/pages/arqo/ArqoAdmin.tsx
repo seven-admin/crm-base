@@ -19,15 +19,16 @@ import { ArqoGerenciarLeads } from './ArqoGerenciarLeads';
 
 function KpiCard({ label, value, icon: Icon, hint }: any) {
   return (
-    <Card className="p-4">
+    <Card className="group relative overflow-hidden p-5 shadow-none transition-colors hover:bg-primary-soft/35">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{label}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-[-0.05em]">{value}</p>
           {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
         </div>
-        <Icon className="h-8 w-8 text-primary/40" />
+        <Icon className="h-6 w-6 text-primary/65" />
       </div>
+      <span className="absolute inset-x-5 bottom-0 h-0.5 origin-left scale-x-0 bg-primary transition-transform group-hover:scale-x-100" />
     </Card>
   );
 }
@@ -143,8 +144,8 @@ export default function ArqoAdmin() {
 
   return (
     <MainLayout
-      title="Arqo — Admin"
-      subtitle="Visão gerencial e gestão de leads importados"
+      title="Gestão Arqo"
+      subtitle="Visão gerencial de filas, equipes e oportunidades"
     >
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
@@ -159,7 +160,7 @@ export default function ArqoAdmin() {
             </div>
           ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-[1.75rem] border border-border/70 bg-card md:grid-cols-5 [&>*]:rounded-none [&>*]:border-0 [&>*]:border-b [&>*]:border-r [&>*]:border-border/70">
             <KpiCard label="Leads ativos" value={kpis.totalAtivos} icon={Users} />
             <KpiCard label="Na fila" value={kpis.semConsultor} icon={AlertCircle} hint="Sem consultor" />
             <KpiCard label="Em atendimento" value={kpis.emAtendimento} icon={UserCheck} />

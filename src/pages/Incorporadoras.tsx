@@ -95,7 +95,7 @@ export default function Incorporadoras() {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="page-toolbar flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -118,7 +118,7 @@ export default function Incorporadoras() {
           </div>
         ) : (
           <>
-            <div className="rounded-lg border overflow-x-auto">
+            <div className="overflow-x-auto rounded-[1.5rem] border border-border/70 bg-card shadow-card">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -133,12 +133,12 @@ export default function Incorporadoras() {
                   {incorporadoras.map((inc) => (
                     <TableRow 
                       key={inc.id}
-                      className={canEdit ? "cursor-pointer hover:bg-muted/50" : ""}
+                      className={canEdit ? "cursor-pointer hover:bg-primary-soft/35" : ""}
                       onClick={() => canEdit && handleEdit(inc)}
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
                             <Building2 className="h-5 w-5 text-primary" />
                           </div>
                           <div>

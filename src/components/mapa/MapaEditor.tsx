@@ -491,7 +491,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
           top: center.y * imageScale + imageOffset.y,
           fontSize,
           fill: '#ffffff',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Space Grotesk", system-ui, sans-serif',
           fontWeight: '300',
           originX: 'center',
           originY: 'center',
@@ -552,7 +552,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
           top: centerY,
           fontSize,
           fill: '#ffffff',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Space Grotesk", system-ui, sans-serif',
           fontWeight: '300',
           originX: 'center',
           originY: 'center',
@@ -999,7 +999,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-card border border-border rounded-lg">
+      <div className="page-toolbar flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={activeTool === 'select' ? 'default' : 'outline'}
@@ -1284,7 +1284,7 @@ export function MapaEditor({ empreendimentoId, mapa, unidades, labelFormato = ['
 
       {/* Canvas */}
       <Card>
-        <CardContent className="p-0 overflow-hidden rounded-lg">
+        <CardContent className="overflow-hidden rounded-[1.5rem] p-0">
           <div ref={containerRef} className="w-full">
             <canvas ref={canvasRef} />
           </div>

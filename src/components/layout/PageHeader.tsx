@@ -17,29 +17,31 @@ export function PageHeader({ title, subtitle, actions, badge, backTo, backLabel,
   const navigate = useNavigate();
 
   return (
-    <header className="bg-card border-b border-border px-4 md:px-6 py-5">
-      {backTo && (
-        <div className="mb-2">
+    <header className="bg-background">
+      <div className="mx-auto w-full max-w-[1600px] px-4 pb-2 pt-7 md:px-6 md:pt-9 lg:px-8">
+        {backTo && (
+          <div className="mb-5">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1 -ml-2 h-8 text-muted-foreground hover:text-foreground font-medium"
+            className="-ml-3 h-8 gap-1 rounded-full text-muted-foreground hover:text-foreground font-medium"
             onClick={() => navigate(backTo)}
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{backLabel || 'Voltar'}</span>
           </Button>
-        </div>
-      )}
+          </div>
+        )}
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">SVN CRM · Workspace</p>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">{title}</h1>
+            <h1 className="text-3xl font-semibold leading-[.95] tracking-[-0.045em] text-foreground md:text-[2.35rem]">{title}</h1>
             {badge}
           </div>
           {(subtitle || metadata) && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               {subtitle && <span>{subtitle}</span>}
               {subtitle && metadata && <span>·</span>}
               {metadata}
@@ -47,10 +49,11 @@ export function PageHeader({ title, subtitle, actions, badge, backTo, backLabel,
           )}
         </div>
         {actions && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0 sm:justify-end sm:pb-1">
             {actions}
           </div>
         )}
+      </div>
       </div>
     </header>
   );

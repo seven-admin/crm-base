@@ -73,8 +73,8 @@ export default function ResetPassword() {
 
   if (!isRecoveryMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <div className="w-full max-w-sm space-y-6 text-center">
+      <div className="login-canvas relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0d0c0a] p-6">
+        <div className="relative z-10 w-full max-w-sm space-y-6 rounded-[2rem] border border-white/50 bg-[#f7f3ed]/95 p-8 text-center shadow-popover backdrop-blur-xl">
           <h2 className="text-2xl font-bold text-foreground">Link inválido</h2>
           <p className="text-muted-foreground text-sm">
             Este link de recuperação é inválido ou já expirou. Solicite um novo link na tela de login.
@@ -88,8 +88,8 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="login-canvas relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0d0c0a] p-6">
+      <div className="relative z-10 w-full max-w-sm space-y-6 rounded-[2rem] border border-white/50 bg-[#f7f3ed]/95 p-8 shadow-popover backdrop-blur-xl">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-foreground">Nova Senha</h2>
           <p className="text-muted-foreground text-sm mt-1">
@@ -99,7 +99,7 @@ export default function ResetPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}

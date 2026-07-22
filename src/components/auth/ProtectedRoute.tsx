@@ -96,14 +96,14 @@ export function ProtectedRoute({
     if (empresa === 'nexa' && !path.startsWith('/nexa')) {
       return <Navigate to="/nexa/agenda" replace />;
     }
-    if (empresa === 'incorporador' && !path.startsWith('/portal-incorporador')) {
-      return <Navigate to="/portal-incorporador" replace />;
+    if (empresa === 'incorporador') {
+      return <Navigate to="/sem-acesso" replace />;
     }
   }
 
-  // IMPORTANTE: legado por role (mantém compat com role incorporador / corretor)
-  if (role === 'incorporador' && !path.startsWith('/portal-incorporador') && !isSelfPath) {
-    return <Navigate to="/portal-incorporador" replace />;
+  // O portal do incorporador foi descontinuado; vínculos legados não entram no CRM interno.
+  if (role === 'incorporador' && !isSelfPath) {
+    return <Navigate to="/sem-acesso" replace />;
   }
 
   if ((role === 'corretor' || role === 'gestor_imobiliaria') && !path.startsWith('/portal-corretor') && !path.startsWith('/portal') && !isSelfPath) {

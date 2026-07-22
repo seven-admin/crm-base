@@ -52,18 +52,13 @@ export function ClientesTable({
   const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;
 
   return (
-    <div className="rounded-lg border">
+    <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={allSelected}
-                ref={(ref) => {
-                  if (ref) {
-                    (ref as any).indeterminate = someSelected;
-                  }
-                }}
+                checked={someSelected ? 'indeterminate' : allSelected}
                 onCheckedChange={onToggleSelectAll}
                 aria-label="Selecionar todos"
               />
@@ -81,7 +76,7 @@ export function ClientesTable({
           {clientes.map((cliente) => (
             <TableRow
               key={cliente.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer hover:bg-primary-soft/35"
               onClick={() => onOpenQuickView(cliente)}
             >
               <TableCell onClick={(e) => e.stopPropagation()}>
@@ -106,11 +101,11 @@ export function ClientesTable({
               <TableCell>{cliente.whatsapp || '-'}</TableCell>
               <TableCell>{cliente.endereco_cidade || '-'}</TableCell>
               <TableCell>{cliente.endereco_uf || '-'}</TableCell>
-              <TableCell>{(cliente as any).gestor?.full_name || '-'}</TableCell>
+              <TableCell>{(cliente as Cliente & { gestor?: { full_name?: string } }).gestor?.full_name || '-'}</TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={`Abrir ações de ${cliente.nome}`}>
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

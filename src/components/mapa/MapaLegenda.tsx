@@ -11,7 +11,7 @@ export function MapaLegenda({ statusVisiveis }: MapaLegendaProps) {
     : STATUS_LEGEND;
 
   return (
-    <div className="flex flex-wrap gap-4 p-3 bg-card border border-border rounded-lg">
+    <div className="flex flex-wrap gap-4 rounded-full border border-border bg-card px-4 py-2.5">
       {legendItems.map(({ status, label, color }) => (
         <div key={status} className="flex items-center gap-2">
           <div

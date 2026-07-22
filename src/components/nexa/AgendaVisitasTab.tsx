@@ -47,7 +47,7 @@ export function AgendaVisitasTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
@@ -74,7 +74,7 @@ export function AgendaVisitasTab() {
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12" />)}
         </div>
       ) : !filtered.length ? (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="py-12 text-center text-muted-foreground">
             Nenhuma visita encontrada.
           </CardContent>

@@ -192,7 +192,7 @@ export default function Auditoria() {
   return (
     <MainLayout title="Auditoria" subtitle="Log completo de alterações do sistema">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-[1.75rem] border border-border/70 bg-card md:grid-cols-4 [&>*]:rounded-none [&>*]:border-0 [&>*]:border-b [&>*]:border-r [&>*]:border-border/70 [&>*]:shadow-none">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -254,6 +254,7 @@ export default function Auditoria() {
       {/* Filtros */}
       <Card className="mb-6">
         <CardContent className="pt-6">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Filtros de auditoria</p>
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px]">
               <label className="text-sm font-medium mb-2 block">Período</label>

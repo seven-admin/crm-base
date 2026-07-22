@@ -95,7 +95,8 @@ export function ArqoGerenciarLeads() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="p-4 sm:p-5">
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Filtros e ações em lote</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
           <div className="lg:col-span-2">
             <Label className="text-xs">Busca (nome, telefone, email)</Label>
@@ -197,7 +198,7 @@ export function ArqoGerenciarLeads() {
         </div>
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

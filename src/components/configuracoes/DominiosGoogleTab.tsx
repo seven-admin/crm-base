@@ -23,7 +23,6 @@ const EMPRESAS: { value: EmpresaDefault; label: string }[] = [
   { value: 'seven', label: 'Seven' },
   { value: 'arqo', label: 'Arqo' },
   { value: 'nexa', label: 'Nexa' },
-  { value: 'incorporador', label: 'Incorporador' },
   { value: 'externo', label: 'Externo' },
 ];
 

@@ -19,13 +19,13 @@ export function useDefaultRoute() {
     if (empresa === 'externo') return '/sem-acesso';
     if (empresa === 'arqo' && !isAdmin()) return '/arqo/roleta';
     if (empresa === 'nexa' && !isAdmin()) return '/nexa/agenda';
-    if (empresa === 'incorporador') return '/portal-incorporador';
+    if (empresa === 'incorporador') return '/sem-acesso';
 
     // Admins e usuários Seven
     if (isAdmin() || role === 'super_admin' || role === 'admin') return '/';
 
     // Legado (compat com roles antigos)
-    if (role === 'incorporador') return '/portal-incorporador';
+    if (role === 'incorporador') return '/sem-acesso';
     if (role === 'corretor' || role === 'gestor_imobiliaria') return '/portal-corretor';
 
     if (permissions.length === 0) return '/';
@@ -40,4 +40,3 @@ export function useDefaultRoute() {
 
   return { getDefaultRoute, canAccessDashboard, isLoading };
 }
-

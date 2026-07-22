@@ -31,40 +31,32 @@ export default function NexaVisitaDetalhe() {
   const telefone = visita.cliente?.telefone || visita.visitante_telefone;
 
   return (
-    <MainLayout>
-      <div className="space-y-6 max-w-5xl mx-auto">
-      <Link to="/nexa/agenda" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-        <ArrowLeft className="h-4 w-4" /> Voltar para agenda
-      </Link>
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{nome}</h1>
-          <p className="text-muted-foreground">
-            {format(new Date(visita.data_hora), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-          </p>
-        </div>
-        <Badge className={STATUS_COLORS[visita.status]}>{STATUS_LABELS[visita.status]}</Badge>
-      </div>
+    <MainLayout
+      title={nome}
+      subtitle={format(new Date(visita.data_hora), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+      badge={<Badge className={STATUS_COLORS[visita.status]}>{STATUS_LABELS[visita.status]}</Badge>}
+      actions={<Button variant="outline" asChild><Link to="/nexa/agenda"><ArrowLeft className="h-4 w-4" /> Voltar para agenda</Link></Button>}
+    >
+      <div className="mx-auto max-w-5xl space-y-5">
 
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="md:col-span-2">
-          <CardHeader><CardTitle>Dados da visita</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> {nome}</div>
-            {telefone && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {telefone}</div>}
-            {visita.cliente?.email && <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {visita.cliente.email}</div>}
-            <div className="flex items-center gap-2"><Home className="h-4 w-4 text-muted-foreground" /> {visita.empreendimento?.nome}</div>
+        <Card className="border-0 bg-[#201a17] text-white md:col-span-2">
+          <CardHeader><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Visita agendada</p><CardTitle className="text-2xl">Dados da visita</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
+            <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><User className="h-4 w-4 text-[#ff8a39]" /> {nome}</div>
+            {telefone && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Phone className="h-4 w-4 text-[#ff8a39]" /> {telefone}</div>}
+            {visita.cliente?.email && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Mail className="h-4 w-4 text-[#ff8a39]" /> {visita.cliente.email}</div>}
+            <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Home className="h-4 w-4 text-[#ff8a39]" /> {visita.empreendimento?.nome}</div>
             {visita.imobiliaria?.nome && (
-              <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" /> {visita.imobiliaria.nome}</div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Building2 className="h-4 w-4 text-[#ff8a39]" /> {visita.imobiliaria.nome}</div>
             )}
             {visita.corretor?.nome_completo && (
-              <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> Corretor: {visita.corretor.nome_completo}</div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><User className="h-4 w-4 text-[#ff8a39]" /> Corretor: {visita.corretor.nome_completo}</div>
             )}
             {visita.observacoes && (
-              <div className="pt-2 border-t mt-2">
+              <div className="col-span-full mt-2 border-t border-white/10 pt-4">
                 <p className="font-medium mb-1">Observações</p>
-                <p className="text-muted-foreground whitespace-pre-wrap">{visita.observacoes}</p>
+                <p className="text-white/50 whitespace-pre-wrap">{visita.observacoes}</p>
               </div>
             )}
           </CardContent>
@@ -112,4 +104,3 @@ export default function NexaVisitaDetalhe() {
     </MainLayout>
   );
 }
-

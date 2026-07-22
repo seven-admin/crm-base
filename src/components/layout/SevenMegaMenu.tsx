@@ -21,9 +21,10 @@ export interface SevenMenuCategory {
 interface SevenMegaMenuProps {
   categories: SevenMenuCategory[];
   hasActive: boolean;
+  dark?: boolean;
 }
 
-export function SevenMegaMenu({ categories, hasActive }: SevenMegaMenuProps) {
+export function SevenMegaMenu({ categories, hasActive, dark = false }: SevenMegaMenuProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const visible = categories.filter((c) => c.items.length > 0);
@@ -34,10 +35,15 @@ export function SevenMegaMenu({ categories, hasActive }: SevenMegaMenuProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'relative px-3 h-16 text-sm transition-colors outline-none whitespace-nowrap uppercase tracking-wide',
-            hasActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
+            'inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors outline-none whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring/40',
+            dark
+              ? hasActive
+                ? 'bg-white/10 text-white'
+                : 'text-white/55 hover:bg-white/[.07] hover:text-white'
+              : hasActive
+                ? 'bg-primary-soft text-primary-soft-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
           )}
-          style={hasActive ? { boxShadow: 'inset 0 -2px 0 0 hsl(var(--primary))' } : undefined}
         >
           <span className="flex items-center gap-1.5">
             Seven
@@ -47,7 +53,7 @@ export function SevenMegaMenu({ categories, hasActive }: SevenMegaMenuProps) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[640px] max-w-[calc(100vw-2rem)] p-4"
+        className="w-[640px] max-w-[calc(100vw-2rem)] rounded-2xl p-4"
       >
         <div className={cn('grid gap-4', visible.length === 3 ? 'grid-cols-3' : visible.length === 2 ? 'grid-cols-2' : 'grid-cols-1')}>
           {visible.map((cat) => (

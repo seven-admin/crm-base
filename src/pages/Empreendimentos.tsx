@@ -174,7 +174,7 @@ const Empreendimentos = () => {
       title="Empreendimentos"
       subtitle="Gerencie seus empreendimentos imobiliários"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="page-toolbar mb-6">
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -250,7 +250,7 @@ const Empreendimentos = () => {
                 <div className="flex-1 border-t border-border ml-2" />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="rounded-lg border border-border bg-card overflow-hidden mt-2">
+                <div className="mt-2 overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -277,7 +277,7 @@ const Empreendimentos = () => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="page-section flex flex-col items-center justify-center py-16 text-center">
           <Building2 className="h-16 w-16 text-muted-foreground/30 mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-1">
             Nenhum empreendimento encontrado

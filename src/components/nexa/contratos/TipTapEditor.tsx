@@ -66,14 +66,14 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
 
   if (!editor) {
     return (
-      <div className="border rounded-md bg-background min-h-[500px] p-6 text-sm text-muted-foreground">
+      <div className="min-h-[500px] rounded-[1.25rem] border border-border/70 bg-card p-6 text-sm text-muted-foreground">
         Carregando editor…
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md bg-background">
+    <div className="overflow-hidden rounded-[1.25rem] border border-border/70 bg-card">
       <div className="flex flex-wrap gap-0.5 border-b p-2 items-center sticky top-0 bg-background z-10">
         <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Negrito"><Bold className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Itálico"><Italic className="h-4 w-4" /></ToolbarButton>

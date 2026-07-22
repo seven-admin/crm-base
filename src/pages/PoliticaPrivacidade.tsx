@@ -49,7 +49,7 @@ const PoliticaPrivacidade = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link to="/auth">
             <Button variant="ghost" size="icon">
@@ -57,12 +57,12 @@ const PoliticaPrivacidade = () => {
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            <img src={logoAsset} alt="Logo" className="w-10 h-10 object-contain brightness-0 invert" />
+            <img src={logoAsset} alt="Logo" className="h-auto w-40 object-contain" />
             <span className="font-semibold text-lg">Seven Group 360</span>
           </div>
         </div>
 
-        <div className="card-elevated p-6 md:p-8">
+        <div className="card-elevated p-6 md:p-10">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

@@ -36,7 +36,7 @@ export default function NexaContratosTemplates() {
 
   return (
     <MainLayout
-      title="Modelos de Contrato"
+      title="Modelos de contrato"
       subtitle="Modelos reutilizáveis com variáveis dinâmicas."
       actions={
         <Button asChild>
@@ -44,7 +44,7 @@ export default function NexaContratosTemplates() {
         </Button>
       }
     >
-      <div className="border rounded-lg bg-background">
+      <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
         <Table>
           <TableHeader>
             <TableRow>

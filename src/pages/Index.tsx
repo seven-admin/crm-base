@@ -15,7 +15,7 @@ const Index = () => {
   }
 
   if (role === 'incorporador') {
-    return <Navigate to="/portal-incorporador" replace />;
+    return <Navigate to="/sem-acesso" replace />;
   }
 
   if (role === 'corretor' || role === 'gestor_imobiliaria') {

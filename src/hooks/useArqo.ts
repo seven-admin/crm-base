@@ -5,6 +5,7 @@ import type {
   ArqoLead, ArqoLeadWithRelations, ArqoFunilEtapa, ArqoTemperatura,
   ArqoLeadSource, ArqoGrupo, ArqoGrupoMembro, ArqoSlaRegra, ArqoReguaReengajamento,
   ArqoAgendamento, ArqoAgendamentoWithRelations, ArqoAgendamentoStatus,
+  ArqoAtendimentoOpcao, ArqoAtendimentoPayload, ArqoMetaAtendimento, ArqoPerformanceConfig,
 } from '@/types/arqo.types';
 
 // ============ Config queries ============
@@ -98,6 +99,7 @@ export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string;
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
         consultor:consultor_id (id, full_name, email),
+        closer:closer_id (id, full_name, email),
         empreendimento:empreendimento_id (id, nome)
       `).eq('is_active', true).order('updated_at', { ascending: false }).limit(500);
       if (filters?.etapaId) q = q.eq('etapa_id', filters.etapaId);
@@ -165,6 +167,35 @@ export function useAtribuirRoleta() {
       toast.success('Lead atribuído');
     },
     onError: (e: any) => toast.error(e.message ?? 'Roleta bloqueada — nenhum consultor livre'),
+  });
+}
+
+export function usePuxarProximoLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (grupoId: string) => {
+      const { data, error } = await supabase.rpc('arqo_puxar_proximo_lead' as any, { p_grupo_id: grupoId } as any);
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
+      toast.success('Próximo lead atribuído a você');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Não foi possível puxar o próximo lead'),
+  });
+}
+
+export function useArqoFilaUsuario() {
+  return useQuery({
+    queryKey: ['arqo', 'fila-usuario'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('arqo_contar_fila_usuario' as any);
+      if (error) throw error;
+      return (data ?? []) as Array<{ grupo_id: string; quantidade: number }>;
+    },
   });
 }
 
@@ -272,7 +303,10 @@ type ConfigTable =
   | 'arqo_grupos_atendimento'
   | 'arqo_grupo_membros'
   | 'arqo_sla_regras'
-  | 'arqo_regua_reengajamento';
+  | 'arqo_regua_reengajamento'
+  | 'arqo_atendimento_opcoes'
+  | 'arqo_metas_atendimento'
+  | 'arqo_performance_config';
 
 const invalidationKey: Record<ConfigTable, string> = {
   arqo_lead_sources: 'sources',
@@ -282,6 +316,9 @@ const invalidationKey: Record<ConfigTable, string> = {
   arqo_grupo_membros: 'grupo-membros',
   arqo_sla_regras: 'sla-regras',
   arqo_regua_reengajamento: 'regua',
+  arqo_atendimento_opcoes: 'atendimento-opcoes',
+  arqo_metas_atendimento: 'metas-atendimento',
+  arqo_performance_config: 'performance-config',
 };
 
 export function useUpsertArqoConfig(table: ConfigTable) {
@@ -290,11 +327,11 @@ export function useUpsertArqoConfig(table: ConfigTable) {
     mutationFn: async (payload: Record<string, any>) => {
       if (payload.id) {
         const { id, ...rest } = payload;
-        const { data, error } = await (supabase.from(table) as any).update(rest).eq('id', id).select().single();
+        const { data, error } = await (supabase.from(table as any) as any).update(rest).eq('id', id).select().single();
         if (error) throw error;
         return data;
       }
-      const { data, error } = await (supabase.from(table) as any).insert(payload).select().single();
+      const { data, error } = await (supabase.from(table as any) as any).insert(payload).select().single();
       if (error) throw error;
       return data;
     },
@@ -310,7 +347,7 @@ export function useDeleteArqoConfig(table: ConfigTable) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(table).delete().eq('id', id);
+      const { error } = await (supabase.from(table as any) as any).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -333,10 +370,113 @@ export function useArqoLead(id?: string) {
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
         consultor:consultor_id (id, full_name, email),
+        closer:closer_id (id, full_name, email),
         empreendimento:empreendimento_id (id, nome)
       `).eq('id', id!).single();
       if (error) throw error;
       return data as unknown as ArqoLeadWithRelations;
+    },
+  });
+}
+
+// ============ Atendimento operacional ============
+export function useArqoAtendimentoOpcoes(includeInactive = false) {
+  return useQuery({
+    queryKey: ['arqo', 'atendimento-opcoes', includeInactive],
+    queryFn: async () => {
+      let query = supabase
+        .from('arqo_atendimento_opcoes' as any)
+        .select('*')
+        .order('grupo')
+        .order('ordem');
+      if (!includeInactive) query = query.eq('is_active', true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoAtendimentoOpcao[];
+    },
+  });
+}
+
+export function useConcluirArqoAtendimento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ArqoAtendimentoPayload) => {
+      const { data, error } = await supabase.rpc('arqo_concluir_atendimento' as any, {
+        p_lead_id: payload.leadId,
+        p_status_codigo: payload.statusCodigo,
+        p_qualificacao_codigo: payload.qualificacaoCodigo ?? null,
+        p_interesse_codigo: payload.interesseCodigo ?? null,
+        p_perfil_codigo: payload.perfilCodigo ?? null,
+        p_acao_codigo: payload.acaoCodigo ?? null,
+        p_acao_data: payload.acaoData ?? null,
+        p_temperatura_id: payload.temperaturaId ?? null,
+        p_observacao: payload.observacao,
+        p_acao_final: payload.acaoFinal,
+        p_etapa_destino_id: payload.etapaDestinoId ?? null,
+      } as any);
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
+      toast.success('Atendimento registrado');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Erro ao registrar atendimento'),
+  });
+}
+
+export function useCriarLeadIndicado() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      leadOrigemId: string;
+      nome: string;
+      telefone?: string;
+      email?: string;
+      empreendimentoId?: string | null;
+      observacoes?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('arqo_criar_lead_indicado' as any, {
+        p_lead_origem_id: payload.leadOrigemId,
+        p_nome: payload.nome,
+        p_telefone: payload.telefone || null,
+        p_email: payload.email || null,
+        p_empreendimento_id: payload.empreendimentoId || null,
+        p_observacoes: payload.observacoes || null,
+      } as any);
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      toast.success('Lead indicado criado e enviado para a fila');
+    },
+    onError: (e: any) => toast.error(e.message ?? 'Erro ao gerar lead indicado'),
+  });
+}
+
+export function useArqoMetasAtendimento() {
+  return useQuery({
+    queryKey: ['arqo', 'metas-atendimento'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('arqo_metas_atendimento' as any).select('*').order('vigencia_inicio', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoMetaAtendimento[];
+    },
+  });
+}
+
+export function useArqoPerformanceConfigs() {
+  return useQuery({
+    queryKey: ['arqo', 'performance-config'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('arqo_performance_config' as any).select('*').order('is_default', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoPerformanceConfig[];
     },
   });
 }

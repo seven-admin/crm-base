@@ -49,7 +49,8 @@ export function WhatsAppAtividadesTab() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="p-4 sm:p-5">
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Filtros do histórico</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="lg:col-span-2">
             <Label className="text-xs">Busca (nome, WhatsApp)</Label>
@@ -92,7 +93,7 @@ export function WhatsAppAtividadesTab() {
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12" />)}
         </div>
       ) : !atividades.length ? (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="py-12 text-center text-muted-foreground">
             Nenhuma atividade de WhatsApp encontrada. Os registros são gerados automaticamente
             pela rotina diária de resumo de conversas.
@@ -197,4 +198,3 @@ export function WhatsAppAtividadesTab() {
     </div>
   );
 }
-

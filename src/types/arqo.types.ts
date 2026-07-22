@@ -41,6 +41,7 @@ export interface ArqoLead {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  indicado_por_lead_id?: string | null;
 }
 
 export interface ArqoLeadWithRelations extends ArqoLead {
@@ -49,7 +50,70 @@ export interface ArqoLeadWithRelations extends ArqoLead {
   temperatura?: ArqoTemperatura | null;
   source?: ArqoLeadSource | null;
   consultor?: { id: string; full_name: string; email: string } | null;
+  closer?: { id: string; full_name: string; email: string } | null;
   empreendimento?: { id: string; nome: string } | null;
+}
+
+export type ArqoAtendimentoGrupo = 'status_ligacao' | 'qualificacao' | 'interesse' | 'perfil' | 'proxima_acao';
+export type ArqoAtendimentoAcaoFinal = 'aplicar' | 'mover_etapa' | 'liberar' | 'sem_resposta';
+
+export interface ArqoAtendimentoOpcao {
+  id: string;
+  grupo: ArqoAtendimentoGrupo;
+  codigo: string;
+  rotulo: string;
+  ordem: number;
+  is_active: boolean;
+  encerra_atendimento: boolean;
+  libera_proximo_bloco: boolean;
+  exige_data: boolean;
+  acao_sistema: string | null;
+  temperatura_sugerida_id: string | null;
+}
+
+export interface ArqoAtendimentoPayload {
+  leadId: string;
+  statusCodigo: string;
+  qualificacaoCodigo?: string | null;
+  interesseCodigo?: string | null;
+  perfilCodigo?: string | null;
+  acaoCodigo?: string | null;
+  acaoData?: string | null;
+  temperaturaId?: string | null;
+  observacao: string;
+  acaoFinal: ArqoAtendimentoAcaoFinal;
+  etapaDestinoId?: string | null;
+}
+
+export interface ArqoMetaAtendimento {
+  id: string;
+  nome: string;
+  user_id: string | null;
+  grupo_id: string | null;
+  vigencia_inicio: string;
+  vigencia_fim: string | null;
+  meta_diaria_atendimentos: number;
+  meta_diaria_retornos: number;
+  meta_diaria_visitas: number;
+  meta_diaria_conversoes: number;
+  meta_semanal_atendimentos: number;
+  meta_semanal_retornos: number;
+  meta_semanal_visitas: number;
+  meta_semanal_conversoes: number;
+  is_active: boolean;
+}
+
+export interface ArqoPerformanceConfig {
+  id: string;
+  nome: string;
+  limite_bom: number;
+  limite_atencao: number;
+  peso_atendimentos: number;
+  peso_retornos: number;
+  peso_visitas: number;
+  peso_conversoes: number;
+  is_default: boolean;
+  is_active: boolean;
 }
 
 export type ArqoAgendamentoTipo = 'visita' | 'reuniao' | 'ligacao' | 'outro';

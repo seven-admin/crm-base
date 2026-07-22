@@ -121,7 +121,7 @@ export default function NexaDisponibilidade() {
       subtitle={canEdit ? 'Clique no status para alterá-lo.' : 'Consulta em tempo real do banco.'}
     >
       <div className="space-y-6">
-      <div className="flex gap-3 items-end">
+      <div className="page-toolbar flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1 max-w-md">
           <label className="text-sm font-medium mb-1 block">Empreendimento</label>
           <Select value={empId} onValueChange={setEmpId}>
@@ -155,7 +155,7 @@ export default function NexaDisponibilidade() {
       ) : !unidades?.length ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma unidade encontrada.</CardContent></Card>
       ) : (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <Table>
               <TableHeader>

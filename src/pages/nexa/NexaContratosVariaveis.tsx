@@ -37,11 +37,11 @@ export default function NexaContratosVariaveis() {
 
   return (
     <MainLayout
-      title="Variáveis de Contratos"
+      title="Variáveis de contratos"
       subtitle="Cadastro de variáveis que podem ser usadas nos modelos."
       actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova variável</Button>}
     >
-      <div className="border rounded-lg bg-background">
+      <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
         <Table>
           <TableHeader>
             <TableRow>

@@ -213,7 +213,7 @@ export default function EmpreendimentoDetalhe() {
     >
 
       {!empreendimento.is_active && (
-        <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 mb-6">
+        <div className="mb-6 flex items-center gap-2 rounded-[1.25rem] border border-yellow-500/30 bg-yellow-500/10 p-4">
           <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0" />
           <p className="text-sm text-yellow-700 dark:text-yellow-400">
             Este empreendimento está <strong>desativado</strong> e não aparece nas listagens para os demais usuários.
@@ -222,7 +222,7 @@ export default function EmpreendimentoDetalhe() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-2 overflow-hidden rounded-[1.75rem] border border-border/70 bg-card md:grid-cols-4 [&>*]:rounded-none [&>*]:border-0 [&>*]:border-b [&>*]:border-r [&>*]:border-border/70">
         <KPICard
           title="Total de Unidades"
           value={totalUnidades.toLocaleString('pt-BR')}

@@ -32,7 +32,7 @@ export default function NexaContratos() {
         </div>
       }
     >
-      <div className="border rounded-lg bg-background">
+      <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
         <Table>
           <TableHeader>
             <TableRow>

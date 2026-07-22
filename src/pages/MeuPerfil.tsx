@@ -78,11 +78,11 @@ export default function MeuPerfil() {
 
   return (
     <MainLayout title="Meu Perfil" subtitle="Suas informações e credenciais">
-      <div className="max-w-3xl space-y-6">
-        <Card>
+      <div className="max-w-4xl space-y-5">
+        <Card className="border-0 bg-[#201a17] text-white">
           <CardHeader>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
+              <Avatar className="h-16 w-16 ring-4 ring-[#ff7417]/20">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -90,7 +90,7 @@ export default function MeuPerfil() {
                 <CardTitle className="flex items-center gap-2">
                   {profile?.full_name || 'Usuário'}
                 </CardTitle>
-                <CardDescription>{profile?.email}</CardDescription>
+                <CardDescription className="text-white/45">{profile?.email}</CardDescription>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {profile?.empresa && (
                     <Badge variant="secondary">

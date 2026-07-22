@@ -31,18 +31,19 @@ export const KPICard = forwardRef<HTMLDivElement, KPICardProps>(({
   return (
     <div
       ref={ref}
-      className="bg-card rounded-2xl border border-border/60 shadow-card p-6 transition-shadow duration-200 hover:shadow-popover animate-fade-in"
+      className="group relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-card p-5 shadow-card transition-all duration-200 hover:bg-primary-soft/30 animate-fade-in"
     >
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+          <p className="truncate text-[10px] font-bold uppercase tracking-[.13em] text-muted-foreground">
             {title}
           </p>
-          <p className="text-3xl font-bold text-foreground mt-2 tracking-tight tabular-nums">{value}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-foreground tabular-nums">{value}</p>
 
           {change && (
             <span className={cn(
-              'inline-flex items-center gap-1 mt-3 text-xs font-medium px-2 py-0.5 rounded-full',
+              'mt-3 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium',
               changeType === 'positive' && 'bg-success/10 text-success',
               changeType === 'negative' && 'bg-destructive/10 text-destructive',
               changeType === 'neutral' && 'bg-secondary text-muted-foreground'
@@ -54,7 +55,7 @@ export const KPICard = forwardRef<HTMLDivElement, KPICardProps>(({
           )}
         </div>
 
-        <div className={cn('flex items-center justify-center shrink-0 h-12 w-12 rounded-full', styles.bg)}>
+        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', styles.bg)}>
           <Icon className={cn('h-5 w-5', styles.fg)} />
         </div>
       </div>

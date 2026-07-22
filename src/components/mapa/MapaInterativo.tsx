@@ -318,7 +318,7 @@ export function MapaInterativo({ empreendimentoId, readonly = false }: MapaInter
       top: center.y * scale + offsetY,
       fontSize,
       fill: '#ffffff',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      fontFamily: '"Space Grotesk", system-ui, sans-serif',
       fontWeight: '300',
       originX: 'center',
       originY: 'center',
@@ -396,7 +396,7 @@ export function MapaInterativo({ empreendimentoId, readonly = false }: MapaInter
       top: centerY,
       fontSize,
       fill: '#ffffff',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      fontFamily: '"Space Grotesk", system-ui, sans-serif',
       fontWeight: '300',
       originX: 'center',
       originY: 'center',
@@ -546,7 +546,7 @@ export function MapaInterativo({ empreendimentoId, readonly = false }: MapaInter
       </div>
 
       <Card>
-        <CardContent className="p-0 overflow-hidden rounded-lg">
+        <CardContent className="overflow-hidden rounded-[1.5rem] p-0">
           <div 
             ref={containerRef} 
             className="w-full"
