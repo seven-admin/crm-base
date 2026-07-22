@@ -33,10 +33,24 @@ function corsHeaders(req: Request): HeadersInit {
     || "https://crm.sevengroup360sys.com.br,http://localhost:8080";
   const allowed = configured.split(",").map((item) => item.trim());
   const origin = req.headers.get("Origin") || allowed[0];
+  let trustedOrigin = allowed.includes(origin);
+  if (!trustedOrigin) {
+    try {
+      const parsed = new URL(origin);
+      const isLocal = parsed.protocol === "http:"
+        && (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1");
+      const isSevenDomain = parsed.protocol === "https:"
+        && (parsed.hostname === "sevengroup360sys.com.br" || parsed.hostname.endsWith(".sevengroup360sys.com.br"));
+      trustedOrigin = isLocal || isSevenDomain;
+    } catch {
+      trustedOrigin = false;
+    }
+  }
   return {
-    "Access-Control-Allow-Origin": allowed.includes(origin) ? origin : allowed[0],
+    "Access-Control-Allow-Origin": trustedOrigin ? origin : allowed[0],
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
 }

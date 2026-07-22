@@ -258,7 +258,7 @@ export default function Usuarios() {
       fetchUsers();
     } catch (error) {
       console.error('Error updating user:', error);
-      toast.error('Erro ao atualizar usuário');
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar usuário');
     } finally {
       setIsSaving(false);
     }
