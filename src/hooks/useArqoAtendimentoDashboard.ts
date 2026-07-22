@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { endOfDay, endOfWeek, startOfDay, startOfWeek, subWeeks } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useArqoLeads, useArqoMetasAtendimento, useArqoPerformanceConfigs, useArqoFilaUsuario, useMeusArqoGrupos } from '@/hooks/useArqo';
+import { useArqoLeads, useArqoMetasAtendimento, useArqoPerformanceConfigs, useArqoFilaUsuario, useArqoLeadCounters, useMeusArqoGrupos } from '@/hooks/useArqo';
 import type { ArqoMetaAtendimento, ArqoPerformanceConfig } from '@/types/arqo.types';
 
 type PeriodMetrics = {
@@ -61,7 +61,8 @@ export function useArqoAtendimentoDashboard() {
   const userId = user?.id;
   const { data: leads = [], isLoading: loadingLeads } = useArqoLeads(userId ? { consultorId: userId } : undefined);
   const { data: grupos = [] } = useMeusArqoGrupos(userId);
-  const { data: fila = [] } = useArqoFilaUsuario();
+  const { data: fila = [], isLoading: loadingFila } = useArqoFilaUsuario(userId);
+  const { data: counters, isLoading: loadingCounters } = useArqoLeadCounters(userId);
   const { data: metas = [] } = useArqoMetasAtendimento();
   const { data: configs = [] } = useArqoPerformanceConfigs();
 
@@ -146,7 +147,9 @@ export function useArqoAtendimentoDashboard() {
     specialistName: activeLeads.find((lead) => lead.closer)?.closer?.full_name ?? null,
     activeLeads,
     portfolio: {
-      lista: activeLeads.length,
+      totalVisivel: counters?.totalVisivel ?? 0,
+      lista: counters?.minhaCarteira ?? activeLeads.length,
+      encerrados: counters?.encerrados ?? 0,
       retornos: returnsToday,
       classificacao: classification,
     },
@@ -164,6 +167,6 @@ export function useArqoAtendimentoDashboard() {
     previousWeekPerformance: performance(previousWeekMetrics, previousWeekGoals, performanceConfig),
     meta: currentMeta,
     performanceConfig,
-    isLoading: loadingLeads || metricsQuery.isLoading,
+    isLoading: loadingLeads || loadingFila || loadingCounters || metricsQuery.isLoading,
   };
 }

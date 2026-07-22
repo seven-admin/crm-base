@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import React, { Suspense, lazy } from "react";
 
 const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
+const ArqoAtendimento = lazy(() => import("./pages/arqo/ArqoAtendimento"));
 const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
@@ -102,6 +103,7 @@ const App = () => (
 
                 {/* Arqo */}
                 <Route path="/arqo/roleta" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoRoleta /></ArqoProtectedRoute>} />
+                <Route path="/arqo/atendimento" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoAtendimento /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadsKanban /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadDetail /></ArqoProtectedRoute>} />
                 <Route path="/arqo/forecast" element={<ArqoProtectedRoute moduleName="arqo_forecast"><ArqoForecast /></ArqoProtectedRoute>} />

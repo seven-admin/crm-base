@@ -149,6 +149,8 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
     setResult({ ok, fail });
     setIsImporting(false);
     qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+    qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+    qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
     if (ok > 0) toast.success(`${ok} lead(s) importado(s)`);
     if (fail > 0) toast.error(`${fail} falha(s) na importação`);
   };

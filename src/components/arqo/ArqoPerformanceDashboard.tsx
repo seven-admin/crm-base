@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, CalendarCheck2, Clock3, Layers3, Target, Users } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -68,7 +69,7 @@ function ResultChart({ title, actual, target }: { title: string; actual: Dashboa
   );
 }
 
-export function ArqoPerformanceDashboard({ dashboard }: { dashboard: DashboardData }) {
+export function ArqoPerformanceDashboard({ dashboard, roulette }: { dashboard: DashboardData; roulette?: ReactNode }) {
   const classification = Object.entries(dashboard.portfolio.classificacao)
     .map(([name, quantity]) => `${name} ${quantity}`)
     .join(' · ') || 'Sem classificação';
@@ -85,8 +86,9 @@ export function ArqoPerformanceDashboard({ dashboard }: { dashboard: DashboardDa
             <p className="text-xs text-muted-foreground">Especialista: {dashboard.specialistName ?? 'Sem especialista definido'}</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-3 lg:text-right">
-          <span><strong className="block text-base text-foreground">{dashboard.portfolio.lista}</strong> Lista</span>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs text-muted-foreground sm:grid-cols-4 lg:text-right">
+          <span><strong className="block text-base text-foreground">{dashboard.portfolio.totalVisivel}</strong> Total visível</span>
+          <span><strong className="block text-base text-foreground">{dashboard.portfolio.lista}</strong> Minha carteira</span>
           <span><strong className="block text-base text-foreground">{dashboard.portfolio.retornos}</strong> Retornos</span>
           <span className="max-w-xs"><strong className="block truncate text-sm text-foreground">{classification}</strong> Classificação</span>
         </div>
@@ -112,6 +114,8 @@ export function ArqoPerformanceDashboard({ dashboard }: { dashboard: DashboardDa
           </Card>
         </a>
       </section>
+
+      {roulette}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <PerformanceCard title="Como você está hoje?" subtitle="Resultado do dia comparado à meta configurada." {...dashboard.dayPerformance} />

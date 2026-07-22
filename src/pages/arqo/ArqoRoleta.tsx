@@ -1,24 +1,25 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Clock, Loader2, Phone, Upload, Users } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Clock, Loader2, Phone, Upload } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
-import { ArqoAtendimentoFlow } from '@/components/arqo/ArqoAtendimentoFlow';
 import { ArqoPerformanceDashboard } from '@/components/arqo/ArqoPerformanceDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useArqoAtendimentoDashboard } from '@/hooks/useArqoAtendimentoDashboard';
-import { useArqoEtapas, useArqoFilaUsuario, useArqoLeads, useMeusArqoGrupos, usePuxarProximoLead } from '@/hooks/useArqo';
+import { useArqoFilaUsuario, useArqoLeads, useMeusArqoGrupos, usePuxarProximoLead } from '@/hooks/useArqo';
 
 export default function ArqoRoleta() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [importOpen, setImportOpen] = useState(false);
   const { data: meusGrupos = [], isLoading: loadingGrupos } = useMeusArqoGrupos(user?.id);
-  const { data: allLeads = [], isLoading: loadingLeads } = useArqoLeads();
-  const { data: etapas = [] } = useArqoEtapas();
-  const { data: fila = [] } = useArqoFilaUsuario();
+  const { data: allLeads = [] } = useArqoLeads(
+    user?.id ? { consultorId: user.id } : undefined,
+  );
+  const { data: fila = [] } = useArqoFilaUsuario(user?.id);
   const puxar = usePuxarProximoLead();
   const dashboard = useArqoAtendimentoDashboard();
 
@@ -37,6 +38,77 @@ export default function ArqoRoleta() {
     [fila],
   );
 
+  const pullNextLead = async (groupId: string) => {
+    try {
+      await puxar.mutateAsync(groupId);
+      navigate('/arqo/atendimento');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('já possui um lead ativo')) {
+        navigate('/arqo/atendimento');
+      }
+    }
+  };
+
+  const rouletteCard = (
+    <section id="roleta" className="relative overflow-hidden rounded-[2rem] bg-[#201a17] p-5 text-white sm:p-7">
+      <div className="pointer-events-none absolute -right-20 -top-28 h-64 w-64 rounded-full border-[48px] border-[#ff7417]/10" />
+      <div className="relative mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#ff8a39]">Roleta</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Puxar próximo lead</h2>
+        </div>
+        <p className="max-w-sm text-xs leading-relaxed text-white/45">A seleção acontece no banco em uma única operação e respeita a ordem da fila.</p>
+      </div>
+
+      {meuLeadAtivo && (
+        <div className="relative mb-4 flex flex-col gap-4 rounded-[1.5rem] border border-[#ff7417]/30 bg-[#ff7417]/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#ff8a39]">Atendimento em andamento</p>
+            <p className="mt-1 font-semibold">{meuLeadAtivo.cliente?.nome ?? 'Lead atribuído'}</p>
+            <p className="mt-1 text-xs text-white/50">Conclua ou libere este lead antes de puxar o próximo.</p>
+          </div>
+          <Button asChild className="shrink-0 bg-[#ff7417] text-[#21150d] hover:bg-[#ff8a39]">
+            <Link to="/arqo/atendimento">Continuar atendimento <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        </div>
+      )}
+
+      {loadingGrupos ? (
+        <Card className="flex justify-center border-white/10 bg-white/[.05] p-6 text-white shadow-none"><Loader2 className="h-5 w-5 animate-spin" /></Card>
+      ) : meusGrupos.length === 0 ? (
+        <Card className="border-white/10 bg-white/[.05] p-6 text-center text-sm text-white/50 shadow-none">
+          Você não está vinculado a nenhum grupo de atendimento.
+        </Card>
+      ) : (
+        <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {meusGrupos.map((group) => {
+            const quantity = filaPorGrupo.get(group.id) ?? 0;
+            return (
+              <Card key={group.id} className="border-white/10 bg-white/[.055] p-4 text-white shadow-none">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-white/40">{group.papel}</p>
+                    <h3 className="mt-1 truncate font-semibold">{group.nome}</h3>
+                  </div>
+                  <Badge className="border-0 bg-[#ff7417] px-3 text-lg text-[#21150d]">{quantity}</Badge>
+                </div>
+                <Button
+                  className="w-full bg-[#ff7417] text-[#21150d] hover:bg-[#ff8a39]"
+                  size="sm"
+                  disabled={!!meuLeadAtivo || quantity === 0 || puxar.isPending}
+                  onClick={() => void pullNextLead(group.id)}
+                >
+                  {puxar.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Puxar próximo lead
+                </Button>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <MainLayout
       title="Atendimento Arqo"
@@ -50,73 +122,7 @@ export default function ArqoRoleta() {
     >
       <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
 
-      <ArqoPerformanceDashboard dashboard={dashboard} />
-
-      <section className="mt-6" aria-labelledby="atendimento-atual-title">
-        <div className="mb-4 flex items-end justify-between gap-4 px-1">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Atendimento</p>
-            <h2 id="atendimento-atual-title" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Oportunidade atual</h2>
-          </div>
-          {meuLeadAtivo && <Badge className="bg-success text-success-foreground">Em andamento</Badge>}
-        </div>
-        {loadingLeads ? (
-          <Card className="flex justify-center p-10"><Loader2 className="h-6 w-6 animate-spin" /></Card>
-        ) : meuLeadAtivo ? (
-          <ArqoAtendimentoFlow lead={meuLeadAtivo} etapas={etapas} />
-        ) : (
-          <Card className="border-dashed bg-[#fffdfa] p-10 text-center text-muted-foreground shadow-none">
-            <Users className="mx-auto mb-4 h-8 w-8 text-primary/60" />
-            <p className="font-medium text-foreground">Nenhuma oportunidade em atendimento</p>
-            <p className="mt-1 text-sm">Use a roleta abaixo para receber o próximo lead disponível.</p>
-          </Card>
-        )}
-      </section>
-
-      <section id="roleta" className="relative mt-6 overflow-hidden rounded-[2rem] bg-[#201a17] p-5 text-white sm:p-7">
-        <div className="pointer-events-none absolute -right-20 -top-28 h-64 w-64 rounded-full border-[48px] border-[#ff7417]/10" />
-        <div className="relative mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#ff8a39]">Roleta</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Puxar próximo lead</h2>
-          </div>
-          <p className="max-w-sm text-xs leading-relaxed text-white/45">A seleção acontece no banco em uma única operação e respeita a ordem da fila.</p>
-        </div>
-
-        {loadingGrupos ? (
-          <Card className="flex justify-center border-white/10 bg-white/[.05] p-6 text-white shadow-none"><Loader2 className="h-5 w-5 animate-spin" /></Card>
-        ) : meusGrupos.length === 0 ? (
-          <Card className="border-white/10 bg-white/[.05] p-6 text-center text-sm text-white/50 shadow-none">
-            Você não está vinculado a nenhum grupo de atendimento.
-          </Card>
-        ) : (
-          <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {meusGrupos.map((group) => {
-              const quantity = filaPorGrupo.get(group.id) ?? 0;
-              return (
-                <Card key={group.id} className="border-white/10 bg-white/[.055] p-4 text-white shadow-none">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-white/40">{group.papel}</p>
-                      <h3 className="mt-1 truncate font-semibold">{group.nome}</h3>
-                    </div>
-                    <Badge className="border-0 bg-[#ff7417] px-3 text-lg text-[#21150d]">{quantity}</Badge>
-                  </div>
-                  <Button
-                    className="w-full bg-[#ff7417] text-[#21150d] hover:bg-[#ff8a39]"
-                    size="sm"
-                    disabled={!!meuLeadAtivo || quantity === 0 || puxar.isPending}
-                    onClick={() => puxar.mutate(group.id)}
-                  >
-                    {puxar.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Puxar próximo lead
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <ArqoPerformanceDashboard dashboard={dashboard} roulette={rouletteCard} />
 
       {minhasPendencias.length > 0 && (
         <section className="mt-6 rounded-[2rem] border border-black/[.06] bg-[#fffdfa] p-5 sm:p-7">

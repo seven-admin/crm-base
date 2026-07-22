@@ -20,7 +20,9 @@ export default function ArqoLeadsKanban() {
   const { isAdmin } = usePermissions();
   const podeVerTudo = isAdmin() || (role ? ARQO_ADMIN_ROLES.has(role) : false);
   const { data: leads = [], isLoading } = useArqoLeads(
-    podeVerTudo ? undefined : { consultorId: user?.id },
+    podeVerTudo
+      ? { atendidos: true }
+      : { consultorId: user?.id, atendidos: true },
   );
   const { data: etapas = [] } = useArqoEtapas();
   const transicionar = useTransicionarEtapa();
@@ -53,7 +55,7 @@ export default function ArqoLeadsKanban() {
   return (
     <MainLayout
       title="Pipeline de leads"
-      subtitle="Acompanhe o fluxo comercial e mova oportunidades entre etapas"
+      subtitle="Acompanhe oportunidades que já passaram pelo primeiro atendimento"
       actions={
         <Button variant="outline" size="sm" className="bg-card" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4 mr-2" /> Importar CSV
@@ -62,7 +64,7 @@ export default function ArqoLeadsKanban() {
     >
       <div className="mb-4 flex items-center justify-between rounded-[1.25rem] border border-border/70 bg-card px-4 py-3 text-xs text-muted-foreground shadow-card">
         <span className="font-semibold uppercase tracking-[.14em] text-primary">Pipeline Arqo</span>
-        <span>{leads.length} oportunidades · {etapas.length} etapas</span>
+        <span>{leads.length} leads atendidos · {etapas.length} etapas</span>
       </div>
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">

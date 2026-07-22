@@ -88,7 +88,7 @@ export function useArqoRegua() {
 }
 
 // ============ Leads ============
-export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string; grupoId?: string; empreendimentoId?: string }) {
+export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string; grupoId?: string; empreendimentoId?: string; atendidos?: boolean }) {
   return useQuery({
     queryKey: ['arqo', 'leads', filters],
     queryFn: async () => {
@@ -106,6 +106,7 @@ export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string;
       if (filters?.consultorId) q = q.eq('consultor_id', filters.consultorId);
       if (filters?.grupoId) q = q.eq('grupo_id', filters.grupoId);
       if (filters?.empreendimentoId) q = q.eq('empreendimento_id', filters.empreendimentoId);
+      if (filters?.atendidos) q = q.not('ultimo_contato_em', 'is', null);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as ArqoLeadWithRelations[];
@@ -125,6 +126,7 @@ export function useCreateArqoLead() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       toast.success('Lead criado');
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro ao criar lead'),
@@ -145,6 +147,7 @@ export function useTransicionarEtapa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'forecast'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
@@ -164,6 +167,8 @@ export function useAtribuirRoleta() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
       toast.success('Lead atribuído');
     },
     onError: (e: any) => toast.error(e.message ?? 'Roleta bloqueada — nenhum consultor livre'),
@@ -180,21 +185,65 @@ export function usePuxarProximoLead() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
       toast.success('Próximo lead atribuído a você');
     },
-    onError: (e: any) => toast.error(e.message ?? 'Não foi possível puxar o próximo lead'),
+    onError: (e: any) => {
+      if (e.message?.includes('já possui um lead ativo')) {
+        qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+        toast.info('Você já possui um atendimento em andamento.');
+        return;
+      }
+      toast.error(e.message ?? 'Não foi possível puxar o próximo lead');
+    },
   });
 }
 
-export function useArqoFilaUsuario() {
+export function useArqoFilaUsuario(userId?: string) {
   return useQuery({
-    queryKey: ['arqo', 'fila-usuario'],
+    queryKey: ['arqo', 'fila-usuario', userId],
+    enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('arqo_contar_fila_usuario' as any);
       if (error) throw error;
       return (data ?? []) as Array<{ grupo_id: string; quantidade: number }>;
+    },
+  });
+}
+
+export function useArqoLeadCounters(userId?: string) {
+  return useQuery({
+    queryKey: ['arqo', 'lead-counters', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const [visibleRes, mineRes, closedRes] = await Promise.all([
+        supabase
+          .from('arqo_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true),
+        supabase
+          .from('arqo_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq('consultor_id', userId!)
+          .is('fechado_em', null)
+          .is('optout_em', null),
+        supabase
+          .from('arqo_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .not('fechado_em', 'is', null),
+      ]);
+      if (visibleRes.error) throw visibleRes.error;
+      if (mineRes.error) throw mineRes.error;
+      if (closedRes.error) throw closedRes.error;
+      return {
+        totalVisivel: visibleRes.count ?? 0,
+        minhaCarteira: mineRes.count ?? 0,
+        encerrados: closedRes.count ?? 0,
+      };
     },
   });
 }
@@ -210,6 +259,7 @@ export function useRegistrarTentativa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
@@ -452,6 +502,7 @@ export function useCriarLeadIndicado() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
       toast.success('Lead indicado criado e enviado para a fila');
     },
