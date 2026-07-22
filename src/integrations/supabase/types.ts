@@ -3453,7 +3453,7 @@ export type Database = {
       arqo_atribuir_lead_roleta: {
         Args: {
           p_grupo_id: string
-          p_lead_id: string
+          p_lead_id?: string
           p_tipo_atribuicao?: string
         }
         Returns: string

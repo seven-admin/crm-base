@@ -25,6 +25,7 @@ export default function ArqoRoleta() {
   const [importOpen, setImportOpen] = useState(false);
   const [observacao, setObservacao] = useState('');
   const [novaEtapaId, setNovaEtapaId] = useState<string>('');
+  const [grupoPuxandoId, setGrupoPuxandoId] = useState<string | null>(null);
 
   const { data: meusGrupos = [], isLoading: loadingGrupos } = useMeusArqoGrupos(user?.id);
   const { data: allLeads = [], isLoading } = useArqoLeads();
@@ -100,18 +101,18 @@ export default function ArqoRoleta() {
     );
   };
 
-  // Puxar próximo lead: pega o primeiro sem consultor do grupo e chama RPC
+  // Puxar próximo lead: a RPC escolhe e bloqueia o próximo lead disponível do grupo.
   const puxarProximo = (grupoId: string) => {
-    if (meuLeadAtivo) {
-      toast.error('Você já tem um lead ativo. Finalize ou libere antes de puxar outro.');
-      return;
-    }
-    const proximo = allLeads.find(l => l.grupo_id === grupoId && !l.consultor_id);
-    if (!proximo) {
+    const temLeadNaFila = allLeads.some(l => l.grupo_id === grupoId && !l.consultor_id);
+    if (!temLeadNaFila) {
       toast.info('Nenhum lead disponível neste grupo no momento.');
       return;
     }
-    atribuir.mutate({ grupoId, leadId: proximo.id });
+    setGrupoPuxandoId(grupoId);
+    atribuir.mutate(
+      { grupoId },
+      { onSettled: () => setGrupoPuxandoId(null) },
+    );
   };
 
   return (
@@ -160,10 +161,10 @@ export default function ArqoRoleta() {
                   <Button
                     className="w-full"
                     size="sm"
-                    disabled={!!meuLeadAtivo || qtd === 0 || atribuir.isPending}
+                    disabled={qtd === 0 || grupoPuxandoId === g.id}
                     onClick={() => puxarProximo(g.id)}
                   >
-                    {atribuir.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {grupoPuxandoId === g.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Puxar próximo lead
                   </Button>
                 </Card>
