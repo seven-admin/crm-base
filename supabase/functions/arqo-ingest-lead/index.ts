@@ -83,19 +83,10 @@ Deno.serve(async (req) => {
       .single();
     if (leadErr) throw leadErr;
 
-    // 6) Auto-atribui se grupo indicado
-    let consultorId: string | null = null;
-    if (body.grupo_id) {
-      const { data: assigned } = await supabase.rpc("arqo_atribuir_lead_roleta", {
-        p_grupo_id: body.grupo_id,
-        p_lead_id: lead.id,
-        p_tipo_atribuicao: "ingest_api",
-      });
-      consultorId = (assigned as string) ?? null;
-    }
+    // 6) Leads com grupo entram na fila; a atribuição acontece quando um consultor puxa na roleta.
 
     return new Response(
-      JSON.stringify({ ok: true, lead_id: lead.id, cliente_id: clienteId, consultor_id: consultorId }),
+      JSON.stringify({ ok: true, lead_id: lead.id, cliente_id: clienteId, consultor_id: null }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

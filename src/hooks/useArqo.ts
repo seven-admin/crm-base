@@ -143,6 +143,7 @@ export function useTransicionarEtapa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'forecast'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
@@ -163,8 +164,9 @@ export function useAtribuirRoleta() {
       if (error) throw error;
       return data as string;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      await qc.refetchQueries({ queryKey: ['arqo', 'leads'], type: 'active' });
       toast.success('Lead atribuído');
     },
     onError: (e: any) => toast.error(e.message ?? 'Roleta bloqueada — nenhum consultor livre'),
@@ -182,6 +184,7 @@ export function useRegistrarTentativa() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
@@ -200,6 +203,7 @@ export function useLiberarConsultor() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
