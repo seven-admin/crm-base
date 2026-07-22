@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
-  useArqoLeads, useAtribuirRoleta, useLiberarConsultor,
+  useArqoLeads, useArqoLead, useAtribuirRoleta, useLiberarConsultor,
   useRegistrarTentativa, useTransicionarEtapa, useArqoEtapas, useMeusArqoGrupos,
 } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,9 +26,11 @@ export default function ArqoRoleta() {
   const [observacao, setObservacao] = useState('');
   const [novaEtapaId, setNovaEtapaId] = useState<string>('');
   const [grupoPuxandoId, setGrupoPuxandoId] = useState<string | null>(null);
+  const [leadEmTratamentoId, setLeadEmTratamentoId] = useState<string | null>(null);
 
   const { data: meusGrupos = [], isLoading: loadingGrupos } = useMeusArqoGrupos(user?.id);
   const { data: allLeads = [], isLoading } = useArqoLeads();
+  const { data: leadEmTratamento, isLoading: loadingLeadEmTratamento } = useArqoLead(leadEmTratamentoId ?? undefined);
   const { data: etapas = [] } = useArqoEtapas();
 
   const atribuir = useAtribuirRoleta();
@@ -38,10 +40,16 @@ export default function ArqoRoleta() {
 
   // Leads em etapas com bloqueia_roleta=false (ex: Aguardando Followup, Reagendar) ficam
   // vinculados ao consultor como pendência, mas não impedem puxar um novo lead.
-  const meuLeadAtivo = useMemo(
-    () => allLeads.find(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta !== false),
-    [allLeads, user],
-  );
+  const meuLeadAtivo = useMemo(() => {
+    const leadPuxadoValido = leadEmTratamento
+      && leadEmTratamento.consultor_id === user?.id
+      && !leadEmTratamento.fechado_em
+      && leadEmTratamento.etapa?.bloqueia_roleta !== false;
+
+    if (leadPuxadoValido) return leadEmTratamento;
+
+    return allLeads.find(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta !== false);
+  }, [allLeads, leadEmTratamento, user]);
 
   const minhasPendencias = useMemo(
     () => allLeads.filter(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta === false),
@@ -111,7 +119,10 @@ export default function ArqoRoleta() {
     setGrupoPuxandoId(grupoId);
     atribuir.mutate(
       { grupoId },
-      { onSettled: () => setGrupoPuxandoId(null) },
+      {
+        onSuccess: (leadId) => setLeadEmTratamentoId(leadId),
+        onSettled: () => setGrupoPuxandoId(null),
+      },
     );
   };
 
