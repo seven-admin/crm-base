@@ -163,8 +163,9 @@ export function useAtribuirRoleta() {
       if (error) throw error;
       return data as string;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      await qc.refetchQueries({ queryKey: ['arqo', 'leads'], type: 'active' });
       toast.success('Lead atribuído');
     },
     onError: (e: any) => toast.error(e.message ?? 'Roleta bloqueada — nenhum consultor livre'),
