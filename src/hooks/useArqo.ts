@@ -94,7 +94,7 @@ export function useArqoLeads(filters?: { etapaId?: string; consultorId?: string;
     queryFn: async () => {
       let q = supabase.from('arqo_leads').select(`
         *,
-        cliente:cliente_id (id, nome, telefone, email, nivel_cadastro),
+        cliente:cliente_id (id, nome, telefone, whatsapp, email, nivel_cadastro),
         etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento, bloqueia_roleta),
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
@@ -415,7 +415,7 @@ export function useArqoLead(id?: string) {
     queryFn: async () => {
       const { data, error } = await supabase.from('arqo_leads').select(`
         *,
-        cliente:cliente_id (id, nome, telefone, email, cpf, nivel_cadastro, profissao, renda_mensal),
+        cliente:cliente_id (id, nome, telefone, whatsapp, email, cpf, nivel_cadastro, profissao, renda_mensal),
         etapa:etapa_id (id, nome, categoria, cor, ordem, peso, is_encerramento, bloqueia_roleta),
         temperatura:temperatura_id (id, nome, cor, peso),
         source:source_id (id, nome),
@@ -472,6 +472,8 @@ export function useConcluirArqoAtendimento() {
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       toast.success('Atendimento registrado');
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro ao registrar atendimento'),

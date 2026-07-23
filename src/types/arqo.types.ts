@@ -26,6 +26,7 @@ export interface ArqoLead {
   unidade_id: string | null;
   valor_estimado: number | null;
   observacoes: string | null;
+  telefones_adicionais: string[];
   tentativas_contato: number;
   ultimo_contato_em: string | null;
   proximo_contato_em: string | null;
@@ -45,7 +46,7 @@ export interface ArqoLead {
 }
 
 export interface ArqoLeadWithRelations extends ArqoLead {
-  cliente?: { id: string; nome: string; telefone: string | null; email: string | null; nivel_cadastro: string | null };
+  cliente?: { id: string; nome: string; telefone: string | null; whatsapp: string | null; email: string | null; nivel_cadastro: string | null };
   etapa?: ArqoFunilEtapa;
   temperatura?: ArqoTemperatura | null;
   source?: ArqoLeadSource | null;

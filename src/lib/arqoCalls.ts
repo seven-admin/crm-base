@@ -148,7 +148,7 @@ function waitForIce(pc: RTCPeerConnection): Promise<void> {
   });
 }
 
-export async function openArqoCall(leadId: string): Promise<OpenArqoCall> {
+export async function openArqoCall(leadId: string, phone?: string): Promise<OpenArqoCall> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error('Este navegador não oferece suporte a chamadas de áudio.');
   }
@@ -169,7 +169,7 @@ export async function openArqoCall(leadId: string): Promise<OpenArqoCall> {
 
     const started = await gateway<{ callId: string; logId: string; phone: string }>('/calls', {
       method: 'POST',
-      body: JSON.stringify({ leadId }),
+      body: JSON.stringify({ leadId, phone }),
     });
     callId = started.callId;
 

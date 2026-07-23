@@ -234,10 +234,10 @@ function normalizedBrazilianPhone(value: string): string {
   return digits;
 }
 
-async function authorizedLeadPhone(userId: string, leadId: string): Promise<string> {
+async function authorizedLeadPhone(userId: string, leadId: string, requestedPhone?: string): Promise<string> {
   const { data, error } = await admin
     .from("arqo_leads")
-    .select("id, consultor_id, closer_id, cliente:cliente_id(telefone)")
+    .select("id, consultor_id, closer_id, telefones_adicionais, cliente:cliente_id(telefone, whatsapp)")
     .eq("id", leadId)
     .eq("is_active", true)
     .maybeSingle();
@@ -246,9 +246,21 @@ async function authorizedLeadPhone(userId: string, leadId: string): Promise<stri
   if (data.consultor_id !== userId && data.closer_id !== userId) {
     throw new HttpError(403, "Este lead não está atribuído a você");
   }
-  const cliente = data.cliente as { telefone?: string | null } | null;
-  if (!cliente?.telefone) throw new HttpError(400, "O lead não possui telefone cadastrado");
-  return normalizedBrazilianPhone(cliente.telefone);
+  const cliente = data.cliente as { telefone?: string | null; whatsapp?: string | null } | null;
+  const candidates = [
+    cliente?.telefone,
+    cliente?.whatsapp,
+    ...((data.telefones_adicionais as string[] | null) ?? []),
+  ].flatMap((value) => {
+    if (!value) return [];
+    try { return [normalizedBrazilianPhone(value)]; } catch { return []; }
+  });
+  const phones = [...new Set(candidates)];
+  if (phones.length === 0) throw new HttpError(400, "O lead não possui telefone válido cadastrado");
+  if (!requestedPhone) return phones[0];
+  const normalizedRequested = normalizedBrazilianPhone(requestedPhone);
+  if (!phones.includes(normalizedRequested)) throw new HttpError(403, "O telefone selecionado não pertence a este lead");
+  return normalizedRequested;
 }
 
 async function assertAdmin(userId: string): Promise<void> {
@@ -361,9 +373,9 @@ Deno.serve(async (req) => {
     if (req.method === "POST" && route.join("/") === "calls") {
       row = await syncSession(row);
       if (!row?.paired || row.state !== "open") throw new HttpError(409, "Sua conta do WhatsApp não está conectada");
-      const body = await req.json() as { leadId?: string };
+      const body = await req.json() as { leadId?: string; phone?: string };
       if (!body.leadId) throw new HttpError(400, "leadId obrigatório");
-      const phone = await authorizedLeadPhone(user.id, body.leadId);
+      const phone = await authorizedLeadPhone(user.id, body.leadId, body.phone);
       const result = await astraJson<{ call: { callId: string } }>(
         `/api/sessions/${encodeURIComponent(row.external_session_id)}/calls`,
         { method: "POST", headers: { "X-Client-Id": user.id }, body: JSON.stringify({ phone, duration_ms: 300_000, record: false }) },

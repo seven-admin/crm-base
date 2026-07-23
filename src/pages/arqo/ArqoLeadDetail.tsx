@@ -9,6 +9,7 @@ import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useTransicionarEtapa, us
 import { ArrowLeft, Phone, Mail, Sparkles, PhoneOff, User, Building, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 
 const EVENTO_LABELS: Record<string, string> = {
   transicao_etapa: 'Mudança de etapa',
@@ -38,6 +39,7 @@ export default function ArqoLeadDetail() {
       </MainLayout>
     );
   }
+  const phoneOptions = arqoLeadPhoneOptions(lead);
 
   return (
     <MainLayout
@@ -65,7 +67,12 @@ export default function ArqoLeadDetail() {
               )}
             </div>
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {lead.cliente?.telefone && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5"><Phone className="h-4 w-4 text-[#ff8a39]" /> {lead.cliente.telefone}</div>}
+              {phoneOptions.map((phone) => (
+                <div key={phone.value} className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5">
+                  <Phone className="h-4 w-4 text-[#ff8a39]" />
+                  <span><span className="text-white/45">{phone.label}: </span>{phone.value}</span>
+                </div>
+              ))}
               {lead.cliente?.email && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5"><Mail className="h-4 w-4 text-[#ff8a39]" /> {lead.cliente.email}</div>}
               {lead.empreendimento && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5"><Building className="h-4 w-4 text-[#ff8a39]" /> {lead.empreendimento.nome}</div>}
               {lead.valor_estimado != null && <div className="rounded-xl bg-white/[.07] px-3 py-2.5">💰 R$ {Number(lead.valor_estimado).toLocaleString('pt-BR')}</div>}

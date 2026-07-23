@@ -44,6 +44,7 @@ function parseMoney(value: string) {
 
 export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
   const [form, setForm] = useState(initialForm);
+  const [additionalPhones, setAdditionalPhones] = useState(['', '', '', '']);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const { data: etapas = [] } = useArqoEtapas();
@@ -70,6 +71,7 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
   const close = () => {
     if (isSaving) return;
     setForm(initialForm);
+    setAdditionalPhones(['', '', '', '']);
     onOpenChange(false);
   };
 
@@ -79,7 +81,8 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
       toast.error('Informe o nome do lead');
       return;
     }
-    if (!form.telefone.trim() && !form.email.trim()) {
+    const phones = additionalPhones.map((phone) => phone.trim()).filter(Boolean);
+    if (!form.telefone.trim() && !form.email.trim() && phones.length === 0) {
       toast.error('Informe ao menos um telefone ou e-mail');
       return;
     }
@@ -107,6 +110,7 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
       p_empreendimento_id: form.empreendimentoId === NONE ? undefined : form.empreendimentoId,
       p_valor_estimado: valor ?? undefined,
       p_observacoes: form.observacoes.trim() || undefined,
+      p_telefones_adicionais: phones,
     });
     setIsSaving(false);
 
@@ -118,6 +122,7 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
     await queryClient.invalidateQueries({ queryKey: ['arqo'] });
     toast.success('Lead cadastrado com sucesso');
     setForm(initialForm);
+    setAdditionalPhones(['', '', '', '']);
     onOpenChange(false);
     return data;
   };
@@ -147,6 +152,23 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
           <div className="space-y-1.5">
             <Label htmlFor="lead-email">E-mail</Label>
             <Input id="lead-email" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="nome@empresa.com" />
+          </div>
+          <div className="space-y-3 rounded-2xl border border-black/[.07] bg-muted/25 p-4 sm:col-span-2">
+            <div>
+              <Label>Telefones adicionais</Label>
+              <p className="mt-1 text-xs text-muted-foreground">Você pode informar até quatro outros números específicos deste lead.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {additionalPhones.map((phone, index) => (
+                <Input
+                  key={index}
+                  aria-label={`Telefone adicional ${index + 1}`}
+                  value={phone}
+                  onChange={(event) => setAdditionalPhones((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                  placeholder={`Telefone adicional ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="lead-cpf">CPF</Label>
@@ -222,4 +244,3 @@ export function ArqoNovoLeadDialog({ open, onOpenChange }: Props) {
     </Dialog>
   );
 }
-

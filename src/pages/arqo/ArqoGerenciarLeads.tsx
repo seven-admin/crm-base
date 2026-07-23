@@ -9,17 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Trash2, Search, X, Users, UserPlus } from 'lucide-react';
+import { Trash2, Search, X, Users, UserPlus, Pencil } from 'lucide-react';
 import { useArqoLeadsAdmin, useDeleteArqoLeadsBulk, useAssignGrupoLeadsBulk } from '@/hooks/useArqoLeadsAdmin';
 import { useArqoEtapas, useArqoSources, useArqoGrupos } from '@/hooks/useArqo';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArqoNovoLeadDialog } from '@/components/arqo/ArqoNovoLeadDialog';
+import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 
 export function ArqoGerenciarLeads() {
   const { role } = useAuth();
   const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sourceId, setSourceId] = useState<string>('all');
   const [etapaId, setEtapaId] = useState<string>('all');
@@ -227,12 +229,13 @@ export function ArqoGerenciarLeads() {
               <TableHead>Consultor</TableHead>
               <TableHead>Grupo</TableHead>
               <TableHead>Criado em</TableHead>
+              {role === 'super_admin' && <TableHead className="w-20 text-right">Ações</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-6">Carregando…</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={role === 'super_admin' ? 9 : 8} className="text-center py-6">Carregando…</TableCell></TableRow>}
             {!isLoading && leads.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+              <TableRow><TableCell colSpan={role === 'super_admin' ? 9 : 8} className="text-center py-8 text-muted-foreground">
                 Nenhum lead encontrado.
               </TableCell></TableRow>
             )}
@@ -248,7 +251,10 @@ export function ArqoGerenciarLeads() {
                   )}
                 </TableCell>
                 <TableCell className="text-xs">
-                  {l.cliente?.telefone && <div>{l.cliente.telefone}</div>}
+                  {(l.cliente?.telefone || l.cliente?.whatsapp) && <div>{l.cliente.telefone || l.cliente.whatsapp}</div>}
+                  {l.telefones_adicionais?.map((telefone, index) => (
+                    <div key={`${telefone}-${index}`} className="text-muted-foreground">{telefone}</div>
+                  ))}
                   {l.cliente?.email && <div className="text-muted-foreground">{l.cliente.email}</div>}
                 </TableCell>
                 <TableCell className="text-xs">{l.source?.nome || '—'}</TableCell>
@@ -268,6 +274,13 @@ export function ArqoGerenciarLeads() {
                 <TableCell className="text-xs text-muted-foreground">
                   {format(new Date(l.created_at), 'dd/MM/yyyy HH:mm')}
                 </TableCell>
+                {role === 'super_admin' && (
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => setEditingLeadId(l.id)} title="Editar lead">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -306,7 +319,14 @@ export function ArqoGerenciarLeads() {
       </AlertDialog>
 
       {role === 'super_admin' && (
-        <ArqoNovoLeadDialog open={newLeadOpen} onOpenChange={setNewLeadOpen} />
+        <>
+          <ArqoNovoLeadDialog open={newLeadOpen} onOpenChange={setNewLeadOpen} />
+          <ArqoEditarLeadDialog
+            leadId={editingLeadId}
+            open={!!editingLeadId}
+            onOpenChange={(open) => { if (!open) setEditingLeadId(null); }}
+          />
+        </>
       )}
     </div>
   );

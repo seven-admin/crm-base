@@ -12,6 +12,7 @@ import { useArqoAtendimentoOpcoes, useArqoTemperaturas, useConcluirArqoAtendimen
 import type { ArqoAtendimentoAcaoFinal, ArqoAtendimentoGrupo, ArqoFunilEtapa, ArqoLeadWithRelations } from '@/types/arqo.types';
 import { LeadIndicadoDialog } from '@/components/arqo/LeadIndicadoDialog';
 import { ArqoCallDialog } from '@/components/arqo/ArqoCallDialog';
+import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 
 interface ArqoAtendimentoFlowProps {
   lead: ArqoLeadWithRelations;
@@ -206,7 +207,10 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Atendimento em andamento</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{lead.cliente?.nome ?? 'Lead'}</h2>
-          <p className="mt-1 text-sm text-white/50">{lead.cliente?.telefone ?? 'Telefone não informado'} · {lead.etapa?.nome ?? 'Sem etapa'}</p>
+          <p className="mt-1 text-sm text-white/50">
+            {arqoLeadPhoneOptions(lead).map((phone) => phone.value).join(' · ') || 'Telefone não informado'}
+          </p>
+          <p className="mt-1 text-xs text-white/35">{lead.etapa?.nome ?? 'Sem etapa'}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ArqoCallDialog lead={lead} />

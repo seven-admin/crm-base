@@ -10,6 +10,7 @@ import { ArqoPerformanceDashboard } from '@/components/arqo/ArqoPerformanceDashb
 import { useAuth } from '@/contexts/AuthContext';
 import { useArqoAtendimentoDashboard } from '@/hooks/useArqoAtendimentoDashboard';
 import { useArqoFilaUsuario, useArqoLeads, useMeusArqoGrupos, usePuxarProximoLead } from '@/hooks/useArqo';
+import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 
 export default function ArqoRoleta() {
   const { user } = useAuth();
@@ -137,7 +138,11 @@ export default function ArqoRoleta() {
                     <span className="truncate text-sm font-medium">{lead.cliente?.nome ?? '—'}</span>
                     <Badge style={{ backgroundColor: lead.etapa?.cor, color: '#fff' }} className="shrink-0 text-xs">{lead.etapa?.nome}</Badge>
                   </div>
-                  {lead.cliente?.telefone && <div className="flex items-center gap-1 text-xs text-muted-foreground"><Phone className="h-3 w-3" /> {lead.cliente.telefone}</div>}
+                  {arqoLeadPhoneOptions(lead).map((phone) => (
+                    <div key={phone.value} className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3" /> {phone.value}
+                    </div>
+                  ))}
                 </Card>
               </Link>
             ))}

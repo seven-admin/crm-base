@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Mic, MicOff, PhoneCall, PhoneOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   endArqoCall,
   getArqoCallSession,
@@ -13,6 +15,7 @@ import {
   type OpenArqoCall,
 } from '@/lib/arqoCalls';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
+import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 
 type UiStatus = 'idle' | ArqoCallStatus | 'ending';
 
@@ -41,6 +44,8 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
+  const phoneOptions = useMemo(() => arqoLeadPhoneOptions(lead), [lead]);
+  const [selectedPhone, setSelectedPhone] = useState(phoneOptions[0]?.value ?? '');
   const callRef = useRef<OpenArqoCall | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionExternalId = session?.external_session_id;
@@ -49,13 +54,14 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
 
   useEffect(() => {
     if (!open) return;
+    setSelectedPhone((current) => phoneOptions.some((phone) => phone.value === current) ? current : phoneOptions[0]?.value ?? '');
     setIsLoadingSession(true);
     setError(null);
     void getArqoCallSession()
       .then(setSession)
       .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Serviço de chamadas indisponível.'))
       .finally(() => setIsLoadingSession(false));
-  }, [open]);
+  }, [open, phoneOptions]);
 
   useEffect(() => {
     if (!open || !sessionExternalId) return undefined;
@@ -100,7 +106,7 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
     setMuted(false);
     setDuration(0);
     try {
-      const call = await openArqoCall(lead.id);
+      const call = await openArqoCall(lead.id, selectedPhone);
       callRef.current = call;
       setStatus('ringing');
       if (audioRef.current) {
@@ -167,8 +173,8 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
         <Button
           size="sm"
           className="bg-[#ff7417] text-[#21150d] hover:bg-[#ff8a39]"
-          disabled={!lead.cliente?.telefone}
-          title={lead.cliente?.telefone ? 'Ligar pelo WhatsApp' : 'Lead sem telefone cadastrado'}
+          disabled={phoneOptions.length === 0}
+          title={phoneOptions.length > 0 ? 'Ligar pelo WhatsApp' : 'Lead sem telefone cadastrado'}
         >
           <PhoneCall className="mr-2 h-4 w-4" /> Ligar
         </Button>
@@ -184,7 +190,7 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
             <PhoneCall className="h-7 w-7 text-[#ff8a39]" />
           </div>
           <p className="mt-4 text-lg font-semibold">{lead.cliente?.nome ?? 'Lead'}</p>
-          <p className="mt-1 text-sm text-white/50">{lead.cliente?.telefone ?? 'Telefone não informado'}</p>
+          <p className="mt-1 text-sm text-white/50">{selectedPhone || 'Telefone não informado'}</p>
           <p className="mt-5 text-sm font-medium text-[#ffb17d]">
             {isLoadingSession ? 'Verificando sua conta...' : STATUS_LABELS[status]}
           </p>
@@ -213,6 +219,20 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
             {(status === 'starting' || status === 'ending') && <Loader2 className="h-7 w-7 animate-spin text-[#ff8a39]" />}
           </div>
         </div>
+
+        {phoneOptions.length > 1 && !active && (
+          <div className="space-y-2">
+            <Label>Número para ligação</Label>
+            <Select value={selectedPhone} onValueChange={setSelectedPhone}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {phoneOptions.map((phone) => (
+                  <SelectItem key={phone.value} value={phone.value}>{phone.label} · {phone.value}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {!isLoadingSession && !connected && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

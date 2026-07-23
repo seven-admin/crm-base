@@ -347,6 +347,7 @@ export type Database = {
           qualificacao_score: number | null
           source_id: string | null
           temperatura_id: string | null
+          telefones_adicionais: string[]
           tentativas_contato: number
           ultimo_contato_em: string | null
           unidade_id: string | null
@@ -376,6 +377,7 @@ export type Database = {
           qualificacao_score?: number | null
           source_id?: string | null
           temperatura_id?: string | null
+          telefones_adicionais?: string[]
           tentativas_contato?: number
           ultimo_contato_em?: string | null
           unidade_id?: string | null
@@ -405,6 +407,7 @@ export type Database = {
           qualificacao_score?: number | null
           source_id?: string | null
           temperatura_id?: string | null
+          telefones_adicionais?: string[]
           tentativas_contato?: number
           ultimo_contato_em?: string | null
           unidade_id?: string | null
@@ -3450,6 +3453,27 @@ export type Database = {
       }
     }
     Functions: {
+      arqo_editar_lead_manual: {
+        Args: {
+          p_closer_id?: string
+          p_consultor_id?: string
+          p_cpf?: string
+          p_email?: string
+          p_empreendimento_id?: string
+          p_etapa_id: string
+          p_grupo_id?: string
+          p_lead_id: string
+          p_nome: string
+          p_observacoes?: string
+          p_source_id?: string
+          p_telefone?: string
+          p_telefones_adicionais?: string[]
+          p_temperatura_id?: string
+          p_valor_estimado?: number
+          p_whatsapp?: string
+        }
+        Returns: undefined
+      }
       arqo_criar_lead_manual: {
         Args: {
           p_cpf?: string
@@ -3461,6 +3485,7 @@ export type Database = {
           p_observacoes?: string
           p_source_id?: string
           p_telefone?: string
+          p_telefones_adicionais?: string[]
           p_temperatura_id?: string
           p_valor_estimado?: number
         }
