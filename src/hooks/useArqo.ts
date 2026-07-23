@@ -5,6 +5,7 @@ import type {
   ArqoLead, ArqoLeadWithRelations, ArqoFunilEtapa, ArqoTemperatura,
   ArqoLeadSource, ArqoGrupo, ArqoGrupoMembro, ArqoSlaRegra, ArqoReguaReengajamento,
   ArqoAgendamento, ArqoAgendamentoWithRelations, ArqoAgendamentoStatus,
+  ArqoHistoricoContato,
   ArqoAtendimentoOpcao, ArqoAtendimentoPayload, ArqoMetaAtendimento, ArqoPerformanceConfig,
 } from '@/types/arqo.types';
 
@@ -436,6 +437,34 @@ export function useArqoAtendimentoOpcoes(includeInactive = false) {
   });
 }
 
+export function useArqoHistoricoContatos() {
+  return useQuery({
+    queryKey: ['arqo', 'historico-contatos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('arqo_atendimentos' as any)
+        .select(`
+          id,
+          lead_id,
+          consultor_id,
+          status_codigo,
+          observacao,
+          acao_final,
+          encerrado_em,
+          lead_nome_snapshot,
+          telefone_snapshot,
+          whatsapp_snapshot,
+          telefones_adicionais_snapshot,
+          consultor:consultor_id (id, full_name)
+        `)
+        .order('encerrado_em', { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoHistoricoContato[];
+    },
+  });
+}
+
 export function useConcluirArqoAtendimento() {
   const qc = useQueryClient();
   return useMutation({
@@ -461,6 +490,7 @@ export function useConcluirArqoAtendimento() {
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'historico-contatos'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       toast.success('Atendimento registrado');

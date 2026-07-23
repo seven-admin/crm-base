@@ -86,6 +86,21 @@ export interface ArqoAtendimentoPayload {
   etapaDestinoId?: string | null;
 }
 
+export interface ArqoHistoricoContato {
+  id: string;
+  lead_id: string;
+  consultor_id: string;
+  status_codigo: string;
+  observacao: string;
+  acao_final: ArqoAtendimentoAcaoFinal;
+  encerrado_em: string;
+  lead_nome_snapshot: string | null;
+  telefone_snapshot: string | null;
+  whatsapp_snapshot: string | null;
+  telefones_adicionais_snapshot: string[];
+  consultor?: { id: string; full_name: string } | null;
+}
+
 export interface ArqoMetaAtendimento {
   id: string;
   nome: string;
