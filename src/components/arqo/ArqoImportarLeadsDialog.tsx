@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useArqoEtapas, useArqoGrupos, useArqoSources } from '@/hooks/useArqo';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Row {
   nome: string;
@@ -58,6 +59,7 @@ interface Props {
 }
 
 export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
+  const { role } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [grupoId, setGrupoId] = useState<string>('none');
   const [etapaId, setEtapaId] = useState<string>('');
@@ -99,6 +101,11 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
     nome ? sources.find(s => s.nome.toLowerCase() === nome.toLowerCase())?.id ?? null : null;
 
   const handleImport = async () => {
+    if (role !== 'super_admin') {
+      toast.error('A importação é exclusiva para superadministradores');
+      onOpenChange(false);
+      return;
+    }
     if (rows.length === 0 || !selectedEtapa) return;
     setIsImporting(true);
     let ok = 0, fail = 0;
@@ -115,7 +122,7 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
             email: row.email ?? null,
             nivel_cadastro: 'lead',
             origem: row.origem ?? null,
-          } as any)
+          })
           .select('id')
           .single();
         if (cErr || !cliente) throw cErr ?? new Error('cliente');
@@ -130,7 +137,7 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
             valor_estimado: row.valor_estimado ?? null,
             grupo_id: grupoId !== 'none' ? grupoId : null,
             created_by: userId,
-          } as any)
+          })
           .select('id')
           .single();
         if (lErr || !lead) throw lErr ?? new Error('lead');
@@ -159,6 +166,8 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
     setRows([]); setResult(null); setGrupoId('none'); setEtapaId('');
     onOpenChange(false);
   };
+
+  if (role !== 'super_admin') return null;
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(v) : close())}>

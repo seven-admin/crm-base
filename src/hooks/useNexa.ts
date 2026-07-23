@@ -8,7 +8,8 @@ const SELECT_VISITA = `
   cliente:seven_clientes(id, nome, telefone, email),
   empreendimento:seven_empreendimentos(id, nome),
   imobiliaria:seven_imobiliarias!nexa_visitas_imobiliaria_parceira_id_fkey(id, nome),
-  corretor:seven_corretores(id, nome_completo)
+  corretor:seven_corretores(id, nome_completo),
+  criador:profiles!nexa_visitas_created_by_fkey(id, full_name, email)
 `;
 
 // ============ Visitas ============

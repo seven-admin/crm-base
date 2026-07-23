@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, FileText,
-  UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, TrendingUp, CalendarDays,
+  UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, CalendarDays,
   Home, Handshake, User as UserIcon, ExternalLink, PhoneCall,
   type LucideIcon,
 } from 'lucide-react';
@@ -45,7 +45,7 @@ const sevenCategories: { label: string; items: MenuItem[] }[] = [
     label: 'Portfólio',
     items: [
       { icon: Building2, label: 'Empreendimentos', path: '/empreendimentos', moduleName: 'empreendimentos', description: 'Projetos e obras' },
-      { icon: Map, label: 'Disponibilidade', path: '/mapa-unidades', moduleName: 'unidades', description: 'Mapa de unidades' },
+      { icon: Map, label: 'Mapa', path: '/mapa-unidades', moduleName: 'unidades', description: 'Mapa de unidades' },
     ],
   },
   {
@@ -72,7 +72,6 @@ const menuGroups: MenuGroup[] = [
       { icon: PhoneCall, label: 'Atendimento', path: '/arqo/atendimento', moduleName: 'arqo_roleta' },
       { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo_leads' },
       { icon: CalendarDays, label: 'Atividades', path: '/arqo/atividades', moduleName: 'arqo_atividades' },
-      { icon: TrendingUp, label: 'Forecast', path: '/arqo/forecast', moduleName: 'arqo_forecast' },
       { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo_admin' },
       { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo_config' },
     ],

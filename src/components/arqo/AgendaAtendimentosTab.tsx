@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Pencil, PhoneCall, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +20,12 @@ import {
   type ArqoAgendamentoStatus, type ArqoAgendamentoWithRelations,
 } from '@/types/arqo.types';
 import { usePermissions } from '@/hooks/usePermissions';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function AgendaAtendimentosTab() {
+  const navigate = useNavigate();
   const { isSuperAdmin } = usePermissions();
   const superAdmin = isSuperAdmin();
 
@@ -42,7 +47,7 @@ export function AgendaAtendimentosTab() {
   return (
     <div className="space-y-4">
       <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todos' | ArqoAgendamentoStatus)}>
           <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os status</SelectItem>
@@ -51,7 +56,31 @@ export function AgendaAtendimentosTab() {
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Novo agendamento</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Criar
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => navigate('/arqo/roleta')} className="gap-3 py-3">
+              <PhoneCall className="h-4 w-4 text-primary" />
+              <div>
+                <p className="font-medium">Novo Atendimento</p>
+                <p className="text-xs text-muted-foreground">Iniciar pela roleta</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={openCreate} className="gap-3 py-3">
+              <CalendarPlus className="h-4 w-4 text-primary" />
+              <div>
+                <p className="font-medium">Nova Atividade</p>
+                <p className="text-xs text-muted-foreground">Agendar uma ação</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isLoading ? (

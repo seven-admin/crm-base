@@ -13,7 +13,6 @@ import React, { Suspense, lazy } from "react";
 const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
 const ArqoAtendimento = lazy(() => import("./pages/arqo/ArqoAtendimento"));
 const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
-const ArqoForecast = lazy(() => import("./pages/arqo/ArqoForecast"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoAtividades = lazy(() => import("./pages/arqo/ArqoAtividades"));
 const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
@@ -106,7 +105,6 @@ const App = () => (
                 <Route path="/arqo/atendimento" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoAtendimento /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadsKanban /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadDetail /></ArqoProtectedRoute>} />
-                <Route path="/arqo/forecast" element={<ArqoProtectedRoute moduleName="arqo_forecast"><ArqoForecast /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute moduleName="arqo_config"><ArqoConfig /></ArqoProtectedRoute>} />
                 <Route path="/arqo/admin" element={<ArqoProtectedRoute moduleName="arqo_admin"><ArqoAdmin /></ArqoProtectedRoute>} />
                 <Route path="/arqo/atividades" element={<ArqoProtectedRoute moduleName="arqo_atividades"><ArqoAtividades /></ArqoProtectedRoute>} />

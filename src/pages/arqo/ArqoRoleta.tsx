@@ -13,7 +13,7 @@ import { useArqoFilaUsuario, useArqoLeads, useMeusArqoGrupos, usePuxarProximoLea
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 
 export default function ArqoRoleta() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const [importOpen, setImportOpen] = useState(false);
   const { data: meusGrupos = [], isLoading: loadingGrupos } = useMeusArqoGrupos(user?.id);
@@ -114,14 +114,14 @@ export default function ArqoRoleta() {
     <MainLayout
       title="Atendimento Arqo"
       subtitle="Carteira, performance e próxima oportunidade em um único fluxo"
-      actions={
+      actions={role === 'super_admin' ? (
         <Button variant="outline" onClick={() => setImportOpen(true)} className="bg-card">
           <Upload className="mr-2 h-4 w-4" /> Importar leads
         </Button>
-      }
+      ) : undefined}
       contentClassName="pt-4 md:pt-6"
     >
-      <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
+      {role === 'super_admin' && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
 
       <ArqoPerformanceDashboard dashboard={dashboard} roulette={rouletteCard} />
 

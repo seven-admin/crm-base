@@ -23,6 +23,7 @@ export interface NexaVisitaWithRelations extends NexaVisita {
   empreendimento?: { id: string; nome: string } | null;
   imobiliaria?: { id: string; nome: string } | null;
   corretor?: { id: string; nome_completo: string } | null;
+  criador?: { id: string; full_name: string; email: string } | null;
 }
 
 export interface NexaEvento {

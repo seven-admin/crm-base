@@ -21,6 +21,7 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   visita?: NexaVisitaWithRelations | null;
+  createMode?: 'atendimento' | 'atividade';
 }
 
 function toLocalInput(iso: string) {
@@ -29,7 +30,7 @@ function toLocalInput(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function VisitaFormDialog({ open, onOpenChange, visita }: Props) {
+export function VisitaFormDialog({ open, onOpenChange, visita, createMode = 'atividade' }: Props) {
   const create = useCreateVisita();
   const update = useUpdateVisita();
   const { data: emps } = useEmpreendimentosAtivos();
@@ -102,8 +103,8 @@ export function VisitaFormDialog({ open, onOpenChange, visita }: Props) {
         });
       }
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message || 'Erro ao salvar');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar');
     } finally {
       setSaving(false);
     }
@@ -113,7 +114,13 @@ export function VisitaFormDialog({ open, onOpenChange, visita }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Editar visita' : 'Nova visita'}</DialogTitle>
+          <DialogTitle>
+            {isEdit
+              ? 'Editar visita'
+              : createMode === 'atendimento'
+                ? 'Novo atendimento'
+                : 'Nova atividade'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -162,7 +169,7 @@ export function VisitaFormDialog({ open, onOpenChange, visita }: Props) {
               <Select value={imobId} onValueChange={setImobId}>
                 <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                 <SelectContent>
-                  {imobs?.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
+                  {imobs?.map((i: { id: string; nome: string }) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -197,7 +204,13 @@ export function VisitaFormDialog({ open, onOpenChange, visita }: Props) {
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={saving}>
-            {saving ? 'Salvando...' : isEdit ? 'Salvar alterações' : 'Agendar visita'}
+            {saving
+              ? 'Salvando...'
+              : isEdit
+                ? 'Salvar alterações'
+                : createMode === 'atendimento'
+                  ? 'Criar atendimento'
+                  : 'Criar atividade'}
           </Button>
         </DialogFooter>
       </DialogContent>

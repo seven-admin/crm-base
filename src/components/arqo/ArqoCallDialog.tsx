@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Mic, MicOff, PhoneCall, PhoneOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   endArqoCall,
@@ -21,7 +20,7 @@ type UiStatus = 'idle' | ArqoCallStatus | 'ending';
 
 const STATUS_LABELS: Record<UiStatus, string> = {
   idle: 'Pronto para ligar',
-  starting: 'Preparando microfone...',
+  starting: 'Preparando...',
   ringing: 'Chamando...',
   connected: 'Em chamada',
   ending: 'Encerrando...',
@@ -35,12 +34,14 @@ function formatDuration(seconds: number) {
   return `${minutes}:${rest}`;
 }
 
+/**
+ * Controles compactos de chamada. O nome legado foi mantido para não alterar
+ * os consumidores, mas o componente não abre mais Dialog nem bloqueia a tela.
+ */
 export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
-  const [open, setOpen] = useState(false);
   const [session, setSession] = useState<ArqoCallSession | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [status, setStatus] = useState<UiStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
@@ -48,38 +49,54 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
   const [selectedPhone, setSelectedPhone] = useState(phoneOptions[0]?.value ?? '');
   const callRef = useRef<OpenArqoCall | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const wasConnectedRef = useRef(false);
   const sessionExternalId = session?.external_session_id;
-
   const active = ['starting', 'ringing', 'connected', 'ending'].includes(status);
+  const connected = session?.paired && session.state === 'open';
 
   useEffect(() => {
-    if (!open) return;
-    setSelectedPhone((current) => phoneOptions.some((phone) => phone.value === current) ? current : phoneOptions[0]?.value ?? '');
+    setSelectedPhone((current) => (
+      phoneOptions.some((phone) => phone.value === current)
+        ? current
+        : phoneOptions[0]?.value ?? ''
+    ));
+  }, [phoneOptions]);
+
+  useEffect(() => {
+    let activeRequest = true;
     setIsLoadingSession(true);
-    setError(null);
     void getArqoCallSession()
-      .then(setSession)
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Serviço de chamadas indisponível.'))
-      .finally(() => setIsLoadingSession(false));
-  }, [open, phoneOptions]);
+      .then((value) => { if (activeRequest) setSession(value); })
+      .catch(() => { if (activeRequest) setSession(null); })
+      .finally(() => { if (activeRequest) setIsLoadingSession(false); });
+    return () => { activeRequest = false; };
+  }, []);
 
   useEffect(() => {
-    if (!open || !sessionExternalId) return undefined;
+    if (!sessionExternalId) return undefined;
     return subscribeArqoCallEvents((event) => {
       const current = callRef.current;
       if (!current || event.id !== current.callId) return;
       if (event.type === 'call-status' && event.status) {
         setStatus(event.status);
-        if (event.status === 'connected') setConnectedAt((value) => value ?? Date.now());
+        if (event.status === 'connected') {
+          wasConnectedRef.current = true;
+          setConnectedAt((value) => value ?? Date.now());
+        }
       }
       if (event.type === 'call-ended') {
         current.closeLocal();
         callRef.current = null;
         setStatus('ended');
         setConnectedAt(null);
+        setMuted(false);
+        if (!wasConnectedRef.current) {
+          toast.info('Ligação não completada. Confirme se o número possui WhatsApp.');
+        }
+        wasConnectedRef.current = false;
       }
     });
-  }, [open, sessionExternalId]);
+  }, [sessionExternalId]);
 
   useEffect(() => {
     if (!connectedAt) {
@@ -101,10 +118,14 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
   }, []);
 
   const startCall = async () => {
+    if (!connected) {
+      toast.info('Conta não conectada.');
+      return;
+    }
     setStatus('starting');
-    setError(null);
     setMuted(false);
     setDuration(0);
+    wasConnectedRef.current = false;
     try {
       const call = await openArqoCall(lead.id, selectedPhone);
       callRef.current = call;
@@ -114,20 +135,19 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
         await audioRef.current.play().catch(() => undefined);
       }
       call.pc.onconnectionstatechange = () => {
-        if (call.pc.connectionState === 'failed') {
-          call.closeLocal();
-          callRef.current = null;
-          void endArqoCall(call.callId).catch(() => undefined);
-          setStatus('failed');
-          setError('Não foi possível estabelecer o canal de áudio.');
-        }
+        if (call.pc.connectionState !== 'failed') return;
+        call.closeLocal();
+        callRef.current = null;
+        void endArqoCall(call.callId).catch(() => undefined);
+        setStatus('failed');
+        toast.error('Não foi possível estabelecer o canal de áudio.');
       };
     } catch (callError) {
       const message = callError instanceof DOMException && callError.name === 'NotAllowedError'
         ? 'Permita o acesso ao microfone para realizar a ligação.'
         : callError instanceof Error ? callError.message : 'Não foi possível iniciar a ligação.';
-      setError(message);
       setStatus('failed');
+      toast.error(message);
     }
   };
 
@@ -137,14 +157,15 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
     setStatus('ending');
     try {
       await endArqoCall(call.callId);
-    } catch (endError) {
-      setError(endError instanceof Error ? endError.message : 'O servidor não confirmou o encerramento.');
+    } catch {
+      toast.error('O servidor não confirmou o encerramento da chamada.');
     } finally {
       call.closeLocal();
       callRef.current = null;
       setStatus('ended');
       setConnectedAt(null);
       setMuted(false);
+      wasConnectedRef.current = false;
     }
   };
 
@@ -156,92 +177,70 @@ export function ArqoCallDialog({ lead }: { lead: ArqoLeadWithRelations }) {
     setMuted(nextMuted);
   };
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && active) return;
-    setOpen(nextOpen);
-    if (nextOpen) {
-      setStatus('idle');
-      setError(null);
-    }
-  };
-
-  const connected = session?.paired && session.state === 'open';
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {phoneOptions.length > 1 && !active && (
+        <Select value={selectedPhone} onValueChange={setSelectedPhone}>
+          <SelectTrigger className="h-9 w-[11.5rem] border-white/15 bg-white/[.07] text-xs text-white hover:bg-white/[.12]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {phoneOptions.map((phone) => (
+              <SelectItem key={phone.value} value={phone.value}>{phone.label} · {phone.value}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {!active && (
         <Button
           size="sm"
-          className="bg-[#ff7417] text-[#21150d] hover:bg-[#ff8a39]"
-          disabled={phoneOptions.length === 0}
-          title={phoneOptions.length > 0 ? 'Ligar pelo WhatsApp' : 'Lead sem telefone cadastrado'}
+          className="bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
+          disabled={phoneOptions.length === 0 || isLoadingSession || !connected}
+          title={!connected && !isLoadingSession ? 'Conta não conectada' : 'Ligar pelo WhatsApp'}
+          onClick={startCall}
         >
-          <PhoneCall className="mr-2 h-4 w-4" /> Ligar
+          {isLoadingSession ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PhoneCall className="mr-2 h-4 w-4" />}
+          {isLoadingSession
+            ? 'Verificando...'
+            : !connected
+              ? 'Conta não conectada'
+              : status === 'ended' || status === 'failed'
+                ? 'Ligar novamente'
+                : 'Ligar'}
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Ligação pelo WhatsApp</DialogTitle>
-          <DialogDescription>A chamada usa a conta vinculada ao seu perfil.</DialogDescription>
-        </DialogHeader>
+      )}
 
-        <div className="rounded-[1.5rem] bg-[#201a17] px-6 py-8 text-center text-white">
-          <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white/10">
-            <PhoneCall className="h-7 w-7 text-[#ff8a39]" />
-          </div>
-          <p className="mt-4 text-lg font-semibold">{lead.cliente?.nome ?? 'Lead'}</p>
-          <p className="mt-1 text-sm text-white/50">{selectedPhone || 'Telefone não informado'}</p>
-          <p className="mt-5 text-sm font-medium text-[#ffb17d]">
-            {isLoadingSession ? 'Verificando sua conta...' : STATUS_LABELS[status]}
-          </p>
-          {status === 'connected' && <p className="mt-1 font-mono text-2xl tabular-nums">{formatDuration(duration)}</p>}
-
-          <div className="mt-7 flex items-center justify-center gap-3">
-            {!active && status !== 'connected' && (
+      {active && (
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[.07] py-1 pl-3 pr-1">
+          <span className="flex items-center gap-2 text-xs font-medium text-white">
+            {(status === 'starting' || status === 'ending') && <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />}
+            {status === 'ringing' && <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />}
+            {status === 'connected' && <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />}
+            {STATUS_LABELS[status]}
+            {status === 'connected' && <span className="font-mono tabular-nums text-white/65">{formatDuration(duration)}</span>}
+          </span>
+          {(status === 'ringing' || status === 'connected') && (
+            <>
               <Button
-                className="h-14 rounded-full bg-emerald-500 px-7 text-white hover:bg-emerald-600"
-                onClick={startCall}
-                disabled={isLoadingSession || !connected}
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full text-white hover:bg-white/10 hover:text-white"
+                onClick={toggleMute}
+                disabled={status !== 'connected'}
+                title={muted ? 'Ativar microfone' : 'Silenciar microfone'}
               >
-                <PhoneCall className="mr-2 h-5 w-5" /> {status === 'ended' || status === 'failed' ? 'Ligar novamente' : 'Iniciar ligação'}
+                {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
-            )}
-            {(status === 'ringing' || status === 'connected') && (
-              <>
-                <Button size="icon" variant="secondary" className="h-12 w-12 rounded-full" onClick={toggleMute} disabled={status !== 'connected'}>
-                  {muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                </Button>
-                <Button size="icon" variant="destructive" className="h-14 w-14 rounded-full" onClick={endCall}>
-                  <PhoneOff className="h-5 w-5" />
-                </Button>
-              </>
-            )}
-            {(status === 'starting' || status === 'ending') && <Loader2 className="h-7 w-7 animate-spin text-[#ff8a39]" />}
-          </div>
+              <Button size="icon" variant="destructive" className="h-8 w-8 rounded-full" onClick={endCall} title="Encerrar ligação">
+                <PhoneOff className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
+      )}
 
-        {phoneOptions.length > 1 && !active && (
-          <div className="space-y-2">
-            <Label>Número para ligação</Label>
-            <Select value={selectedPhone} onValueChange={setSelectedPhone}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {phoneOptions.map((phone) => (
-                  <SelectItem key={phone.value} value={phone.value}>{phone.label} · {phone.value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {!isLoadingSession && !connected && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Sua conta AstraCalls ainda não está conectada. Solicite ao administrador que informe o webhook da sua conta no cadastro de usuários.
-          </div>
-        )}
-        {error && <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
-        <audio ref={audioRef} autoPlay className="hidden" />
-      </DialogContent>
-    </Dialog>
+      <audio ref={audioRef} autoPlay className="hidden" />
+    </div>
   );
 }

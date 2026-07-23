@@ -317,17 +317,6 @@ export function useArqoLeadEvents(leadId?: string) {
   });
 }
 
-export function useArqoForecast() {
-  return useQuery({
-    queryKey: ['arqo', 'forecast'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('arqo_vw_forecast_ponderado' as any).select('*');
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
-
 export function useQualificarIA() {
   const qc = useQueryClient();
   return useMutation({

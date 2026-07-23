@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Phone, Mail, Upload } from 'lucide-react';
+import { ArrowRight, Sparkles, Phone, Mail, Upload, Pencil } from 'lucide-react';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
+import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -22,12 +23,13 @@ export default function ArqoLeadsKanban() {
   const { data: leads = [], isLoading } = useArqoLeads(
     podeVerTudo
       ? { atendidos: true }
-      : { consultorId: user?.id, atendidos: true },
+      : { consultorId: user?.id },
   );
   const { data: etapas = [] } = useArqoEtapas();
   const transicionar = useTransicionarEtapa();
   const [dragging, setDragging] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
 
   // Mostra todas as etapas cadastradas (ativa/ganho/perda/descartado) como
   // colunas, na mesma ordem do cadastro — antes só "ativa" aparecia, então
@@ -55,16 +57,18 @@ export default function ArqoLeadsKanban() {
   return (
     <MainLayout
       title="Pipeline de leads"
-      subtitle="Acompanhe oportunidades que já passaram pelo primeiro atendimento"
-      actions={
+      subtitle={podeVerTudo
+        ? 'Acompanhe oportunidades que já passaram pelo primeiro atendimento'
+        : 'Acompanhe e atualize todos os leads da sua carteira'}
+      actions={role === 'super_admin' ? (
         <Button variant="outline" size="sm" className="bg-card" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4 mr-2" /> Importar CSV
         </Button>
-      }
+      ) : undefined}
     >
       <div className="mb-4 flex items-center justify-between rounded-[1.25rem] border border-border/70 bg-card px-4 py-3 text-xs text-muted-foreground shadow-card">
         <span className="font-semibold uppercase tracking-[.14em] text-primary">Pipeline Arqo</span>
-        <span>{leads.length} leads atendidos · {etapas.length} etapas</span>
+        <span>{leads.length} {podeVerTudo ? 'leads atendidos' : 'leads na sua carteira'} · {etapas.length} etapas</span>
       </div>
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -106,6 +110,17 @@ export default function ArqoLeadsKanban() {
                         <Link to={`/arqo/leads/${l.id}`} className="font-medium text-sm hover:underline flex-1 truncate">
                           {l.cliente?.nome ?? '—'}
                         </Link>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="-mr-1 -mt-1 h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-primary-soft hover:text-primary"
+                          aria-label={`Editar ${l.cliente?.nome ?? 'lead'}`}
+                          title="Editar lead"
+                          onClick={() => setEditingLeadId(l.id)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         {l.qualificacao_score != null && (
                           <Badge variant="outline" className="gap-1 text-xs">
                             <Sparkles className="h-3 w-3" /> {l.qualificacao_score}
@@ -141,7 +156,13 @@ export default function ArqoLeadsKanban() {
           })}
         </div>
       )}
-      <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
+      {role === 'super_admin' && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
+      <ArqoEditarLeadDialog
+        leadId={editingLeadId}
+        open={!!editingLeadId}
+        onOpenChange={(open) => !open && setEditingLeadId(null)}
+        canManageAssignment={podeVerTudo}
+      />
     </MainLayout>
   );
 }

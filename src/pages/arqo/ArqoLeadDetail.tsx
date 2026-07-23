@@ -1,15 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useTransicionarEtapa, useQualificarIA, useRegistrarTentativa } from '@/hooks/useArqo';
-import { ArrowLeft, Phone, Mail, Sparkles, PhoneOff, User, Building, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Phone, Mail, Sparkles, PhoneOff, Building, Loader2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
+import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
+
+const ARQO_ADMIN_ROLES = new Set(['super_admin', 'admin', 'arqo_admin', 'arqo_gestor']);
 
 const EVENTO_LABELS: Record<string, string> = {
   transicao_etapa: 'Mudança de etapa',
@@ -22,6 +29,8 @@ const EVENTO_LABELS: Record<string, string> = {
 };
 
 export default function ArqoLeadDetail() {
+  const { user, role } = useAuth();
+  const { isAdmin } = usePermissions();
   const { id } = useParams<{ id: string }>();
   const { data: lead, isLoading } = useArqoLead(id);
   const { data: events = [] } = useArqoLeadEvents(id);
@@ -29,8 +38,15 @@ export default function ArqoLeadDetail() {
   const transicionar = useTransicionarEtapa();
   const qualificar = useQualificarIA();
   const tentar = useRegistrarTentativa();
+  const [etapaDestinoId, setEtapaDestinoId] = useState('');
+  const [motivoPerda, setMotivoPerda] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
 
   const nomePorEtapaId = useMemo(() => new Map(etapas.map(e => [e.id, e.nome])), [etapas]);
+  const etapasDestino = useMemo(() => etapas.filter(e => e.id !== lead?.etapa_id), [etapas, lead?.etapa_id]);
+  const etapaDestino = etapasDestino.find(e => e.id === etapaDestinoId);
+  const podeGerenciarAtribuicao = isAdmin() || (role ? ARQO_ADMIN_ROLES.has(role) : false);
+  const podeEditar = podeGerenciarAtribuicao || lead?.consultor_id === user?.id;
 
   if (isLoading || !lead) {
     return (
@@ -46,24 +62,27 @@ export default function ArqoLeadDetail() {
       title={lead.cliente?.nome ?? 'Lead'}
       subtitle={`Etapa: ${lead.etapa?.nome ?? '—'}`}
       actions={
-        <Button variant="outline" asChild size="sm">
-          <Link to="/arqo/leads"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {podeEditar && (
+            <Button size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar lead
+            </Button>
+          )}
+          <Button variant="outline" asChild size="sm">
+            <Link to="/arqo/leads"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Link>
+          </Button>
+        </div>
       }
     >
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <Card className="overflow-hidden border-0 bg-[#201a17] p-6 text-white shadow-popover sm:p-7">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Oportunidade</p>
-                <h2 className="flex items-center gap-2 text-2xl font-semibold tracking-[-0.04em]"><User className="h-4 w-4" /> Cliente</h2>
-                <p className="mt-1 text-sm text-white/45">
-                  Nível: <Badge variant="outline">{lead.cliente?.nivel_cadastro ?? '—'}</Badge>
-                </p>
-              </div>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Dados da oportunidade</p>
               {lead.temperatura && (
-                <Badge style={{ backgroundColor: lead.temperatura.cor, color: '#fff' }}>{lead.temperatura.nome}</Badge>
+                <Badge className="border-0 px-3 py-1 text-xs font-semibold" style={{ backgroundColor: lead.temperatura.cor, color: '#fff' }}>
+                  {lead.temperatura.nome}
+                </Badge>
               )}
             </div>
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
@@ -93,31 +112,126 @@ export default function ArqoLeadDetail() {
             </Card>
           )}
 
-          <Card className="p-5">
-            <h3 className="font-semibold text-sm mb-3">Ações</h3>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => tentar.mutate({ leadId: lead.id })}>
-                <PhoneOff className="h-4 w-4 mr-2" /> Sem resposta
-              </Button>
-              <Button size="sm" variant="outline" disabled={qualificar.isPending} onClick={() => qualificar.mutate(lead.id)}>
-                {qualificar.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Qualificar com IA
-              </Button>
-              {etapas.filter(e => e.id !== lead.etapa_id).map(e => (
-                <Button key={e.id} size="sm" variant="ghost"
+          <Card className="overflow-hidden border-black/[.07] bg-[#fffdfa] shadow-none">
+            <div className="border-b border-black/[.07] p-5 sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Ações rápidas</p>
+              <h3 className="mt-1 text-lg font-semibold tracking-[-0.03em]">O que deseja fazer agora?</h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  className="h-auto justify-start rounded-xl border-black/10 bg-white px-4 py-3 text-left shadow-sm hover:border-primary/35 hover:bg-primary-soft/35"
+                  disabled={tentar.isPending}
+                  onClick={() => tentar.mutate({ leadId: lead.id })}
+                >
+                  {tentar.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <PhoneOff className="mr-3 h-5 w-5 text-primary" />}
+                  <span>
+                    <span className="block font-semibold">Registrar sem resposta</span>
+                    <span className="block text-xs font-normal text-muted-foreground">Adiciona uma tentativa ao histórico</span>
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto justify-start rounded-xl border-black/10 bg-white px-4 py-3 text-left shadow-sm hover:border-primary/35 hover:bg-primary-soft/35"
+                  disabled={qualificar.isPending}
+                  onClick={() => qualificar.mutate(lead.id)}
+                >
+                  {qualificar.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <Sparkles className="mr-3 h-5 w-5 text-primary" />}
+                  <span>
+                    <span className="block font-semibold">Qualificar com IA</span>
+                    <span className="block text-xs font-normal text-muted-foreground">Atualiza score e resumo da oportunidade</span>
+                  </span>
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Alterar etapa</p>
+                  <h3 className="mt-1 text-lg font-semibold tracking-[-0.03em]">Mover oportunidade</h3>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground sm:mt-0">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: lead.etapa?.cor ?? '#a8a29e' }} />
+                  Atualmente em <strong className="font-semibold text-foreground">{lead.etapa?.nome ?? '—'}</strong>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <Label>Escolha a etapa de destino</Label>
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {etapasDestino.map((etapa) => {
+                    const selected = etapa.id === etapaDestinoId;
+                    const discarded = etapa.categoria === 'descartado' || etapa.nome.toLowerCase().includes('descart');
+                    return (
+                      <Button
+                        key={etapa.id}
+                        type="button"
+                        variant="outline"
+                        aria-pressed={selected}
+                        className={`h-auto min-h-11 justify-start rounded-xl px-3 py-2.5 text-left shadow-none ${
+                          selected
+                            ? 'border-primary bg-primary-soft/70 ring-2 ring-primary/15'
+                            : discarded
+                              ? 'border-black/15 bg-black/[.035] hover:border-black/30 hover:bg-black/[.07]'
+                              : 'border-black/10 bg-white hover:border-primary/30 hover:bg-primary-soft/30'
+                        }`}
+                        onClick={() => {
+                          setEtapaDestinoId(etapa.id);
+                          setMotivoPerda('');
+                        }}
+                      >
+                        <span className="mr-2.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: etapa.cor }} />
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold">{etapa.nome}</span>
+                          <span className="block text-[11px] font-normal text-muted-foreground">
+                            {discarded ? 'Retira da operação ativa' : 'Mover para esta etapa'}
+                          </span>
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {etapaDestino?.categoria === 'perda' && (
+                <div className="mt-4 space-y-2 rounded-xl border border-destructive/15 bg-destructive/[.04] p-4">
+                  <Label htmlFor="motivo-perda">Motivo da perda</Label>
+                  <Textarea
+                    id="motivo-perda"
+                    value={motivoPerda}
+                    onChange={(event) => setMotivoPerda(event.target.value)}
+                    placeholder="Descreva por que esta oportunidade foi perdida"
+                    className="min-h-24 bg-white"
+                  />
+                  <p className="text-xs text-muted-foreground">Obrigatório para mover para uma etapa de perda.</p>
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-end">
+                <Button
+                  className="h-11 rounded-xl px-5"
+                  disabled={!etapaDestino || transicionar.isPending || (etapaDestino.categoria === 'perda' && !motivoPerda.trim())}
                   onClick={() => {
-                    if (e.categoria === 'perda') {
-                      const motivo = prompt('Motivo da perda:');
-                      if (motivo) transicionar.mutate({ leadId: lead.id, etapaPara: e.id, motivoPerda: motivo });
-                    } else {
-                      transicionar.mutate({ leadId: lead.id, etapaPara: e.id });
-                    }
+                    if (!etapaDestino) return;
+                    transicionar.mutate(
+                      {
+                        leadId: lead.id,
+                        etapaPara: etapaDestino.id,
+                        motivoPerda: etapaDestino.categoria === 'perda' ? motivoPerda.trim() : undefined,
+                      },
+                      {
+                        onSuccess: () => {
+                          setEtapaDestinoId('');
+                          setMotivoPerda('');
+                        },
+                      },
+                    );
                   }}
                 >
-                  <span className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: e.cor }} />
-                  {e.nome}
+                  {transicionar.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                  {etapaDestino ? `Mover para ${etapaDestino.nome}` : 'Selecione uma etapa'}
                 </Button>
-              ))}
+              </div>
             </div>
           </Card>
         </div>
@@ -127,7 +241,7 @@ export default function ArqoLeadDetail() {
           <h3 className="mb-4 mt-2 text-xl font-semibold tracking-[-0.035em]">Linha do tempo</h3>
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
             {events.length === 0 && <p className="text-xs text-muted-foreground">Sem eventos registrados</p>}
-            {events.map((ev: any) => (
+            {events.map((ev) => (
               <div key={ev.id} className="border-l-2 border-primary pl-3 pb-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">{EVENTO_LABELS[ev.tipo] ?? ev.tipo}</Badge>
@@ -153,6 +267,12 @@ export default function ArqoLeadDetail() {
           </div>
         </Card>
       </div>
+      <ArqoEditarLeadDialog
+        leadId={lead.id}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        canManageAssignment={podeGerenciarAtribuicao}
+      />
     </MainLayout>
   );
 }

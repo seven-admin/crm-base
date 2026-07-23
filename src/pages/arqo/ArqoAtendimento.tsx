@@ -49,7 +49,7 @@ export default function ArqoAtendimento() {
       ) : (
         <Card className="border-dashed bg-[#fffdfa] p-10 text-center shadow-none">
           <PhoneCall className="mx-auto mb-4 h-9 w-9 text-primary/60" />
-          <h2 className="text-xl font-semibold tracking-[-0.03em]">Nenhum atendimento bloqueante</h2>
+          <h2 className="text-xl font-semibold tracking-[-0.03em]">Nenhum atendimento bloqueado</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Você não possui um lead ativo que bloqueie a roleta neste momento.
           </p>

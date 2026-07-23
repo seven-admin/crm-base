@@ -17,7 +17,7 @@ export function useDefaultRoute() {
   const getDefaultRoute = (): string => {
     // Empresa define a área principal, exceto para admins Seven
     if (empresa === 'externo') return '/sem-acesso';
-    if (empresa === 'arqo' && !isAdmin()) return '/arqo/roleta';
+    if (empresa === 'arqo') return '/arqo/roleta';
     if (empresa === 'nexa' && !isAdmin()) return '/nexa/agenda';
     if (empresa === 'incorporador') return '/sem-acesso';
 

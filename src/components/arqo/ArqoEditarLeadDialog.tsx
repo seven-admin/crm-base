@@ -16,6 +16,7 @@ interface Props {
   leadId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canManageAssignment?: boolean;
 }
 
 interface EditableLead {
@@ -52,7 +53,7 @@ function parseMoney(value: string) {
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
-export function ArqoEditarLeadDialog({ leadId, open, onOpenChange }: Props) {
+export function ArqoEditarLeadDialog({ leadId, open, onOpenChange, canManageAssignment = true }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [additionalPhones, setAdditionalPhones] = useState(['', '', '', '']);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,7 +66,7 @@ export function ArqoEditarLeadDialog({ leadId, open, onOpenChange }: Props) {
 
   const { data: responsaveis = [] } = useQuery({
     queryKey: ['arqo', 'responsaveis-edicao'],
-    enabled: open,
+    enabled: open && canManageAssignment,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -185,7 +186,11 @@ export function ArqoEditarLeadDialog({ leadId, open, onOpenChange }: Props) {
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-primary" />Editar lead</DialogTitle>
-          <DialogDescription>Atualize o cadastro do contato e a organização comercial do lead.</DialogDescription>
+          <DialogDescription>
+            {canManageAssignment
+              ? 'Atualize o cadastro do contato e a organização comercial do lead.'
+              : 'Atualize os dados do contato e da oportunidade da sua carteira.'}
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
@@ -217,9 +222,13 @@ export function ArqoEditarLeadDialog({ leadId, open, onOpenChange }: Props) {
             <div className="space-y-1.5"><Label>Origem</Label><Select value={form.sourceId} onValueChange={(v) => update('sourceId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Não informada</SelectItem>{sources.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1.5"><Label>Etapa *</Label><Select value={form.etapaId} onValueChange={(v) => update('etapaId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{etapasDisponiveis.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1.5"><Label>Temperatura</Label><Select value={form.temperaturaId} onValueChange={(v) => update('temperaturaId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Não definida</SelectItem>{temperaturas.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-1.5"><Label>Grupo / fila</Label><Select value={form.grupoId} onValueChange={(v) => update('grupoId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem grupo</SelectItem>{grupos.filter((item) => item.is_active).map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-1.5"><Label>Consultor</Label><Select value={form.consultorId} onValueChange={(v) => update('consultorId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem consultor</SelectItem>{responsaveis.map((item) => <SelectItem key={item.id} value={item.id}>{item.full_name}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-1.5"><Label>Closer</Label><Select value={form.closerId} onValueChange={(v) => update('closerId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem closer</SelectItem>{responsaveis.map((item) => <SelectItem key={item.id} value={item.id}>{item.full_name}</SelectItem>)}</SelectContent></Select></div>
+            {canManageAssignment && (
+              <>
+                <div className="space-y-1.5"><Label>Grupo / fila</Label><Select value={form.grupoId} onValueChange={(v) => update('grupoId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem grupo</SelectItem>{grupos.filter((item) => item.is_active).map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label>Consultor</Label><Select value={form.consultorId} onValueChange={(v) => update('consultorId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem consultor</SelectItem>{responsaveis.map((item) => <SelectItem key={item.id} value={item.id}>{item.full_name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1.5"><Label>Closer</Label><Select value={form.closerId} onValueChange={(v) => update('closerId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Sem closer</SelectItem>{responsaveis.map((item) => <SelectItem key={item.id} value={item.id}>{item.full_name}</SelectItem>)}</SelectContent></Select></div>
+              </>
+            )}
             <div className="space-y-1.5 sm:col-span-2"><Label>Empreendimento</Label><Select value={form.empreendimentoId} onValueChange={(v) => update('empreendimentoId', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={NONE}>Não informado</SelectItem>{empreendimentos.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1.5"><Label>Valor estimado</Label><Input inputMode="decimal" value={form.valorEstimado} onChange={(e) => update('valorEstimado', e.target.value)} /></div>
             <div className="space-y-1.5 sm:col-span-2 lg:col-span-3"><Label>Observações</Label><Textarea rows={3} value={form.observacoes} onChange={(e) => update('observacoes', e.target.value)} /></div>

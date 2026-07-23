@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Eye, Pencil, PhoneCall, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,11 @@ import { useNexaVisitas, useDeleteVisita, useEmpreendimentosAtivos } from '@/hoo
 import { VisitaFormDialog } from '@/components/nexa/VisitaFormDialog';
 import { STATUS_LABELS, STATUS_COLORS, type NexaVisitaStatus, type NexaVisitaWithRelations } from '@/types/nexa.types';
 import { usePermissions } from '@/hooks/usePermissions';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+type CreateMode = 'atendimento' | 'atividade';
 
 export function AgendaVisitasTab() {
   const navigate = useNavigate();
@@ -24,6 +29,7 @@ export function AgendaVisitasTab() {
   const superAdmin = isSuperAdmin();
 
   const [formOpen, setFormOpen] = useState(false);
+  const [createMode, setCreateMode] = useState<CreateMode>('atividade');
   const [editing, setEditing] = useState<NexaVisitaWithRelations | null>(null);
   const [toDelete, setToDelete] = useState<NexaVisitaWithRelations | null>(null);
 
@@ -42,14 +48,18 @@ export function AgendaVisitasTab() {
     });
   }, [visitas, statusFilter, empFilter]);
 
-  const openCreate = () => { setEditing(null); setFormOpen(true); };
+  const openCreate = (mode: CreateMode) => {
+    setEditing(null);
+    setCreateMode(mode);
+    setFormOpen(true);
+  };
   const openEdit = (v: NexaVisitaWithRelations) => { setEditing(v); setFormOpen(true); };
 
   return (
     <div className="space-y-4">
       <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todos' | NexaVisitaStatus)}>
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os status</SelectItem>
@@ -66,7 +76,31 @@ export function AgendaVisitasTab() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Nova visita</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Criar
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => openCreate('atendimento')} className="gap-3 py-3">
+              <PhoneCall className="h-4 w-4 text-primary" />
+              <div>
+                <p className="font-medium">Novo Atendimento</p>
+                <p className="text-xs text-muted-foreground">Registrar atendimento ou visita</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openCreate('atividade')} className="gap-3 py-3">
+              <CalendarPlus className="h-4 w-4 text-primary" />
+              <div>
+                <p className="font-medium">Nova Atividade</p>
+                <p className="text-xs text-muted-foreground">Agendar uma atividade</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isLoading ? (
@@ -89,6 +123,7 @@ export function AgendaVisitasTab() {
                 <TableHead>Empreendimento</TableHead>
                 <TableHead>Imobiliária</TableHead>
                 <TableHead>Corretor</TableHead>
+                <TableHead>Responsável</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -103,6 +138,14 @@ export function AgendaVisitasTab() {
                   <TableCell>{v.empreendimento?.nome || '—'}</TableCell>
                   <TableCell>{v.imobiliaria?.nome || '—'}</TableCell>
                   <TableCell>{v.corretor?.nome_completo || '—'}</TableCell>
+                  <TableCell>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{v.criador?.full_name || 'Não identificado'}</p>
+                      {v.criador?.email && (
+                        <p className="truncate text-xs text-muted-foreground">{v.criador.email}</p>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell><Badge className={STATUS_COLORS[v.status]}>{STATUS_LABELS[v.status]}</Badge></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -132,7 +175,12 @@ export function AgendaVisitasTab() {
         </Card>
       )}
 
-      <VisitaFormDialog open={formOpen} onOpenChange={setFormOpen} visita={editing} />
+      <VisitaFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        visita={editing}
+        createMode={createMode}
+      />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>

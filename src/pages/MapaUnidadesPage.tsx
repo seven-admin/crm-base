@@ -28,7 +28,7 @@ const MapaUnidadesPage = () => {
   if (isLoading) {
     return (
       <MainLayout
-        title="Disponibilidade"
+        title="Mapa de unidades"
         subtitle="Visualize a disponibilidade de unidades por empreendimento"
       >
         <div className="flex items-center justify-center py-12">
@@ -40,7 +40,7 @@ const MapaUnidadesPage = () => {
 
   return (
     <MainLayout
-      title="Disponibilidade"
+      title="Mapa de unidades"
       subtitle="Visualize a disponibilidade de unidades por empreendimento"
     >
       <div className="page-toolbar mb-6 flex items-center gap-4">

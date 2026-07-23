@@ -141,10 +141,11 @@ export function useArqoAtendimentoDashboard() {
   });
 
   const activeLeads = leads.filter((lead) => !lead.fechado_em);
-  const returnsToday = activeLeads.filter((lead) => {
+  const returnLeads = activeLeads.filter((lead) => {
     if (!lead.proximo_contato_em) return false;
     return new Date(lead.proximo_contato_em) <= todayEnd;
-  }).length;
+  });
+  const returnsToday = returnLeads.length;
   const classification = activeLeads.reduce<Record<string, number>>((acc, lead) => {
     const key = lead.temperatura?.nome ?? 'Sem classificação';
     acc[key] = (acc[key] ?? 0) + 1;
@@ -182,6 +183,7 @@ export function useArqoAtendimentoDashboard() {
       lista: counters?.minhaCarteira ?? activeLeads.length,
       encerrados: counters?.encerrados ?? 0,
       retornos: returnsToday,
+      returnLeads,
       classificacao: classification,
     },
     actions: {
