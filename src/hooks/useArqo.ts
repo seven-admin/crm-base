@@ -465,6 +465,27 @@ export function useArqoHistoricoContatos() {
   });
 }
 
+export function useReabrirAtendimentoHistorico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (atendimentoId: string) => {
+      const { data, error } = await supabase.rpc('arqo_reabrir_atendimento_historico' as any, {
+        p_atendimento_id: atendimentoId,
+      } as any);
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
+      toast.success('Lead retomado para um novo atendimento');
+    },
+    onError: (error: Error) => toast.error(error.message || 'Não foi possível iniciar o atendimento'),
+  });
+}
+
 export function useConcluirArqoAtendimento() {
   const qc = useQueryClient();
   return useMutation({

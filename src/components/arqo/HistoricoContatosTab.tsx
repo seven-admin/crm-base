@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Check, Copy, PhoneCall, Search } from 'lucide-react';
+import { Check, Copy, Loader2, PhoneCall, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useArqoAtendimentoOpcoes, useArqoHistoricoContatos } from '@/hooks/useArqo';
+import { useArqoAtendimentoOpcoes, useArqoHistoricoContatos, useReabrirAtendimentoHistorico } from '@/hooks/useArqo';
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -45,9 +46,20 @@ function ContactPhone({ phone }: { phone: string }) {
 }
 
 export function HistoricoContatosTab() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const { data: contatos = [], isLoading } = useArqoHistoricoContatos();
   const { data: opcoes = [] } = useArqoAtendimentoOpcoes(true);
+  const reopen = useReabrirAtendimentoHistorico();
+
+  const startNewAttendance = async (atendimentoId: string) => {
+    try {
+      const leadId = await reopen.mutateAsync(atendimentoId);
+      navigate(`/arqo/atendimento?lead=${leadId}`);
+    } catch {
+      // A mutation já apresenta ao usuário a mensagem específica retornada pelo banco.
+    }
+  };
 
   const statusLabels = useMemo(
     () => new Map(opcoes.filter((opcao) => opcao.grupo === 'status_ligacao').map((opcao) => [opcao.codigo, opcao.rotulo])),
@@ -111,6 +123,7 @@ export function HistoricoContatosTab() {
                   <TableHead>Resultado</TableHead>
                   <TableHead>Responsável</TableHead>
                   <TableHead>Observação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -140,6 +153,21 @@ export function HistoricoContatosTab() {
                       <TableCell>{contato.consultor?.full_name || '—'}</TableCell>
                       <TableCell className="max-w-[320px] whitespace-normal text-sm text-muted-foreground">
                         {contato.observacao}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={reopen.isPending}
+                          onClick={() => void startNewAttendance(contato.id)}
+                          className="whitespace-nowrap"
+                        >
+                          {reopen.isPending && reopen.variables === contato.id
+                            ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            : <PhoneCall className="mr-2 h-4 w-4" />}
+                          Novo atendimento
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );

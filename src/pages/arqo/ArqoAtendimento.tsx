@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, PhoneCall } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ArqoAtendimentoFlow } from '@/components/arqo/ArqoAtendimentoFlow';
@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useArqoEtapas, useArqoLeads } from '@/hooks/useArqo';
 
 export default function ArqoAtendimento() {
+  const [searchParams] = useSearchParams();
+  const requestedLeadId = searchParams.get('lead');
   const { user } = useAuth();
   const { data: leads = [], isLoading, refetch } = useArqoLeads(
     user?.id ? { consultorId: user.id } : undefined,
@@ -20,13 +22,17 @@ export default function ArqoAtendimento() {
   }, [refetch, user?.id]);
 
   const activeLead = useMemo(
-    () => leads.find((lead) => (
-      lead.consultor_id === user?.id
-      && !lead.fechado_em
-      && !lead.optout_em
-      && lead.etapa?.bloqueia_roleta !== false
-    )),
-    [leads, user?.id],
+    () => {
+      const available = leads.filter((lead) => (
+        lead.consultor_id === user?.id
+        && lead.is_active
+        && !lead.fechado_em
+        && !lead.optout_em
+      ));
+      return available.find((lead) => lead.id === requestedLeadId)
+        ?? available.find((lead) => lead.etapa?.bloqueia_roleta !== false);
+    },
+    [leads, requestedLeadId, user?.id],
   );
 
   return (
