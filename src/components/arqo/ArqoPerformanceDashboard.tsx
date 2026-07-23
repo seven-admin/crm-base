@@ -38,10 +38,10 @@ function PerformanceCard({ title, subtitle, score, level }: { title: string; sub
 
 function ResultChart({ title, actual, target }: { title: string; actual: DashboardData['dayMetrics']; target: DashboardData['dayGoals'] }) {
   const data = [
-    { name: 'Atendimentos', resultado: actual.atendimentos, meta: target.atendimentos },
-    { name: 'Retornos', resultado: actual.retornos, meta: target.retornos },
-    { name: 'Visitas', resultado: actual.visitas, meta: target.visitas },
-    { name: 'Conversões', resultado: actual.conversoes, meta: target.conversoes },
+    { name: 'Ligações', resultado: actual.ligacoes, meta: target.ligacoes },
+    { name: 'Conversas', resultado: actual.conversas, meta: target.conversas },
+    { name: 'Agendamentos', resultado: actual.agendamentos, meta: target.agendamentos },
+    { name: 'Visitas realizadas', resultado: actual.visitasRealizadas, meta: target.visitasRealizadas },
   ];
   return (
     <Card className="p-5 shadow-none sm:p-6">

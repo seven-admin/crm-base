@@ -17,7 +17,6 @@ export function ArqoGrupoMembros() {
   const del = useDeleteArqoConfig('arqo_grupo_membros');
 
   const [novoUser, setNovoUser] = useState<string>('');
-  const [novoPapel, setNovoPapel] = useState<'consultor' | 'closer'>('consultor');
   const [novaOrdem, setNovaOrdem] = useState<number>(0);
 
   const disponiveis = profiles.filter(p => !membros.some(m => m.user_id === p.id));
@@ -38,7 +37,7 @@ export function ArqoGrupoMembros() {
     upsert.mutate({
       grupo_id: grupoId,
       user_id: novoUser,
-      papel: novoPapel,
+      papel: 'consultor',
       ordem_roleta: novaOrdem,
       is_active: true,
     }, {
@@ -51,7 +50,10 @@ export function ArqoGrupoMembros() {
   return (
     <Card className="p-4 mt-4">
       <div className="flex items-center gap-3 mb-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Membros do grupo</h3>
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Consultores do grupo</h3>
+          <p className="mt-1 text-xs text-muted-foreground">O closer responsável é definido no cadastro do grupo acima.</p>
+        </div>
         <div className="w-64">
           <Select value={grupoId} onValueChange={setGrupoId}>
             <SelectTrigger><SelectValue placeholder="Selecione um grupo" /></SelectTrigger>
@@ -71,16 +73,6 @@ export function ArqoGrupoMembros() {
                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                 <SelectContent>
                   {disponiveis.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-36">
-              <label className="text-xs text-muted-foreground">Papel</label>
-              <Select value={novoPapel} onValueChange={(v) => setNovoPapel(v as 'consultor' | 'closer')}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="consultor">Consultor</SelectItem>
-                  <SelectItem value="closer">Closer</SelectItem>
                 </SelectContent>
               </Select>
             </div>

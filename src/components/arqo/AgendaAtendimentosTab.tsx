@@ -74,6 +74,7 @@ export function AgendaAtendimentosTab() {
                 <TableHead>Empreendimento</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Responsável</TableHead>
+                <TableHead>Closer</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -88,6 +89,7 @@ export function AgendaAtendimentosTab() {
                   <TableCell>{a.lead?.empreendimento?.nome || '—'}</TableCell>
                   <TableCell>{AGENDAMENTO_TIPO_LABELS[a.tipo]}</TableCell>
                   <TableCell>{a.responsavel?.full_name || '—'}</TableCell>
+                  <TableCell>{a.closer?.full_name || '—'}</TableCell>
                   <TableCell><Badge className={AGENDAMENTO_STATUS_COLORS[a.status]}>{AGENDAMENTO_STATUS_LABELS[a.status]}</Badge></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">

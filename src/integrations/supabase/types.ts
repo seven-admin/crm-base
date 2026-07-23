@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       arqo_agendamentos: {
         Row: {
+          closer_id: string | null
           created_at: string
           data_hora: string
           duracao_min: number
@@ -30,6 +31,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          closer_id?: string | null
           created_at?: string
           data_hora: string
           duracao_min?: number
@@ -44,6 +46,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          closer_id?: string | null
           created_at?: string
           data_hora?: string
           duracao_min?: number
@@ -58,6 +61,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "arqo_agendamentos_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "arqo_agendamentos_lead_id_fkey"
             columns: ["lead_id"]
@@ -173,6 +183,7 @@ export type Database = {
       }
       arqo_grupos_atendimento: {
         Row: {
+          closer_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -182,6 +193,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          closer_id: string
           created_at?: string
           descricao?: string | null
           id?: string
@@ -191,6 +203,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          closer_id?: string
           created_at?: string
           descricao?: string | null
           id?: string
@@ -199,7 +212,15 @@ export type Database = {
           tipo?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "arqo_grupos_atendimento_closer_id_fkey"
+            columns: ["closer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       arqo_lead_events: {
         Row: {
@@ -3453,6 +3474,25 @@ export type Database = {
       }
     }
     Functions: {
+      arqo_salvar_meta_atendimento: {
+        Args: {
+          p_is_active: boolean
+          p_meta_diaria_agendamentos: number
+          p_meta_diaria_conversas: number
+          p_meta_diaria_ligacoes: number
+          p_meta_diaria_visitas_realizadas: number
+          p_meta_id?: string | null
+          p_meta_semanal_agendamentos: number
+          p_meta_semanal_conversas: number
+          p_meta_semanal_ligacoes: number
+          p_meta_semanal_visitas_realizadas: number
+          p_nome: string
+          p_user_ids: string[]
+          p_vigencia_fim: string | null
+          p_vigencia_inicio: string
+        }
+        Returns: string
+      }
       arqo_editar_lead_manual: {
         Args: {
           p_closer_id?: string

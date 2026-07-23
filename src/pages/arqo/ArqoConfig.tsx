@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useArqoEtapas, useArqoTemperaturas, useArqoSources, useArqoGrupos, useArqoSlaRegras, useArqoRegua, useArqoAtendimentoOpcoes, useArqoMetasAtendimento, useArqoPerformanceConfigs } from '@/hooks/useArqo';
 import { ArqoConfigCrud, type ConfigField } from '@/components/arqo/ArqoConfigCrud';
 import { ArqoGrupoMembros } from '@/components/arqo/ArqoGrupoMembros';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { ArqoMetasManager } from '@/components/arqo/ArqoMetasManager';
+import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
 
 export default function ArqoConfig() {
   const { data: etapas = [] } = useArqoEtapas();
@@ -18,14 +18,8 @@ export default function ArqoConfig() {
   const { data: atendimentoOpcoes = [] } = useArqoAtendimentoOpcoes(true);
   const { data: metas = [] } = useArqoMetasAtendimento();
   const { data: performanceConfigs = [] } = useArqoPerformanceConfigs();
-  const { data: profiles = [] } = useQuery({
-    queryKey: ['arqo', 'config', 'profiles'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const { data: profiles = [] } = useProfilesByRoles(['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer', 'super_admin']);
+  const { data: closerProfiles = [] } = useProfilesByRoles(['arqo_closer', 'super_admin']);
 
   const etapaOptions = etapas.map(e => ({ value: e.id, label: e.nome }));
   const tempOptions = [{ value: '__none__', label: '— Todas —' }, ...temps.map(t => ({ value: t.id, label: t.nome }))];
@@ -72,6 +66,13 @@ export default function ArqoConfig() {
         { value: 'closer', label: 'Closer' },
         { value: 'misto', label: 'Misto' },
       ] },
+    {
+      name: 'closer_id',
+      label: 'Closer responsável',
+      type: 'select',
+      required: true,
+      options: closerProfiles.map((profile) => ({ value: profile.id, label: profile.full_name || profile.email })),
+    },
     { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
   ];
 
@@ -132,33 +133,14 @@ export default function ArqoConfig() {
     { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
   ];
 
-  const profileOptions = [{ value: '__none__', label: '— Nenhum —' }, ...profiles.map((profile) => ({ value: profile.id, label: profile.full_name || profile.email }))];
-  const groupOptions = [{ value: '__none__', label: '— Nenhum —' }, ...grupos.map((group) => ({ value: group.id, label: group.nome }))];
-  const metasFields: ConfigField[] = [
-    { name: 'nome', label: 'Nome da meta', type: 'text', required: true },
-    { name: 'user_id', label: 'Consultor', type: 'select', options: profileOptions },
-    { name: 'grupo_id', label: 'Grupo', type: 'select', options: groupOptions },
-    { name: 'vigencia_inicio', label: 'Início da vigência', type: 'date', required: true, default: new Date().toISOString().slice(0, 10) },
-    { name: 'vigencia_fim', label: 'Fim da vigência', type: 'date' },
-    { name: 'meta_diaria_atendimentos', label: 'Atendimentos por dia', type: 'number', default: 0 },
-    { name: 'meta_diaria_retornos', label: 'Retornos por dia', type: 'number', default: 0 },
-    { name: 'meta_diaria_visitas', label: 'Visitas por dia', type: 'number', default: 0 },
-    { name: 'meta_diaria_conversoes', label: 'Conversões por dia', type: 'number', default: 0 },
-    { name: 'meta_semanal_atendimentos', label: 'Atendimentos por semana', type: 'number', default: 0 },
-    { name: 'meta_semanal_retornos', label: 'Retornos por semana', type: 'number', default: 0 },
-    { name: 'meta_semanal_visitas', label: 'Visitas por semana', type: 'number', default: 0 },
-    { name: 'meta_semanal_conversoes', label: 'Conversões por semana', type: 'number', default: 0 },
-    { name: 'is_active', label: 'Ativa', type: 'switch', default: true },
-  ];
-
   const performanceFields: ConfigField[] = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'limite_bom', label: 'Bom a partir de (%)', type: 'number', default: 100 },
     { name: 'limite_atencao', label: 'Atenção a partir de (%)', type: 'number', default: 70 },
-    { name: 'peso_atendimentos', label: 'Peso de atendimentos', type: 'number', default: 1 },
-    { name: 'peso_retornos', label: 'Peso de retornos', type: 'number', default: 1 },
-    { name: 'peso_visitas', label: 'Peso de visitas', type: 'number', default: 1 },
-    { name: 'peso_conversoes', label: 'Peso de conversões', type: 'number', default: 1 },
+    { name: 'peso_ligacoes', label: 'Peso de ligações', type: 'number', default: 1 },
+    { name: 'peso_conversas', label: 'Peso de conversas efetivadas', type: 'number', default: 1 },
+    { name: 'peso_agendamentos', label: 'Peso de agendamentos', type: 'number', default: 1 },
+    { name: 'peso_visitas_realizadas', label: 'Peso de visitas realizadas', type: 'number', default: 1 },
     { name: 'is_default', label: 'Configuração padrão', type: 'switch', default: false },
     { name: 'is_active', label: 'Ativa', type: 'switch', default: true },
   ];
@@ -245,6 +227,9 @@ export default function ArqoConfig() {
                 <div className="flex items-center gap-3">
                   <span className="font-medium">{g.nome}</span>
                   <Badge variant="outline">{g.tipo}</Badge>
+                  <Badge variant={g.closer_id ? 'secondary' : 'destructive'}>
+                    Closer: {closerProfiles.find((profile) => profile.id === g.closer_id)?.full_name || 'não configurado'}
+                  </Badge>
                   <Badge variant={g.is_active ? 'default' : 'secondary'}>{g.is_active ? 'Ativo' : 'Inativo'}</Badge>
                 </div>
               )}
@@ -317,22 +302,7 @@ export default function ArqoConfig() {
 
         <TabsContent value="metas">
           <Card className="p-4">
-            <ArqoConfigCrud
-              table="arqo_metas_atendimento"
-              items={metas}
-              fields={metasFields}
-              title="Metas de atendimento"
-              renderRow={(meta) => (
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{meta.nome}</span>
-                    <Badge variant="outline">{profiles.find((profile) => profile.id === meta.user_id)?.full_name || grupos.find((group) => group.id === meta.grupo_id)?.nome || 'Sem responsável'}</Badge>
-                    {!meta.is_active && <Badge variant="secondary">inativa</Badge>}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Dia: {meta.meta_diaria_atendimentos} atend. · {meta.meta_diaria_retornos} retornos · {meta.meta_diaria_visitas} visitas · {meta.meta_diaria_conversoes} conversões</p>
-                </div>
-              )}
-            />
+            <ArqoMetasManager metas={metas} profiles={profiles} />
           </Card>
         </TabsContent>
 

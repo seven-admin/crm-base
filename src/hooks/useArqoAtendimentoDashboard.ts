@@ -6,38 +6,54 @@ import { useArqoLeads, useArqoMetasAtendimento, useArqoPerformanceConfigs, useAr
 import type { ArqoMetaAtendimento, ArqoPerformanceConfig } from '@/types/arqo.types';
 
 type PeriodMetrics = {
-  atendimentos: number;
-  retornos: number;
-  visitas: number;
-  conversoes: number;
+  ligacoes: number;
+  conversas: number;
+  agendamentos: number;
+  visitasRealizadas: number;
 };
 
 export type ArqoPerformanceLevel = 'bom' | 'atencao' | 'critico' | 'sem_meta';
 
-function aggregate(rows: Array<Record<string, unknown>>): PeriodMetrics {
+function aggregate(
+  calls: Array<Record<string, unknown>>,
+  appointments: Array<Record<string, unknown>>,
+  visits: Array<Record<string, unknown>>,
+  start: Date,
+  end: Date,
+): PeriodMetrics {
+  const callsInRange = calls.filter((row) => {
+    const date = new Date(String(row.encerrado_em));
+    return date >= start && date <= end;
+  });
   return {
-    atendimentos: rows.length,
-    retornos: rows.filter((row) => row.acao_codigo === 'A02').length,
-    visitas: rows.filter((row) => row.acao_codigo === 'A01').length,
-    conversoes: rows.filter((row) => row.interesse_codigo === 'I03' || row.interesse_codigo === 'I04').length,
+    ligacoes: callsInRange.length,
+    conversas: callsInRange.filter((row) => row.status_codigo === 'C07').length,
+    agendamentos: appointments.filter((row) => {
+      const date = new Date(String(row.created_at));
+      return date >= start && date <= end && row.status !== 'cancelado';
+    }).length,
+    visitasRealizadas: visits.filter((row) => {
+      const date = new Date(String(row.data_hora));
+      return date >= start && date <= end && row.tipo === 'visita' && row.status === 'realizado';
+    }).length,
   };
 }
 
 function goals(meta: ArqoMetaAtendimento | undefined, period: 'diaria' | 'semanal'): PeriodMetrics {
   return {
-    atendimentos: meta?.[`meta_${period}_atendimentos`] ?? 0,
-    retornos: meta?.[`meta_${period}_retornos`] ?? 0,
-    visitas: meta?.[`meta_${period}_visitas`] ?? 0,
-    conversoes: meta?.[`meta_${period}_conversoes`] ?? 0,
+    ligacoes: meta?.[`meta_${period}_ligacoes`] ?? 0,
+    conversas: meta?.[`meta_${period}_conversas`] ?? 0,
+    agendamentos: meta?.[`meta_${period}_agendamentos`] ?? 0,
+    visitasRealizadas: meta?.[`meta_${period}_visitas_realizadas`] ?? 0,
   };
 }
 
 function performance(actual: PeriodMetrics, target: PeriodMetrics, config?: ArqoPerformanceConfig) {
   const weights = {
-    atendimentos: config?.peso_atendimentos ?? 1,
-    retornos: config?.peso_retornos ?? 1,
-    visitas: config?.peso_visitas ?? 1,
-    conversoes: config?.peso_conversoes ?? 1,
+    ligacoes: config?.peso_ligacoes ?? 1,
+    conversas: config?.peso_conversas ?? 1,
+    agendamentos: config?.peso_agendamentos ?? 1,
+    visitasRealizadas: config?.peso_visitas_realizadas ?? 1,
   };
   let total = 0;
   let weightTotal = 0;
@@ -78,35 +94,48 @@ export function useArqoAtendimentoDashboard() {
     queryKey: ['arqo', 'dashboard-atendimento', userId, todayStart.toISOString()],
     enabled: !!userId,
     queryFn: async () => {
-      const [atendimentosRes, agendamentosRes] = await Promise.all([
+      const userFilter = `responsavel_id.eq.${userId},closer_id.eq.${userId}`;
+      const [atendimentosRes, agendamentosCriadosRes, visitasRes, agendamentosHojeRes] = await Promise.all([
         supabase
           // A tabela é criada pela migração desta entrega; os tipos gerados serão atualizados após o push.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('arqo_atendimentos' as any)
-          .select('encerrado_em, acao_codigo, interesse_codigo')
+          .select('encerrado_em, status_codigo')
           .eq('consultor_id', userId!)
           .gte('encerrado_em', previousWeekStart.toISOString())
           .lte('encerrado_em', weekEnd.toISOString()),
         supabase
           .from('arqo_agendamentos')
+          .select('id, created_at, status')
+          .or(userFilter)
+          .gte('created_at', previousWeekStart.toISOString())
+          .lte('created_at', weekEnd.toISOString()),
+        supabase
+          .from('arqo_agendamentos')
           .select('id, tipo, data_hora, status')
-          .eq('responsavel_id', userId!)
+          .or(userFilter)
+          .gte('data_hora', previousWeekStart.toISOString())
+          .lte('data_hora', weekEnd.toISOString()),
+        supabase
+          .from('arqo_agendamentos')
+          .select('id, tipo, data_hora, status')
+          .or(userFilter)
           .gte('data_hora', todayStart.toISOString())
           .lte('data_hora', todayEnd.toISOString())
           .neq('status', 'cancelado'),
       ]);
       if (atendimentosRes.error) throw atendimentosRes.error;
-      if (agendamentosRes.error) throw agendamentosRes.error;
-      const rows = (atendimentosRes.data ?? []) as unknown as Array<Record<string, unknown>>;
-      const inRange = (start: Date, end: Date) => rows.filter((row) => {
-        const date = new Date(String(row.encerrado_em));
-        return date >= start && date <= end;
-      });
+      if (agendamentosCriadosRes.error) throw agendamentosCriadosRes.error;
+      if (visitasRes.error) throw visitasRes.error;
+      if (agendamentosHojeRes.error) throw agendamentosHojeRes.error;
+      const calls = (atendimentosRes.data ?? []) as unknown as Array<Record<string, unknown>>;
+      const appointments = (agendamentosCriadosRes.data ?? []) as unknown as Array<Record<string, unknown>>;
+      const visits = (visitasRes.data ?? []) as unknown as Array<Record<string, unknown>>;
       return {
-        dia: aggregate(inRange(todayStart, todayEnd)),
-        semana: aggregate(inRange(weekStart, weekEnd)),
-        semanaAnterior: aggregate(inRange(previousWeekStart, previousWeekEnd)),
-        visitasHoje: (agendamentosRes.data ?? []).filter((item) => item.tipo === 'visita').length,
+        dia: aggregate(calls, appointments, visits, todayStart, todayEnd),
+        semana: aggregate(calls, appointments, visits, weekStart, weekEnd),
+        semanaAnterior: aggregate(calls, appointments, visits, previousWeekStart, previousWeekEnd),
+        visitasHoje: (agendamentosHojeRes.data ?? []).filter((item) => item.tipo === 'visita').length,
       };
     },
   });
@@ -128,7 +157,8 @@ export function useArqoAtendimentoDashboard() {
     const applicable = metas
       .filter((meta) => meta.is_active && meta.vigencia_inicio <= reference && (!meta.vigencia_fim || meta.vigencia_fim >= reference))
       .sort((a, b) => b.vigencia_inicio.localeCompare(a.vigencia_inicio));
-    return applicable.find((meta) => meta.user_id === userId)
+    return applicable.find((meta) => meta.usuarios?.some((item) => item.user_id === userId))
+      ?? applicable.find((meta) => meta.user_id === userId)
       ?? applicable.find((meta) => !!meta.grupo_id && groupIds.has(meta.grupo_id));
   };
   const currentMeta = findMetaForDate(now);
@@ -138,9 +168,10 @@ export function useArqoAtendimentoDashboard() {
   const dayGoals = goals(currentMeta, 'diaria');
   const weekGoals = goals(currentMeta, 'semanal');
   const previousWeekGoals = goals(previousWeekMeta, 'semanal');
-  const dayMetrics = metricsQuery.data?.dia ?? { atendimentos: 0, retornos: 0, visitas: 0, conversoes: 0 };
-  const weekMetrics = metricsQuery.data?.semana ?? { atendimentos: 0, retornos: 0, visitas: 0, conversoes: 0 };
-  const previousWeekMetrics = metricsQuery.data?.semanaAnterior ?? { atendimentos: 0, retornos: 0, visitas: 0, conversoes: 0 };
+  const emptyMetrics = { ligacoes: 0, conversas: 0, agendamentos: 0, visitasRealizadas: 0 };
+  const dayMetrics = metricsQuery.data?.dia ?? emptyMetrics;
+  const weekMetrics = metricsQuery.data?.semana ?? emptyMetrics;
+  const previousWeekMetrics = metricsQuery.data?.semanaAnterior ?? emptyMetrics;
 
   return {
     consultantName: profile?.full_name ?? 'Consultor',

@@ -8,7 +8,7 @@ export interface ArqoFunilEtapa {
   categoria: ArqoEtapaCategoria; is_encerramento: boolean; cor: string; is_active: boolean;
   bloqueia_roleta: boolean;
 }
-export interface ArqoGrupo { id: string; nome: string; descricao: string | null; tipo: 'consultor'|'closer'|'misto'; is_active: boolean; }
+export interface ArqoGrupo { id: string; nome: string; descricao: string | null; tipo: 'consultor'|'closer'|'misto'; closer_id: string | null; is_active: boolean; }
 export interface ArqoGrupoMembro { id: string; grupo_id: string; user_id: string; papel: 'consultor'|'closer'; is_active: boolean; ordem_roleta: number; }
 export interface ArqoSlaRegra { id: string; etapa_id: string; temperatura_id: string | null; horas_max: number; acao_expiracao: 'notificar'|'reatribuir'|'encerrar'; is_active: boolean; }
 export interface ArqoReguaReengajamento { id: string; nome: string; dias_apos_ultimo_contato: number; canal: 'whatsapp'|'email'|'sms'|'ligacao'; mensagem_template: string; is_active: boolean; ordem: number; }
@@ -93,15 +93,19 @@ export interface ArqoMetaAtendimento {
   grupo_id: string | null;
   vigencia_inicio: string;
   vigencia_fim: string | null;
-  meta_diaria_atendimentos: number;
-  meta_diaria_retornos: number;
-  meta_diaria_visitas: number;
-  meta_diaria_conversoes: number;
-  meta_semanal_atendimentos: number;
-  meta_semanal_retornos: number;
-  meta_semanal_visitas: number;
-  meta_semanal_conversoes: number;
+  meta_diaria_ligacoes: number;
+  meta_diaria_conversas: number;
+  meta_diaria_agendamentos: number;
+  meta_diaria_visitas_realizadas: number;
+  meta_semanal_ligacoes: number;
+  meta_semanal_conversas: number;
+  meta_semanal_agendamentos: number;
+  meta_semanal_visitas_realizadas: number;
   is_active: boolean;
+  usuarios?: Array<{
+    user_id: string;
+    profile?: { id: string; full_name: string; email: string } | null;
+  }>;
 }
 
 export interface ArqoPerformanceConfig {
@@ -109,10 +113,10 @@ export interface ArqoPerformanceConfig {
   nome: string;
   limite_bom: number;
   limite_atencao: number;
-  peso_atendimentos: number;
-  peso_retornos: number;
-  peso_visitas: number;
-  peso_conversoes: number;
+  peso_ligacoes: number;
+  peso_conversas: number;
+  peso_agendamentos: number;
+  peso_visitas_realizadas: number;
   is_default: boolean;
   is_active: boolean;
 }
@@ -131,6 +135,7 @@ export interface ArqoAgendamento {
   status: ArqoAgendamentoStatus;
   google_event_id: string | null;
   responsavel_id: string | null;
+  closer_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -142,6 +147,7 @@ export interface ArqoAgendamentoWithRelations extends ArqoAgendamento {
     empreendimento?: { id: string; nome: string } | null;
   } | null;
   responsavel?: { id: string; full_name: string } | null;
+  closer?: { id: string; full_name: string } | null;
 }
 
 export const AGENDAMENTO_TIPO_LABELS: Record<ArqoAgendamentoTipo, string> = {

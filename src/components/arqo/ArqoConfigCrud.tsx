@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useUpsertArqoConfig, useDeleteArqoConfig } from '@/hooks/useArqo';
 
 export type ConfigField = {
@@ -47,6 +48,15 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title, allowDe
   };
 
   const save = () => {
+    const missing = fields.find((field) => field.required && (
+      editing?.[field.name] == null
+      || editing?.[field.name] === ''
+      || editing?.[field.name] === '__none__'
+    ));
+    if (missing) {
+      toast.error(`Preencha o campo "${missing.label}"`);
+      return;
+    }
     // Normaliza sentinel "__none__" -> null (para FKs opcionais como temperatura_id)
     const payload = { ...editing };
     Object.keys(payload).forEach((k) => {

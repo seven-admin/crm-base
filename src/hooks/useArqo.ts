@@ -516,7 +516,10 @@ export function useArqoMetasAtendimento() {
   return useQuery({
     queryKey: ['arqo', 'metas-atendimento'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('arqo_metas_atendimento' as any).select('*').order('vigencia_inicio', { ascending: false });
+      const { data, error } = await supabase
+        .from('arqo_metas_atendimento' as any)
+        .select('*, usuarios:arqo_meta_usuarios(user_id, profile:profiles(id, full_name, email))')
+        .order('vigencia_inicio', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as ArqoMetaAtendimento[];
     },
@@ -542,7 +545,8 @@ const SELECT_AGENDAMENTO = `
     cliente:cliente_id (id, nome, telefone, email),
     empreendimento:empreendimento_id (id, nome)
   ),
-  responsavel:responsavel_id (id, full_name)
+  responsavel:responsavel_id (id, full_name),
+  closer:closer_id (id, full_name)
 `;
 
 export function useArqoAgendamentos(filters?: { status?: ArqoAgendamentoStatus }) {
