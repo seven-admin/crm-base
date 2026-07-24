@@ -186,6 +186,7 @@ export type Database = {
           closer_id: string | null
           created_at: string
           descricao: string | null
+          horas_reserva_sem_resposta: number
           id: string
           is_active: boolean
           nome: string
@@ -196,6 +197,7 @@ export type Database = {
           closer_id: string
           created_at?: string
           descricao?: string | null
+          horas_reserva_sem_resposta?: number
           id?: string
           is_active?: boolean
           nome: string
@@ -206,6 +208,7 @@ export type Database = {
           closer_id?: string
           created_at?: string
           descricao?: string | null
+          horas_reserva_sem_resposta?: number
           id?: string
           is_active?: boolean
           nome?: string
@@ -363,6 +366,8 @@ export type Database = {
           observacoes: string | null
           optout_em: string | null
           proximo_contato_em: string | null
+          reserva_ate: string | null
+          reserva_consultor_id: string | null
           qualificacao_atualizada_em: string | null
           qualificacao_resumo: string | null
           qualificacao_score: number | null
@@ -393,6 +398,8 @@ export type Database = {
           observacoes?: string | null
           optout_em?: string | null
           proximo_contato_em?: string | null
+          reserva_ate?: string | null
+          reserva_consultor_id?: string | null
           qualificacao_atualizada_em?: string | null
           qualificacao_resumo?: string | null
           qualificacao_score?: number | null
@@ -423,6 +430,8 @@ export type Database = {
           observacoes?: string | null
           optout_em?: string | null
           proximo_contato_em?: string | null
+          reserva_ate?: string | null
+          reserva_consultor_id?: string | null
           qualificacao_atualizada_em?: string | null
           qualificacao_resumo?: string | null
           qualificacao_score?: number | null
@@ -490,6 +499,13 @@ export type Database = {
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "arqo_grupos_atendimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqo_leads_reserva_consultor_id_fkey"
+            columns: ["reserva_consultor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

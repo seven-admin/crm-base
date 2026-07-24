@@ -7,8 +7,10 @@ import { ArqoConfigCrud, type ConfigField } from '@/components/arqo/ArqoConfigCr
 import { ArqoGrupoMembros } from '@/components/arqo/ArqoGrupoMembros';
 import { ArqoMetasManager } from '@/components/arqo/ArqoMetasManager';
 import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ArqoConfig() {
+  const { role } = useAuth();
   const { data: etapas = [] } = useArqoEtapas();
   const { data: temps = [] } = useArqoTemperaturas();
   const { data: sources = [] } = useArqoSources();
@@ -73,6 +75,15 @@ export default function ArqoConfig() {
       required: true,
       options: closerProfiles.map((profile) => ({ value: profile.id, label: profile.full_name || profile.email })),
     },
+    ...(role === 'super_admin' ? [{
+      name: 'horas_reserva_sem_resposta',
+      label: 'Reserva após sem resposta (horas)',
+      type: 'number' as const,
+      default: 24,
+      min: 0,
+      max: 720,
+      description: 'Impede que outro consultor puxe o lead durante este período. Use 0 para desativar.',
+    }] : []),
     { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
   ];
 
@@ -230,6 +241,9 @@ export default function ArqoConfig() {
                   <Badge variant={g.closer_id ? 'secondary' : 'destructive'}>
                     Closer: {closerProfiles.find((profile) => profile.id === g.closer_id)?.full_name || 'não configurado'}
                   </Badge>
+                  {role === 'super_admin' && (
+                    <Badge variant="outline">Reserva: {g.horas_reserva_sem_resposta}h</Badge>
+                  )}
                   <Badge variant={g.is_active ? 'default' : 'secondary'}>{g.is_active ? 'Ativo' : 'Inativo'}</Badge>
                 </div>
               )}

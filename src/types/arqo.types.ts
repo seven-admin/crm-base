@@ -8,7 +8,15 @@ export interface ArqoFunilEtapa {
   categoria: ArqoEtapaCategoria; is_encerramento: boolean; cor: string; is_active: boolean;
   bloqueia_roleta: boolean;
 }
-export interface ArqoGrupo { id: string; nome: string; descricao: string | null; tipo: 'consultor'|'closer'|'misto'; closer_id: string | null; is_active: boolean; }
+export interface ArqoGrupo {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  tipo: 'consultor'|'closer'|'misto';
+  closer_id: string | null;
+  horas_reserva_sem_resposta: number;
+  is_active: boolean;
+}
 export interface ArqoGrupoMembro { id: string; grupo_id: string; user_id: string; papel: 'consultor'|'closer'; is_active: boolean; ordem_roleta: number; }
 export interface ArqoSlaRegra { id: string; etapa_id: string; temperatura_id: string | null; horas_max: number; acao_expiracao: 'notificar'|'reatribuir'|'encerrar'; is_active: boolean; }
 export interface ArqoReguaReengajamento { id: string; nome: string; dias_apos_ultimo_contato: number; canal: 'whatsapp'|'email'|'sms'|'ligacao'; mensagem_template: string; is_active: boolean; ordem: number; }
@@ -38,6 +46,8 @@ export interface ArqoLead {
   motivo_perda: string | null;
   fechado_em: string | null;
   atribuido_em: string | null;
+  reserva_consultor_id: string | null;
+  reserva_ate: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

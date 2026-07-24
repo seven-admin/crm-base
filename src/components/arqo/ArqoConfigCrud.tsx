@@ -18,6 +18,9 @@ export type ConfigField = {
   required?: boolean;
   default?: any;
   immutable?: boolean;
+  description?: string;
+  min?: number;
+  max?: number;
 };
 
 interface ArqoConfigCrudProps {
@@ -94,6 +97,7 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title, allowDe
             {fields.map(f => (
               <div key={f.name}>
                 <Label>{f.label}{f.required ? ' *' : ''}</Label>
+                {f.description && <p className="mb-1 text-xs text-muted-foreground">{f.description}</p>}
                 {f.type === 'textarea' ? (
                   <Textarea value={editing?.[f.name] ?? ''} onChange={e => setEditing({ ...editing, [f.name]: e.target.value })} />
                 ) : f.type === 'switch' ? (
@@ -114,6 +118,8 @@ export function ArqoConfigCrud({ table, items, fields, renderRow, title, allowDe
                   <Input
                     type={f.type === 'number' ? 'number' : f.type === 'color' ? 'color' : f.type === 'date' ? 'date' : 'text'}
                     step={f.type === 'number' ? 'any' : undefined}
+                    min={f.type === 'number' ? f.min : undefined}
+                    max={f.type === 'number' ? f.max : undefined}
                     disabled={!!editing?.id && f.immutable}
                     value={editing?.[f.name] ?? ''}
                     onChange={e => setEditing({

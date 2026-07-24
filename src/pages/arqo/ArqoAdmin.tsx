@@ -74,7 +74,10 @@ export default function ArqoAdmin() {
 
   const kpis = useMemo(() => {
     const ativos = leads.filter(l => !l.fechado_em);
-    const semConsultor = ativos.filter(l => !l.consultor_id).length;
+    const agora = Date.now();
+    const semConsultor = ativos.filter(l => (
+      !l.consultor_id && (!l.reserva_ate || new Date(l.reserva_ate).getTime() <= agora)
+    )).length;
     const emAtendimento = ativos.filter(l => l.consultor_id).length;
     const ganhosMes = leads.filter(l =>
       l.etapa?.categoria === 'ganho' && l.fechado_em && l.fechado_em >= inicioMes,
@@ -92,10 +95,15 @@ export default function ArqoAdmin() {
   }, [leads, inicioMes]);
 
   const porGrupo = useMemo(() => {
+    const agora = Date.now();
     return grupos.map(g => {
       const membrosDoGrupo = membros.filter((m: any) => m.grupo_id === g.id && m.is_active).length;
       const leadsGrupo = leads.filter(l => l.grupo_id === g.id);
-      const fila = leadsGrupo.filter(l => !l.consultor_id && !l.fechado_em).length;
+      const fila = leadsGrupo.filter(l => (
+        !l.consultor_id
+        && !l.fechado_em
+        && (!l.reserva_ate || new Date(l.reserva_ate).getTime() <= agora)
+      )).length;
       const emAtend = leadsGrupo.filter(l => l.consultor_id && !l.fechado_em).length;
       const ganhos = leadsGrupo.filter(l => l.etapa?.categoria === 'ganho').length;
       const perdas = leadsGrupo.filter(l => l.etapa?.categoria === 'perda').length;
