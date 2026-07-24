@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useNexaVisitas, useDeleteVisita, useEmpreendimentosAtivos } from '@/hooks/useNexa';
 import { VisitaFormDialog } from '@/components/nexa/VisitaFormDialog';
 import { STATUS_LABELS, STATUS_COLORS, type NexaVisitaStatus, type NexaVisitaWithRelations } from '@/types/nexa.types';
@@ -35,18 +36,18 @@ export function AgendaVisitasTab() {
 
   const [statusFilter, setStatusFilter] = useState<'todos' | NexaVisitaStatus>('todos');
   const [empFilter, setEmpFilter] = useState<string>('todos');
+  const [page, setPage] = useState(1);
 
-  const { data: visitas, isLoading } = useNexaVisitas();
+  const { data, isLoading } = useNexaVisitas({
+    status: statusFilter === 'todos' ? undefined : statusFilter,
+    empreendimento_id: empFilter === 'todos' ? undefined : empFilter,
+    page,
+    pageSize: 20,
+  });
   const { data: emps } = useEmpreendimentosAtivos();
   const del = useDeleteVisita();
 
-  const filtered = useMemo(() => {
-    return (visitas ?? []).filter((v) => {
-      if (statusFilter !== 'todos' && v.status !== statusFilter) return false;
-      if (empFilter !== 'todos' && v.empreendimento_id !== empFilter) return false;
-      return true;
-    });
-  }, [visitas, statusFilter, empFilter]);
+  const filtered = useMemo(() => data?.visitas ?? [], [data?.visitas]);
 
   const openCreate = (mode: CreateMode) => {
     setEditing(null);
@@ -59,7 +60,13 @@ export function AgendaVisitasTab() {
     <div className="space-y-4">
       <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-3">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todos' | NexaVisitaStatus)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => {
+              setStatusFilter(v as 'todos' | NexaVisitaStatus);
+              setPage(1);
+            }}
+          >
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os status</SelectItem>
@@ -68,7 +75,13 @@ export function AgendaVisitasTab() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={empFilter} onValueChange={setEmpFilter}>
+          <Select
+            value={empFilter}
+            onValueChange={(value) => {
+              setEmpFilter(value);
+              setPage(1);
+            }}
+          >
             <SelectTrigger className="w-[260px]"><SelectValue placeholder="Empreendimento" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos empreendimentos</SelectItem>
@@ -119,7 +132,7 @@ export function AgendaVisitasTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Data / Hora</TableHead>
-                <TableHead>Visitante</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>Empreendimento</TableHead>
                 <TableHead>Imobiliária</TableHead>
                 <TableHead>Corretor</TableHead>
@@ -174,6 +187,13 @@ export function AgendaVisitasTab() {
           </Table>
         </Card>
       )}
+
+      <PaginationControls
+        page={page}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.total ?? 0}
+        onPageChange={setPage}
+      />
 
       <VisitaFormDialog
         open={formOpen}

@@ -419,6 +419,29 @@ export function useArqoLead(id?: string) {
   });
 }
 
+export function useAtualizarArqoTemperatura() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ leadId, temperaturaId }: { leadId: string; temperaturaId: string | null }) => {
+      const { error } = await supabase.rpc('arqo_atualizar_temperatura_lead', {
+        p_lead_id: leadId,
+        p_temperatura_id: temperaturaId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead', variables.leadId] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-events', variables.leadId] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'dashboard'] });
+      toast.success('Temperatura atualizada');
+    },
+    onError: (error: Error) => toast.error(error.message || 'Não foi possível atualizar a temperatura'),
+  });
+}
+
 // ============ Atendimento operacional ============
 export function useArqoAtendimentoOpcoes(includeInactive = false) {
   return useQuery({
@@ -589,15 +612,30 @@ const SELECT_AGENDAMENTO = `
   closer:closer_id (id, full_name)
 `;
 
-export function useArqoAgendamentos(filters?: { status?: ArqoAgendamentoStatus }) {
+export function useArqoAgendamentos(filters?: {
+  status?: ArqoAgendamentoStatus;
+  page?: number;
+  pageSize?: number;
+}) {
+  const page = filters?.page ?? 1;
+  const pageSize = filters?.pageSize ?? 20;
+
   return useQuery({
     queryKey: ['arqo', 'agendamentos', filters],
     queryFn: async () => {
-      let q = supabase.from('arqo_agendamentos').select(SELECT_AGENDAMENTO).order('data_hora', { ascending: false });
+      let q = supabase
+        .from('arqo_agendamentos')
+        .select(SELECT_AGENDAMENTO, { count: 'exact' })
+        .order('data_hora', { ascending: false });
       if (filters?.status) q = q.eq('status', filters.status);
-      const { data, error } = await q;
+      const { data, error, count } = await q.range((page - 1) * pageSize, page * pageSize - 1);
       if (error) throw error;
-      return (data ?? []) as unknown as ArqoAgendamentoWithRelations[];
+      const total = count ?? 0;
+      return {
+        agendamentos: (data ?? []) as unknown as ArqoAgendamentoWithRelations[],
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
     },
   });
 }
@@ -607,6 +645,9 @@ export function useCreateArqoAgendamento() {
   return useMutation({
     mutationFn: async (payload: Partial<ArqoAgendamento> & { lead_id: string; tipo: ArqoAgendamento['tipo']; data_hora: string }) => {
       const { data, error } = await supabase.from('arqo_agendamentos').insert(payload as any).select().single();
+      if (error?.code === 'PGRST116' || (!error && !data)) {
+        throw new Error('Já existe um agendamento ativo para este lead, tipo, data e horário');
+      }
       if (error) throw error;
       return data;
     },

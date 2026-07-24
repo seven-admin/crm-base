@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,7 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
   const [obs, setObs] = useState('');
   const [status, setStatus] = useState<ArqoAgendamentoStatus>('agendado');
   const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -56,10 +57,12 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
   }, [open, agendamento]);
 
   const submit = async () => {
+    if (submittingRef.current) return;
     if (!leadId || !dataHora) {
       toast.error('Selecione o lead e a data/hora.');
       return;
     }
+    submittingRef.current = true;
     setSaving(true);
     try {
       if (isEdit && agendamento) {
@@ -86,9 +89,10 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
         });
       }
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message || 'Erro ao salvar');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar');
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

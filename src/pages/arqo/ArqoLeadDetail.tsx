@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useTransicionarEtapa, useQualificarIA, useRegistrarTentativa } from '@/hooks/useArqo';
+import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useArqoTemperaturas, useAtualizarArqoTemperatura, useTransicionarEtapa, useQualificarIA, useRegistrarTentativa } from '@/hooks/useArqo';
 import { ArrowLeft, ArrowRight, Phone, Mail, Sparkles, PhoneOff, Building, Loader2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,8 +15,10 @@ import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
 import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ARQO_ADMIN_ROLES = new Set(['super_admin', 'admin', 'arqo_admin', 'arqo_gestor']);
+const NO_TEMPERATURE = '__none__';
 
 const EVENTO_LABELS: Record<string, string> = {
   transicao_etapa: 'Mudança de etapa',
@@ -24,6 +26,8 @@ const EVENTO_LABELS: Record<string, string> = {
   tentativa_sem_resposta: 'Sem resposta',
   liberacao_consultor: 'Liberado para fila',
   atendimento_registrado: 'Atendimento registrado',
+  temperatura_alterada: 'Temperatura alterada',
+  agendamento_duplicado_removido: 'Agendamento duplicado corrigido',
   lead_indicado_gerado: 'Lead indicado gerado',
   indicacao_recebida: 'Lead recebido por indicação',
 };
@@ -35,7 +39,9 @@ export default function ArqoLeadDetail() {
   const { data: lead, isLoading } = useArqoLead(id);
   const { data: events = [] } = useArqoLeadEvents(id);
   const { data: etapas = [] } = useArqoEtapas();
+  const { data: temperaturas = [] } = useArqoTemperaturas();
   const transicionar = useTransicionarEtapa();
+  const atualizarTemperatura = useAtualizarArqoTemperatura();
   const qualificar = useQualificarIA();
   const tentar = useRegistrarTentativa();
   const [etapaDestinoId, setEtapaDestinoId] = useState('');
@@ -79,11 +85,40 @@ export default function ArqoLeadDetail() {
           <Card className="overflow-hidden border-0 bg-[#201a17] p-6 text-white shadow-popover sm:p-7">
             <div className="mb-5 flex items-center justify-between gap-3">
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Dados da oportunidade</p>
-              {lead.temperatura && (
+              {podeEditar ? (
+                <div className="flex items-center gap-2">
+                  <span className="hidden text-xs font-medium text-white/55 sm:inline">Temperatura</span>
+                  <Select
+                    value={lead.temperatura_id ?? NO_TEMPERATURE}
+                    disabled={atualizarTemperatura.isPending}
+                    onValueChange={(value) => atualizarTemperatura.mutate({
+                      leadId: lead.id,
+                      temperaturaId: value === NO_TEMPERATURE ? null : value,
+                    })}
+                  >
+                    <SelectTrigger className="h-9 w-[170px] rounded-full border-white/15 bg-white/10 text-xs font-semibold text-white hover:bg-white/15 [&>svg]:text-white/60">
+                      {atualizarTemperatura.isPending
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <SelectValue placeholder="Não definida" />}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_TEMPERATURE}>Não definida</SelectItem>
+                      {temperaturas.map((temperatura) => (
+                        <SelectItem key={temperatura.id} value={temperatura.id}>
+                          <span className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: temperatura.cor }} />
+                            {temperatura.nome}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : lead.temperatura ? (
                 <Badge className="border-0 px-3 py-1 text-xs font-semibold" style={{ backgroundColor: lead.temperatura.cor, color: '#fff' }}>
                   {lead.temperatura.nome}
                 </Badge>
-              )}
+              ) : null}
             </div>
             <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
               {phoneOptions.map((phone) => (
@@ -259,6 +294,12 @@ export default function ArqoLeadDetail() {
                     {[ev.payload.status_codigo, ev.payload.qualificacao_codigo, ev.payload.interesse_codigo, ev.payload.perfil_codigo, ev.payload.acao_codigo]
                       .filter(Boolean)
                       .join(' · ')}
+                  </p>
+                )}
+                {ev.tipo === 'temperatura_alterada' && (
+                  <p className="mt-1 text-xs font-medium">
+                    {temperaturas.find((item) => item.id === ev.temperatura_de)?.nome ?? 'Não definida'} →{' '}
+                    {temperaturas.find((item) => item.id === ev.temperatura_para)?.nome ?? 'Não definida'}
                   </p>
                 )}
                 {ev.comentario && <p className="text-xs mt-1 text-muted-foreground">{ev.comentario}</p>}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, CalendarClock, Check, ChevronDown, PhoneOff, RotateCcw, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,6 +91,7 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
   const { data: options = [], isLoading } = useArqoAtendimentoOpcoes();
   const { data: temperatures = [] } = useArqoTemperaturas();
   const complete = useConcluirArqoAtendimento();
+  const submittingRef = useRef(false);
   const [currentStep, setCurrentStep] = useState<WizardStepId>('status_ligacao');
   const [status, setStatus] = useState('');
   const [qualification, setQualification] = useState('');
@@ -155,20 +156,26 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
   };
 
   const submit = async (finalAction: ArqoAtendimentoAcaoFinal) => {
-    await complete.mutateAsync({
-      leadId: lead.id,
-      statusCodigo: status,
-      qualificacaoCodigo: qualification || null,
-      interesseCodigo: interest || null,
-      perfilCodigo: profile || null,
-      acaoCodigo: nextAction || null,
-      acaoData: requiresActionDate && actionDate ? new Date(actionDate).toISOString() : null,
-      temperaturaId: temperatureId || null,
-      observacao: observation,
-      acaoFinal: finalAction,
-      etapaDestinoId: finalAction === 'mover_etapa' ? targetStage : null,
-    });
-    reset();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await complete.mutateAsync({
+        leadId: lead.id,
+        statusCodigo: status,
+        qualificacaoCodigo: qualification || null,
+        interesseCodigo: interest || null,
+        perfilCodigo: profile || null,
+        acaoCodigo: nextAction || null,
+        acaoData: requiresActionDate && actionDate ? new Date(actionDate).toISOString() : null,
+        temperaturaId: temperatureId || null,
+        observacao: observation,
+        acaoFinal: finalAction,
+        etapaDestinoId: finalAction === 'mover_etapa' ? targetStage : null,
+      });
+      reset();
+    } finally {
+      submittingRef.current = false;
+    }
   };
 
   const fullFlowComplete = answered && !!qualification && !!interest && !!profile && !!nextAction
@@ -330,26 +337,29 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
               )}
 
               <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-black/[.07] pt-5">
+                <p className="w-full text-xs text-muted-foreground">
+                  Escolha somente uma ação final. Não é necessário salvar antes de mover ou liberar o lead.
+                </p>
                 {terminalStatus ? (
                   <Button onClick={() => submit('sem_resposta')} disabled={!canFinish || complete.isPending}>
-                    <PhoneOff className="mr-2 h-4 w-4" /> Sem resposta e encerrar atendimento
+                    <PhoneOff className="mr-2 h-4 w-4" /> Salvar sem resposta e liberar
                   </Button>
                 ) : (
                   <>
                     <Button onClick={() => submit('aplicar')} disabled={!canFinish || complete.isPending}>
-                      <Check className="mr-2 h-4 w-4" /> Aplicar
+                      <Check className="mr-2 h-4 w-4" /> Salvar e manter comigo
                     </Button>
                     <div className="flex min-w-[280px] flex-1 items-center gap-2 sm:flex-none">
                       <Select value={targetStage} onValueChange={setTargetStage}>
                         <SelectTrigger className="min-w-[210px]"><SelectValue placeholder="Mover para etapa..." /></SelectTrigger>
                         <SelectContent>{availableStages.map((stage) => <SelectItem key={stage.id} value={stage.id}>{stage.nome}</SelectItem>)}</SelectContent>
                       </Select>
-                      <Button variant="outline" size="icon" title="Mover para etapa" onClick={() => submit('mover_etapa')} disabled={!canFinish || !targetStage || complete.isPending}>
-                        <ArrowRight className="h-4 w-4" />
+                      <Button variant="outline" onClick={() => submit('mover_etapa')} disabled={!canFinish || !targetStage || complete.isPending}>
+                        <ArrowRight className="mr-2 h-4 w-4" /> Salvar e mover
                       </Button>
                     </div>
                     <Button variant="ghost" onClick={() => submit('liberar')} disabled={!canFinish || complete.isPending}>
-                      Liberar lead <ChevronDown className="ml-2 h-4 w-4" />
+                      Salvar e liberar para fila <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                   </>
                 )}

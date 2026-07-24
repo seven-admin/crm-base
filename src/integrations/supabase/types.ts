@@ -3474,6 +3474,10 @@ export type Database = {
       }
     }
     Functions: {
+      arqo_atualizar_temperatura_lead: {
+        Args: { p_lead_id: string; p_temperatura_id?: string | null }
+        Returns: undefined
+      }
       arqo_salvar_meta_atendimento: {
         Args: {
           p_is_active: boolean

@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useArqoAgendamentos, useDeleteArqoAgendamento } from '@/hooks/useArqo';
 import { AgendamentoFormDialog } from '@/components/arqo/AgendamentoFormDialog';
 import {
@@ -33,13 +34,16 @@ export function AgendaAtendimentosTab() {
   const [editing, setEditing] = useState<ArqoAgendamentoWithRelations | null>(null);
   const [toDelete, setToDelete] = useState<ArqoAgendamentoWithRelations | null>(null);
   const [statusFilter, setStatusFilter] = useState<'todos' | ArqoAgendamentoStatus>('todos');
+  const [page, setPage] = useState(1);
 
-  const { data: agendamentos, isLoading } = useArqoAgendamentos();
+  const { data, isLoading } = useArqoAgendamentos({
+    status: statusFilter === 'todos' ? undefined : statusFilter,
+    page,
+    pageSize: 20,
+  });
   const del = useDeleteArqoAgendamento();
 
-  const filtered = useMemo(() => {
-    return (agendamentos ?? []).filter((a) => statusFilter === 'todos' || a.status === statusFilter);
-  }, [agendamentos, statusFilter]);
+  const filtered = useMemo(() => data?.agendamentos ?? [], [data?.agendamentos]);
 
   const openCreate = () => { setEditing(null); setFormOpen(true); };
   const openEdit = (a: ArqoAgendamentoWithRelations) => { setEditing(a); setFormOpen(true); };
@@ -47,7 +51,13 @@ export function AgendaAtendimentosTab() {
   return (
     <div className="space-y-4">
       <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todos' | ArqoAgendamentoStatus)}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            setStatusFilter(v as 'todos' | ArqoAgendamentoStatus);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os status</SelectItem>
@@ -99,7 +109,7 @@ export function AgendaAtendimentosTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Data / Hora</TableHead>
-                <TableHead>Lead</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>Empreendimento</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Responsável</TableHead>
@@ -144,6 +154,13 @@ export function AgendaAtendimentosTab() {
           </Table>
         </Card>
       )}
+
+      <PaginationControls
+        page={page}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.total ?? 0}
+        onPageChange={setPage}
+      />
 
       <AgendamentoFormDialog open={formOpen} onOpenChange={setFormOpen} agendamento={editing} />
 
