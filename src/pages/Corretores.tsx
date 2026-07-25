@@ -16,6 +16,7 @@ import { useCorretores, useCorretor, useCorretoresPaginated } from '@/hooks/useC
 import { usePermissions } from '@/hooks/usePermissions';
 import { CorretorForm } from '@/components/mercado/CorretorForm';
 import { Corretor } from '@/types/mercado.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export default function Corretores() {
   const [search, setSearch] = useState('');
@@ -142,7 +143,7 @@ export default function Corretores() {
                       <TableCell>
                         <div className="space-y-1">
                           {c.telefone && (
-                            <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{c.telefone}</div>
+                            <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{formatarTelefone(c.telefone)}</div>
                           )}
                           {c.email && (
                             <div className="flex items-center gap-1 text-sm text-muted-foreground"><Mail className="h-3 w-3" />{c.email}</div>

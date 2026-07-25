@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Cliente } from '@/types/clientes.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 import { ClipboardList, Edit, MessageSquare, MoreVertical, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
 
 type Props = {
@@ -98,7 +99,7 @@ export function ClientesTable({
                 )}
               </TableCell>
               
-              <TableCell>{cliente.whatsapp || '-'}</TableCell>
+              <TableCell>{cliente.whatsapp ? formatarTelefone(cliente.whatsapp) : '-'}</TableCell>
               <TableCell>{cliente.endereco_cidade || '-'}</TableCell>
               <TableCell>{cliente.endereco_uf || '-'}</TableCell>
               <TableCell>{(cliente as Cliente & { gestor?: { full_name?: string } }).gestor?.full_name || '-'}</TableCell>

@@ -135,7 +135,7 @@ export function ClienteTelefonesEditor({ clienteId, readonly = false }: ClienteT
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    {telefone.numero}
+                    {formatarTelefone(telefone.numero)}
                     {telefone.is_whatsapp && (
                       <MessageCircle className="h-4 w-4 text-green-500" />
                     )}

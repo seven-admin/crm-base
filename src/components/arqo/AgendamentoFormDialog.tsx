@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { ArqoAgendamentoStatus, ArqoAgendamentoTipo, ArqoAgendamentoWithRelations } from '@/types/arqo.types';
 import { AGENDAMENTO_TIPO_LABELS, AGENDAMENTO_STATUS_LABELS } from '@/types/arqo.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 interface Props {
   open: boolean;
@@ -112,7 +113,7 @@ export function AgendamentoFormDialog({ open, onOpenChange, agendamento }: Props
               <SelectContent>
                 {leads?.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.cliente?.nome ?? '—'}{l.cliente?.telefone ? ` · ${l.cliente.telefone}` : ''}
+                    {l.cliente?.nome ?? '—'}{l.cliente?.telefone ? ` · ${formatarTelefone(l.cliente.telefone)}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>

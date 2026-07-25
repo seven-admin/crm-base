@@ -21,6 +21,7 @@ import {
   type ArqoAgendamentoStatus, type ArqoAgendamentoWithRelations,
 } from '@/types/arqo.types';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatarTelefone } from '@/lib/documentUtils';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -110,6 +111,7 @@ export function AgendaAtendimentosTab() {
               <TableRow>
                 <TableHead>Data / Hora</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Telefone</TableHead>
                 <TableHead>Empreendimento</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Responsável</TableHead>
@@ -125,6 +127,12 @@ export function AgendaAtendimentosTab() {
                     {format(new Date(a.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                   </TableCell>
                   <TableCell>{a.lead?.cliente?.nome || '—'}</TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs">
+                    {(() => {
+                      const phone = a.lead?.cliente?.telefone || a.lead?.cliente?.whatsapp;
+                      return phone ? formatarTelefone(phone) : '—';
+                    })()}
+                  </TableCell>
                   <TableCell>{a.lead?.empreendimento?.nome || '—'}</TableCell>
                   <TableCell>{AGENDAMENTO_TIPO_LABELS[a.tipo]}</TableCell>
                   <TableCell>{a.responsavel?.full_name || '—'}</TableCell>

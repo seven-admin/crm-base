@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Cliente, ClienteFase } from '@/types/clientes.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 import {
   CLIENTE_FASE_COLORS,
   CLIENTE_FASE_LABELS,
@@ -72,7 +73,7 @@ export function ClientesMobileCards({
                   {cliente.nome}
                 </button>
                 <p className="text-sm text-muted-foreground truncate">{cliente.email || '-'}</p>
-                <p className="text-sm text-muted-foreground">{cliente.telefone || '-'}</p>
+                <p className="text-sm text-muted-foreground">{cliente.telefone ? formatarTelefone(cliente.telefone) : '-'}</p>
               </div>
             </div>
             <DropdownMenu>

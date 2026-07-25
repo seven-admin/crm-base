@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useArqoAtendimentoOpcoes, useArqoHistoricoContatos, useReabrirAtendimentoHistorico } from '@/hooks/useArqo';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -37,7 +38,7 @@ function ContactPhone({ phone }: { phone: string }) {
 
   return (
     <div className="flex items-center gap-1">
-      <span className="font-mono text-xs">{phone}</span>
+      <span className="font-mono text-xs">{formatarTelefone(phone)}</span>
       <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={copy} title="Copiar número">
         {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
       </Button>

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatarTelefone } from '@/lib/documentUtils';
 import {
   CLIENTE_FASE_COLORS,
   CLIENTE_FASE_LABELS,
@@ -21,7 +22,7 @@ export function ClienteQuickViewDialog({
   onOpenChange,
   onOpenFull,
 }: ClienteQuickViewDialogProps) {
-  const formatPhone = (phone?: string | null) => phone || '-';
+  const formatPhone = (phone?: string | null) => (phone ? formatarTelefone(phone) : '-');
 
   if (!cliente) return null;
 

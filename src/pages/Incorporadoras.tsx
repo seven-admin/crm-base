@@ -14,6 +14,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { IncorporadoraForm } from '@/components/mercado/IncorporadoraForm';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { Incorporadora } from '@/types/mercado.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export default function Incorporadoras() {
   const [search, setSearch] = useState('');
@@ -154,7 +155,7 @@ export default function Incorporadoras() {
                           {inc.telefone && (
                             <div className="flex items-center gap-1 text-sm">
                               <Phone className="h-3 w-3" />
-                              {inc.telefone}
+                              {formatarTelefone(inc.telefone)}
                             </div>
                           )}
                           {inc.email && (

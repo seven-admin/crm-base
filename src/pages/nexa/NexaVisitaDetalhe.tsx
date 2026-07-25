@@ -12,6 +12,7 @@ import { useNexaVisita, useNexaEventos, useUpdateVisitaStatus } from '@/hooks/us
 import { UnidadeAcaoDialog } from '@/components/nexa/UnidadeAcaoDialog';
 import { VisitaTimeline } from '@/components/nexa/VisitaTimeline';
 import { STATUS_LABELS, STATUS_COLORS, type NexaVisitaStatus } from '@/types/nexa.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export default function NexaVisitaDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +45,7 @@ export default function NexaVisitaDetalhe() {
           <CardHeader><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">Visita agendada</p><CardTitle className="text-2xl">Dados da visita</CardTitle></CardHeader>
           <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
             <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><User className="h-4 w-4 text-[#ff8a39]" /> {nome}</div>
-            {telefone && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Phone className="h-4 w-4 text-[#ff8a39]" /> {telefone}</div>}
+            {telefone && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Phone className="h-4 w-4 text-[#ff8a39]" /> {formatarTelefone(telefone)}</div>}
             {visita.cliente?.email && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Mail className="h-4 w-4 text-[#ff8a39]" /> {visita.cliente.email}</div>}
             <div className="flex items-center gap-2 rounded-xl bg-white/[.07] p-3"><Home className="h-4 w-4 text-[#ff8a39]" /> {visita.empreendimento?.nome}</div>
             {visita.imobiliaria?.nome && (

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useArqoAtendimentoDashboard, type ArqoPerformanceLevel } from '@/hooks/useArqoAtendimentoDashboard';
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 type DashboardData = ReturnType<typeof useArqoAtendimentoDashboard>;
 
@@ -172,7 +173,7 @@ export function ArqoPerformanceDashboard({ dashboard, roulette }: { dashboard: D
                       {lead.temperatura && <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: lead.temperatura.cor }} />}
                     </div>
                     <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span className="truncate">{phone?.value ?? 'Sem telefone'}</span>
+                      <span className="truncate">{phone?.value ? formatarTelefone(phone.value) : 'Sem telefone'}</span>
                       <span className="shrink-0">{lead.etapa?.nome ?? 'Sem etapa'}</span>
                     </div>
                   </Link>

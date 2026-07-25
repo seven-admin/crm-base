@@ -12,6 +12,7 @@ import { ArrowLeft, ArrowRight, Phone, Mail, Sparkles, PhoneOff, Building, Loade
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
+import { formatarTelefone } from '@/lib/documentUtils';
 import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -124,7 +125,7 @@ export default function ArqoLeadDetail() {
               {phoneOptions.map((phone) => (
                 <div key={phone.value} className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5">
                   <Phone className="h-4 w-4 text-[#ff8a39]" />
-                  <span><span className="text-white/45">{phone.label}: </span>{phone.value}</span>
+                  <span><span className="text-white/45">{phone.label}: </span>{formatarTelefone(phone.value)}</span>
                 </div>
               ))}
               {lead.cliente?.email && <div className="flex items-center gap-2 rounded-xl bg-white/[.07] px-3 py-2.5"><Mail className="h-4 w-4 text-[#ff8a39]" /> {lead.cliente.email}</div>}

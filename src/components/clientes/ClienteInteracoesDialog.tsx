@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useClienteInteracoes } from '@/hooks/useClienteInteracoes';
 import { Cliente, INTERACAO_TIPOS } from '@/types/clientes.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 interface ClienteInteracoesDialogProps {
   cliente: Cliente | null;
@@ -79,7 +80,7 @@ export function ClienteInteracoesDialog({
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               {cliente.email && <p>{cliente.email}</p>}
-              {cliente.telefone && <p>{cliente.telefone}</p>}
+              {cliente.telefone && <p>{formatarTelefone(cliente.telefone)}</p>}
             </div>
             <Button 
               variant={showForm ? 'outline' : 'default'} 

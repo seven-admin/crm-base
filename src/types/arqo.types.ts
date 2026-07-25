@@ -168,7 +168,7 @@ export interface ArqoAgendamento {
 export interface ArqoAgendamentoWithRelations extends ArqoAgendamento {
   lead?: {
     id: string;
-    cliente?: { id: string; nome: string; telefone: string | null; email: string | null } | null;
+    cliente?: { id: string; nome: string; telefone: string | null; whatsapp: string | null; email: string | null } | null;
     empreendimento?: { id: string; nome: string } | null;
   } | null;
   responsavel?: { id: string; full_name: string } | null;

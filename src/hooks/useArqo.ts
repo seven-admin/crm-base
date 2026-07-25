@@ -605,7 +605,7 @@ const SELECT_AGENDAMENTO = `
   *,
   lead:lead_id (
     id,
-    cliente:cliente_id (id, nome, telefone, email),
+    cliente:cliente_id (id, nome, telefone, whatsapp, email),
     empreendimento:empreendimento_id (id, nome)
   ),
   responsavel:responsavel_id (id, full_name),

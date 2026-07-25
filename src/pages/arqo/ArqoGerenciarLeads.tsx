@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArqoNovoLeadDialog } from '@/components/arqo/ArqoNovoLeadDialog';
 import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export function ArqoGerenciarLeads() {
   const { role } = useAuth();
@@ -251,9 +252,9 @@ export function ArqoGerenciarLeads() {
                   )}
                 </TableCell>
                 <TableCell className="text-xs">
-                  {(l.cliente?.telefone || l.cliente?.whatsapp) && <div>{l.cliente.telefone || l.cliente.whatsapp}</div>}
+                  {(l.cliente?.telefone || l.cliente?.whatsapp) && <div>{formatarTelefone(l.cliente.telefone || l.cliente.whatsapp)}</div>}
                   {l.telefones_adicionais?.map((telefone, index) => (
-                    <div key={`${telefone}-${index}`} className="text-muted-foreground">{telefone}</div>
+                    <div key={`${telefone}-${index}`} className="text-muted-foreground">{formatarTelefone(telefone)}</div>
                   ))}
                   {l.cliente?.email && <div className="text-muted-foreground">{l.cliente.email}</div>}
                 </TableCell>

@@ -16,6 +16,7 @@ import { useImobiliarias, useImobiliaria, useImobiliariasPaginated } from '@/hoo
 import { usePermissions } from '@/hooks/usePermissions';
 import { ImobiliariaForm } from '@/components/mercado/ImobiliariaForm';
 import { Imobiliaria } from '@/types/mercado.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export default function Imobiliarias() {
   const [search, setSearch] = useState('');
@@ -142,7 +143,7 @@ export default function Imobiliarias() {
                       <TableCell>
                         <div className="space-y-1">
                           {imob.telefone && (
-                            <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{imob.telefone}</div>
+                            <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{formatarTelefone(imob.telefone)}</div>
                           )}
                           {imob.email && (
                             <div className="flex items-center gap-1 text-sm text-muted-foreground"><Mail className="h-3 w-3" />{imob.email}</div>

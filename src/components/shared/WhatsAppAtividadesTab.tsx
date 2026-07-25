@@ -20,6 +20,7 @@ import {
 import { useNexaWhatsappAtividades, useNexaWhatsappCategorias, useDeleteNexaWhatsappAtividade } from '@/hooks/useNexa';
 import type { NexaWhatsappAtividade } from '@/types/nexa.types';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export function WhatsAppAtividadesTab() {
   const { isAdmin } = usePermissions();
@@ -119,7 +120,7 @@ export function WhatsAppAtividadesTab() {
                     {format(new Date(`${a.data}T00:00:00`), 'dd/MM/yyyy', { locale: ptBR })}
                   </TableCell>
                   <TableCell className="font-medium">{a.nome}</TableCell>
-                  <TableCell className="text-xs">{a.whatsapp}</TableCell>
+                  <TableCell className="text-xs">{formatarTelefone(a.whatsapp)}</TableCell>
                   <TableCell>
                     {a.categoria ? <Badge variant="outline">{a.categoria}</Badge> : <span className="text-muted-foreground text-xs">—</span>}
                   </TableCell>
@@ -152,7 +153,7 @@ export function WhatsAppAtividadesTab() {
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{viewing?.nome} — {viewing?.whatsapp}</DialogTitle>
+            <DialogTitle>{viewing?.nome} — {viewing?.whatsapp ? formatarTelefone(viewing.whatsapp) : ''}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
             {viewing?.categoria && (

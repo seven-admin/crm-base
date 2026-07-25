@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useArqoAtendimentoDashboard } from '@/hooks/useArqoAtendimentoDashboard';
 import { useArqoFilaUsuario, useArqoLeads, useMeusArqoGrupos, usePuxarProximoLead } from '@/hooks/useArqo';
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 export default function ArqoRoleta() {
   const { user, role } = useAuth();
@@ -140,7 +141,7 @@ export default function ArqoRoleta() {
                   </div>
                   {arqoLeadPhoneOptions(lead).map((phone) => (
                     <div key={phone.value} className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Phone className="h-3 w-3" /> {phone.value}
+                      <Phone className="h-3 w-3" /> {formatarTelefone(phone.value)}
                     </div>
                   ))}
                 </Card>

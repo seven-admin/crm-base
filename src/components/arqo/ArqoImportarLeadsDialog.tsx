@@ -11,6 +11,7 @@ import { useArqoEtapas, useArqoGrupos, useArqoSources } from '@/hooks/useArqo';
 import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatarTelefone } from '@/lib/documentUtils';
 
 interface Row {
   nome: string;
@@ -230,7 +231,7 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
                   {rows.slice(0, 50).map((r, i) => (
                     <TableRow key={i}>
                       <TableCell className="font-medium">{r.nome}</TableCell>
-                      <TableCell>{r.telefone ?? '—'}</TableCell>
+                      <TableCell>{r.telefone ? formatarTelefone(r.telefone) : '—'}</TableCell>
                       <TableCell>{r.email ?? '—'}</TableCell>
                       <TableCell>{r.origem ?? '—'}</TableCell>
                       <TableCell>{r.empreendimento ?? '—'}</TableCell>

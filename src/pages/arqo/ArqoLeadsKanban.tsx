@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Phone, Mail, Upload, Pencil } from 'lucide-react';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
+import { formatarTelefone } from '@/lib/documentUtils';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 
@@ -133,7 +134,7 @@ export default function ArqoLeadsKanban() {
                         </Badge>
                       )}
                       <div className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground">
-                        {l.cliente?.telefone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{l.cliente.telefone}</span>}
+                        {l.cliente?.telefone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{formatarTelefone(l.cliente.telefone)}</span>}
                         {l.cliente?.email && <span className="flex items-center gap-1 truncate"><Mail className="h-3 w-3" />{l.cliente.email}</span>}
                         {l.empreendimento && <span className="truncate">🏢 {l.empreendimento.nome}</span>}
                         {l.valor_estimado != null && <span>💰 R$ {Number(l.valor_estimado).toLocaleString('pt-BR')}</span>}
