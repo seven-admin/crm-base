@@ -149,6 +149,7 @@ export function useTransicionarEtapa() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'forecast'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
@@ -159,15 +160,19 @@ export function useTransicionarEtapa() {
 export function useAtribuirRoleta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ grupoId, leadId, tipo = 'roleta' }: { grupoId: string; leadId: string; tipo?: string }) => {
+    mutationFn: async ({ grupoId, leadId, tipo = 'roleta' }: { grupoId: string; leadId?: string | null; tipo?: string }) => {
+      const args = leadId
+        ? { p_grupo_id: grupoId, p_lead_id: leadId, p_tipo_atribuicao: tipo }
+        : { p_grupo_id: grupoId, p_tipo_atribuicao: tipo };
       const { data, error } = await supabase.rpc('arqo_atribuir_lead_roleta', {
-        p_grupo_id: grupoId, p_lead_id: leadId, p_tipo_atribuicao: tipo,
+        ...args,
       });
       if (error) throw error;
       return data as string;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      await qc.refetchQueries({ queryKey: ['arqo', 'leads'], type: 'active' });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
       toast.success('Lead atribuído');
@@ -261,6 +266,7 @@ export function useRegistrarTentativa() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
@@ -279,6 +285,7 @@ export function useLiberarConsultor() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'lead'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro'),
