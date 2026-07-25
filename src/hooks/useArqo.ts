@@ -325,23 +325,6 @@ export function useArqoLeadEvents(leadId?: string) {
   });
 }
 
-export function useQualificarIA() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (leadId: string) => {
-      const { data, error } = await supabase.functions.invoke('arqo-qualificar-lead', { body: { lead_id: leadId } });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
-      qc.invalidateQueries({ queryKey: ['arqo', 'lead-events'] });
-      toast.success('Lead qualificado pela IA');
-    },
-    onError: (e: any) => toast.error(e.message ?? 'Erro na qualificação IA'),
-  });
-}
-
 // ============ CRUD genérico para tabelas de configuração ============
 type ConfigTable =
   | 'arqo_lead_sources'

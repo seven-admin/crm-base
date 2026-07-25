@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useArqoTemperaturas, useAtualizarArqoTemperatura, useTransicionarEtapa, useQualificarIA, useRegistrarTentativa } from '@/hooks/useArqo';
-import { ArrowLeft, ArrowRight, Phone, Mail, Sparkles, PhoneOff, Building, Loader2, Pencil } from 'lucide-react';
+import { useArqoLead, useArqoLeadEvents, useArqoEtapas, useArqoTemperaturas, useAtualizarArqoTemperatura, useTransicionarEtapa, useRegistrarTentativa } from '@/hooks/useArqo';
+import { ArrowLeft, ArrowRight, Phone, Mail, PhoneOff, Building, Loader2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { arqoLeadPhoneOptions } from '@/lib/arqoPhones';
@@ -43,7 +43,6 @@ export default function ArqoLeadDetail() {
   const { data: temperaturas = [] } = useArqoTemperaturas();
   const transicionar = useTransicionarEtapa();
   const atualizarTemperatura = useAtualizarArqoTemperatura();
-  const qualificar = useQualificarIA();
   const tentar = useRegistrarTentativa();
   const [etapaDestinoId, setEtapaDestinoId] = useState('');
   const [motivoPerda, setMotivoPerda] = useState('');
@@ -139,15 +138,6 @@ export default function ArqoLeadDetail() {
             )}
           </Card>
 
-          {lead.qualificacao_resumo && (
-            <Card className="border-primary/25 bg-primary-soft/60 p-5 shadow-none">
-              <div className="flex items-center gap-2 font-medium mb-2">
-                <Sparkles className="h-4 w-4 text-primary" /> Qualificação IA — score {lead.qualificacao_score}
-              </div>
-              <p className="text-sm text-muted-foreground">{lead.qualificacao_resumo}</p>
-            </Card>
-          )}
-
           <Card className="overflow-hidden border-black/[.07] bg-[#fffdfa] shadow-none">
             <div className="border-b border-black/[.07] p-5 sm:p-6">
               <p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Ações rápidas</p>
@@ -163,18 +153,6 @@ export default function ArqoLeadDetail() {
                   <span>
                     <span className="block font-semibold">Registrar sem resposta</span>
                     <span className="block text-xs font-normal text-muted-foreground">Adiciona uma tentativa ao histórico</span>
-                  </span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto justify-start rounded-xl border-black/10 bg-white px-4 py-3 text-left shadow-sm hover:border-primary/35 hover:bg-primary-soft/35"
-                  disabled={qualificar.isPending}
-                  onClick={() => qualificar.mutate(lead.id)}
-                >
-                  {qualificar.isPending ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <Sparkles className="mr-3 h-5 w-5 text-primary" />}
-                  <span>
-                    <span className="block font-semibold">Qualificar com IA</span>
-                    <span className="block text-xs font-normal text-muted-foreground">Atualiza score e resumo da oportunidade</span>
                   </span>
                 </Button>
               </div>

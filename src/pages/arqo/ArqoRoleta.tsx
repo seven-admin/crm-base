@@ -230,13 +230,6 @@ export default function ArqoRoleta() {
               </div>
             </div>
 
-            {meuLeadAtivo.qualificacao_resumo && (
-              <div className="p-3 bg-muted rounded-lg text-sm">
-                <div className="font-medium mb-1">Qualificação IA (score {meuLeadAtivo.qualificacao_score})</div>
-                {meuLeadAtivo.qualificacao_resumo}
-              </div>
-            )}
-
             {/* Observação obrigatória */}
             <div className="space-y-2 pt-2 border-t">
               <Label htmlFor="obs-atendimento">
