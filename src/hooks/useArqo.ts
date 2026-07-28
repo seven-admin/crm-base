@@ -7,6 +7,7 @@ import type {
   ArqoAgendamento, ArqoAgendamentoWithRelations, ArqoAgendamentoStatus,
   ArqoHistoricoContato,
   ArqoAtendimentoOpcao, ArqoAtendimentoPayload, ArqoMetaAtendimento, ArqoPerformanceConfig,
+  ArqoAtividadeTipo,
 } from '@/types/arqo.types';
 
 // ============ Config queries ============
@@ -335,6 +336,7 @@ type ConfigTable =
   | 'arqo_sla_regras'
   | 'arqo_regua_reengajamento'
   | 'arqo_atendimento_opcoes'
+  | 'arqo_atividade_tipos'
   | 'arqo_metas_atendimento'
   | 'arqo_performance_config';
 
@@ -347,6 +349,7 @@ const invalidationKey: Record<ConfigTable, string> = {
   arqo_sla_regras: 'sla-regras',
   arqo_regua_reengajamento: 'regua',
   arqo_atendimento_opcoes: 'atendimento-opcoes',
+  arqo_atividade_tipos: 'atividade-tipos',
   arqo_metas_atendimento: 'metas-atendimento',
   arqo_performance_config: 'performance-config',
 };
@@ -446,6 +449,22 @@ export function useArqoAtendimentoOpcoes(includeInactive = false) {
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as ArqoAtendimentoOpcao[];
+    },
+  });
+}
+
+export function useArqoAtividadeTipos(includeInactive = false) {
+  return useQuery({
+    queryKey: ['arqo', 'atividade-tipos', includeInactive],
+    queryFn: async () => {
+      let query = supabase
+        .from('arqo_atividade_tipos' as any)
+        .select('*')
+        .order('ordem');
+      if (!includeInactive) query = query.eq('is_active', true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoAtividadeTipo[];
     },
   });
 }
@@ -633,19 +652,19 @@ export function useArqoAgendamentos(filters?: {
 export function useCreateArqoAgendamento() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Partial<ArqoAgendamento> & { lead_id: string; tipo: ArqoAgendamento['tipo']; data_hora: string }) => {
+    mutationFn: async (payload: Partial<ArqoAgendamento> & { tipo: ArqoAgendamento['tipo']; data_hora: string }) => {
       const { data, error } = await supabase.from('arqo_agendamentos').insert(payload as any).select().single();
       if (error?.code === 'PGRST116' || (!error && !data)) {
-        throw new Error('Já existe um agendamento ativo para este lead, tipo, data e horário');
+        throw new Error('Já existe uma atividade ativa para este lead, tipo, data e horário');
       }
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
-      toast.success('Atendimento agendado');
+      toast.success('Atividade criada');
     },
-    onError: (e: any) => toast.error(e.message || 'Erro ao agendar'),
+    onError: (e: any) => toast.error(e.message || 'Erro ao criar atividade'),
   });
 }
 
@@ -658,9 +677,9 @@ export function useUpdateArqoAgendamento() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
-      toast.success('Agendamento atualizado');
+      toast.success('Atividade atualizada');
     },
-    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar agendamento'),
+    onError: (e: any) => toast.error(e.message || 'Erro ao atualizar atividade'),
   });
 }
 
@@ -673,8 +692,8 @@ export function useDeleteArqoAgendamento() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', 'agendamentos'] });
-      toast.success('Agendamento excluído');
+      toast.success('Atividade excluída');
     },
-    onError: (e: any) => toast.error(e.message || 'Erro ao excluir agendamento'),
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir atividade'),
   });
 }

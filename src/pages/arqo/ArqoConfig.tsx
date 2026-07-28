@@ -2,7 +2,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useArqoEtapas, useArqoTemperaturas, useArqoSources, useArqoGrupos, useArqoSlaRegras, useArqoRegua, useArqoAtendimentoOpcoes, useArqoMetasAtendimento, useArqoPerformanceConfigs } from '@/hooks/useArqo';
+import { useArqoEtapas, useArqoTemperaturas, useArqoSources, useArqoGrupos, useArqoSlaRegras, useArqoRegua, useArqoAtendimentoOpcoes, useArqoAtividadeTipos, useArqoMetasAtendimento, useArqoPerformanceConfigs } from '@/hooks/useArqo';
 import { ArqoConfigCrud, type ConfigField } from '@/components/arqo/ArqoConfigCrud';
 import { ArqoGrupoMembros } from '@/components/arqo/ArqoGrupoMembros';
 import { ArqoMetasManager } from '@/components/arqo/ArqoMetasManager';
@@ -18,6 +18,7 @@ export default function ArqoConfig() {
   const { data: sla = [] } = useArqoSlaRegras();
   const { data: regua = [] } = useArqoRegua();
   const { data: atendimentoOpcoes = [] } = useArqoAtendimentoOpcoes(true);
+  const { data: atividadeTipos = [] } = useArqoAtividadeTipos(true);
   const { data: metas = [] } = useArqoMetasAtendimento();
   const { data: performanceConfigs = [] } = useArqoPerformanceConfigs();
   const { data: profiles = [] } = useProfilesByRoles(['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer', 'super_admin']);
@@ -144,6 +145,14 @@ export default function ArqoConfig() {
     { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
   ];
 
+  const atividadeTipoFields: ConfigField[] = [
+    { name: 'rotulo', label: 'Rótulo', type: 'text', required: true },
+    { name: 'codigo', label: 'Código', type: 'text', required: true, immutable: true,
+      description: 'Identificador interno (sem espaços). Ex.: visita, follow_up. Não pode ser alterado depois.' },
+    { name: 'ordem', label: 'Ordem', type: 'number', default: 0 },
+    { name: 'is_active', label: 'Ativo', type: 'switch', default: true },
+  ];
+
   const performanceFields: ConfigField[] = [
     { name: 'nome', label: 'Nome', type: 'text', required: true },
     { name: 'limite_bom', label: 'Bom a partir de (%)', type: 'number', default: 100 },
@@ -167,6 +176,7 @@ export default function ArqoConfig() {
           <TabsTrigger value="sla">SLA</TabsTrigger>
           <TabsTrigger value="regua">Reengajamento</TabsTrigger>
           <TabsTrigger value="atendimento">Atendimento</TabsTrigger>
+          <TabsTrigger value="atividade-tipos">Tipos de Atividade</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
@@ -308,6 +318,25 @@ export default function ArqoConfig() {
                   {option.exige_data && <Badge variant="secondary">exige data</Badge>}
                   {!option.is_active && <Badge variant="secondary">inativo</Badge>}
                   <span className="ml-auto text-xs text-muted-foreground">#{option.ordem}</span>
+                </div>
+              )}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="atividade-tipos">
+          <Card className="p-4">
+            <ArqoConfigCrud
+              table="arqo_atividade_tipos"
+              items={atividadeTipos}
+              fields={atividadeTipoFields}
+              title="Tipos de atividade"
+              renderRow={(t) => (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{t.rotulo}</span>
+                  <Badge variant="outline">{t.codigo}</Badge>
+                  {!t.is_active && <Badge variant="secondary">inativo</Badge>}
+                  <span className="ml-auto text-xs text-muted-foreground">#{t.ordem}</span>
                 </div>
               )}
             />

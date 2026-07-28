@@ -146,12 +146,24 @@ export interface ArqoPerformanceConfig {
   is_active: boolean;
 }
 
-export type ArqoAgendamentoTipo = 'visita' | 'reuniao' | 'ligacao' | 'outro';
+// Tipos de atividade agora são configuráveis (tabela arqo_atividade_tipos),
+// então o union deixa de ser fechado.
+export type ArqoAgendamentoTipo = string;
+
+export interface ArqoAtividadeTipo {
+  id: string;
+  codigo: string;
+  rotulo: string;
+  ordem: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 export type ArqoAgendamentoStatus = 'agendado' | 'confirmado' | 'realizado' | 'cancelado' | 'no_show';
 
 export interface ArqoAgendamento {
   id: string;
-  lead_id: string;
+  lead_id: string | null;
   tipo: ArqoAgendamentoTipo;
   data_hora: string;
   duracao_min: number;
@@ -175,12 +187,6 @@ export interface ArqoAgendamentoWithRelations extends ArqoAgendamento {
   closer?: { id: string; full_name: string } | null;
 }
 
-export const AGENDAMENTO_TIPO_LABELS: Record<ArqoAgendamentoTipo, string> = {
-  visita: 'Visita',
-  reuniao: 'Reunião',
-  ligacao: 'Ligação',
-  outro: 'Outro',
-};
 
 export const AGENDAMENTO_STATUS_LABELS: Record<ArqoAgendamentoStatus, string> = {
   agendado: 'Agendado',
