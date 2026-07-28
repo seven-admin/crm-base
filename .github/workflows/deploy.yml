@@ -1,0 +1,30 @@
+name: Deploy
+
+# Dispara o webhook de implantação a cada push na main.
+# Também pode ser acionado manualmente na aba Actions (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Garante que só um deploy roda por vez; um novo push cancela o anterior.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acionar webhook de deploy
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
+            echo "::error::Secret DEPLOY_WEBHOOK_URL não configurado."
+            exit 1
+          fi
+          echo "Disparando deploy..."
+          # -f: falha em HTTP >= 400 para o job refletir erro do gatilho.
+          curl -fsS --retry 3 --retry-delay 5 -m 120 "$DEPLOY_WEBHOOK_URL"
+          echo "\nGatilho de deploy enviado."
