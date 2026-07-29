@@ -16,14 +16,29 @@ Deno.serve(async (req) => {
     if (!leads || leads.length === 0) return new Response(JSON.stringify({ ok: true, processed: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: regras } = await supabase.from("arqo_sla_regras").select("etapa_id, temperatura_id, horas_max, acao_expiracao").eq("is_active", true);
+
+    // Já disparou sla_expirado desde a última atividade do lead? Evita reinserir a cada tick do cron.
+    const { data: jaExpirados } = await supabase
+      .from("arqo_lead_events")
+      .select("lead_id, created_at")
+      .eq("tipo", "sla_expirado")
+      .in("lead_id", leads.map(l => l.id));
+    const ultimoExpirado = new Map<string, number>();
+    for (const ev of jaExpirados ?? []) {
+      const t = new Date(ev.created_at as string).getTime();
+      if (t > (ultimoExpirado.get(ev.lead_id as string) ?? 0)) ultimoExpirado.set(ev.lead_id as string, t);
+    }
+
     let acted = 0;
     const now = Date.now();
 
     for (const lead of leads) {
       const regra = regras?.find(r => r.etapa_id === lead.etapa_id && (r.temperatura_id === lead.temperatura_id || r.temperatura_id === null));
       if (!regra) continue;
-      const ageH = (now - new Date(lead.updated_at as string).getTime()) / 3600000;
+      const updatedAt = new Date(lead.updated_at as string).getTime();
+      const ageH = (now - updatedAt) / 3600000;
       if (ageH < regra.horas_max) continue;
+      if ((ultimoExpirado.get(lead.id as string) ?? 0) >= updatedAt) continue; // já expirou nesta janela
 
       await supabase.from("arqo_lead_events").insert({
         lead_id: lead.id,
