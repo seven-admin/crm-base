@@ -173,7 +173,7 @@ export function useCreateEmpreendimento() {
     mutationFn: async (data: EmpreendimentoFormData) => {
       const { data: result, error } = await supabase
         .from('seven_empreendimentos')
-        .insert(data)
+        .insert(data as never)
         .select()
         .single();
 
@@ -198,7 +198,7 @@ export function useUpdateEmpreendimento() {
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmpreendimentoFormData> }) => {
       const { data: result, error } = await supabase
         .from('seven_empreendimentos')
-        .update(data)
+        .update(data as never)
         .eq('id', id)
         .select()
         .single();

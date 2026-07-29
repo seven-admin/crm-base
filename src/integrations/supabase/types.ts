@@ -2120,6 +2120,7 @@ export type Database = {
       seven_empreendimentos: {
         Row: {
           auto_vincular_corretor: boolean
+          config_venda: Json | null
           construtora: string | null
           created_at: string
           data_inicio_contrato: string | null
@@ -2155,6 +2156,7 @@ export type Database = {
         }
         Insert: {
           auto_vincular_corretor?: boolean
+          config_venda?: Json | null
           construtora?: string | null
           created_at?: string
           data_inicio_contrato?: string | null
@@ -2190,6 +2192,7 @@ export type Database = {
         }
         Update: {
           auto_vincular_corretor?: boolean
+          config_venda?: Json | null
           construtora?: string | null
           created_at?: string
           data_inicio_contrato?: string | null

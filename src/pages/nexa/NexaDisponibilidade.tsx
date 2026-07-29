@@ -111,13 +111,13 @@ export default function NexaDisponibilidade() {
     return new Map(nomes.map((nome, index) => [nome, TIPOLOGIA_COLORS[index % TIPOLOGIA_COLORS.length]]));
   }, [unidades]);
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (modelo: 'simples' | 'tabela_vendas' = 'simples') => {
     if (!empId) return;
     setIsExporting(true);
     try {
       const { data: emp, error: empErr } = await supabase
         .from('seven_empreendimentos')
-        .select('nome, tipo, texto_rodape_relatorio')
+        .select('nome, tipo, texto_rodape_relatorio, config_venda, registro_incorporacao, matricula_mae')
         .eq('id', empId)
         .maybeSingle();
       if (empErr) throw empErr;
@@ -139,6 +139,9 @@ export default function NexaDisponibilidade() {
         empreendimento: {
           nome: emp.nome,
           texto_rodape_relatorio: emp.texto_rodape_relatorio ?? null,
+          config_venda: (emp.config_venda as any) ?? null,
+          registro_incorporacao: emp.registro_incorporacao ?? null,
+          matricula_mae: emp.matricula_mae ?? null,
         },
         unidades: (unis ?? []).map((u) => ({
           id: u.id,
@@ -152,6 +155,7 @@ export default function NexaDisponibilidade() {
         })),
         isLoteamento,
         escopo: 'disponiveis',
+        modelo,
       });
     } catch (error) {
       console.error(error);
@@ -183,13 +187,21 @@ export default function NexaDisponibilidade() {
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
-        <Button variant="outline" onClick={handleExportPdf} disabled={!empId || isExporting}>
+        <Button variant="outline" onClick={() => handleExportPdf('simples')} disabled={!empId || isExporting}>
           {isExporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <FileDown className="h-4 w-4 mr-2" />
           )}
           Exportar PDF
+        </Button>
+        <Button variant="outline" onClick={() => handleExportPdf('tabela_vendas')} disabled={!empId || isExporting}>
+          {isExporting ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4 mr-2" />
+          )}
+          Tabela de vendas
         </Button>
       </div>
 

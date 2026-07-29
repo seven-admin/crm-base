@@ -7,7 +7,9 @@ import nexaLogoAsset from '@/assets/nexa-logo.png';
 import spaceGroteskRegularAsset from '@/assets/fonts/SpaceGrotesk-Regular.ttf';
 import spaceGroteskBoldAsset from '@/assets/fonts/SpaceGrotesk-Bold.ttf';
 import { supabase } from '@/integrations/supabase/client';
-import type { UnidadeStatus } from '@/types/empreendimentos.types';
+import type { ConfigVenda, UnidadeStatus } from '@/types/empreendimentos.types';
+import { CONFIG_VENDA_RODAPE_DEFAULTS } from '@/types/empreendimentos.types';
+import { calcularFluxo, PLANO_PADRAO } from '@/lib/fluxoEntrada';
 
 export interface ExportUnidadeInput {
   id: string;
@@ -23,14 +25,19 @@ export interface ExportUnidadeInput {
 export interface ExportEmpreendimentoInput {
   nome: string;
   texto_rodape_relatorio?: string | null;
+  config_venda?: ConfigVenda | null;
+  registro_incorporacao?: string | null;
+  matricula_mae?: string | null;
 }
 
 export type ExportUnidadesEscopo = 'disponiveis' | 'completo';
+export type ExportUnidadesModelo = 'simples' | 'tabela_vendas';
 export interface ExportUnidadesDisponiveisPdfOptions {
   empreendimento: ExportEmpreendimentoInput;
   unidades: ExportUnidadeInput[];
   isLoteamento?: boolean;
   escopo?: ExportUnidadesEscopo;
+  modelo?: ExportUnidadesModelo;
   download?: boolean;
   /** Uso interno em testes de renderização fora do navegador. */
   logoDataUrl?: string;
@@ -52,8 +59,11 @@ const STATUS_CONFIG: Record<UnidadeStatus, { label: string; color: [number, numb
 };
 
 const STATUS_ORDER: UnidadeStatus[] = ['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'];
-const BRAND_ORANGE: [number, number, number] = [255, 116, 23];
-const INK: [number, number, number] = [32, 26, 23];
+// Paleta da marca Nexa (violeta/índigo do símbolo + preto do wordmark). Sem laranja.
+const NEXA_VIOLET: [number, number, number] = [79, 63, 224];
+const INK: [number, number, number] = [16, 16, 20];
+const SECTION_GRAY: [number, number, number] = [150, 156, 163];
+const SECTION_GRAY_LIGHT: [number, number, number] = [237, 238, 240];
 
 const formatCurrency = (value: number | null | undefined) => (
   value == null
@@ -84,18 +94,25 @@ export async function exportUnidadesPdf({
   unidades,
   isLoteamento = false,
   escopo = 'disponiveis',
+  modelo = 'simples',
   download = true,
   logoDataUrl,
   fontRegularDataUrl,
   fontBoldDataUrl,
   boxesPorUnidade,
 }: ExportUnidadesDisponiveisPdfOptions): Promise<Blob | null> {
-  if (!unidades?.length) {
+  const isTabelaVendas = modelo === 'tabela_vendas';
+  // Folha comercial só faz sentido com unidades disponíveis.
+  const unidadesFonte = isTabelaVendas ? unidades.filter((u) => u.status === 'disponivel') : unidades;
+  if (!unidadesFonte?.length) {
     toast.warning(escopo === 'completo' ? 'Nenhuma unidade ativa para exportar.' : 'Nenhuma unidade disponível para exportar.');
     return null;
   }
 
-  const ordenadas = [...unidades].sort((a, b) => {
+  const plano = { ...PLANO_PADRAO, ...(empreendimento.config_venda?.plano ?? {}) };
+  const rodapeCfg = empreendimento.config_venda?.rodape ?? {};
+
+  const ordenadas = [...unidadesFonte].sort((a, b) => {
     const blocoCompare = (a.bloco?.nome || '').localeCompare(b.bloco?.nome || '', 'pt-BR', { numeric: true });
     if (blocoCompare !== 0) return blocoCompare;
     const andarCompare = (a.andar ?? 0) - (b.andar ?? 0);
@@ -105,7 +122,9 @@ export async function exportUnidadesPdf({
 
   const blocoLabel = isLoteamento ? 'Quadra' : 'Bloco';
   const unidadeLabel = isLoteamento ? 'Lote' : 'Unidade';
-  const reportTitle = escopo === 'completo' ? `Relatório completo de ${isLoteamento ? 'lotes' : 'unidades'}` : `${isLoteamento ? 'Lotes' : 'Unidades'} disponíveis`;
+  const reportTitle = isTabelaVendas
+    ? 'Tabela de vendas'
+    : escopo === 'completo' ? `Relatório completo de ${isLoteamento ? 'lotes' : 'unidades'}` : `${isLoteamento ? 'Lotes' : 'Unidades'} disponíveis`;
   const generatedAt = format(new Date(), 'dd/MM/yyyy HH:mm');
   const safeName = empreendimento.nome.replace(/[^a-zA-Z0-9À-ÿ ]/g, '').replace(/ +/g, '_');
   const dateStamp = format(new Date(), 'dd-MM-yyyy');
@@ -151,8 +170,26 @@ export async function exportUnidadesPdf({
     });
   }
 
-  const includeStatus = escopo === 'completo';
+  const includeStatus = escopo === 'completo' && !isTabelaVendas;
+  const mensaisLabel = `${plano.mensais_qtd}x mensais`;
+  const reforcosLabel = `${plano.reforcos_qtd} reforços`;
+
   const body = ordenadas.map((unit) => {
+    if (isTabelaVendas) {
+      const f = calcularFluxo(Number(unit.valor) || 0, plano);
+      return [
+        unit.andar != null ? `${unit.andar}º` : '-',
+        unit.numero,
+        boxesByUnit.get(unit.id)?.join(', ') || '-',
+        unit.tipologia?.nome || '-',
+        formatDecimal(unit.area_privativa),
+        formatCurrency(f.ato),
+        formatCurrency(f.mensalUnit),
+        formatCurrency(f.reforcoUnit),
+        formatCurrency(f.financiamento),
+        formatCurrency(f.total),
+      ];
+    }
     const row: Array<string> = [
       unit.numero,
       unit.bloco?.nome || '-',
@@ -165,6 +202,44 @@ export async function exportUnidadesPdf({
     if (includeStatus) row.push(unit.status ? STATUS_CONFIG[unit.status].label : '-');
     return row;
   });
+
+  const head: string[][] = isTabelaVendas
+    ? [['Andar', unidadeLabel, 'Box', 'Tipologia', 'Área priv.', 'ATO', mensaisLabel, reforcosLabel, 'Financiamento', 'Valor total']]
+    : [[unidadeLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área privativa', 'Valor', ...(includeStatus ? ['Status'] : [])]];
+
+  const columnStyles: Record<number, Partial<Record<string, unknown>>> = isTabelaVendas
+    ? {
+        0: { cellWidth: 14, halign: 'center' },
+        1: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+        2: { cellWidth: 16, halign: 'center' },
+        3: { cellWidth: 47 },
+        4: { cellWidth: 20, halign: 'right' },
+        5: { cellWidth: 28, halign: 'right' },
+        6: { cellWidth: 28, halign: 'right' },
+        7: { cellWidth: 28, halign: 'right' },
+        8: { cellWidth: 30, halign: 'right' },
+        9: { cellWidth: 30, halign: 'right', fontStyle: 'bold' },
+      }
+    : includeStatus
+      ? {
+          0: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+          1: { cellWidth: 32 },
+          2: { cellWidth: 17, halign: 'center' },
+          3: { cellWidth: 62 },
+          4: { cellWidth: 30, halign: 'center' },
+          5: { cellWidth: 30, halign: 'right' },
+          6: { cellWidth: 48, halign: 'right' },
+          7: { cellWidth: 34, halign: 'center', fontStyle: 'bold' },
+        }
+      : {
+          0: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+          1: { cellWidth: 36 },
+          2: { cellWidth: 18, halign: 'center' },
+          3: { cellWidth: 72 },
+          4: { cellWidth: 34, halign: 'center' },
+          5: { cellWidth: 32, halign: 'right' },
+          6: { cellWidth: 59, halign: 'right' },
+        };
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
   const fontName = regularFontBase64 ? 'SpaceGrotesk' : 'helvetica';
@@ -203,8 +278,9 @@ export async function exportUnidadesPdf({
     doc.setFont(fontName, 'normal');
     doc.setFontSize(8);
     doc.setTextColor(112, 106, 101);
-    doc.text(`${empreendimento.nome}  ·  Gerado em ${generatedAt}`, pageWidth - marginX, 18, { align: 'right' });
-    doc.setDrawColor(...BRAND_ORANGE);
+    const refLabel = isTabelaVendas && plano.ref_label ? `  ·  Ref: ${plano.ref_label}` : '';
+    doc.text(`${empreendimento.nome}  ·  Gerado em ${generatedAt}${refLabel}`, pageWidth - marginX, 18, { align: 'right' });
+    doc.setDrawColor(...NEXA_VIOLET);
     doc.setLineWidth(0.8);
     doc.line(marginX, 24, pageWidth - marginX, 24);
 
@@ -244,7 +320,7 @@ export async function exportUnidadesPdf({
   autoTable(doc, {
     startY: 49,
     margin: { top: 31, right: marginX, bottom: 17, left: marginX },
-    head: [[unidadeLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área privativa', 'Valor', ...(includeStatus ? ['Status'] : [])]],
+    head,
     body,
     theme: 'plain',
     styles: {
@@ -265,26 +341,7 @@ export async function exportUnidadesPdf({
       cellPadding: { top: 2.8, bottom: 2.8, left: 2.5, right: 2.5 },
     },
     alternateRowStyles: { fillColor: [250, 248, 245] },
-    columnStyles: includeStatus
-      ? {
-          0: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-          1: { cellWidth: 32 },
-          2: { cellWidth: 17, halign: 'center' },
-          3: { cellWidth: 62 },
-          4: { cellWidth: 30, halign: 'center' },
-          5: { cellWidth: 30, halign: 'right' },
-          6: { cellWidth: 48, halign: 'right' },
-          7: { cellWidth: 34, halign: 'center', fontStyle: 'bold' },
-        }
-      : {
-          0: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
-          1: { cellWidth: 36 },
-          2: { cellWidth: 18, halign: 'center' },
-          3: { cellWidth: 72 },
-          4: { cellWidth: 34, halign: 'center' },
-          5: { cellWidth: 32, halign: 'right' },
-          6: { cellWidth: 59, halign: 'right' },
-        },
+    columnStyles: columnStyles as any,
     didParseCell: (data: CellHookData) => {
       if (!includeStatus || data.section !== 'body' || data.column.index !== 7) return;
       const unit = ordenadas[data.row.index];
@@ -296,26 +353,120 @@ export async function exportUnidadesPdf({
   });
 
   const tableDoc = doc as jsPDF & { lastAutoTable?: { finalY: number } };
-  let noteY = (tableDoc.lastAutoTable?.finalY ?? 49) + 8;
-  const notes = empreendimento.texto_rodape_relatorio?.trim();
-  if (notes) {
-    const lines = doc.splitTextToSize(notes, contentWidth - 8) as string[];
-    const noteHeight = Math.max(18, 11 + lines.length * 3.4);
-    if (noteY + noteHeight > pageHeight - 17) {
+  const bottomLimit = pageHeight - 17;
+  let y = (tableDoc.lastAutoTable?.finalY ?? 49) + 8;
+  const ensureSpace = (h: number) => {
+    if (y + h > bottomLimit) {
       doc.addPage('a4', 'landscape');
       drawHeader(false);
-      noteY = 32;
+      y = 32;
     }
-    doc.setFillColor(248, 245, 241);
-    doc.roundedRect(marginX, noteY, contentWidth, noteHeight, 2, 2, 'F');
-    doc.setFont(fontName, 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...INK);
-    doc.text('OBSERVAÇÕES DO RELATÓRIO', marginX + 4, noteY + 6);
-    doc.setFont(fontName, 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(92, 86, 81);
-    doc.text(lines, marginX + 4, noteY + 11);
+  };
+
+  if (isTabelaVendas) {
+    const rodape = {
+      reajustes: rodapeCfg.reajustes || CONFIG_VENDA_RODAPE_DEFAULTS.reajustes,
+      vantagens: rodapeCfg.vantagens || CONFIG_VENDA_RODAPE_DEFAULTS.vantagens,
+      garantias: rodapeCfg.garantias || CONFIG_VENDA_RODAPE_DEFAULTS.garantias,
+    };
+    const fmtData = (v?: string) => {
+      if (!v) return '';
+      const d = new Date(`${v}T00:00:00`);
+      return Number.isNaN(d.getTime()) ? v : format(d, 'dd/MM/yyyy');
+    };
+
+    const sectionHeader = (title: string) => {
+      ensureSpace(8);
+      doc.setFillColor(...SECTION_GRAY);
+      doc.rect(marginX, y, contentWidth, 6.2, 'F');
+      doc.setFont(fontName, 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(title.toUpperCase(), pageWidth / 2, y + 4.3, { align: 'center' });
+      y += 6.2 + 1.5;
+    };
+    const textBlock = (text: string) => {
+      const lines = doc.splitTextToSize(text, contentWidth - 6) as string[];
+      const h = lines.length * 3.5 + 3;
+      ensureSpace(h);
+      doc.setFillColor(...SECTION_GRAY_LIGHT);
+      doc.rect(marginX, y, contentWidth, h, 'F');
+      doc.setFont(fontName, 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(...INK);
+      doc.text(lines, marginX + 3, y + 4);
+      y += h + 1.5;
+    };
+    const boxRow = (items: { label: string; value: string }[]) => {
+      const list = items.filter((it) => it.value);
+      if (!list.length) return;
+      ensureSpace(11);
+      const gap = 2;
+      const w = (contentWidth - gap * (list.length - 1)) / list.length;
+      list.forEach((it, i) => {
+        const x = marginX + i * (w + gap);
+        doc.setFillColor(...SECTION_GRAY_LIGHT);
+        doc.rect(x, y, w, 10, 'F');
+        doc.setFont(fontName, 'bold');
+        doc.setFontSize(6.5);
+        doc.setTextColor(90, 94, 100);
+        doc.text(it.label.toUpperCase(), x + 3, y + 4);
+        doc.setFont(fontName, 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...INK);
+        doc.text(it.value, x + 3, y + 8);
+      });
+      y += 10 + 1.5;
+    };
+
+    // Contatos
+    boxRow([
+      { label: 'Gestão comercial', value: rodapeCfg.gestao_comercial ?? '' },
+      { label: 'Especialista responsável', value: rodapeCfg.especialista ?? '' },
+    ]);
+
+    // Notas explicativas
+    if (rodapeCfg.inicio_obra || rodapeCfg.previsao_entrega) {
+      sectionHeader('Notas explicativas');
+      boxRow([
+        { label: 'Início de obra', value: fmtData(rodapeCfg.inicio_obra) },
+        { label: 'Previsão de entrega', value: rodapeCfg.previsao_entrega ?? '' },
+      ]);
+    }
+
+    sectionHeader('Regras de reajustes');
+    textBlock(rodape.reajustes);
+
+    sectionHeader('Vantagens do financiamento');
+    textBlock(rodape.vantagens);
+
+    sectionHeader('Garantia de entrega e segurança patrimonial');
+    textBlock(rodape.garantias);
+    const juridicos = [
+      ['Certidão de aprovação', rodapeCfg.certidao_aprovacao],
+      ['Licença de construção', rodapeCfg.licenca_construcao],
+      ['Registro de incorporação', empreendimento.registro_incorporacao],
+      ['Matrícula-mãe', empreendimento.matricula_mae],
+      ['Patrimônio de afetação', rodapeCfg.patrimonio_afetacao],
+    ].filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`);
+    if (juridicos.length) textBlock(juridicos.join('   ·   '));
+  } else {
+    const notes = empreendimento.texto_rodape_relatorio?.trim();
+    if (notes) {
+      const lines = doc.splitTextToSize(notes, contentWidth - 8) as string[];
+      const noteHeight = Math.max(18, 11 + lines.length * 3.4);
+      ensureSpace(noteHeight);
+      doc.setFillColor(248, 245, 241);
+      doc.roundedRect(marginX, y, contentWidth, noteHeight, 2, 2, 'F');
+      doc.setFont(fontName, 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...INK);
+      doc.text('OBSERVAÇÕES DO RELATÓRIO', marginX + 4, y + 6);
+      doc.setFont(fontName, 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(92, 86, 81);
+      doc.text(lines, marginX + 4, y + 11);
+    }
   }
 
   const totalPages = doc.getNumberOfPages();
@@ -333,7 +484,7 @@ export async function exportUnidadesPdf({
 
   const blob = doc.output('blob');
   if (download) {
-    const prefix = escopo === 'completo' ? 'Unidades_Completas' : 'Unidades_Disponiveis';
+    const prefix = isTabelaVendas ? 'Tabela_Vendas' : escopo === 'completo' ? 'Unidades_Completas' : 'Unidades_Disponiveis';
     doc.save(`${prefix}_${safeName}_${dateStamp}.pdf`);
     toast.success(`${ordenadas.length} ${isLoteamento ? 'lote(s)' : 'unidade(s)'} exportado(s) em PDF.`);
   }

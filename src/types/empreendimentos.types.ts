@@ -55,6 +55,52 @@ export const DOCUMENTO_TIPO_LABELS: Record<DocumentoTipo, string> = {
   outro: 'Outro',
 };
 
+// Configuração da tabela de vendas (PDF comercial)
+export interface ConfigVendaPlano {
+  ato_pct: number;
+  mensais_pct: number;
+  mensais_qtd: number;
+  reforcos_pct: number;
+  reforcos_qtd: number;
+  ref_label?: string;
+}
+
+export interface ConfigVendaRodape {
+  gestao_comercial?: string;
+  especialista?: string;
+  inicio_obra?: string;
+  previsao_entrega?: string;
+  certidao_aprovacao?: string;
+  licenca_construcao?: string;
+  patrimonio_afetacao?: string;
+  reajustes?: string;
+  vantagens?: string;
+  garantias?: string;
+}
+
+export interface ConfigVenda {
+  plano?: ConfigVendaPlano;
+  rodape?: ConfigVendaRodape;
+}
+
+// Textos padrão do rodapé — pré-preenchem o form; o admin sobrescreve por empreendimento.
+export const CONFIG_VENDA_RODAPE_DEFAULTS = {
+  reajustes:
+    'Fase de Obra: As parcelas pagas durante a construção serão reajustadas pelo CUB + juros de 0,5% a.m.\n'
+    + 'Pós-Entrega (Apto/Box): Para pagamentos após o recebimento das chaves, o reajuste será pelo IGP-M (ou IPCA) + juros de 0,8% a.m.\n'
+    + 'Financiamento Bancário: Vendas com financiamento (na planta ou pós-obra) seguem os mesmos critérios acima para o saldo a financiar até a data da assinatura do contrato com o banco.',
+  vantagens:
+    'Segurança Jurídica: Escritura em nome do cliente já no ato da assinatura com o banco, com garantia de entrega e seguros inclusos.\n'
+    + 'Congelamento do Saldo: Após assinar com a Caixa, o valor financiado não sofre mais reajustes ou juros por parte da Incorporadora.\n'
+    + 'Parcelamento Direto: Limitado ao prazo máximo de 60 meses.\n'
+    + 'Exceções: Propostas fora destes termos serão analisadas individualmente pela diretoria.',
+  garantias:
+    'Projeto Aprovado e Licenciado: O projeto encontra-se totalmente aprovado pelos órgãos competentes, respeitando as normas urbanísticas e ambientais vigentes.\n'
+    + 'Incorporação Registrada: O empreendimento possui o Memorial de Incorporação registrado no Cartório de Registro de Imóveis.\n'
+    + 'Seguro de Entrega de Obra (Performance Bond): O projeto conta com seguro que garante o aporte de recursos para a finalização da obra.\n'
+    + 'Patrimônio de Afetação: Terreno e recursos financeiros da obra são segregados do patrimônio da incorporadora, protegendo o investimento do cliente.',
+} as const;
+
 // Interfaces
 export interface Empreendimento {
   id: string;
@@ -83,6 +129,7 @@ export interface Empreendimento {
   mapa_label_formato: string[] | null;
   auto_vincular_corretor: boolean;
   texto_rodape_relatorio: string | null;
+  config_venda: ConfigVenda | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -243,6 +290,7 @@ export interface EmpreendimentoFormData {
   registro_incorporacao?: string;
   matricula_mae?: string;
   texto_rodape_relatorio?: string;
+  config_venda?: ConfigVenda;
   legenda_status_visiveis?: UnidadeStatus[];
   mapa_label_formato?: string[];
 }

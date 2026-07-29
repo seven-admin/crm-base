@@ -24,12 +24,23 @@ import {
 import { useCreateEmpreendimento, useUpdateEmpreendimento } from '@/hooks/useEmpreendimentos';
 import { useGestoresProduto } from '@/hooks/useGestores';
 import { useIncorporadoras } from '@/hooks/useIncorporadoras';
-import type { Empreendimento, EmpreendimentoFormData, EmpreendimentoTipo, EmpreendimentoStatus } from '@/types/empreendimentos.types';
-import { EMPREENDIMENTO_TIPO_LABELS, EMPREENDIMENTO_STATUS_LABELS } from '@/types/empreendimentos.types';
+import type { Empreendimento, EmpreendimentoFormData, EmpreendimentoTipo, EmpreendimentoStatus, ConfigVenda } from '@/types/empreendimentos.types';
+import { EMPREENDIMENTO_TIPO_LABELS, EMPREENDIMENTO_STATUS_LABELS, CONFIG_VENDA_RODAPE_DEFAULTS } from '@/types/empreendimentos.types';
 import { LABEL_FORMAT_OPTIONS, type LabelFormatElement } from '@/lib/mapaUtils';
 import { useCepLookup } from '@/hooks/useCepLookup';
-import { Building2, MapPin, FileText, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
+import { Building2, MapPin, FileText, Table2, ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const DEFAULT_CONFIG_VENDA = {
+  plano: { ato_pct: 10, mensais_pct: 20, mensais_qtd: 60, reforcos_pct: 10, reforcos_qtd: 5, ref_label: '' },
+  rodape: {
+    gestao_comercial: '', especialista: '', inicio_obra: '', previsao_entrega: '',
+    certidao_aprovacao: '', licenca_construcao: '', patrimonio_afetacao: '',
+    reajustes: CONFIG_VENDA_RODAPE_DEFAULTS.reajustes,
+    vantagens: CONFIG_VENDA_RODAPE_DEFAULTS.vantagens,
+    garantias: CONFIG_VENDA_RODAPE_DEFAULTS.garantias,
+  },
+};
 
 const formSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
@@ -49,6 +60,31 @@ const formSchema = z.object({
   registro_incorporacao: z.string().optional(),
   matricula_mae: z.string().optional(),
   texto_rodape_relatorio: z.string().optional(),
+  config_venda: z.object({
+    plano: z.object({
+      ato_pct: z.coerce.number().min(0).max(100),
+      mensais_pct: z.coerce.number().min(0).max(100),
+      mensais_qtd: z.coerce.number().int().min(1, 'Mínimo 1'),
+      reforcos_pct: z.coerce.number().min(0).max(100),
+      reforcos_qtd: z.coerce.number().int().min(1, 'Mínimo 1'),
+      ref_label: z.string().optional(),
+    }).refine(
+      (p) => p.ato_pct + p.mensais_pct + p.reforcos_pct <= 100,
+      { message: 'A soma de ato + mensais + reforços não pode passar de 100%', path: ['ato_pct'] },
+    ),
+    rodape: z.object({
+      gestao_comercial: z.string().optional(),
+      especialista: z.string().optional(),
+      inicio_obra: z.string().optional(),
+      previsao_entrega: z.string().optional(),
+      certidao_aprovacao: z.string().optional(),
+      licenca_construcao: z.string().optional(),
+      patrimonio_afetacao: z.string().optional(),
+      reajustes: z.string().optional(),
+      vantagens: z.string().optional(),
+      garantias: z.string().optional(),
+    }),
+  }),
   legenda_status_visiveis: z.array(z.enum(['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'])).optional(),
   mapa_label_formato: z.array(z.enum(['bloco', 'tipologia', 'numero', 'posicao', 'andar'])).optional(),
 });
@@ -63,6 +99,7 @@ const STEPS = [
   { id: 1, title: 'Dados Gerais', icon: Building2 },
   { id: 2, title: 'Localização', icon: MapPin },
   { id: 3, title: 'Documentação', icon: FileText },
+  { id: 4, title: 'Tabela de Vendas', icon: Table2 },
 ];
 
 export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: EmpreendimentoFormProps) {
@@ -93,6 +130,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       registro_incorporacao: '',
       matricula_mae: '',
       texto_rodape_relatorio: '',
+      config_venda: DEFAULT_CONFIG_VENDA,
       legenda_status_visiveis: ['disponivel', 'reservada', 'vendida', 'bloqueada'],
       mapa_label_formato: ['bloco', 'tipologia', 'numero'],
     },
@@ -119,6 +157,10 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
         registro_incorporacao: empreendimento.registro_incorporacao || '',
         matricula_mae: empreendimento.matricula_mae || '',
         texto_rodape_relatorio: (empreendimento as any).texto_rodape_relatorio || '',
+        config_venda: {
+          plano: { ...DEFAULT_CONFIG_VENDA.plano, ...(empreendimento.config_venda?.plano || {}) },
+          rodape: { ...DEFAULT_CONFIG_VENDA.rodape, ...(empreendimento.config_venda?.rodape || {}) },
+        },
         legenda_status_visiveis: empreendimento.legenda_status_visiveis || ['disponivel', 'reservada', 'negociacao', 'contrato', 'vendida', 'bloqueada'],
         mapa_label_formato: (empreendimento as any).mapa_label_formato || ['bloco', 'tipologia', 'numero'],
       });
@@ -141,6 +183,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
         registro_incorporacao: '',
         matricula_mae: '',
         texto_rodape_relatorio: '',
+        config_venda: DEFAULT_CONFIG_VENDA,
         legenda_status_visiveis: ['disponivel', 'reservada', 'vendida', 'bloqueada'],
         mapa_label_formato: ['bloco', 'tipologia', 'numero'],
       });
@@ -156,6 +199,8 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       setCurrentStep(1);
     } else if (errorKeys.some(k => step2Fields.includes(k))) {
       setCurrentStep(2);
+    } else if (errorKeys.includes('config_venda')) {
+      setCurrentStep(4);
     } else {
       setCurrentStep(3);
     }
@@ -183,6 +228,7 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
       registro_incorporacao: values.registro_incorporacao || undefined,
       matricula_mae: values.matricula_mae || undefined,
       texto_rodape_relatorio: values.texto_rodape_relatorio || undefined,
+      config_venda: values.config_venda as ConfigVenda,
       legenda_status_visiveis: values.legenda_status_visiveis as any || undefined,
       mapa_label_formato: values.mapa_label_formato as any || undefined,
     };
@@ -601,6 +647,105 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
                 </p>
               </div>
             )}
+
+            {/* Step 4: Tabela de Vendas */}
+            {currentStep === 4 && (() => {
+              const p = form.watch('config_venda.plano');
+              const finPct = 100 - (Number(p?.ato_pct) || 0) - (Number(p?.mensais_pct) || 0) - (Number(p?.reforcos_pct) || 0);
+              const planoErr = form.formState.errors.config_venda?.plano as any;
+              return (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-semibold">Fluxo de entrada (% do valor da unidade)</h3>
+                    <p className="text-xs text-muted-foreground">Usado no PDF modelo "Tabela de Vendas". Os valores em R$ são calculados a partir do valor de cada unidade.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="ato_pct">ATO (%)</Label>
+                      <Input id="ato_pct" type="number" step="0.01" {...form.register('config_venda.plano.ato_pct')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="mensais_pct">Mensais (%)</Label>
+                      <Input id="mensais_pct" type="number" step="0.01" {...form.register('config_venda.plano.mensais_pct')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="mensais_qtd">Qtd. parcelas mensais</Label>
+                      <Input id="mensais_qtd" type="number" step="1" {...form.register('config_venda.plano.mensais_qtd')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reforcos_pct">Reforços (%)</Label>
+                      <Input id="reforcos_pct" type="number" step="0.01" {...form.register('config_venda.plano.reforcos_pct')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reforcos_qtd">Qtd. reforços</Label>
+                      <Input id="reforcos_qtd" type="number" step="1" {...form.register('config_venda.plano.reforcos_qtd')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Financiamento (%)</Label>
+                      <Input value={Number.isFinite(finPct) ? finPct : ''} readOnly disabled className={cn(finPct < 0 && 'text-destructive')} />
+                    </div>
+                  </div>
+                  {planoErr?.ato_pct?.message && (
+                    <p className="text-sm text-destructive">{planoErr.ato_pct.message}</p>
+                  )}
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="ref_label">Referência (ex: julho/2026)</Label>
+                    <Input id="ref_label" {...form.register('config_venda.plano.ref_label')} placeholder="julho/2026" />
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className="text-sm font-semibold">Rodapé do PDF comercial</h3>
+                    <p className="text-xs text-muted-foreground">Campos vazios não aparecem no PDF. Os textos abaixo já vêm preenchidos com um padrão editável.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="gestao_comercial">Gestão comercial (nome · telefone)</Label>
+                      <Input id="gestao_comercial" {...form.register('config_venda.rodape.gestao_comercial')} placeholder="Fulano - (55) 9....." />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="especialista">Especialista responsável (nome · telefone)</Label>
+                      <Input id="especialista" {...form.register('config_venda.rodape.especialista')} placeholder="Fulano - (55) 9....." />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="inicio_obra">Início de obra</Label>
+                      <Input id="inicio_obra" type="date" {...form.register('config_venda.rodape.inicio_obra')} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="previsao_entrega">Previsão de entrega</Label>
+                      <Input id="previsao_entrega" {...form.register('config_venda.rodape.previsao_entrega')} placeholder="Outubro de 2029" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="certidao_aprovacao">Certidão de aprovação</Label>
+                      <Input id="certidao_aprovacao" {...form.register('config_venda.rodape.certidao_aprovacao')} placeholder="134/2025" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="licenca_construcao">Licença de construção</Label>
+                      <Input id="licenca_construcao" {...form.register('config_venda.rodape.licenca_construcao')} placeholder="00263/2025" />
+                    </div>
+                    <div className="grid gap-2 sm:col-span-2">
+                      <Label htmlFor="patrimonio_afetacao">Patrimônio de afetação</Label>
+                      <Input id="patrimonio_afetacao" {...form.register('config_venda.rodape.patrimonio_afetacao')} placeholder="AV.4/194.982" />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="reajustes">Regras de reajustes</Label>
+                    <Textarea id="reajustes" rows={3} {...form.register('config_venda.rodape.reajustes')} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="vantagens">Vantagens do financiamento</Label>
+                    <Textarea id="vantagens" rows={3} {...form.register('config_venda.rodape.vantagens')} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="garantias">Garantia de entrega e segurança patrimonial</Label>
+                    <Textarea id="garantias" rows={3} {...form.register('config_venda.rodape.garantias')} />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Navigation Buttons */}
