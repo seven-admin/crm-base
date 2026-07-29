@@ -129,7 +129,6 @@ export interface Empreendimento {
   legenda_status_visiveis: UnidadeStatus[] | null;
   mapa_label_formato: string[] | null;
   auto_vincular_corretor: boolean;
-  texto_rodape_relatorio: string | null;
   config_venda: ConfigVenda | null;
   slug_publico: string | null;
   is_active: boolean;
@@ -292,7 +291,6 @@ export interface EmpreendimentoFormData {
   infraestrutura?: string[];
   registro_incorporacao?: string;
   matricula_mae?: string;
-  texto_rodape_relatorio?: string;
   config_venda?: ConfigVenda;
   legenda_status_visiveis?: UnidadeStatus[];
   mapa_label_formato?: string[];
