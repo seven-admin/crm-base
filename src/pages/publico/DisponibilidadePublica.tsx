@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Loader2, FileDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,13 @@ interface PublicData {
 
 export default function DisponibilidadePublica() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const autoDownload = searchParams.get('download') !== null;
   const [data, setData] = useState<PublicData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
+  const baixouRef = useRef(false);
 
   useEffect(() => {
     let ativo = true;
@@ -75,6 +78,15 @@ export default function DisponibilidadePublica() {
     }
   };
 
+  // Link com ?download=1: dispara o download automaticamente ao carregar.
+  useEffect(() => {
+    if (autoDownload && data && data.unidades.length && !baixouRef.current) {
+      baixouRef.current = true;
+      gerarPdf();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDownload, data]);
+
   return (
     <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6">
       <div className="w-full max-w-lg rounded-2xl border bg-white p-8 shadow-sm text-center">
@@ -91,12 +103,22 @@ export default function DisponibilidadePublica() {
             <p className="mt-1 text-muted-foreground">
               {data.unidades.length} {isLoteamento ? 'lote(s)' : 'unidade(s)'} disponível(is)
             </p>
-            <div className="mt-6">
-              <Button className="w-full" onClick={() => gerarPdf()} disabled={gerando || !data.unidades.length}>
-                {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
-                Baixar tabela de vendas (PDF)
-              </Button>
-            </div>
+            {autoDownload ? (
+              <div className="mt-6">
+                <p className="mb-3 text-sm text-muted-foreground">O download vai começar automaticamente.</p>
+                <Button variant="outline" className="w-full" onClick={() => gerarPdf()} disabled={gerando || !data.unidades.length}>
+                  {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+                  Se não iniciar, clique aqui
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <Button className="w-full" onClick={() => gerarPdf()} disabled={gerando || !data.unidades.length}>
+                  {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+                  Baixar tabela de vendas (PDF)
+                </Button>
+              </div>
+            )}
           </>
         ) : null}
       </div>

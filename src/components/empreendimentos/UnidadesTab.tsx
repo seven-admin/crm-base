@@ -354,7 +354,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                       onClick={() => {
                         const slug = (empreendimento as any)?.slug_publico;
                         if (!slug) { toast.error('Link público indisponível para este empreendimento.'); return; }
-                        const url = `${window.location.origin}/p/disponibilidade/${slug}`;
+                        const url = `${window.location.origin}/p/disponibilidade/${slug}?download=1`;
                         navigator.clipboard.writeText(url).then(
                           () => toast.success('Link público copiado.'),
                           () => toast.error('Não foi possível copiar o link.'),
