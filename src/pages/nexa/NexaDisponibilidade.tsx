@@ -187,21 +187,13 @@ export default function NexaDisponibilidade() {
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
-        <Button variant="outline" onClick={() => handleExportPdf('simples')} disabled={!empId || isExporting}>
-          {isExporting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <FileDown className="h-4 w-4 mr-2" />
-          )}
-          Exportar PDF
-        </Button>
         <Button variant="outline" onClick={() => handleExportPdf('tabela_vendas')} disabled={!empId || isExporting}>
           {isExporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <FileDown className="h-4 w-4 mr-2" />
           )}
-          Tabela de vendas
+          Exportar tabela de vendas (PDF)
         </Button>
       </div>
 

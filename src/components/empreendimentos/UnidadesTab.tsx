@@ -352,16 +352,8 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handleExportarPdf('completo')} disabled={isExportingPdf || !unidades?.length}>
-                      {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-                      Exportar lista completa (PDF)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExportarPdf('disponiveis')} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exportar disponíveis (PDF)
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExportarPdf('disponiveis', 'tabela_vendas')} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
-                      <FileText className="h-4 w-4 mr-2" />
+                      {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
                       Exportar tabela de vendas (PDF)
                     </DropdownMenuItem>
                     <DropdownMenuItem
