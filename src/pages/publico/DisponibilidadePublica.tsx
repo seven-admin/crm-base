@@ -49,7 +49,7 @@ export default function DisponibilidadePublica() {
 
   const isLoteamento = data?.empreendimento.tipo === 'loteamento' || data?.empreendimento.tipo === 'condominio';
 
-  const gerarPdf = async (modelo: 'simples' | 'tabela_vendas') => {
+  const gerarPdf = async () => {
     if (!data) return;
     setGerando(true);
     try {
@@ -69,7 +69,7 @@ export default function DisponibilidadePublica() {
         unidades,
         isLoteamento,
         escopo: 'disponiveis',
-        modelo,
+        modelo: 'tabela_vendas',
         boxesPorUnidade,
       });
     } finally {
@@ -93,14 +93,10 @@ export default function DisponibilidadePublica() {
             <p className="mt-1 text-muted-foreground">
               {data.unidades.length} {isLoteamento ? 'lote(s)' : 'unidade(s)'} disponível(is)
             </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Button onClick={() => gerarPdf('tabela_vendas')} disabled={gerando || !data.unidades.length}>
+            <div className="mt-6">
+              <Button className="w-full" onClick={() => gerarPdf()} disabled={gerando || !data.unidades.length}>
                 {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
                 Baixar tabela de vendas (PDF)
-              </Button>
-              <Button variant="outline" onClick={() => gerarPdf('simples')} disabled={gerando || !data.unidades.length}>
-                <FileDown className="h-4 w-4 mr-2" />
-                Baixar lista simples (PDF)
               </Button>
             </div>
           </>
