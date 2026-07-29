@@ -203,22 +203,35 @@ export async function exportUnidadesPdf({
     return row;
   });
 
-  const head: string[][] = isTabelaVendas
-    ? [['Andar', unidadeLabel, 'Box', 'Tipologia', 'Área priv.', 'ATO', mensaisLabel, reforcosLabel, 'Financiamento', 'Valor total']]
+  const head: any = isTabelaVendas
+    ? [
+        [
+          { content: 'Andar', rowSpan: 2 },
+          { content: unidadeLabel, rowSpan: 2 },
+          { content: 'Box', rowSpan: 2 },
+          { content: 'Tipologia', rowSpan: 2 },
+          { content: 'Área priv.', rowSpan: 2 },
+          { content: 'Fluxo da entrada', colSpan: 3 },
+          { content: 'Financiamento', rowSpan: 2 },
+          { content: 'Valor total', rowSpan: 2 },
+        ].map((c) => ({ ...c, content: c.content.toUpperCase() })),
+        ['ATO', mensaisLabel, reforcosLabel].map((t) => t.toUpperCase()),
+      ]
     : [[unidadeLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área privativa', 'Valor', ...(includeStatus ? ['Status'] : [])]];
 
+  // Larguras somam a contentWidth (273mm) para a tabela alinhar com o cabeçalho.
   const columnStyles: Record<number, Partial<Record<string, unknown>>> = isTabelaVendas
     ? {
-        0: { cellWidth: 14, halign: 'center' },
-        1: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-        2: { cellWidth: 16, halign: 'center' },
-        3: { cellWidth: 47 },
-        4: { cellWidth: 20, halign: 'right' },
-        5: { cellWidth: 28, halign: 'right' },
-        6: { cellWidth: 28, halign: 'right' },
-        7: { cellWidth: 28, halign: 'right' },
-        8: { cellWidth: 30, halign: 'right' },
-        9: { cellWidth: 30, halign: 'right', fontStyle: 'bold' },
+        0: { cellWidth: 14 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 18 },
+        3: { cellWidth: 55 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 28 },
+        7: { cellWidth: 28 },
+        8: { cellWidth: 31 },
+        9: { cellWidth: 31 },
       }
     : includeStatus
       ? {
@@ -281,10 +294,10 @@ export async function exportUnidadesPdf({
     const refLabel = isTabelaVendas && plano.ref_label ? `  ·  Ref: ${plano.ref_label}` : '';
     doc.text(`${empreendimento.nome}  ·  Gerado em ${generatedAt}${refLabel}`, pageWidth - marginX, 18, { align: 'right' });
     doc.setDrawColor(...NEXA_VIOLET);
-    doc.setLineWidth(0.8);
+    doc.setLineWidth(0.6);
     doc.line(marginX, 24, pageWidth - marginX, 24);
 
-    if (!showSummary) return;
+    if (isTabelaVendas || !showSummary) return;
 
     const metrics = escopo === 'completo'
       ? [
@@ -318,31 +331,71 @@ export async function exportUnidadesPdf({
   };
 
   autoTable(doc, {
-    startY: 49,
-    margin: { top: 31, right: marginX, bottom: 17, left: marginX },
+    startY: isTabelaVendas ? 30 : 49,
+    margin: { top: isTabelaVendas ? 28 : 31, right: marginX, bottom: 17, left: marginX },
     head,
     body,
     theme: 'plain',
-    styles: {
-      font: fontName,
-      fontSize: 8,
-      cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 },
-      lineWidth: { bottom: 0.1 },
-      lineColor: [231, 227, 222],
-      textColor: [52, 47, 43],
-      valign: 'middle',
-      overflow: 'linebreak',
-    },
-    headStyles: {
-      fontStyle: 'bold',
-      fillColor: INK,
-      textColor: [255, 255, 255],
-      lineWidth: 0,
-      cellPadding: { top: 2.8, bottom: 2.8, left: 2.5, right: 2.5 },
-    },
-    alternateRowStyles: { fillColor: [250, 248, 245] },
+    styles: isTabelaVendas
+      ? {
+          font: fontName,
+          fontSize: 7,
+          cellPadding: { top: 2.7, bottom: 2.7, left: 1.5, right: 1.5 },
+          lineWidth: { bottom: 0.1 },
+          lineColor: [236, 236, 241],
+          textColor: [72, 72, 80],
+          halign: 'center',
+          valign: 'middle',
+          overflow: 'linebreak',
+        }
+      : {
+          font: fontName,
+          fontSize: 8,
+          cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 },
+          lineWidth: { bottom: 0.1 },
+          lineColor: [231, 227, 222],
+          textColor: [52, 47, 43],
+          valign: 'middle',
+          overflow: 'linebreak',
+        },
+    headStyles: isTabelaVendas
+      ? {
+          fontStyle: 'bold',
+          fillColor: [38, 38, 46],
+          textColor: [255, 255, 255],
+          fontSize: 6.6,
+          halign: 'center',
+          valign: 'middle',
+          lineWidth: { right: 0.4, bottom: 0 },
+          lineColor: [255, 255, 255],
+          cellPadding: { top: 2.4, bottom: 2.4, left: 1.5, right: 1.5 },
+        }
+      : {
+          fontStyle: 'bold',
+          fillColor: INK,
+          textColor: [255, 255, 255],
+          lineWidth: 0,
+          cellPadding: { top: 2.8, bottom: 2.8, left: 2.5, right: 2.5 },
+        },
+    alternateRowStyles: isTabelaVendas ? {} : { fillColor: [250, 248, 245] },
     columnStyles: columnStyles as any,
     didParseCell: (data: CellHookData) => {
+      if (isTabelaVendas) {
+        if (data.section === 'head') {
+          if (data.cell.text[0] === 'FLUXO DA ENTRADA') data.cell.styles.fillColor = NEXA_VIOLET;
+          return;
+        }
+        if (data.section === 'body') {
+          const c = data.column.index;
+          if (c === 5 || c === 6 || c === 7) {
+            data.cell.styles.fillColor = [244, 243, 253];
+          } else if (c === 9) {
+            data.cell.styles.fillColor = [235, 232, 250];
+            data.cell.styles.textColor = NEXA_VIOLET;
+          }
+        }
+        return;
+      }
       if (!includeStatus || data.section !== 'body' || data.column.index !== 7) return;
       const unit = ordenadas[data.row.index];
       if (!unit?.status) return;
@@ -479,6 +532,7 @@ export async function exportUnidadesPdf({
     doc.setFontSize(6.8);
     doc.setTextColor(130, 124, 119);
     doc.text(escopo === 'completo' ? 'Uso administrativo · Inclui todas as unidades ativas' : 'Disponibilidade sujeita a alteração sem aviso prévio', marginX, pageHeight - 6);
+    doc.text(`Gerado em ${generatedAt}`, pageWidth / 2, pageHeight - 6, { align: 'center' });
     doc.text(`Página ${page} de ${totalPages}`, pageWidth - marginX, pageHeight - 6, { align: 'right' });
   }
 
