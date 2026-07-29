@@ -171,18 +171,26 @@ export async function exportUnidadesPdf({
   }
 
   const includeStatus = escopo === 'completo' && !isTabelaVendas;
+  // Fluxo de entrada só aparece quando explicitamente ativado na config do empreendimento.
+  const showFluxo = isTabelaVendas && plano.fluxo_ativo === true;
+  const fluxoBodyCols = showFluxo ? [5, 6, 7] : [];
+  const valorTotalCol = isTabelaVendas ? (showFluxo ? 9 : 5) : -1;
   const mensaisLabel = `${plano.mensais_qtd}x mensais`;
   const reforcosLabel = `${plano.reforcos_qtd} reforços`;
 
   const body = ordenadas.map((unit) => {
     if (isTabelaVendas) {
-      const f = calcularFluxo(Number(unit.valor) || 0, plano);
-      return [
+      const base = [
         unit.andar != null ? `${unit.andar}º` : '-',
         unit.numero,
         boxesByUnit.get(unit.id)?.join(', ') || '-',
         unit.tipologia?.nome || '-',
         formatDecimal(unit.area_privativa),
+      ];
+      if (!showFluxo) return [...base, formatCurrency(unit.valor)];
+      const f = calcularFluxo(Number(unit.valor) || 0, plano);
+      return [
+        ...base,
         formatCurrency(f.ato),
         formatCurrency(f.mensalUnit),
         formatCurrency(f.reforcoUnit),
@@ -203,24 +211,30 @@ export async function exportUnidadesPdf({
     return row;
   });
 
-  const head: any = isTabelaVendas
+  const tabelaVendasHeadBase = (extra: any[]) => [
+    { content: 'Andar', rowSpan: 2 },
+    { content: unidadeLabel, rowSpan: 2 },
+    { content: 'Box', rowSpan: 2 },
+    { content: 'Tipologia', rowSpan: 2 },
+    { content: 'Área priv.', rowSpan: 2 },
+    ...extra,
+  ].map((c) => ({ ...c, content: String(c.content).toUpperCase() }));
+
+  const head: any = showFluxo
     ? [
-        [
-          { content: 'Andar', rowSpan: 2 },
-          { content: unidadeLabel, rowSpan: 2 },
-          { content: 'Box', rowSpan: 2 },
-          { content: 'Tipologia', rowSpan: 2 },
-          { content: 'Área priv.', rowSpan: 2 },
+        tabelaVendasHeadBase([
           { content: 'Fluxo da entrada', colSpan: 3 },
           { content: 'Financiamento', rowSpan: 2 },
           { content: 'Valor total', rowSpan: 2 },
-        ].map((c) => ({ ...c, content: c.content.toUpperCase() })),
+        ]),
         ['ATO', mensaisLabel, reforcosLabel].map((t) => t.toUpperCase()),
       ]
-    : [[unidadeLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área privativa', 'Valor', ...(includeStatus ? ['Status'] : [])]];
+    : isTabelaVendas
+      ? [tabelaVendasHeadBase([{ content: 'Valor total', rowSpan: 1 }]).map((c) => ({ content: c.content }))]
+      : [[unidadeLabel, blocoLabel, 'Andar', 'Tipologia', 'Box', 'Área privativa', 'Valor', ...(includeStatus ? ['Status'] : [])]];
 
   // Larguras somam a contentWidth (273mm) para a tabela alinhar com o cabeçalho.
-  const columnStyles: Record<number, Partial<Record<string, unknown>>> = isTabelaVendas
+  const columnStyles: Record<number, Partial<Record<string, unknown>>> = showFluxo
     ? {
         0: { cellWidth: 14 },
         1: { cellWidth: 18 },
@@ -233,6 +247,15 @@ export async function exportUnidadesPdf({
         8: { cellWidth: 31 },
         9: { cellWidth: 31 },
       }
+    : isTabelaVendas
+      ? {
+          0: { cellWidth: 18 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 100 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 75 },
+        }
     : includeStatus
       ? {
           0: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
@@ -387,9 +410,9 @@ export async function exportUnidadesPdf({
         }
         if (data.section === 'body') {
           const c = data.column.index;
-          if (c === 5 || c === 6 || c === 7) {
+          if (fluxoBodyCols.includes(c)) {
             data.cell.styles.fillColor = [244, 243, 253];
-          } else if (c === 9) {
+          } else if (c === valorTotalCol) {
             data.cell.styles.fillColor = [235, 232, 250];
             data.cell.styles.textColor = NEXA_VIOLET;
           }

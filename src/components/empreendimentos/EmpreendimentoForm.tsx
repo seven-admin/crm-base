@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -32,7 +33,7 @@ import { Building2, MapPin, FileText, Table2, ChevronLeft, ChevronRight, Check, 
 import { cn } from '@/lib/utils';
 
 const DEFAULT_CONFIG_VENDA = {
-  plano: { ato_pct: 10, mensais_pct: 20, mensais_qtd: 60, reforcos_pct: 10, reforcos_qtd: 5, ref_label: '' },
+  plano: { fluxo_ativo: false, ato_pct: 10, mensais_pct: 20, mensais_qtd: 60, reforcos_pct: 10, reforcos_qtd: 5, ref_label: '' },
   rodape: {
     gestao_comercial: '', especialista: '', inicio_obra: '', previsao_entrega: '',
     certidao_aprovacao: '', licenca_construcao: '', patrimonio_afetacao: '',
@@ -62,16 +63,21 @@ const formSchema = z.object({
   texto_rodape_relatorio: z.string().optional(),
   config_venda: z.object({
     plano: z.object({
+      fluxo_ativo: z.boolean().default(false),
       ato_pct: z.coerce.number().min(0).max(100),
       mensais_pct: z.coerce.number().min(0).max(100),
-      mensais_qtd: z.coerce.number().int().min(1, 'Mínimo 1'),
+      mensais_qtd: z.coerce.number().int().min(0),
       reforcos_pct: z.coerce.number().min(0).max(100),
-      reforcos_qtd: z.coerce.number().int().min(1, 'Mínimo 1'),
+      reforcos_qtd: z.coerce.number().int().min(0),
       ref_label: z.string().optional(),
-    }).refine(
-      (p) => p.ato_pct + p.mensais_pct + p.reforcos_pct <= 100,
-      { message: 'A soma de ato + mensais + reforços não pode passar de 100%', path: ['ato_pct'] },
-    ),
+    }).superRefine((p, ctx) => {
+      if (!p.fluxo_ativo) return; // sem fluxo ativo, percentuais não são exigidos
+      if (p.ato_pct + p.mensais_pct + p.reforcos_pct > 100) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A soma de ato + mensais + reforços não pode passar de 100%', path: ['ato_pct'] });
+      }
+      if (p.mensais_qtd < 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Mínimo 1', path: ['mensais_qtd'] });
+      if (p.reforcos_qtd < 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Mínimo 1', path: ['reforcos_qtd'] });
+    }),
     rodape: z.object({
       gestao_comercial: z.string().optional(),
       especialista: z.string().optional(),
@@ -651,15 +657,23 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
             {/* Step 4: Tabela de Vendas */}
             {currentStep === 4 && (() => {
               const p = form.watch('config_venda.plano');
+              const fluxoAtivo = p?.fluxo_ativo ?? false;
               const finPct = 100 - (Number(p?.ato_pct) || 0) - (Number(p?.mensais_pct) || 0) - (Number(p?.reforcos_pct) || 0);
               const planoErr = form.formState.errors.config_venda?.plano as any;
               return (
                 <div className="space-y-5">
-                  <div>
-                    <h3 className="text-sm font-semibold">Fluxo de entrada (% do valor da unidade)</h3>
-                    <p className="text-xs text-muted-foreground">Usado no PDF modelo "Tabela de Vendas". Os valores em R$ são calculados a partir do valor de cada unidade.</p>
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="pr-4">
+                      <h3 className="text-sm font-semibold">Fluxo de pagamento na tabela de vendas</h3>
+                      <p className="text-xs text-muted-foreground">Quando ativo, o PDF "Tabela de Vendas" exibe as colunas ATO, mensais, reforços e financiamento (calculadas do valor da unidade). Desligado, mostra só o valor total.</p>
+                    </div>
+                    <Switch
+                      checked={fluxoAtivo}
+                      onCheckedChange={(v) => form.setValue('config_venda.plano.fluxo_ativo', v)}
+                    />
                   </div>
 
+                  {fluxoAtivo && (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                     <div className="grid gap-2">
                       <Label htmlFor="ato_pct">ATO (%)</Label>
@@ -686,7 +700,8 @@ export function EmpreendimentoForm({ open, onOpenChange, empreendimento }: Empre
                       <Input value={Number.isFinite(finPct) ? finPct : ''} readOnly disabled className={cn(finPct < 0 && 'text-destructive')} />
                     </div>
                   </div>
-                  {planoErr?.ato_pct?.message && (
+                  )}
+                  {fluxoAtivo && planoErr?.ato_pct?.message && (
                     <p className="text-sm text-destructive">{planoErr.ato_pct.message}</p>
                   )}
 

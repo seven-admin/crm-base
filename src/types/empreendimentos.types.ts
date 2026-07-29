@@ -57,6 +57,7 @@ export const DOCUMENTO_TIPO_LABELS: Record<DocumentoTipo, string> = {
 
 // Configuração da tabela de vendas (PDF comercial)
 export interface ConfigVendaPlano {
+  fluxo_ativo?: boolean;
   ato_pct: number;
   mensais_pct: number;
   mensais_qtd: number;
