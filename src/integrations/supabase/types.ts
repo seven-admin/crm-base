@@ -2148,6 +2148,7 @@ export type Database = {
           nome: string
           registro_incorporacao: string | null
           responsavel_comercial_id: string | null
+          slug_publico: string | null
           status: Database["public"]["Enums"]["empreendimento_status"]
           texto_rodape_relatorio: string | null
           tipo: Database["public"]["Enums"]["empreendimento_tipo"]
@@ -2184,6 +2185,7 @@ export type Database = {
           nome: string
           registro_incorporacao?: string | null
           responsavel_comercial_id?: string | null
+          slug_publico?: string | null
           status?: Database["public"]["Enums"]["empreendimento_status"]
           texto_rodape_relatorio?: string | null
           tipo: Database["public"]["Enums"]["empreendimento_tipo"]
@@ -2220,6 +2222,7 @@ export type Database = {
           nome?: string
           registro_incorporacao?: string | null
           responsavel_comercial_id?: string | null
+          slug_publico?: string | null
           status?: Database["public"]["Enums"]["empreendimento_status"]
           texto_rodape_relatorio?: string | null
           tipo?: Database["public"]["Enums"]["empreendimento_tipo"]
@@ -2855,6 +2858,7 @@ export type Database = {
           observacoes: string | null
           polygon_coords: Json | null
           posicao: string | null
+          reserved_until: string | null
           status: Database["public"]["Enums"]["unidade_status"]
           tipologia_id: string | null
           updated_at: string
@@ -2875,6 +2879,7 @@ export type Database = {
           observacoes?: string | null
           polygon_coords?: Json | null
           posicao?: string | null
+          reserved_until?: string | null
           status?: Database["public"]["Enums"]["unidade_status"]
           tipologia_id?: string | null
           updated_at?: string
@@ -2895,6 +2900,7 @@ export type Database = {
           observacoes?: string | null
           polygon_coords?: Json | null
           posicao?: string | null
+          reserved_until?: string | null
           status?: Database["public"]["Enums"]["unidade_status"]
           tipologia_id?: string | null
           updated_at?: string

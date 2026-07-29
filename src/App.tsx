@@ -46,6 +46,7 @@ const Auditoria = lazy(() => import("./pages/Auditoria"));
 const TermosUso = lazy(() => import("./pages/TermosUso"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const SemAcesso = lazy(() => import("./pages/SemAcesso"));
+const DisponibilidadePublica = lazy(() => import("./pages/publico/DisponibilidadePublica"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
 const Configuracoes = lazy(() => import("./pages/Configuracoes"));
@@ -83,6 +84,7 @@ const App = () => (
                 <Route path="/termos" element={<TermosUso />} />
                 <Route path="/privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/sem-acesso" element={<SemAcesso />} />
+                <Route path="/p/disponibilidade/:slug" element={<DisponibilidadePublica />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* Protected routes */}

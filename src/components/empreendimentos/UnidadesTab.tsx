@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { Plus, Loader2, Grid, Map as MapIcon, Building2, Pencil, Layers, Upload, History, Check, X, Trash2, RefreshCw, FileText, MoreHorizontal, ChevronDown, Link2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -363,6 +363,20 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     <DropdownMenuItem onClick={() => handleExportarPdf('disponiveis', 'tabela_vendas')} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
                       <FileText className="h-4 w-4 mr-2" />
                       Exportar tabela de vendas (PDF)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        const slug = (empreendimento as any)?.slug_publico;
+                        if (!slug) { toast.error('Link público indisponível para este empreendimento.'); return; }
+                        const url = `${window.location.origin}/p/disponibilidade/${slug}`;
+                        navigator.clipboard.writeText(url).then(
+                          () => toast.success('Link público copiado.'),
+                          () => toast.error('Não foi possível copiar o link.'),
+                        );
+                      }}
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Copiar link público (sem login)
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>

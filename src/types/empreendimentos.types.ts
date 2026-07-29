@@ -131,6 +131,7 @@ export interface Empreendimento {
   auto_vincular_corretor: boolean;
   texto_rodape_relatorio: string | null;
   config_venda: ConfigVenda | null;
+  slug_publico: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -198,6 +199,7 @@ export interface Unidade {
   area_total?: number | null;
   valor: number | null;
   status: UnidadeStatus;
+  reserved_until?: string | null;
   descricao: string | null;
   observacoes: string | null;
   polygon_coords: PolygonCoords | null;

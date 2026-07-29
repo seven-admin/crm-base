@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.arqo-calls]
 verify_jwt = true
+
+[functions.unidades-status]
+verify_jwt = false
+
+[functions.unidades-publicas]
+verify_jwt = false
