@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
-import { exportUnidadesDisponiveisPdf } from '@/lib/exportUnidadesDisponiveisPdf';
+import { exportUnidadesPdf } from '@/lib/exportUnidadesDisponiveisPdf';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -111,13 +111,13 @@ export default function NexaDisponibilidade() {
     return new Map(nomes.map((nome, index) => [nome, TIPOLOGIA_COLORS[index % TIPOLOGIA_COLORS.length]]));
   }, [unidades]);
 
-  const handleExportPdf = async (modelo: 'simples' | 'tabela_vendas' = 'simples') => {
+  const handleExportPdf = async () => {
     if (!empId) return;
     setIsExporting(true);
     try {
       const { data: emp, error: empErr } = await supabase
         .from('seven_empreendimentos')
-        .select('nome, tipo, texto_rodape_relatorio, config_venda, registro_incorporacao, matricula_mae')
+        .select('nome, tipo, config_venda, registro_incorporacao, matricula_mae')
         .eq('id', empId)
         .maybeSingle();
       if (empErr) throw empErr;
@@ -135,10 +135,9 @@ export default function NexaDisponibilidade() {
       if (uniErr) throw uniErr;
 
       const isLoteamento = emp.tipo === 'loteamento' || emp.tipo === 'condominio';
-      await exportUnidadesDisponiveisPdf({
+      await exportUnidadesPdf({
         empreendimento: {
           nome: emp.nome,
-          texto_rodape_relatorio: emp.texto_rodape_relatorio ?? null,
           config_venda: (emp.config_venda as any) ?? null,
           registro_incorporacao: emp.registro_incorporacao ?? null,
           matricula_mae: emp.matricula_mae ?? null,
@@ -154,8 +153,6 @@ export default function NexaDisponibilidade() {
           tipologia: u.tipologia ? { nome: u.tipologia.nome } : null,
         })),
         isLoteamento,
-        escopo: 'disponiveis',
-        modelo,
       });
     } catch (error) {
       console.error(error);
@@ -187,7 +184,7 @@ export default function NexaDisponibilidade() {
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
-        <Button variant="outline" onClick={() => handleExportPdf('tabela_vendas')} disabled={!empId || isExporting}>
+        <Button variant="outline" onClick={() => handleExportPdf()} disabled={!empId || isExporting}>
           {isExporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

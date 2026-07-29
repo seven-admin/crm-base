@@ -42,7 +42,7 @@ import { buildUnitLabel, type LabelFormatElement } from '@/lib/mapaUtils';
 import { ordenarUnidadesPorBlocoENumero } from '@/lib/unidadeUtils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { exportUnidadesPdf, type ExportUnidadesEscopo, type ExportUnidadesModelo } from '@/lib/exportUnidadesDisponiveisPdf';
+import { exportUnidadesPdf } from '@/lib/exportUnidadesDisponiveisPdf';
 
 
 const TIPOLOGIA_COLORS = [
@@ -196,22 +196,18 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     handleExitSelectionMode();
   };
 
-  const handleExportarPdf = async (escopo: ExportUnidadesEscopo, modelo: ExportUnidadesModelo = 'simples') => {
+  const handleExportarPdf = async () => {
     if (!unidades || !empreendimento) return;
     setIsExportingPdf(true);
     try {
-      const unitsToExport = escopo === 'completo' && modelo !== 'tabela_vendas'
-        ? unidades
-        : unidades.filter((unit) => unit.status === 'disponivel');
       await exportUnidadesPdf({
         empreendimento: {
           nome: empreendimento.nome,
-          texto_rodape_relatorio: empreendimento.texto_rodape_relatorio ?? null,
           config_venda: empreendimento.config_venda ?? null,
           registro_incorporacao: empreendimento.registro_incorporacao ?? null,
           matricula_mae: empreendimento.matricula_mae ?? null,
         },
-        unidades: unitsToExport.map((unit) => ({
+        unidades: unidades.map((unit) => ({
           id: unit.id,
           numero: unit.numero,
           andar: unit.andar,
@@ -222,8 +218,6 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
           tipologia: unit.tipologia ? { nome: unit.tipologia.nome } : null,
         })),
         isLoteamento,
-        escopo,
-        modelo,
       });
     } finally {
       setIsExportingPdf(false);
@@ -352,7 +346,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handleExportarPdf('disponiveis', 'tabela_vendas')} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
+                    <DropdownMenuItem onClick={() => handleExportarPdf()} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
                       {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
                       Exportar tabela de vendas (PDF)
                     </DropdownMenuItem>

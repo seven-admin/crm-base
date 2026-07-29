@@ -68,8 +68,6 @@ export default function DisponibilidadePublica() {
         },
         unidades,
         isLoteamento,
-        escopo: 'disponiveis',
-        modelo: 'tabela_vendas',
         boxesPorUnidade,
       });
     } finally {
