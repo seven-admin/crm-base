@@ -15,6 +15,7 @@ import { ROLE_LABELS } from '@/types/auth.types';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -27,10 +28,11 @@ import logoNexa from '@/assets/logo-nexa.png';
 interface MenuItem {
   icon: LucideIcon;
   label: string;
-  path: string;
-  moduleName: string;
+  path?: string;
+  moduleName?: string;
   adminOnly?: boolean;
   description?: string;
+  children?: MenuItem[];
 }
 
 interface MenuGroup {
@@ -81,10 +83,14 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: CalendarDays, label: 'Atividades', path: '/nexa/agenda', moduleName: 'nexa_agenda' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa_disponibilidade' },
-      { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa_contratos' },
-      { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa_contratos_modelos' },
-      { icon: FileText, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa_contratos_blocos' },
-      { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa_contratos_variaveis' },
+      {
+        icon: FileText, label: 'Contratos', children: [
+          { icon: FileText, label: 'Contratos', path: '/nexa/contratos', moduleName: 'nexa_contratos' },
+          { icon: FileText, label: 'Modelos de Contrato', path: '/nexa/contratos/modelos', moduleName: 'nexa_contratos_modelos' },
+          { icon: FileText, label: 'Blocos de Texto', path: '/nexa/contratos/blocos', moduleName: 'nexa_contratos_blocos' },
+          { icon: Settings, label: 'Variáveis de Contrato', path: '/nexa/contratos/variaveis', moduleName: 'nexa_contratos_variaveis' },
+        ],
+      },
       { icon: ExternalLink, label: 'Render Vithória', path: '/nexa/render-vithoria', moduleName: '__nexa_only__' },
     ],
   },
@@ -104,6 +110,7 @@ const menuGroups: MenuGroup[] = [
 
 
 function isPathActive(item: MenuItem, pathname: string, search: string) {
+  if (!item.path) return false;
   const [basePath, queryString] = item.path.split('?');
   return queryString
     ? pathname === basePath && search === `?${queryString}`
@@ -125,16 +132,24 @@ export function AppTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroups, setMobileGroups] = useState<string[]>([]);
 
-  const filterItems = (items: MenuItem[]) =>
-    items.filter((item) => {
-      if (item.moduleName === '__self__') return true;
-      // Não depende de módulo cadastrado (ex: iframe "Render Vithória"), mas só
-      // deve aparecer para quem realmente tem vínculo com o grupo Nexa/Seven —
-      // '__self__' era universal demais e vazava pra usuários Arqo.
-      if (item.moduleName === '__nexa_only__') return isAdmin() || canAccessGroup('nexa');
-      if (item.adminOnly) return isAdmin();
-      return canAccessModule(item.moduleName);
-    });
+  const canSeeLeaf = (item: MenuItem) => {
+    if (item.moduleName === '__self__') return true;
+    // Não depende de módulo cadastrado (ex: iframe "Render Vithória"), mas só
+    // deve aparecer para quem realmente tem vínculo com o grupo Nexa/Seven —
+    // '__self__' era universal demais e vazava pra usuários Arqo.
+    if (item.moduleName === '__nexa_only__') return isAdmin() || canAccessGroup('nexa');
+    if (item.adminOnly) return isAdmin();
+    return canAccessModule(item.moduleName ?? '');
+  };
+
+  const filterItems = (items: MenuItem[]): MenuItem[] =>
+    items
+      .map((item) => (item.children ? { ...item, children: item.children.filter(canSeeLeaf) } : item))
+      .filter((item) => (item.children ? item.children.length > 0 : canSeeLeaf(item)));
+
+  // Achata itens (incluindo filhos de submenu) para checar rota ativa.
+  const flattenItems = (items: MenuItem[]): MenuItem[] =>
+    items.flatMap((i) => (i.children ? i.children : [i]));
 
 
   // Visibilidade baseada em permissões efetivas (canAccessModule).
@@ -150,7 +165,7 @@ export function AppTopbar() {
     });
 
   const sevenVisible: SevenMenuCategory[] = sevenCategories
-    .map((c) => ({ ...c, items: filterItems(c.items) }))
+    .map((c) => ({ ...c, items: filterItems(c.items) as SevenMenuCategory['items'] }))
     .filter((c) => c.items.length > 0);
   const sevenHasActive = sevenVisible.some((c) =>
     c.items.some((i) => isPathActive(i, location.pathname, location.search)),
@@ -187,7 +202,7 @@ export function AppTopbar() {
         <nav className="ml-auto hidden items-center gap-1 overflow-x-auto lg:flex" aria-label="Navegação principal">
           <SevenMegaMenu categories={sevenVisible} hasActive={sevenHasActive} dark />
           {visibleGroups.filter((group) => group.label !== 'Sistema').map((group) => {
-            const hasActive = group.items.some((i) => isPathActive(i, location.pathname, location.search));
+            const hasActive = flattenItems(group.items).some((i) => isPathActive(i, location.pathname, location.search));
             return (
               <DropdownMenu key={group.label}>
                 <DropdownMenuTrigger asChild>
@@ -209,11 +224,41 @@ export function AppTopbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {group.items.map((item) => {
+                    if (item.children) {
+                      const subActive = item.children.some((c) => isPathActive(c, location.pathname, location.search));
+                      return (
+                        <DropdownMenuSub key={item.label}>
+                          <DropdownMenuSubTrigger
+                            className={cn('gap-2.5 rounded-lg py-2', subActive && 'bg-primary-soft text-primary font-medium')}
+                          >
+                            <span>{item.label}</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="min-w-[220px]">
+                            {item.children.map((child) => {
+                              const active = isPathActive(child, location.pathname, location.search);
+                              return (
+                                <DropdownMenuItem key={child.path} asChild>
+                                  <Link
+                                    to={child.path!}
+                                    className={cn(
+                                      'flex items-center gap-2.5 cursor-pointer rounded-lg py-2',
+                                      active && 'bg-primary-soft text-primary font-medium'
+                                    )}
+                                  >
+                                    <span>{child.label}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      );
+                    }
                     const active = isPathActive(item, location.pathname, location.search);
                     return (
                       <DropdownMenuItem key={item.path} asChild>
                         <Link
-                          to={item.path}
+                          to={item.path!}
                           className={cn(
                             'flex items-center gap-2.5 cursor-pointer rounded-lg py-2',
                             active && 'bg-primary-soft text-primary font-medium'
@@ -325,11 +370,38 @@ export function AppTopbar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent className="pl-3 py-1 space-y-0.5">
                         {group.items.map((item) => {
+                          if (item.children) {
+                            return (
+                              <div key={item.label} className="space-y-0.5">
+                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-3 pt-1">
+                                  {item.label}
+                                </p>
+                                {item.children.map((child) => {
+                                  const active = isPathActive(child, location.pathname, location.search);
+                                  return (
+                                    <Link
+                                      key={child.path}
+                                      to={child.path!}
+                                      className={cn(
+                                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm',
+                                        active
+                                          ? 'bg-primary-soft text-primary font-medium'
+                                          : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                      )}
+                                    >
+                                      <child.icon className="h-4 w-4 text-muted-foreground" />
+                                      {child.label}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            );
+                          }
                           const active = isPathActive(item, location.pathname, location.search);
                           return (
                             <Link
                               key={item.path}
-                              to={item.path}
+                              to={item.path!}
                               className={cn(
                                 'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm',
                                 active

@@ -3,6 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActionType, ScopeType, ModulePermission, Module } from '@/types/auth.types';
 
+// Módulos restritos ao super_admin: nem 'admin' ganha bypass automático — só
+// super_admin ou quem tiver permissão concedida explicitamente (por papel/usuário).
+const SUPERADMIN_ONLY_MODULES = new Set([
+  'nexa_contratos',
+  'nexa_contratos_modelos',
+  'nexa_contratos_blocos',
+  'nexa_contratos_variaveis',
+]);
+
 interface UserModulePermissionData {
   module_id: string;
   can_view: boolean;
@@ -114,7 +123,9 @@ export function usePermissions() {
 
   const canAccessModule = useCallback((moduleName: string, action: ActionType = 'view'): boolean => {
     if (!isAuthenticated) return false;
-    if (role === 'admin' || role === 'super_admin') return true;
+    if (role === 'super_admin') return true;
+    // 'admin' tem bypass geral, exceto nos módulos restritos ao super_admin.
+    if (role === 'admin' && !SUPERADMIN_ONLY_MODULES.has(moduleName)) return true;
 
     const perm = permissions.find(p => p.module.name === moduleName);
     if (!perm) return false;

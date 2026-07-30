@@ -18,8 +18,12 @@ export function NexaProtectedRoute({ children, moduleName }: { children: ReactNo
   }
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
 
-  const hasModuleAccess = moduleName ? canAccessModule(moduleName) : true;
-  const hasAccess = isAdmin() || Boolean(role && (NEXA_ROLES as readonly string[]).includes(role) && hasModuleAccess);
+  // Rotas com módulo: quem decide é canAccessModule (que já trata super_admin,
+  // o bypass de 'admin' e os módulos restritos ao super_admin como contratos).
+  // Rotas sem módulo: mantém o acesso amplo (admin ou papel Nexa).
+  const hasAccess = moduleName
+    ? canAccessModule(moduleName)
+    : (isAdmin() || Boolean(role && (NEXA_ROLES as readonly string[]).includes(role)));
   if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
