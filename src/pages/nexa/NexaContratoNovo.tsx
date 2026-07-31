@@ -13,6 +13,9 @@ import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadC
 import { useClientesSelect } from '@/hooks/useClientesSelect';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
 import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml } from '@/lib/contratoVariaveis';
+import { extrairBlocos, prepararConteudo } from '@/lib/contratoNumeracao';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 export default function NexaContratoNovo() {
@@ -33,12 +36,17 @@ export default function NexaContratoNovo() {
   const [valor, setValor] = useState<string>('');
   const [obs, setObs] = useState<string>('');
   const [valores, setValores] = useState<Record<string, string>>({});
+  const [blocosExcluidos, setBlocosExcluidos] = useState<Set<number>>(new Set());
   const [gerando, setGerando] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const { data: unidades } = useUnidadesDisponiveis(empId || undefined, ['disponivel', 'reservada']);
   const template = templates?.find((t) => t.id === templateId);
   const varsUsadas = useMemo(() => (template ? extrairVariaveis(template.conteudo_html) : []), [template]);
+  const blocosDetectados = useMemo(() => (template ? extrairBlocos(template.conteudo_html) : []), [template]);
+
+  // Ao trocar de modelo, volta todos os blocos a "incluídos".
+  useEffect(() => { setBlocosExcluidos(new Set()); }, [templateId]);
 
   // resolver valores auto sempre que dados mudam
   const selecaoAnteriorRef = useRef<string>('');
@@ -64,7 +72,10 @@ export default function NexaContratoNovo() {
     return () => { cancel = true; };
   }, [templateId, clienteId, empId, unidadeId, valor]);
 
-  const previewHtml = useMemo(() => (template ? resolveVariaveis(template.conteudo_html, valores) : ''), [template, valores]);
+  const previewHtml = useMemo(
+    () => (template ? resolveVariaveis(prepararConteudo(template.conteudo_html, blocosExcluidos), valores) : ''),
+    [template, valores, blocosExcluidos],
+  );
 
   const gerar = async () => {
     if (!template || !previewRef.current) return;
@@ -82,7 +93,22 @@ export default function NexaContratoNovo() {
         status: 'em_geracao',
       });
       if (!contratoId) return;
-      const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`);
+
+      // Planta e garagem da unidade viram páginas finais do contrato.
+      let imagensFinais: string[] = [];
+      if (unidadeId) {
+        const { data: u } = await supabase
+          .from('seven_unidades')
+          .select('imagem_planta_url, imagem_garagem_url')
+          .eq('id', unidadeId)
+          .maybeSingle();
+        imagensFinais = [(u as any)?.imagem_planta_url, (u as any)?.imagem_garagem_url].filter(Boolean) as string[];
+      }
+      const marcaDagua = template.marca_dagua_url
+        ? { url: template.marca_dagua_url, opacidade: template.marca_dagua_opacidade ?? 0.08 }
+        : undefined;
+
+      const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`, { marcaDagua, imagensFinais });
       await uploadPdf.mutateAsync({ contratoId, blob });
       if (unidadeId) {
         const travada = await marcarUnidadeEmContrato(unidadeId);
@@ -184,6 +210,25 @@ export default function NexaContratoNovo() {
                     </SelectContent>
                   </Select>
                 </div>
+                {template && blocosDetectados.length > 0 && (
+                  <div className="space-y-2 rounded-[1.25rem] border border-border/70 bg-muted/20 p-3">
+                    <div className="text-sm font-medium">Blocos opcionais</div>
+                    <p className="text-xs text-muted-foreground">Desmarque para não incluir; a numeração das cláusulas se ajusta sozinha.</p>
+                    {blocosDetectados.map((b) => (
+                      <label key={b.index} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={!blocosExcluidos.has(b.index)}
+                          onCheckedChange={(c) => setBlocosExcluidos((prev) => {
+                            const next = new Set(prev);
+                            if (c) next.delete(b.index); else next.add(b.index);
+                            return next;
+                          })}
+                        />
+                        {b.nome}
+                      </label>
+                    ))}
+                  </div>
+                )}
                 {template && (
                   <>
                     <div className="text-sm text-muted-foreground">Variáveis usadas: {varsUsadas.length}</div>

@@ -95,6 +95,26 @@ export async function resolverValoresAutomaticos(opts: {
   return out;
 }
 
+/** Carrega uma imagem (URL pública) já pronta para o jsPDF, com dimensões naturais. */
+function carregarImagem(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${url}`));
+    img.src = url;
+  });
+}
+
+/** Adiciona a imagem como uma página A4 inteira, centralizada e preservando proporção. */
+function addImagemPaginaInteira(pdf: jsPDF, img: HTMLImageElement, pdfW: number, pdfH: number) {
+  pdf.addPage();
+  let w = pdfW;
+  let h = (img.naturalHeight / img.naturalWidth) * w;
+  if (h > pdfH) { h = pdfH; w = (img.naturalWidth / img.naturalHeight) * h; }
+  pdf.addImage(img, 'PNG', (pdfW - w) / 2, (pdfH - h) / 2, w, h);
+}
+
 function addImagePaginado(pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, pdfH: number, isFirstPageOverall: boolean) {
   const imgData = canvas.toDataURL('image/png');
   const imgW = pdfW;
@@ -119,7 +139,14 @@ function addImagePaginado(pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, p
  * renderizando cada segmento separadamente — em vez de fatiar o conteúdo inteiro
  * como uma única imagem por altura fixa, o que cortava parágrafos/linhas ao meio.
  */
-export async function gerarPdfDeHtml(element: HTMLElement, filename: string): Promise<Blob> {
+export interface GerarPdfOptions {
+  /** Marca d'água sobreposta em todas as páginas. */
+  marcaDagua?: { url: string; opacidade: number };
+  /** Imagens anexadas como páginas inteiras ao final (ex.: planta e garagem da unidade). */
+  imagensFinais?: string[];
+}
+
+export async function gerarPdfDeHtml(element: HTMLElement, filename: string, options?: GerarPdfOptions): Promise<Blob> {
   const clone = element.cloneNode(true) as HTMLElement;
   const isBreakMarker = (n: ChildNode): n is HTMLElement =>
     n instanceof HTMLElement && n.style.pageBreakBefore === 'always';
@@ -167,6 +194,39 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string): Pr
     }
   } finally {
     document.body.removeChild(stage);
+  }
+
+  // Páginas de imagem ao final (planta/garagem da unidade).
+  for (const url of options?.imagensFinais ?? []) {
+    try {
+      const img = await carregarImagem(url);
+      addImagemPaginaInteira(pdf, img, pdfW, pdfH);
+    } catch (e) {
+      console.error(e); // não interrompe a geração por uma imagem que falhou
+    }
+  }
+
+  // Marca d'água em todas as páginas (60% da largura, centralizada, com opacidade).
+  if (options?.marcaDagua?.url) {
+    try {
+      const mark = await carregarImagem(options.marcaDagua.url);
+      let w = pdfW * 0.6;
+      let h = (mark.naturalHeight / mark.naturalWidth) * w;
+      if (h > pdfH * 0.6) { h = pdfH * 0.6; w = (mark.naturalWidth / mark.naturalHeight) * h; }
+      const x = (pdfW - w) / 2;
+      const y = (pdfH - h) / 2;
+      const gs = new (pdf as any).GState({ opacity: options.marcaDagua.opacidade });
+      const total = pdf.getNumberOfPages();
+      for (let p = 1; p <= total; p++) {
+        pdf.setPage(p);
+        (pdf as any).saveGraphicsState();
+        pdf.setGState(gs);
+        pdf.addImage(mark, 'PNG', x, y, w, h);
+        (pdf as any).restoreGraphicsState();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const blob = pdf.output('blob');

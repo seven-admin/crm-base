@@ -1,4 +1,5 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { Node, mergeAttributes } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
@@ -8,15 +9,42 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
+import Image from '@tiptap/extension-image';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import {
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
   Heading1, Heading2, Heading3, Undo, Redo,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Link as LinkIcon, Table as TableIcon, Minus, Quote,
+  Link as LinkIcon, Table as TableIcon, Minus, Quote, Image as ImageIcon,
 } from 'lucide-react';
+
+// Bloco opcional do contrato: preserva o wrapper <div data-bloco-nome> ao salvar,
+// para que a geração possa detectá-lo e permitir incluí-lo ou não (ver contratoNumeracao).
+const BlocoContrato = Node.create({
+  name: 'blocoContrato',
+  group: 'block',
+  content: 'block+',
+  defining: true,
+  addAttributes() {
+    return {
+      nome: {
+        default: '',
+        parseHTML: (el) => (el as HTMLElement).getAttribute('data-bloco-nome'),
+        renderHTML: (attrs) => (attrs.nome ? { 'data-bloco-nome': attrs.nome } : {}),
+      },
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-bloco-nome]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'contrato-bloco' }), 0];
+  },
+});
 
 interface Props {
   value: string;
@@ -36,6 +64,8 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
       TableRow,
       TableHeader,
       TableCell,
+      Image.configure({ inline: false, HTMLAttributes: { class: 'contrato-img', style: 'max-width:100%' } }),
+      BlocoContrato,
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -94,7 +124,15 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
         <Separator orientation="vertical" className="h-6 mx-1" />
         <ToolbarButton onClick={() => insertLink(editor)} active={editor.isActive('link')} title="Link"><LinkIcon className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Inserir tabela"><TableIcon className="h-4 w-4" /></ToolbarButton>
+        <ToolbarButton onClick={() => insertImage(editor)} title="Inserir imagem"><ImageIcon className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Linha horizontal"><Minus className="h-4 w-4" /></ToolbarButton>
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        <ToolbarButton onClick={() => editor.chain().focus().insertContent('<h3><strong>CLÁUSULA [[clausula]]ª – </strong></h3>').run()} title="Cláusula (numeração automática)">
+          <span className="text-[10px] font-bold">Cláus.</span>
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().insertContent('[[item]] ').run()} title="Item numerado (ex.: 1.1)">
+          <span className="text-[10px] font-bold">Item</span>
+        </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().insertContent('<div style="page-break-before: always"></div>').run()} title="Quebra de página">
           <span className="text-[10px] font-bold">PG</span>
         </ToolbarButton>
@@ -132,6 +170,27 @@ function insertLink(editor: Editor) {
     return;
   }
   editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+}
+
+function insertImage(editor: Editor) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `contratos/img-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('empreendimentos-midias').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('empreendimentos-midias').getPublicUrl(path);
+      editor.chain().focus().setImage({ src: publicUrl }).run();
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao enviar imagem');
+    }
+  };
+  input.click();
 }
 
 export function insertIntoTipTap(text: string) {

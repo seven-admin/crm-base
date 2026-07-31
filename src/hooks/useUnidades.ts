@@ -273,7 +273,7 @@ export function useUpdateUnidadesMemorial() {
       updates 
     }: { 
       empreendimentoId: string; 
-      updates: Array<{ id: string; descricao?: string; observacoes?: string; fachada_id?: string | null; area_privativa?: number }> 
+      updates: Array<{ id: string; descricao?: string; observacoes?: string; fachada_id?: string | null; area_privativa?: number; imagem_planta_url?: string | null; imagem_garagem_url?: string | null }>
     }) => {
       // Update each unit
       for (const update of updates) {
@@ -282,6 +282,8 @@ export function useUpdateUnidadesMemorial() {
         if (update.observacoes !== undefined) updateData.observacoes = update.observacoes;
         if (update.fachada_id !== undefined) updateData.fachada_id = update.fachada_id;
         if (update.area_privativa !== undefined) updateData.area_privativa = update.area_privativa;
+        if (update.imagem_planta_url !== undefined) updateData.imagem_planta_url = update.imagem_planta_url;
+        if (update.imagem_garagem_url !== undefined) updateData.imagem_garagem_url = update.imagem_garagem_url;
         
         if (Object.keys(updateData).length > 0) {
           const { error } = await supabase

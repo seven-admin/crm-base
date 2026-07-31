@@ -19,7 +19,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Save, Loader2, Copy, ClipboardPaste, FileText } from 'lucide-react';
+import { Save, Loader2, Copy, ClipboardPaste, FileText, Upload, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useUnidades } from '@/hooks/useUnidades';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useFachadas } from '@/hooks/useFachadas';
@@ -38,6 +39,70 @@ interface EditedMemorial {
   observacoes?: string;
   fachada_id?: string | null;
   area_privativa?: number;
+  imagem_planta_url?: string | null;
+  imagem_garagem_url?: string | null;
+}
+
+// Upload compacto de imagem por unidade (planta/garagem). Sobe no ato e devolve a
+// URL pública; o valor só persiste ao clicar em "Salvar Alterações" (via editedValues).
+function UnidadeImagemCell({
+  empreendimentoId, unidadeId, tipo, url, onChange,
+}: {
+  empreendimentoId: string;
+  unidadeId: string;
+  tipo: 'planta' | 'garagem';
+  url?: string | null;
+  onChange: (url: string | null) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const inputId = `und-img-${tipo}-${unidadeId}`;
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) { toast.error('Selecione uma imagem'); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${empreendimentoId}/unidade-${unidadeId}-${tipo}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('empreendimentos-midias').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('empreendimentos-midias').getPublicUrl(path);
+      onChange(publicUrl);
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      {url ? (
+        <div className="relative">
+          <img src={url} alt={tipo} className="h-12 w-16 rounded border object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-white"
+            title="Remover"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : (
+        <label htmlFor={inputId} className="flex h-12 w-16 cursor-pointer items-center justify-center rounded border border-dashed text-muted-foreground hover:border-primary/50">
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+        </label>
+      )}
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }}
+      />
+    </div>
+  );
 }
 
 export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabProps) {
@@ -101,6 +166,20 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
     }));
   };
 
+  const handleImagemChange = (unidadeId: string, tipo: 'planta' | 'garagem', url: string | null) => {
+    const key = tipo === 'planta' ? 'imagem_planta_url' : 'imagem_garagem_url';
+    setEditedValues(prev => ({
+      ...prev,
+      [unidadeId]: { ...prev[unidadeId], [key]: url },
+    }));
+  };
+
+  const getDisplayImagem = (unidadeId: string, tipo: 'planta' | 'garagem', original?: string | null) => {
+    const key = tipo === 'planta' ? 'imagem_planta_url' : 'imagem_garagem_url';
+    const edited = editedValues[unidadeId]?.[key];
+    return edited !== undefined ? edited : (original ?? null);
+  };
+
   const copyDescricao = (value: string) => {
     setCopiedDescricao(value);
     toast.success('Descrição copiada!');
@@ -160,11 +239,13 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
 
   const handleSave = () => {
     const updates = Object.entries(editedValues)
-      .filter(([_, values]) => 
-        values.descricao !== undefined || 
+      .filter(([_, values]) =>
+        values.descricao !== undefined ||
         values.observacoes !== undefined ||
         values.fachada_id !== undefined ||
-        values.area_privativa !== undefined
+        values.area_privativa !== undefined ||
+        values.imagem_planta_url !== undefined ||
+        values.imagem_garagem_url !== undefined
       )
       .map(([id, values]) => ({
         id,
@@ -172,6 +253,8 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
         observacoes: values.observacoes,
         fachada_id: values.fachada_id,
         area_privativa: values.area_privativa,
+        imagem_planta_url: values.imagem_planta_url,
+        imagem_garagem_url: values.imagem_garagem_url,
       }));
 
     if (updates.length > 0) {
@@ -315,6 +398,8 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
                 <TableHead className="w-[80px]">Status</TableHead>
                 <TableHead className="w-[120px]">Área (m²)</TableHead>
                 <TableHead className="w-[180px]">Fachada</TableHead>
+                <TableHead className="w-[80px]">Planta</TableHead>
+                <TableHead className="w-[80px]">Garagem</TableHead>
                 <TableHead className="min-w-[280px]">Descrição / Memorial</TableHead>
                 <TableHead className="min-w-[220px]">Observações</TableHead>
               </TableRow>
@@ -322,7 +407,7 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
             <TableBody>
               {unidades.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     Nenhuma unidade encontrada
                   </TableCell>
                 </TableRow>
@@ -385,6 +470,24 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
                             </Button>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <UnidadeImagemCell
+                          empreendimentoId={empreendimentoId}
+                          unidadeId={unidade.id}
+                          tipo="planta"
+                          url={getDisplayImagem(unidade.id, 'planta', unidade.imagem_planta_url)}
+                          onChange={(url) => handleImagemChange(unidade.id, 'planta', url)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <UnidadeImagemCell
+                          empreendimentoId={empreendimentoId}
+                          unidadeId={unidade.id}
+                          tipo="garagem"
+                          url={getDisplayImagem(unidade.id, 'garagem', unidade.imagem_garagem_url)}
+                          onChange={(url) => handleImagemChange(unidade.id, 'garagem', url)}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">

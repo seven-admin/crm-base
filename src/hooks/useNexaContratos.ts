@@ -74,6 +74,8 @@ export interface ContratoTemplate {
   conteudo_html: string;
   variaveis: string[];
   empreendimento_id: string | null;
+  marca_dagua_url: string | null;
+  marca_dagua_opacidade: number;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -121,6 +123,8 @@ export function useSaveContratoTemplate() {
         conteudo_html: t.conteudo_html,
         variaveis: t.variaveis ?? [],
         empreendimento_id: t.empreendimento_id || null,
+        marca_dagua_url: t.marca_dagua_url ?? null,
+        marca_dagua_opacidade: t.marca_dagua_opacidade ?? 0.08,
         is_active: t.is_active ?? true,
       };
       if (t.id) {

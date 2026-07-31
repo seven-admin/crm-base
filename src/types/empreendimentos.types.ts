@@ -201,6 +201,8 @@ export interface Unidade {
   reserved_until?: string | null;
   descricao: string | null;
   observacoes: string | null;
+  imagem_planta_url?: string | null;
+  imagem_garagem_url?: string | null;
   polygon_coords: PolygonCoords | null;
   is_active: boolean;
   created_at: string;

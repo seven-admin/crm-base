@@ -17,6 +17,8 @@ import { useContratoTemplate, useSaveContratoTemplate, useContratoVariaveis } fr
 import { useContratoBlocos } from '@/hooks/useNexaContratoBlocos';
 import { useEmpreendimentosAtivos } from '@/hooks/useNexa';
 import { extrairVariaveis, resolveVariaveis } from '@/lib/contratoVariaveis';
+import { renumerarClausulas, wrapBloco } from '@/lib/contratoNumeracao';
+import { FachadaImageUpload } from '@/components/empreendimentos/FachadaImageUpload';
 import { toast } from 'sonner';
 
 export default function NexaContratoTemplateEditor() {
@@ -34,6 +36,8 @@ export default function NexaContratoTemplateEditor() {
   const [empId, setEmpId] = useState<string>('');
   const [conteudo, setConteudo] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [marcaDaguaUrl, setMarcaDaguaUrl] = useState('');
+  const [marcaDaguaOpacidade, setMarcaDaguaOpacidade] = useState(0.08);
 
   useEffect(() => {
     if (template) {
@@ -42,6 +46,8 @@ export default function NexaContratoTemplateEditor() {
       setEmpId(template.empreendimento_id || '');
       setConteudo(template.conteudo_html || '');
       setIsActive(template.is_active);
+      setMarcaDaguaUrl(template.marca_dagua_url || '');
+      setMarcaDaguaOpacidade(template.marca_dagua_opacidade ?? 0.08);
     }
   }, [template]);
 
@@ -55,7 +61,7 @@ export default function NexaContratoTemplateEditor() {
     return out;
   }, [variaveis]);
 
-  const previewHtml = useMemo(() => resolveVariaveis(conteudo, exemploValores), [conteudo, exemploValores]);
+  const previewHtml = useMemo(() => resolveVariaveis(renumerarClausulas(conteudo), exemploValores), [conteudo, exemploValores]);
 
   const handleSave = async () => {
     if (!nome.trim()) { toast.error('Informe o nome do modelo.'); return; }
@@ -66,6 +72,8 @@ export default function NexaContratoTemplateEditor() {
       empreendimento_id: empId || null,
       conteudo_html: conteudo,
       variaveis: varsUsadas,
+      marca_dagua_url: marcaDaguaUrl || null,
+      marca_dagua_opacidade: marcaDaguaOpacidade,
       is_active: isActive,
     });
     if (isNew && savedId) nav(`/nexa/contratos/modelos/${savedId}`);
@@ -108,6 +116,33 @@ export default function NexaContratoTemplateEditor() {
               <div className="flex items-center gap-2">
                 <Switch checked={isActive} onCheckedChange={setIsActive} />
                 <Label>Ativo</Label>
+              </div>
+
+              <div className="border-t pt-3 space-y-2">
+                <Label>Marca d'água (todas as páginas)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Imagem sobreposta e centralizada em cada página do PDF gerado.
+                </p>
+                <FachadaImageUpload
+                  empreendimentoId={empId || 'contratos-marca'}
+                  currentImageUrl={marcaDaguaUrl || undefined}
+                  onUploadComplete={setMarcaDaguaUrl}
+                  onRemove={() => setMarcaDaguaUrl('')}
+                />
+                {marcaDaguaUrl && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Opacidade</Label>
+                    <Input
+                      type="number"
+                      min={0.02}
+                      max={1}
+                      step={0.01}
+                      value={marcaDaguaOpacidade}
+                      onChange={(e) => setMarcaDaguaOpacidade(Number(e.target.value) || 0.08)}
+                      className="w-24"
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -165,7 +200,7 @@ export default function NexaContratoTemplateEditor() {
                       <button
                         key={b.id}
                         type="button"
-                        onClick={() => insertHtmlIntoTipTap(b.conteudo_html)}
+                        onClick={() => insertHtmlIntoTipTap(wrapBloco(b.nome, b.conteudo_html))}
                         className="w-full rounded-xl border border-border/70 p-2 text-left text-sm transition-colors hover:bg-primary-soft/50"
                       >
                         <div className="text-xs font-medium">{b.nome}</div>
