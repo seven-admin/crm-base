@@ -182,6 +182,7 @@ export interface Contrato {
   numero: string | null;
   template_id: string | null;
   cliente_id: string | null;
+  cliente_nome: string | null;
   empreendimento_id: string | null;
   unidade_id: string | null;
   visita_id: string | null;

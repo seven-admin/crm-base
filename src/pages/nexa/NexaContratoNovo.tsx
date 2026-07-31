@@ -7,63 +7,83 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
 import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf, marcarUnidadeEmContrato } from '@/hooks/useNexaContratos';
-import { useClientesSelect } from '@/hooks/useClientesSelect';
-import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
+import { usePropostasNexa, buscarPropostaPorCodigo, type PropostaListItem } from '@/hooks/useNexaPropostas';
+import { useEmpreendimentosAtivos } from '@/hooks/useNexa';
 import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, normalizarQuebras } from '@/lib/contratoVariaveis';
 import { extrairBlocos, prepararConteudo } from '@/lib/contratoNumeracao';
 import { propostaParaVariaveis } from '@/lib/propostaParaVariaveis';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NexaContratoNovo() {
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const { data: clientes } = useClientesSelect(undefined, true);
   const { data: emps } = useEmpreendimentosAtivos();
   const { data: templates } = useContratoTemplates();
   const { data: variaveisCat } = useContratoVariaveis();
   const saveContrato = useSaveContrato();
   const uploadPdf = useUploadContratoPdf();
 
+  // Duas frentes: "proposta" (a partir de uma proposta da NEXA) e "zero" (do zero, só modelo).
+  const origem: 'proposta' | 'zero' = params.get('origem') === 'proposta' ? 'proposta' : 'zero';
+
   const [step, setStep] = useState(0);
-  const [clienteId, setClienteId] = useState<string>(params.get('cliente') || '');
   const [empId, setEmpId] = useState<string>(params.get('empreendimento') || '');
   const [unidadeId, setUnidadeId] = useState<string>('');
   const [templateId, setTemplateId] = useState<string>('');
   const [valor, setValor] = useState<string>('');
   const [obs, setObs] = useState<string>('');
   const [valores, setValores] = useState<Record<string, string>>({});
+  const [clienteNome, setClienteNome] = useState<string>('');
+  const [propostaCodigo, setPropostaCodigo] = useState<string>('');
   const [blocosExcluidos, setBlocosExcluidos] = useState<Set<number>>(new Set());
   const [gerando, setGerando] = useState(false);
-  const [buscandoProposta, setBuscandoProposta] = useState(false);
+  const [carregandoProposta, setCarregandoProposta] = useState(false);
+  const [buscaProposta, setBuscaProposta] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // Integração ao vivo: busca a proposta da unidade no sistema NEXA (outro Supabase,
-  // via edge function) e preenche as variáveis do contrato. O UID da unidade daqui é
-  // o mesmo externalUnitId lá.
-  const buscarProposta = async () => {
-    if (!unidadeId) { toast.info('Selecione a unidade primeiro.'); return; }
-    setBuscandoProposta(true);
+  // Front "proposta": a lista de clientes vem das propostas cadastradas na NEXA.
+  const { data: propostas, isLoading: propostasLoading } = usePropostasNexa(origem === 'proposta');
+  const propostasFiltradas = useMemo(() => {
+    const q = buscaProposta.trim().toLowerCase();
+    if (!q) return propostas ?? [];
+    return (propostas ?? []).filter((p) =>
+      [p.buyer_name, p.unit_number, p.project_name, p.proposal_code].some((v) => (v ?? '').toLowerCase().includes(q)),
+    );
+  }, [propostas, buscaProposta]);
+
+  // Ao escolher uma proposta: busca completa, mapeia para as variáveis e resolve a
+  // unidade/empreendimento no nosso banco pelo UID compartilhado.
+  const selecionarProposta = async (p: PropostaListItem) => {
+    setCarregandoProposta(true);
     try {
-      const { data, error } = await supabase.functions.invoke('propostas', { body: { externalUnitId: unidadeId } });
-      if (error) throw error;
-      if (!data?.found) { toast.info('Nenhuma proposta encontrada para esta unidade.'); return; }
-      const vals = propostaParaVariaveis(data.data);
-      setValores((prev) => ({ ...prev, ...vals }));
-      toast.success(`Proposta ${data.proposal_code} carregada (${Object.keys(vals).length} campos).`);
+      const full = await buscarPropostaPorCodigo(p.proposal_code);
+      if (!full?.found) { toast.error('Proposta não encontrada.'); return; }
+      const vals = propostaParaVariaveis(full.data);
+      setPropostaCodigo(p.proposal_code);
+      setClienteNome(p.buyer_name || '');
+      setUnidadeId(p.external_unit_id || '');
+      let empReal = '';
+      if (p.external_unit_id) {
+        const { data: u } = await supabase.from('seven_unidades').select('empreendimento_id').eq('id', p.external_unit_id).maybeSingle();
+        empReal = (u as any)?.empreendimento_id || '';
+        setEmpId(empReal);
+      }
+      const auto = await resolverValoresAutomaticos({ empreendimentoId: empReal || null, unidadeId: p.external_unit_id || null, valorContrato: null });
+      setValores({ ...auto, ...vals }); // proposta vence; herda data_atual do auto
+      toast.success(`Proposta ${p.proposal_code} carregada (${Object.keys(vals).length} campos).`);
     } catch (e: any) {
-      toast.error(e.message || 'Erro ao buscar proposta');
+      toast.error(e.message || 'Erro ao carregar proposta');
     } finally {
-      setBuscandoProposta(false);
+      setCarregandoProposta(false);
     }
   };
 
-  const { data: unidades } = useUnidadesDisponiveis(empId || undefined, ['disponivel', 'reservada']);
   const template = templates?.find((t) => t.id === templateId);
   const varsUsadas = useMemo(() => (template ? extrairVariaveis(template.conteudo_html) : []), [template]);
   const blocosDetectados = useMemo(() => (template ? extrairBlocos(template.conteudo_html) : []), [template]);
@@ -71,29 +91,25 @@ export default function NexaContratoNovo() {
   // Ao trocar de modelo, volta todos os blocos a "incluídos".
   useEffect(() => { setBlocosExcluidos(new Set()); }, [templateId]);
 
-  // resolver valores auto sempre que dados mudam
+  // Auto-resolver só no front "do zero" (o front "proposta" já traz tudo da proposta).
   const selecaoAnteriorRef = useRef<string>('');
   useEffect(() => {
+    if (origem !== 'zero') return;
     let cancel = false;
     (async () => {
       if (!templateId) return;
       const auto = await resolverValoresAutomaticos({
-        clienteId: clienteId || null,
         empreendimentoId: empId || null,
-        unidadeId: unidadeId || null,
         valorContrato: valor ? Number(valor) : null,
       });
       if (cancel) return;
-      // Se cliente/empreendimento/unidade mudaram, os valores auto atuais (nome,
-      // cpf, endereço etc.) substituem os anteriores — senão o merge manteria os
-      // dados da seleção antiga (ex: nome do cliente errado no contrato).
-      const chaveSelecao = `${clienteId}|${empId}|${unidadeId}`;
+      const chaveSelecao = `${empId}`;
       const selecaoMudou = chaveSelecao !== selecaoAnteriorRef.current;
       selecaoAnteriorRef.current = chaveSelecao;
       setValores((prev) => (selecaoMudou ? { ...prev, ...auto } : { ...auto, ...prev }));
     })();
     return () => { cancel = true; };
-  }, [templateId, clienteId, empId, unidadeId, valor]);
+  }, [origem, templateId, empId, valor]);
 
   const previewHtml = useMemo(
     () => (template ? normalizarQuebras(resolveVariaveis(prepararConteudo(template.conteudo_html, blocosExcluidos), valores)) : ''),
@@ -106,7 +122,8 @@ export default function NexaContratoNovo() {
     try {
       const contratoId = await saveContrato.mutateAsync({
         template_id: templateId,
-        cliente_id: clienteId || null,
+        cliente_id: null,
+        cliente_nome: clienteNome || valores.nome_cliente || null,
         empreendimento_id: empId || null,
         unidade_id: unidadeId || null,
         valor_contrato: valor ? Number(valor) : null,
@@ -161,14 +178,14 @@ export default function NexaContratoNovo() {
   };
 
   const canNext = [
-    () => !!clienteId && !!empId,
+    () => (origem === 'proposta' ? !!propostaCodigo : true),
     () => !!templateId,
     () => true,
   ][step]?.();
 
   return (
     <MainLayout
-      title="Novo contrato"
+      title={origem === 'proposta' ? 'Novo contrato — a partir de proposta' : 'Novo contrato — do zero'}
       actions={<Button variant="outline" onClick={() => nav('/nexa/contratos')}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>}
     >
       <div className="mx-auto max-w-5xl space-y-6">
@@ -183,40 +200,64 @@ export default function NexaContratoNovo() {
 
         <Card className="overflow-hidden">
           <CardContent className="pt-6">
-            {step === 0 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Cliente *</Label>
-                    <Select value={clienteId} onValueChange={setClienteId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                      <SelectContent>
-                        {clientes?.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Empreendimento *</Label>
-                    <Select value={empId} onValueChange={setEmpId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                      <SelectContent>
-                        {emps?.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {step === 0 && origem === 'proposta' && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Cliente (proposta NEXA) *</Label>
+                  <Input value={buscaProposta} onChange={(e) => setBuscaProposta(e.target.value)} placeholder="Buscar por nome, unidade, empreendimento ou código…" />
                 </div>
+                {propostasLoading ? (
+                  <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando propostas…</div>
+                ) : (
+                  <div className="max-h-96 space-y-1 overflow-y-auto rounded-[1.25rem] border border-border/70 bg-muted/20 p-2">
+                    {propostasFiltradas.length === 0 && <p className="p-3 text-sm text-muted-foreground">Nenhuma proposta encontrada.</p>}
+                    {propostasFiltradas.map((p) => {
+                      const sel = p.proposal_code === propostaCodigo;
+                      return (
+                        <button
+                          key={p.proposal_code}
+                          type="button"
+                          disabled={carregandoProposta}
+                          onClick={() => selecionarProposta(p)}
+                          className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left text-sm transition-colors ${sel ? 'border-primary bg-primary-soft/40' : 'border-border/70 hover:bg-muted/50'}`}
+                        >
+                          <div className="min-w-0">
+                            <div className="font-medium truncate">{p.buyer_name || '—'}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {p.project_name} · Und. {p.unit_number} · <span className="font-mono">{p.proposal_code}</span>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="shrink-0 text-[10px] uppercase">{p.status}</Badge>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {propostaCodigo && (
+                  <div className="rounded-[1.25rem] border border-border/70 bg-muted/20 p-3 text-sm">
+                    <span className="text-muted-foreground">Selecionada: </span>
+                    <strong>{clienteNome}</strong> — proposta {propostaCodigo}
+                    {carregandoProposta && <Loader2 className="ml-2 inline h-3 w-3 animate-spin" />}
+                  </div>
+                )}
+                <div>
+                  <Label>Observações</Label>
+                  <Textarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {step === 0 && origem === 'zero' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Contrato do zero: escolha o modelo e preencha as variáveis manualmente na próxima etapa.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Unidade (opcional)</Label>
-                    <Select value={unidadeId || 'none'} onValueChange={(v) => setUnidadeId(v === 'none' ? '' : v)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Label>Empreendimento (opcional)</Label>
+                    <Select value={empId || 'none'} onValueChange={(v) => setEmpId(v === 'none' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Global (todos)" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {unidades?.map((u: any) => (
-                          <SelectItem key={u.unidade_id} value={u.unidade_id}>
-                            {u.bloco ? `Bl.${u.bloco} · ` : ''}Und.{u.unidade}{u.tipologia ? ` · ${u.tipologia}` : ''}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="none">Global (todos)</SelectItem>
+                        {emps?.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -225,15 +266,6 @@ export default function NexaContratoNovo() {
                     <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
                   </div>
                 </div>
-                {unidadeId && (
-                  <div className="flex items-center gap-3 rounded-[1.25rem] border border-border/70 bg-muted/20 p-3">
-                    <Button type="button" variant="outline" size="sm" onClick={buscarProposta} disabled={buscandoProposta}>
-                      {buscandoProposta ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileSearch className="h-4 w-4 mr-2" />}
-                      Buscar proposta da unidade
-                    </Button>
-                    <span className="text-xs text-muted-foreground">Preenche comprador, cônjuge, pagamento e dados da unidade a partir da proposta (NEXA).</span>
-                  </div>
-                )}
                 <div>
                   <Label>Observações</Label>
                   <Textarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} />

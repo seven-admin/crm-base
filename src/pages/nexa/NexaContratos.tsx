@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Download, FileText, Settings2, Variable, Blocks, Trash2 } from 'lucide-react';
+import { Plus, Download, FileText, Settings2, Variable, Blocks, Trash2, FileSearch } from 'lucide-react';
 import { useContratos, downloadContratoPdf, useUpdateContratoStatus, useDeleteContrato } from '@/hooks/useNexaContratos';
 import { CONTRATO_STATUS_LABELS, CONTRATO_STATUS_COLORS, type ContratoStatus } from '@/types/contratos.types';
 
@@ -28,7 +28,8 @@ export default function NexaContratos() {
           <Button variant="outline" asChild><Link to="/nexa/contratos/variaveis"><Variable className="h-4 w-4 mr-2" />Variáveis</Link></Button>
           <Button variant="outline" asChild><Link to="/nexa/contratos/blocos"><Blocks className="h-4 w-4 mr-2" />Blocos</Link></Button>
           <Button variant="outline" asChild><Link to="/nexa/contratos/modelos"><Settings2 className="h-4 w-4 mr-2" />Modelos</Link></Button>
-          <Button asChild><Link to="/nexa/contratos/novo"><Plus className="h-4 w-4 mr-2" />Novo contrato</Link></Button>
+          <Button variant="outline" asChild><Link to="/nexa/contratos/novo?origem=proposta"><FileSearch className="h-4 w-4 mr-2" />A partir de proposta</Link></Button>
+          <Button asChild><Link to="/nexa/contratos/novo?origem=zero"><Plus className="h-4 w-4 mr-2" />Do zero (modelo)</Link></Button>
         </div>
       }
     >
@@ -61,7 +62,7 @@ export default function NexaContratos() {
               return (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono text-xs">{c.numero || '—'}</TableCell>
-                  <TableCell>{c.cliente?.nome || '—'}</TableCell>
+                  <TableCell>{c.cliente?.nome || c.cliente_nome || '—'}</TableCell>
                   <TableCell>{c.empreendimento?.nome || '—'}</TableCell>
                   <TableCell>{c.template?.nome || '—'}</TableCell>
                   <TableCell>{(c.valor_contrato ?? c.valor) ? Number(c.valor_contrato ?? c.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</TableCell>
