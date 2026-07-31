@@ -389,6 +389,34 @@
   .rich-text-content .ProseMirror-selectednode {
     @apply outline outline-2 outline-primary outline-offset-2;
   }
+
+  /* Tabelas do editor de contrato (TipTap) — visíveis no editor, no preview e no PDF */
+  .contrato-table {
+    @apply w-full my-3;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .contrato-table td,
+  .contrato-table th {
+    @apply border border-border p-2 align-top;
+    min-width: 3rem;
+    position: relative;
+  }
+  .contrato-table th {
+    @apply bg-muted font-semibold text-left;
+  }
+  /* Célula selecionada e alça de redimensionamento de coluna do ProseMirror */
+  .ProseMirror .selectedCell:after {
+    content: '';
+    @apply absolute inset-0 bg-primary/15 pointer-events-none z-10;
+  }
+  .ProseMirror .column-resize-handle {
+    @apply absolute top-0 bottom-0 w-1 bg-primary pointer-events-none;
+    right: -2px;
+  }
+  .ProseMirror.resize-cursor {
+    cursor: col-resize;
+  }
   /* Placeholder styling */
   .rich-text-content p.is-editor-empty:first-child::before {
     @apply text-muted-foreground pointer-events-none float-left h-0;

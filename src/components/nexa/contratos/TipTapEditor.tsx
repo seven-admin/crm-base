@@ -13,6 +13,9 @@ import Image from '@tiptap/extension-image';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -20,6 +23,7 @@ import {
   Heading1, Heading2, Heading3, Undo, Redo,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Link as LinkIcon, Table as TableIcon, Minus, Quote, Image as ImageIcon,
+  Columns3, Rows3, Trash2, ChevronDown,
 } from 'lucide-react';
 
 // Bloco opcional do contrato: preserva o wrapper <div data-bloco-nome> ao salvar,
@@ -124,6 +128,33 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
         <Separator orientation="vertical" className="h-6 mx-1" />
         <ToolbarButton onClick={() => insertLink(editor)} active={editor.isActive('link')} title="Link"><LinkIcon className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Inserir tabela"><TableIcon className="h-4 w-4" /></ToolbarButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button" size="sm"
+              variant={editor.isActive('table') ? 'default' : 'ghost'}
+              disabled={!editor.isActive('table')}
+              title="Editar tabela"
+              className="h-8 px-1.5"
+            >
+              <TableIcon className="h-4 w-4" /><ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => editor.chain().focus().addColumnBefore().run()}><Columns3 className="h-4 w-4 mr-2" />Coluna à esquerda</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns3 className="h-4 w-4 mr-2" />Coluna à direita</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().deleteColumn().run()}><Trash2 className="h-4 w-4 mr-2" />Remover coluna</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}><Rows3 className="h-4 w-4 mr-2" />Linha acima</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}><Rows3 className="h-4 w-4 mr-2" />Linha abaixo</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}><Trash2 className="h-4 w-4 mr-2" />Remover linha</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Alternar cabeçalho</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().mergeOrSplit().run()}>Mesclar / dividir células</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => editor.chain().focus().deleteTable().run()} className="text-destructive focus:text-destructive"><Trash2 className="h-4 w-4 mr-2" />Excluir tabela</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <ToolbarButton onClick={() => insertImage(editor)} title="Inserir imagem"><ImageIcon className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Linha horizontal"><Minus className="h-4 w-4" /></ToolbarButton>
         <Separator orientation="vertical" className="h-6 mx-1" />
