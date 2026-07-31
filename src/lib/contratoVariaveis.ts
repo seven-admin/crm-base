@@ -21,6 +21,15 @@ export function resolveVariaveis(html: string, valores: Record<string, string>):
   });
 }
 
+/**
+ * Parágrafos vazios (linhas em branco feitas com Enter no editor) saem como
+ * <p></p> e colapsam para altura zero ao renderizar/rasterizar — a linha em branco
+ * some no PDF. Troca por <p><br></p> (preservando atributos) para manterem a altura.
+ */
+export function normalizarQuebras(html: string): string {
+  return html.replace(/<p([^>]*)>(?:\s|&nbsp;)*<\/p>/gi, '<p$1><br></p>');
+}
+
 /** Extrai as chaves {{...}} usadas em um HTML */
 export function extrairVariaveis(html: string): string[] {
   const set = new Set<string>();
