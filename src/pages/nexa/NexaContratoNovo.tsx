@@ -14,8 +14,10 @@ import { useClientesSelect } from '@/hooks/useClientesSelect';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis } from '@/hooks/useNexa';
 import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, normalizarQuebras } from '@/lib/contratoVariaveis';
 import { extrairBlocos, prepararConteudo } from '@/lib/contratoNumeracao';
+import { propostaParaVariaveis } from '@/lib/propostaParaVariaveis';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NexaContratoNovo() {
@@ -38,7 +40,28 @@ export default function NexaContratoNovo() {
   const [valores, setValores] = useState<Record<string, string>>({});
   const [blocosExcluidos, setBlocosExcluidos] = useState<Set<number>>(new Set());
   const [gerando, setGerando] = useState(false);
+  const [buscandoProposta, setBuscandoProposta] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // Integração ao vivo: busca a proposta da unidade no sistema NEXA (outro Supabase,
+  // via edge function) e preenche as variáveis do contrato. O UID da unidade daqui é
+  // o mesmo externalUnitId lá.
+  const buscarProposta = async () => {
+    if (!unidadeId) { toast.info('Selecione a unidade primeiro.'); return; }
+    setBuscandoProposta(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('propostas', { body: { externalUnitId: unidadeId } });
+      if (error) throw error;
+      if (!data?.found) { toast.info('Nenhuma proposta encontrada para esta unidade.'); return; }
+      const vals = propostaParaVariaveis(data.data);
+      setValores((prev) => ({ ...prev, ...vals }));
+      toast.success(`Proposta ${data.proposal_code} carregada (${Object.keys(vals).length} campos).`);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao buscar proposta');
+    } finally {
+      setBuscandoProposta(false);
+    }
+  };
 
   const { data: unidades } = useUnidadesDisponiveis(empId || undefined, ['disponivel', 'reservada']);
   const template = templates?.find((t) => t.id === templateId);
@@ -202,6 +225,15 @@ export default function NexaContratoNovo() {
                     <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
                   </div>
                 </div>
+                {unidadeId && (
+                  <div className="flex items-center gap-3 rounded-[1.25rem] border border-border/70 bg-muted/20 p-3">
+                    <Button type="button" variant="outline" size="sm" onClick={buscarProposta} disabled={buscandoProposta}>
+                      {buscandoProposta ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileSearch className="h-4 w-4 mr-2" />}
+                      Buscar proposta da unidade
+                    </Button>
+                    <span className="text-xs text-muted-foreground">Preenche comprador, cônjuge, pagamento e dados da unidade a partir da proposta (NEXA).</span>
+                  </div>
+                )}
                 <div>
                   <Label>Observações</Label>
                   <Textarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} />
