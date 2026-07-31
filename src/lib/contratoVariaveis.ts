@@ -194,14 +194,22 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
   const isBreakMarker = (n: ChildNode): n is HTMLElement =>
     n instanceof HTMLElement && n.style.pageBreakBefore === 'always';
 
+  // Mantém a tipografia (classe prose etc.) mas remove o "chrome" do card de preview
+  // (borda arredondada, sombra, fundo e padding do container), que senão seria
+  // rasterizado como uma caixa dentro da página. As margens agora vêm do jsPDF.
+  const makeSegment = () => {
+    const d = document.createElement('div');
+    d.className = clone.className;
+    d.style.cssText = 'border:none;border-radius:0;box-shadow:none;padding:0;margin:0;background:#fff;max-width:none;width:100%';
+    return d;
+  };
+
   const segments: HTMLElement[] = [];
-  let current = document.createElement('div');
-  current.className = clone.className;
+  let current = makeSegment();
   Array.from(clone.childNodes).forEach((child) => {
     if (isBreakMarker(child)) {
       segments.push(current);
-      current = document.createElement('div');
-      current.className = clone.className;
+      current = makeSegment();
       return;
     }
     current.appendChild(child);
