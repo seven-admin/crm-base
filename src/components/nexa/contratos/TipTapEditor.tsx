@@ -107,7 +107,7 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[500px] p-6 focus:outline-none',
+        class: 'prose prose-sm max-w-none min-h-[300px] p-6 focus:outline-none',
       },
     },
   });
@@ -218,7 +218,9 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} title="Desfazer"><Undo className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().redo().run()} title="Refazer"><Redo className="h-4 w-4" /></ToolbarButton>
       </div>
-      <EditorContent editor={editor} />
+      <div className="max-h-[55vh] overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

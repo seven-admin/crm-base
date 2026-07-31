@@ -260,7 +260,7 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
   // Cabeçalho/rodapé/numeração nas páginas de conteúdo (antes de anexar imagens finais).
   const paginasConteudo = pdf.getNumberOfPages();
   if (options?.cabecalho || options?.rodape || options?.numerarPaginas) {
-    pdf.setFontSize(9);
+    pdf.setFontSize(7.5);
     pdf.setTextColor(110, 110, 110);
     for (let p = 1; p <= paginasConteudo; p++) {
       pdf.setPage(p);

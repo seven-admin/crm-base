@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown } from 'lucide-react';
 import { TipTapEditor, insertIntoTipTap, insertHtmlIntoTipTap } from '@/components/nexa/contratos/TipTapEditor';
 import { useContratoTemplate, useSaveContratoTemplate, useContratoVariaveis } from '@/hooks/useNexaContratos';
 import { useContratoBlocos } from '@/hooks/useNexaContratoBlocos';
@@ -45,6 +46,7 @@ export default function NexaContratoTemplateEditor() {
   const [cabecalho, setCabecalho] = useState('');
   const [rodape, setRodape] = useState('');
   const [numerarPaginas, setNumerarPaginas] = useState(false);
+  const [configOpen, setConfigOpen] = useState(isNew);
 
   useEffect(() => {
     if (template) {
@@ -113,7 +115,15 @@ export default function NexaContratoTemplateEditor() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         <div className="space-y-4">
           <Card>
-            <CardContent className="pt-6 space-y-3">
+            <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
+              <CollapsibleTrigger asChild>
+                <button type="button" className="flex w-full items-center justify-between px-6 py-4 text-left">
+                  <span className="font-medium">Configurações do modelo{nome ? ` — ${nome}` : ''}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${configOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+            <CardContent className="pt-0 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Nome *</Label>
@@ -192,6 +202,8 @@ export default function NexaContratoTemplateEditor() {
                 </div>
               </div>
             </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           <Tabs defaultValue="editor">
