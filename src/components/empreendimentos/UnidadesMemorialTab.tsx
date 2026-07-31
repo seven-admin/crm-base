@@ -19,7 +19,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Save, Loader2, Copy, ClipboardPaste, FileText, Upload, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Save, Loader2, Copy, ClipboardPaste, FileText, Upload, X, Images } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnidades } from '@/hooks/useUnidades';
 import { useBlocos } from '@/hooks/useBlocos';
@@ -43,6 +45,19 @@ interface EditedMemorial {
   imagem_garagem_url?: string | null;
 }
 
+type ImagemTipo = 'planta' | 'garagem';
+
+// Sobe a imagem para o storage e devolve a URL pública. `refId` é só para compor o
+// nome do arquivo (id da unidade ou 'lote' no modo "mesma imagem para todas").
+async function uploadImagemUnidade(empreendimentoId: string, refId: string, tipo: ImagemTipo, file: File): Promise<string> {
+  const ext = file.name.split('.').pop();
+  const path = `${empreendimentoId}/unidade-${refId}-${tipo}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  const { error } = await supabase.storage.from('empreendimentos-midias').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from('empreendimentos-midias').getPublicUrl(path);
+  return publicUrl;
+}
+
 // Upload compacto de imagem por unidade (planta/garagem). Sobe no ato e devolve a
 // URL pública; o valor só persiste ao clicar em "Salvar Alterações" (via editedValues).
 function UnidadeImagemCell({
@@ -61,12 +76,7 @@ function UnidadeImagemCell({
     if (!file.type.startsWith('image/')) { toast.error('Selecione uma imagem'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${empreendimentoId}/unidade-${unidadeId}-${tipo}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('empreendimentos-midias').upload(path, file, { upsert: true });
-      if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from('empreendimentos-midias').getPublicUrl(path);
-      onChange(publicUrl);
+      onChange(await uploadImagemUnidade(empreendimentoId, unidadeId, tipo, file));
     } catch (e) {
       console.error(e);
       toast.error('Erro ao enviar imagem');
@@ -102,6 +112,128 @@ function UnidadeImagemCell({
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }}
       />
     </div>
+  );
+}
+
+interface UnidadeRef { id: string; numero: string }
+
+// Upload em lote: (A) mesma imagem para todas as unidades do filtro; (B) vários
+// arquivos casados pelo número no nome do arquivo. Resultado vai para editedValues
+// no pai — o usuário revisa e clica "Salvar Alterações".
+function UploadImagensLoteDialog({
+  empreendimentoId, unidades, onApply,
+}: {
+  empreendimentoId: string;
+  unidades: UnidadeRef[];
+  onApply: (updates: { unidadeId: string; tipo: ImagemTipo; url: string }[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [tipo, setTipo] = useState<ImagemTipo>('planta');
+  const [busy, setBusy] = useState(false);
+  const [previa, setPrevia] = useState<{ file: File; unidade: UnidadeRef | null; tipo: ImagemTipo }[]>([]);
+
+  const norm = (s: string) => s.replace(/^0+/, '');
+  const detectarTipo = (nome: string): ImagemTipo => {
+    const n = nome.toLowerCase();
+    if (/garag|vaga|box/.test(n)) return 'garagem';
+    if (/planta/.test(n)) return 'planta';
+    return tipo;
+  };
+  const matchUnidade = (nome: string): UnidadeRef | null => {
+    const base = nome.replace(/\.[^.]+$/, '');
+    for (const g of base.match(/\d+/g) || []) {
+      const alvo = unidades.filter((u) => norm(u.numero) === norm(g));
+      if (alvo.length === 1) return alvo[0];
+    }
+    return null;
+  };
+
+  const aplicarMesma = async (file: File) => {
+    if (!file.type.startsWith('image/')) { toast.error('Selecione uma imagem'); return; }
+    setBusy(true);
+    try {
+      const url = await uploadImagemUnidade(empreendimentoId, 'lote', tipo, file);
+      onApply(unidades.map((u) => ({ unidadeId: u.id, tipo, url })));
+      toast.success(`Imagem aplicada a ${unidades.length} unidade(s). Revise e salve.`);
+      setOpen(false);
+    } catch (e: any) { toast.error(e.message || 'Erro ao enviar'); } finally { setBusy(false); }
+  };
+
+  const confirmarLote = async () => {
+    const casados = previa.filter((p) => p.unidade);
+    setBusy(true);
+    try {
+      const updates: { unidadeId: string; tipo: ImagemTipo; url: string }[] = [];
+      for (const p of casados) {
+        const url = await uploadImagemUnidade(empreendimentoId, p.unidade!.id, p.tipo, p.file);
+        updates.push({ unidadeId: p.unidade!.id, tipo: p.tipo, url });
+      }
+      onApply(updates);
+      toast.success(`${updates.length} imagem(ns) aplicada(s); ${previa.length - casados.length} sem correspondência. Revise e salve.`);
+      setOpen(false); setPrevia([]);
+    } catch (e: any) { toast.error(e.message || 'Erro ao enviar'); } finally { setBusy(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setPrevia([]); }}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm"><Images className="h-4 w-4 mr-2" />Imagens em lote</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Upload de imagens em lote</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-xs">Tipo padrão (quando o nome do arquivo não indicar)</Label>
+            <Select value={tipo} onValueChange={(v) => setTipo(v as ImagemTipo)}>
+              <SelectTrigger className="w-40 mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planta">Planta</SelectItem>
+                <SelectItem value="garagem">Garagem</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="text-sm font-medium">A · Mesma imagem para todas ({unidades.length} un.)</div>
+            <input type="file" accept="image/*" disabled={busy}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) aplicarMesma(f); e.target.value = ''; }}
+              className="text-sm" />
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="text-sm font-medium">B · Vários arquivos — casar pelo número no nome</div>
+            <p className="text-xs text-muted-foreground">Ex.: <code>401-planta.jpg</code>, <code>402 garagem.png</code>. O número casa com a unidade; "planta"/"garagem" no nome define o tipo (senão usa o tipo padrão).</p>
+            <input type="file" accept="image/*" multiple disabled={busy}
+              onChange={(e) => { if (e.target.files?.length) setPrevia(Array.from(e.target.files).map((file) => ({ file, unidade: matchUnidade(file.name), tipo: detectarTipo(file.name) }))); }}
+              className="text-sm" />
+            {previa.length > 0 && (
+              <>
+                <div className="max-h-56 overflow-y-auto rounded border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow><TableHead>Arquivo</TableHead><TableHead>Unidade</TableHead><TableHead>Tipo</TableHead></TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {previa.map((p, i) => (
+                        <TableRow key={i} className={cn(!p.unidade && 'bg-red-50 dark:bg-red-950/20')}>
+                          <TableCell className="text-xs">{p.file.name}</TableCell>
+                          <TableCell className="text-xs">{p.unidade ? p.unidade.numero : <span className="text-destructive">sem correspondência</span>}</TableCell>
+                          <TableCell className="text-xs">{p.tipo}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <Button size="sm" disabled={busy || !previa.some((p) => p.unidade)} onClick={confirmarLote}>
+                  {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                  Enviar {previa.filter((p) => p.unidade).length} imagem(ns)
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -172,6 +304,17 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
       ...prev,
       [unidadeId]: { ...prev[unidadeId], [key]: url },
     }));
+  };
+
+  const aplicarImagensLote = (updates: { unidadeId: string; tipo: ImagemTipo; url: string }[]) => {
+    setEditedValues((prev) => {
+      const next = { ...prev };
+      for (const u of updates) {
+        const key = u.tipo === 'planta' ? 'imagem_planta_url' : 'imagem_garagem_url';
+        next[u.unidadeId] = { ...next[u.unidadeId], [key]: u.url };
+      }
+      return next;
+    });
   };
 
   const getDisplayImagem = (unidadeId: string, tipo: 'planta' | 'garagem', original?: string | null) => {
@@ -343,6 +486,11 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <UploadImagensLoteDialog
+              empreendimentoId={empreendimentoId}
+              unidades={unidades.map((u) => ({ id: u.id, numero: u.numero }))}
+              onApply={aplicarImagensLote}
+            />
             {copiedFachada && (
               <Button
                 variant="outline"
