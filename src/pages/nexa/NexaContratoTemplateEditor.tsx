@@ -38,6 +38,13 @@ export default function NexaContratoTemplateEditor() {
   const [isActive, setIsActive] = useState(true);
   const [marcaDaguaUrl, setMarcaDaguaUrl] = useState('');
   const [marcaDaguaOpacidade, setMarcaDaguaOpacidade] = useState(0.08);
+  const [margemTopo, setMargemTopo] = useState(20);
+  const [margemDireita, setMargemDireita] = useState(20);
+  const [margemBaixo, setMargemBaixo] = useState(20);
+  const [margemEsquerda, setMargemEsquerda] = useState(20);
+  const [cabecalho, setCabecalho] = useState('');
+  const [rodape, setRodape] = useState('');
+  const [numerarPaginas, setNumerarPaginas] = useState(false);
 
   useEffect(() => {
     if (template) {
@@ -48,6 +55,13 @@ export default function NexaContratoTemplateEditor() {
       setIsActive(template.is_active);
       setMarcaDaguaUrl(template.marca_dagua_url || '');
       setMarcaDaguaOpacidade(template.marca_dagua_opacidade ?? 0.08);
+      setMargemTopo(template.margem_topo ?? 20);
+      setMargemDireita(template.margem_direita ?? 20);
+      setMargemBaixo(template.margem_baixo ?? 20);
+      setMargemEsquerda(template.margem_esquerda ?? 20);
+      setCabecalho(template.cabecalho_texto || '');
+      setRodape(template.rodape_texto || '');
+      setNumerarPaginas(template.numerar_paginas ?? false);
     }
   }, [template]);
 
@@ -74,6 +88,13 @@ export default function NexaContratoTemplateEditor() {
       variaveis: varsUsadas,
       marca_dagua_url: marcaDaguaUrl || null,
       marca_dagua_opacidade: marcaDaguaOpacidade,
+      margem_topo: margemTopo,
+      margem_direita: margemDireita,
+      margem_baixo: margemBaixo,
+      margem_esquerda: margemEsquerda,
+      cabecalho_texto: cabecalho || null,
+      rodape_texto: rodape || null,
+      numerar_paginas: numerarPaginas,
       is_active: isActive,
     });
     if (isNew && savedId) nav(`/nexa/contratos/modelos/${savedId}`);
@@ -143,6 +164,32 @@ export default function NexaContratoTemplateEditor() {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="border-t pt-3 space-y-3">
+                <Label>Formatação da página (PDF)</Label>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Margens (mm)</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-1">
+                    <div><Label className="text-[10px]">Topo</Label><Input type="number" min={0} value={margemTopo} onChange={(e) => setMargemTopo(Number(e.target.value) || 0)} /></div>
+                    <div><Label className="text-[10px]">Direita</Label><Input type="number" min={0} value={margemDireita} onChange={(e) => setMargemDireita(Number(e.target.value) || 0)} /></div>
+                    <div><Label className="text-[10px]">Baixo</Label><Input type="number" min={0} value={margemBaixo} onChange={(e) => setMargemBaixo(Number(e.target.value) || 0)} /></div>
+                    <div><Label className="text-[10px]">Esquerda</Label><Input type="number" min={0} value={margemEsquerda} onChange={(e) => setMargemEsquerda(Number(e.target.value) || 0)} /></div>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Cabeçalho (opcional)</Label>
+                  <Input value={cabecalho} onChange={(e) => setCabecalho(e.target.value)} placeholder="Ex.: {{empreendimento}} — Contrato" />
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Impresso na margem superior. Aceita variáveis {'{{...}}'}.</p>
+                </div>
+                <div>
+                  <Label className="text-xs">Rodapé (opcional)</Label>
+                  <Input value={rodape} onChange={(e) => setRodape(e.target.value)} placeholder="Ex.: Documento gerado em {{data_atual}}" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={numerarPaginas} onCheckedChange={setNumerarPaginas} />
+                  <Label>Numerar páginas (Página X de Y)</Label>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -25,7 +25,7 @@ import { useUnidades } from '@/hooks/useUnidades';
 import { useBlocos } from '@/hooks/useBlocos';
 import { useFachadas } from '@/hooks/useFachadas';
 import { useUpdateUnidadesMemorial } from '@/hooks/useUnidades';
-import { UNIDADE_STATUS_LABELS, UNIDADE_STATUS_COLORS } from '@/types/empreendimentos.types';
+import { UNIDADE_STATUS_LABELS, UNIDADE_STATUS_BADGE } from '@/types/empreendimentos.types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { parseDecimalInput } from '@/lib/utils';
@@ -424,9 +424,9 @@ export function UnidadesMemorialTab({ empreendimentoId }: UnidadesMemorialTabPro
                       <TableCell className="font-medium">{unidade.numero}</TableCell>
                       <TableCell>{unidade.bloco?.nome || '-'}</TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="secondary" 
-                          className={cn('text-xs', UNIDADE_STATUS_COLORS[unidade.status])}
+                        <Badge
+                          variant="outline"
+                          className={cn('text-xs border', UNIDADE_STATUS_BADGE[unidade.status])}
                         >
                           {UNIDADE_STATUS_LABELS[unidade.status]}
                         </Badge>

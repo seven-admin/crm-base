@@ -108,7 +108,19 @@ export default function NexaContratoNovo() {
         ? { url: template.marca_dagua_url, opacidade: template.marca_dagua_opacidade ?? 0.08 }
         : undefined;
 
-      const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`, { marcaDagua, imagensFinais });
+      const blob = await gerarPdfDeHtml(previewRef.current, `contrato-${contratoId}.pdf`, {
+        margens: {
+          topo: template.margem_topo ?? 20,
+          direita: template.margem_direita ?? 20,
+          baixo: template.margem_baixo ?? 20,
+          esquerda: template.margem_esquerda ?? 20,
+        },
+        cabecalho: template.cabecalho_texto ? resolveVariaveis(template.cabecalho_texto, valores) : undefined,
+        rodape: template.rodape_texto ? resolveVariaveis(template.rodape_texto, valores) : undefined,
+        numerarPaginas: template.numerar_paginas ?? false,
+        marcaDagua,
+        imagensFinais,
+      });
       await uploadPdf.mutateAsync({ contratoId, blob });
       if (unidadeId) {
         const travada = await marcarUnidadeEmContrato(unidadeId);

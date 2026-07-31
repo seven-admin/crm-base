@@ -8,15 +8,38 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { useContratoTemplates, useDeleteContratoTemplate, contarContratosPorTemplate, type ContratoTemplate } from '@/hooks/useNexaContratos';
+import { Plus, Pencil, Trash2, Copy } from 'lucide-react';
+import { useContratoTemplates, useDeleteContratoTemplate, useSaveContratoTemplate, contarContratosPorTemplate, type ContratoTemplate } from '@/hooks/useNexaContratos';
 import { toast } from 'sonner';
 
 export default function NexaContratosTemplates() {
   const { data: templates, isLoading } = useContratoTemplates();
   const del = useDeleteContratoTemplate();
+  const save = useSaveContratoTemplate();
   const [alvoExclusao, setAlvoExclusao] = useState<ContratoTemplate | null>(null);
   const [verificandoUso, setVerificandoUso] = useState(false);
+  const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+
+  const duplicar = async (t: ContratoTemplate) => {
+    setDuplicandoId(t.id);
+    try {
+      // Cria como inativo para o usuário revisar antes de disponibilizar.
+      await save.mutateAsync({
+        nome: `${t.nome} (cópia)`,
+        descricao: t.descricao ?? undefined,
+        conteudo_html: t.conteudo_html,
+        variaveis: t.variaveis ?? [],
+        empreendimento_id: t.empreendimento_id ?? undefined,
+        marca_dagua_url: t.marca_dagua_url ?? undefined,
+        marca_dagua_opacidade: t.marca_dagua_opacidade,
+        is_active: false,
+      });
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao duplicar modelo');
+    } finally {
+      setDuplicandoId(null);
+    }
+  };
 
   const pedirExclusao = async (t: ContratoTemplate) => {
     setVerificandoUso(true);
@@ -71,6 +94,9 @@ export default function NexaContratosTemplates() {
                   <div className="flex gap-1">
                     <Button size="icon" variant="ghost" asChild>
                       <Link to={`/nexa/contratos/modelos/${t.id}`}><Pencil className="h-4 w-4" /></Link>
+                    </Button>
+                    <Button size="icon" variant="ghost" disabled={duplicandoId === t.id} onClick={() => duplicar(t)} title="Duplicar modelo">
+                      <Copy className="h-4 w-4" />
                     </Button>
                     <Button size="icon" variant="ghost" disabled={verificandoUso} onClick={() => pedirExclusao(t)}>
                       <Trash2 className="h-4 w-4" />

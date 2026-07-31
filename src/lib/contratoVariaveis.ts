@@ -32,6 +32,22 @@ export function extrairVariaveis(html: string): string[] {
 
 const fmtMoeda = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+// Chaves preenchidas automaticamente a partir do banco (cliente/empreendimento/
+// unidade/valor) por resolverValoresAutomaticos. As demais são de preenchimento
+// manual no assistente de geração. Fonte única de verdade — se resolver ganhar
+// uma nova chave, adicione aqui também.
+export const VARIAVEIS_AUTOMATICAS = [
+  'data_atual',
+  'nome_cliente', 'cpf_cliente', 'rg_cliente', 'email_cliente', 'telefone_cliente', 'endereco_cliente',
+  'empreendimento',
+  'unidade_numero', 'unidade_bloco', 'unidade_tipologia',
+  'valor_contrato',
+] as const;
+
+export function isVariavelAutomatica(chave: string): boolean {
+  return (VARIAVEIS_AUTOMATICAS as readonly string[]).includes(chave);
+}
+
 /** Resolve valores automáticos com base nas fontes conhecidas. */
 export async function resolverValoresAutomaticos(opts: {
   clienteId?: string | null;
@@ -115,21 +131,40 @@ function addImagemPaginaInteira(pdf: jsPDF, img: HTMLImageElement, pdfW: number,
   pdf.addImage(img, 'PNG', (pdfW - w) / 2, (pdfH - h) / 2, w, h);
 }
 
-function addImagePaginado(pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, pdfH: number, isFirstPageOverall: boolean) {
-  const imgData = canvas.toDataURL('image/png');
-  const imgW = pdfW;
-  const imgH = (canvas.height * imgW) / canvas.width;
+export interface Margens {
+  topo: number;
+  direita: number;
+  baixo: number;
+  esquerda: number;
+}
 
-  let heightLeft = imgH;
-  let position = 0;
-  if (!isFirstPageOverall) pdf.addPage();
-  pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-  heightLeft -= pdfH;
-  while (heightLeft > 0) {
-    position = heightLeft - imgH;
-    pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-    heightLeft -= pdfH;
+const MARGENS_ZERO: Margens = { topo: 0, direita: 0, baixo: 0, esquerda: 0 };
+
+/**
+ * Adiciona a imagem do conteúdo respeitando as margens: a imagem é escalada para
+ * a largura útil (página - margens laterais) e deslocada a cada página pela altura
+ * útil; o que "vaza" para as margens é coberto por retângulos brancos, criando as
+ * margens superior/inferior sem cortar linhas ao meio.
+ */
+function addImagePaginado(pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, pdfH: number, isFirstPageOverall: boolean, m: Margens) {
+  const imgData = canvas.toDataURL('image/png');
+  const imgW = pdfW - m.esquerda - m.direita;
+  const imgH = (canvas.height * imgW) / canvas.width;
+  const usableH = pdfH - m.topo - m.baixo;
+
+  let offset = 0; // mm da imagem já exibidos
+  let primeiraFatia = true;
+  while (offset < imgH - 0.5) {
+    if (!isFirstPageOverall || !primeiraFatia) pdf.addPage();
+    primeiraFatia = false;
+    pdf.addImage(imgData, 'PNG', m.esquerda, m.topo - offset, imgW, imgH);
+    // Cobre o que vazou para as margens com branco.
+    pdf.setFillColor(255, 255, 255);
+    if (m.topo > 0) pdf.rect(0, 0, pdfW, m.topo, 'F');
+    if (m.baixo > 0) pdf.rect(0, pdfH - m.baixo, pdfW, m.baixo, 'F');
+    if (m.esquerda > 0) pdf.rect(0, 0, m.esquerda, pdfH, 'F');
+    if (m.direita > 0) pdf.rect(pdfW - m.direita, 0, m.direita, pdfH, 'F');
+    offset += usableH;
   }
 }
 
@@ -140,6 +175,14 @@ function addImagePaginado(pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, p
  * como uma única imagem por altura fixa, o que cortava parágrafos/linhas ao meio.
  */
 export interface GerarPdfOptions {
+  /** Margens da página em mm. Padrão 20mm em todos os lados. */
+  margens?: Partial<Margens>;
+  /** Cabeçalho impresso na margem superior de cada página (texto já com variáveis resolvidas). */
+  cabecalho?: string;
+  /** Rodapé impresso na margem inferior de cada página (texto já com variáveis resolvidas). */
+  rodape?: string;
+  /** Numeração automática "Página X de Y" no rodapé. */
+  numerarPaginas?: boolean;
   /** Marca d'água sobreposta em todas as páginas. */
   marcaDagua?: { url: string; opacidade: number };
   /** Imagens anexadas como páginas inteiras ao final (ex.: planta e garagem da unidade). */
@@ -176,6 +219,7 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const pdfW = pdf.internal.pageSize.getWidth();
   const pdfH = pdf.internal.pageSize.getHeight();
+  const m: Margens = { ...MARGENS_ZERO, topo: 20, direita: 20, baixo: 20, esquerda: 20, ...options?.margens };
 
   try {
     let renderedAny = false;
@@ -184,16 +228,37 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
       stage.innerHTML = '';
       stage.appendChild(seg);
       const canvas = await html2canvas(stage, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      addImagePaginado(pdf, canvas, pdfW, pdfH, !renderedAny);
+      addImagePaginado(pdf, canvas, pdfW, pdfH, !renderedAny, m);
       renderedAny = true;
     }
     if (!renderedAny) {
       // fallback: nenhum segmento tinha conteúdo (ex: elemento vazio) — captura como estava antes
       const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      addImagePaginado(pdf, canvas, pdfW, pdfH, true);
+      addImagePaginado(pdf, canvas, pdfW, pdfH, true, m);
     }
   } finally {
     document.body.removeChild(stage);
+  }
+
+  // Cabeçalho/rodapé/numeração nas páginas de conteúdo (antes de anexar imagens finais).
+  const paginasConteudo = pdf.getNumberOfPages();
+  if (options?.cabecalho || options?.rodape || options?.numerarPaginas) {
+    pdf.setFontSize(9);
+    pdf.setTextColor(110, 110, 110);
+    for (let p = 1; p <= paginasConteudo; p++) {
+      pdf.setPage(p);
+      if (options.cabecalho) {
+        pdf.text(options.cabecalho, pdfW / 2, Math.max(6, m.topo / 2), { align: 'center', maxWidth: pdfW - m.esquerda - m.direita });
+      }
+      const rodapeY = pdfH - Math.max(6, m.baixo / 2);
+      if (options.rodape) {
+        pdf.text(options.rodape, m.esquerda, rodapeY, { maxWidth: pdfW - m.esquerda - m.direita });
+      }
+      if (options.numerarPaginas) {
+        pdf.text(`Página ${p} de ${paginasConteudo}`, pdfW - m.direita, rodapeY, { align: 'right' });
+      }
+    }
+    pdf.setTextColor(0, 0, 0);
   }
 
   // Páginas de imagem ao final (planta/garagem da unidade).

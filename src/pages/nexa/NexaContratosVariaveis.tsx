@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Trash2, Lock } from 'lucide-react';
 import { useContratoVariaveis, useSaveContratoVariavel, useDeleteContratoVariavel, ContratoVariavel } from '@/hooks/useNexaContratos';
+import { isVariavelAutomatica } from '@/lib/contratoVariaveis';
 
 const TIPOS = ['texto', 'numero', 'data', 'moeda'] as const;
 
@@ -38,7 +39,7 @@ export default function NexaContratosVariaveis() {
   return (
     <MainLayout
       title="Variáveis de contratos"
-      subtitle="Cadastro de variáveis que podem ser usadas nos modelos."
+      subtitle="As automáticas são preenchidas do banco na geração; as manuais você digita no assistente."
       actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova variável</Button>}
     >
       <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-card shadow-card">
@@ -48,13 +49,14 @@ export default function NexaContratosVariaveis() {
               <TableHead>Chave</TableHead>
               <TableHead>Label</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Preenchimento</TableHead>
               <TableHead>Fonte sugerida</TableHead>
               <TableHead className="w-32">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableRow><TableCell colSpan={5}>Carregando…</TableCell></TableRow>}
-            {!isLoading && !vars?.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma variável.</TableCell></TableRow>}
+            {isLoading && <TableRow><TableCell colSpan={6}>Carregando…</TableCell></TableRow>}
+            {!isLoading && !vars?.length && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma variável.</TableCell></TableRow>}
             {vars?.map((v) => (
               <TableRow key={v.id}>
                 <TableCell className="font-mono text-sm">
@@ -63,6 +65,11 @@ export default function NexaContratosVariaveis() {
                 </TableCell>
                 <TableCell>{v.label}</TableCell>
                 <TableCell><Badge variant="outline">{v.tipo}</Badge></TableCell>
+                <TableCell>
+                  {isVariavelAutomatica(v.chave)
+                    ? <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 border">Automática</Badge>
+                    : <Badge variant="secondary">Manual</Badge>}
+                </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">{v.fonte_sugerida || '—'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">

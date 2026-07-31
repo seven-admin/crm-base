@@ -1,5 +1,5 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Node, Mark, mergeAttributes } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
@@ -50,6 +50,37 @@ const BlocoContrato = Node.create({
   },
 });
 
+// Marca de tamanho de fonte — renderiza <span style="font-size:…"> e sobrevive ao
+// salvar, sem depender de @tiptap/extension-text-style.
+const FontSize = Mark.create({
+  name: 'fontSize',
+  addAttributes() {
+    return {
+      size: {
+        default: null,
+        parseHTML: (el) => (el as HTMLElement).style.fontSize || null,
+        renderHTML: (attrs) => (attrs.size ? { style: `font-size:${attrs.size}` } : {}),
+      },
+    };
+  },
+  parseHTML() {
+    return [{ style: 'font-size', getAttrs: (v) => (v ? {} : false) }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        (size: string) =>
+        ({ commands }: any) =>
+          size ? commands.setMark('fontSize', { size }) : commands.unsetMark('fontSize'),
+    } as any;
+  },
+});
+
+const TAMANHOS_FONTE = ['10px', '12px', '14px', '16px', '18px', '24px', '32px'];
+
 interface Props {
   value: string;
   onChange: (html: string) => void;
@@ -70,6 +101,7 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
       TableCell,
       Image.configure({ inline: false, HTMLAttributes: { class: 'contrato-img', style: 'max-width:100%' } }),
       BlocoContrato,
+      FontSize,
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -116,6 +148,21 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="Título 1"><Heading1 className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Título 2"><Heading2 className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Título 3"><Heading3 className="h-4 w-4" /></ToolbarButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" size="sm" variant="ghost" className="h-8 px-1.5" title="Tamanho da fonte">
+              <span className="text-xs">A</span><ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => (editor.chain().focus() as any).setFontSize('').run()}>Padrão</DropdownMenuItem>
+            {TAMANHOS_FONTE.map((s) => (
+              <DropdownMenuItem key={s} onClick={() => (editor.chain().focus() as any).setFontSize(s).run()}>
+                <span style={{ fontSize: s }}>{parseInt(s, 10)}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Separator orientation="vertical" className="h-6 mx-1" />
         <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Alinhar à esquerda"><AlignLeft className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })} title="Centralizar"><AlignCenter className="h-4 w-4" /></ToolbarButton>

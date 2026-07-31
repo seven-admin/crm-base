@@ -76,6 +76,13 @@ export interface ContratoTemplate {
   empreendimento_id: string | null;
   marca_dagua_url: string | null;
   marca_dagua_opacidade: number;
+  margem_topo: number;
+  margem_direita: number;
+  margem_baixo: number;
+  margem_esquerda: number;
+  cabecalho_texto: string | null;
+  rodape_texto: string | null;
+  numerar_paginas: boolean;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -125,6 +132,13 @@ export function useSaveContratoTemplate() {
         empreendimento_id: t.empreendimento_id || null,
         marca_dagua_url: t.marca_dagua_url ?? null,
         marca_dagua_opacidade: t.marca_dagua_opacidade ?? 0.08,
+        margem_topo: t.margem_topo ?? 20,
+        margem_direita: t.margem_direita ?? 20,
+        margem_baixo: t.margem_baixo ?? 20,
+        margem_esquerda: t.margem_esquerda ?? 20,
+        cabecalho_texto: t.cabecalho_texto ?? null,
+        rodape_texto: t.rodape_texto ?? null,
+        numerar_paginas: t.numerar_paginas ?? false,
         is_active: t.is_active ?? true,
       };
       if (t.id) {

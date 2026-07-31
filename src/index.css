@@ -390,29 +390,54 @@
     @apply outline outline-2 outline-primary outline-offset-2;
   }
 
-  /* Tabelas do editor de contrato (TipTap) — visíveis no editor, no preview e no PDF */
-  .contrato-table {
-    @apply w-full my-3;
+  /* Tabelas do editor de contrato (TipTap) — visíveis no editor, no preview e no PDF.
+     Alvo tanto pela classe (.contrato-table, no HTML salvo/preview/PDF) quanto pelo
+     container do editor (.ProseMirror table), porque a tabela viva do ProseMirror
+     nem sempre carrega a classe configurada. Bordas explícitas (sem @apply) para não
+     depender do border-style do preflight. */
+  .contrato-table,
+  .ProseMirror table {
+    width: 100%;
+    margin: 0.75rem 0;
     border-collapse: collapse;
     table-layout: fixed;
   }
   .contrato-table td,
-  .contrato-table th {
-    @apply border border-border p-2 align-top;
+  .contrato-table th,
+  .ProseMirror table td,
+  .ProseMirror table th {
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem;
     min-width: 3rem;
+    vertical-align: top;
     position: relative;
   }
-  .contrato-table th {
-    @apply bg-muted font-semibold text-left;
+  .contrato-table th,
+  .ProseMirror table th {
+    background-color: hsl(var(--muted));
+    font-weight: 600;
+    text-align: left;
   }
-  /* Célula selecionada e alça de redimensionamento de coluna do ProseMirror */
+  .ProseMirror .tableWrapper {
+    overflow-x: auto;
+    margin: 0.75rem 0;
+  }
   .ProseMirror .selectedCell:after {
     content: '';
-    @apply absolute inset-0 bg-primary/15 pointer-events-none z-10;
+    position: absolute;
+    inset: 0;
+    background: hsl(var(--primary) / 0.15);
+    pointer-events: none;
+    z-index: 2;
   }
   .ProseMirror .column-resize-handle {
-    @apply absolute top-0 bottom-0 w-1 bg-primary pointer-events-none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     right: -2px;
+    width: 4px;
+    background: hsl(var(--primary));
+    pointer-events: none;
   }
   .ProseMirror.resize-cursor {
     cursor: col-resize;

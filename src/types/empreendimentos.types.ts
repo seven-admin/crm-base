@@ -36,6 +36,7 @@ export const UNIDADE_STATUS_LABELS: Record<UnidadeStatus, string> = {
   bloqueada: 'Bloqueada',
 };
 
+// Cor sólida — usada em bolinhas/legendas/swatches (só o fundo importa).
 export const UNIDADE_STATUS_COLORS: Record<UnidadeStatus, string> = {
   disponivel: 'bg-emerald-500',
   reservada: 'bg-yellow-500',
@@ -43,6 +44,16 @@ export const UNIDADE_STATUS_COLORS: Record<UnidadeStatus, string> = {
   contrato: 'bg-purple-500',
   vendida: 'bg-red-500',
   bloqueada: 'bg-gray-500',
+};
+
+// Estilo de badge (fundo claro + texto escuro) — legível para rótulos de status.
+export const UNIDADE_STATUS_BADGE: Record<UnidadeStatus, string> = {
+  disponivel: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  reservada: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  negociacao: 'bg-blue-100 text-blue-800 border-blue-200',
+  contrato: 'bg-purple-100 text-purple-800 border-purple-200',
+  vendida: 'bg-red-100 text-red-800 border-red-200',
+  bloqueada: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
 export const DOCUMENTO_TIPO_LABELS: Record<DocumentoTipo, string> = {

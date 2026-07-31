@@ -10,12 +10,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Blocks } from 'lucide-react';
-import { TipTapEditor } from '@/components/nexa/contratos/TipTapEditor';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus, Edit, Trash2, Blocks, ChevronDown, Braces } from 'lucide-react';
+import { TipTapEditor, insertIntoTipTap } from '@/components/nexa/contratos/TipTapEditor';
 import { useContratoBlocos, useSaveContratoBloco, useDeleteContratoBloco, CATEGORIAS_BLOCO, type ContratoBloco } from '@/hooks/useNexaContratoBlocos';
+import { useContratoVariaveis } from '@/hooks/useNexaContratos';
 
 export default function NexaContratosBlocos() {
   const { data: blocos = [], isLoading } = useContratoBlocos();
+  const { data: variaveis } = useContratoVariaveis();
   const save = useSaveContratoBloco();
   const del = useDeleteContratoBloco();
 
@@ -163,7 +167,29 @@ export default function NexaContratosBlocos() {
               <Textarea rows={2} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
             </div>
             <div>
-              <Label className="mb-1 block">Conteúdo</Label>
+              <div className="mb-1 flex items-center justify-between">
+                <Label>Conteúdo</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-8">
+                      <Braces className="h-4 w-4 mr-1" />Inserir variável<ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <ScrollArea className="h-72">
+                      {!variaveis?.length && <div className="p-2 text-xs text-muted-foreground">Nenhuma variável cadastrada.</div>}
+                      {variaveis?.map((v) => (
+                        <DropdownMenuItem key={v.id} onClick={() => insertIntoTipTap(`{{${v.chave}}}`)}>
+                          <div>
+                            <div className="font-mono text-xs text-primary">{`{{${v.chave}}}`}</div>
+                            <div className="text-xs text-muted-foreground">{v.label}</div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </ScrollArea>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <TipTapEditor value={conteudo} onChange={setConteudo} placeholder="Digite o texto do bloco…" />
             </div>
             <div className="flex items-center gap-2">
