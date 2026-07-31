@@ -2,7 +2,17 @@
 // variáveis do contrato. Retorna só o que veio preenchido — o merge no assistente não
 // sobrescreve um campo do contrato com vazio da proposta.
 
+import { formatarTelefone } from './documentUtils';
+
 type Any = Record<string, any>;
+
+// Telefone da proposta pode vir cru com DDI ("5555997073647") ou já formatado.
+// Remove o 55 do país (quando há 12–13 dígitos) e aplica o formato padrão do CRM.
+function fmtTelefone(v: unknown): string {
+  let d = String(v ?? '').replace(/\D/g, '');
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2);
+  return d ? formatarTelefone(d) : '';
+}
 
 // Casa uma linha de pagamento (por trecho do nome do componente) com a chave da variável.
 const PAGAMENTO_MAP: Array<[RegExp, string]> = [
@@ -41,7 +51,7 @@ export function propostaParaVariaveis(data: Any): Record<string, string> {
   set('cpf_cliente', buyer.cpf);
   set('rg_cliente', [buyer.rg, buyer.rgIssuer].filter(Boolean).join(' '));
   set('email_cliente', buyer.email);
-  set('telefone_cliente', buyer.phone);
+  set('telefone_cliente', fmtTelefone(buyer.phone));
   set('profissao_cliente', buyer.profession);
   set('renda_cliente', buyer.grossIncome);
   set('nacionalidade_cliente', buyer.nationality);
@@ -76,6 +86,7 @@ export function propostaParaVariaveis(data: Any): Record<string, string> {
   // Corretor / imobiliária
   set('corretor_nome', broker.brokerName);
   set('corretor_creci', broker.creci);
+  set('corretor_telefone', fmtTelefone(broker.brokerPhone));
   set('imobiliaria', broker.realEstateTeam);
   set('proposta_codigo', broker.proposalCode);
 
