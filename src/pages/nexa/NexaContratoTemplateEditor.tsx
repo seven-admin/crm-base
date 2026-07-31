@@ -17,7 +17,7 @@ import { TipTapEditor, insertIntoTipTap, insertHtmlIntoTipTap } from '@/componen
 import { useContratoTemplate, useSaveContratoTemplate, useContratoVariaveis } from '@/hooks/useNexaContratos';
 import { useContratoBlocos } from '@/hooks/useNexaContratoBlocos';
 import { useEmpreendimentosAtivos } from '@/hooks/useNexa';
-import { extrairVariaveis, resolveVariaveis, normalizarQuebras } from '@/lib/contratoVariaveis';
+import { extrairVariaveis, resolveVariaveis, normalizarQuebras, resolverCondicionais } from '@/lib/contratoVariaveis';
 import { renumerarClausulas, wrapBloco } from '@/lib/contratoNumeracao';
 import { FachadaImageUpload } from '@/components/empreendimentos/FachadaImageUpload';
 import { toast } from 'sonner';
@@ -77,7 +77,7 @@ export default function NexaContratoTemplateEditor() {
     return out;
   }, [variaveis]);
 
-  const previewHtml = useMemo(() => normalizarQuebras(resolveVariaveis(renumerarClausulas(conteudo), exemploValores)), [conteudo, exemploValores]);
+  const previewHtml = useMemo(() => normalizarQuebras(resolveVariaveis(renumerarClausulas(resolverCondicionais(conteudo, exemploValores)), exemploValores)), [conteudo, exemploValores]);
 
   const handleSave = async () => {
     if (!nome.trim()) { toast.error('Informe o nome do modelo.'); return; }

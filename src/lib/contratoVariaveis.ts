@@ -30,6 +30,25 @@ export function normalizarQuebras(html: string): string {
   return html.replace(/<p([^>]*)>(?:\s|&nbsp;)*<\/p>/gi, '<p$1><br></p>');
 }
 
+/**
+ * Trechos condicionais: {{#se chave}}...{{/se}}. O conteúdo interno só aparece se a
+ * variável tiver valor; senão é removido. Quando o trecho ocupa um parágrafo/heading/
+ * item inteiro, o elemento é removido junto (não deixa linha em branco). Roda ANTES de
+ * resolveVariaveis. Não suporta aninhamento.
+ */
+export function resolverCondicionais(html: string, valores: Record<string, string>): string {
+  const NULO = '@@__SE_VAZIO__@@'; // sentinela para marcar trechos removidos
+  let out = html.replace(/\{\{#se\s+([\w.-]+)\}\}([\s\S]*?)\{\{\/se\}\}/gi, (_m, chave: string, inner: string) => {
+    const v = valores[chave];
+    return v !== undefined && v !== null && String(v).trim() !== '' ? inner : NULO;
+  });
+  // Elemento que ficou apenas com o marcador -> remove o elemento inteiro (sem deixar linha em branco).
+  out = out.replace(/<(p|h[1-6]|li)\b[^>]*>(?:\s|&nbsp;|<br\s*\/?>|@@__SE_VAZIO__@@)*<\/\1>/gi, (m) => (m.includes(NULO) ? '' : m));
+  // Marcadores inline restantes -> somem.
+  out = out.split(NULO).join('');
+  return out;
+}
+
 /** Extrai as chaves {{...}} usadas em um HTML */
 export function extrairVariaveis(html: string): string[] {
   const set = new Set<string>();

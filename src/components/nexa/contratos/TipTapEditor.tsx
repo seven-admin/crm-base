@@ -211,6 +211,9 @@ export function TipTapEditor({ value, onChange, placeholder }: Props) {
         <ToolbarButton onClick={() => editor.chain().focus().insertContent('[[item]] ').run()} title="Item numerado (ex.: 1.1)">
           <span className="text-[10px] font-bold">Item</span>
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().insertContent('{{#se variavel}}texto{{/se}}').run()} title="Trecho condicional: aparece só se a variável tiver valor">
+          <span className="text-[10px] font-bold">Se…</span>
+        </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().insertContent('<div style="page-break-before: always"></div>').run()} title="Quebra de página">
           <span className="text-[10px] font-bold">PG</span>
         </ToolbarButton>

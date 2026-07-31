@@ -13,7 +13,7 @@ import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
 import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf, marcarUnidadeEmContrato } from '@/hooks/useNexaContratos';
 import { usePropostasNexa, buscarPropostaPorCodigo, type PropostaListItem } from '@/hooks/useNexaPropostas';
 import { useEmpreendimentosAtivos } from '@/hooks/useNexa';
-import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, normalizarQuebras } from '@/lib/contratoVariaveis';
+import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, normalizarQuebras, resolverCondicionais } from '@/lib/contratoVariaveis';
 import { extrairBlocos, prepararConteudo } from '@/lib/contratoNumeracao';
 import { propostaParaVariaveis } from '@/lib/propostaParaVariaveis';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,7 +112,7 @@ export default function NexaContratoNovo() {
   }, [origem, templateId, empId, valor]);
 
   const previewHtml = useMemo(
-    () => (template ? normalizarQuebras(resolveVariaveis(prepararConteudo(template.conteudo_html, blocosExcluidos), valores)) : ''),
+    () => (template ? normalizarQuebras(resolveVariaveis(prepararConteudo(resolverCondicionais(template.conteudo_html, valores), blocosExcluidos), valores)) : ''),
     [template, valores, blocosExcluidos],
   );
 
