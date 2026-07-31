@@ -33,7 +33,6 @@ import {
   Calculator,
   Trash2,
   DollarSign,
-  History,
   AlertTriangle,
   CheckCircle2,
   TrendingUp,
@@ -44,10 +43,7 @@ import { useEmpreendimento, useDeleteEmpreendimento, useUpdateEmpreendimento } f
 import { EmpreendimentoForm } from '@/components/empreendimentos/EmpreendimentoForm';
 import { UnidadesTab } from '@/components/empreendimentos/UnidadesTab';
 import { TipologiasTab } from '@/components/empreendimentos/TipologiasTab';
-import { DocumentosTab } from '@/components/empreendimentos/DocumentosTab';
-import { MidiasTab } from '@/components/empreendimentos/MidiasTab';
 import { UnidadesMemorialTab } from '@/components/empreendimentos/UnidadesMemorialTab';
-import { HistoricoEmpreendimentoTab } from '@/components/empreendimentos/HistoricoEmpreendimentoTab';
 import { FachadasTab } from '@/components/empreendimentos/FachadasTab';
 import { BoxesTab } from '@/components/empreendimentos/BoxesTab';
 import { ValoresTab } from '@/components/empreendimentos/ValoresTab';
@@ -280,24 +276,10 @@ export default function EmpreendimentoDetalhe() {
             <Image className="h-4 w-4 hidden sm:block" />
             Fachadas
           </TabsTrigger>
-          <TabsTrigger value="documentos" className="gap-2 shrink-0">
-            <FileText className="h-4 w-4 hidden sm:block" />
-            Documentos
-          </TabsTrigger>
-          <TabsTrigger value="midias" className="gap-2 shrink-0">
-            <Image className="h-4 w-4 hidden sm:block" />
-            Mídias
-          </TabsTrigger>
           {isAdminOrGestor && (
             <TabsTrigger value="memorial" className="gap-2 shrink-0">
               <FileText className="h-4 w-4 hidden sm:block" />
               Memorial
-            </TabsTrigger>
-          )}
-          {isAdminOrGestor && (
-            <TabsTrigger value="historico" className="gap-2 shrink-0">
-              <History className="h-4 w-4 hidden sm:block" />
-              Histórico
             </TabsTrigger>
           )}
         </TabsList>
@@ -318,14 +300,6 @@ export default function EmpreendimentoDetalhe() {
           <FachadasTab empreendimentoId={id!} />
         </TabsContent>
 
-        <TabsContent value="documentos">
-          <DocumentosTab empreendimentoId={id!} />
-        </TabsContent>
-
-        <TabsContent value="midias">
-          <MidiasTab empreendimentoId={id!} />
-        </TabsContent>
-
         {isPredio && isAdminOrGestor && (
           <TabsContent value="boxes">
             <BoxesTab empreendimentoId={id!} />
@@ -342,13 +316,6 @@ export default function EmpreendimentoDetalhe() {
         {isAdminOrGestor && (
           <TabsContent value="memorial">
             <UnidadesMemorialTab empreendimentoId={id!} />
-          </TabsContent>
-        )}
-
-
-        {isAdminOrGestor && (
-          <TabsContent value="historico">
-            <HistoricoEmpreendimentoTab empreendimentoId={id!} />
           </TabsContent>
         )}
       </Tabs>
