@@ -26,10 +26,25 @@ function formatBRL(v: number | null | undefined) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v));
 }
 
+// Aceita tanto formato BR ("731.421,34") quanto ponto decimal ("731421.34", vindo de
+// toFixed) e valores planos ("731421"). Regra: o ÚLTIMO separador (vírgula ou ponto)
+// é o decimal; os demais são milhar. Vários pontos sem vírgula = milhar.
 function parseNumberInput(s: string): number | null {
   if (!s || !s.trim()) return null;
-  const cleaned = s.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
-  const n = Number(cleaned);
+  let t = s.trim().replace(/[^\d.,-]/g, '');
+  if (!t || t === '-') return null;
+  const hasComma = t.includes(',');
+  const hasDot = t.includes('.');
+  if (hasComma && hasDot) {
+    t = t.lastIndexOf(',') > t.lastIndexOf('.')
+      ? t.replace(/\./g, '').replace(',', '.') // BR: ponto = milhar, vírgula = decimal
+      : t.replace(/,/g, '');                   // US: vírgula = milhar, ponto = decimal
+  } else if (hasComma) {
+    t = t.replace(/,/g, '.'); // vírgula é o decimal
+  } else if (hasDot && t.split('.').length > 2) {
+    t = t.replace(/\./g, ''); // vários pontos sem vírgula = separadores de milhar
+  }
+  const n = Number(t);
   return isNaN(n) ? null : n;
 }
 
