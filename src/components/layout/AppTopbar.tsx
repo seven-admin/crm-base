@@ -82,6 +82,8 @@ const menuGroups: MenuGroup[] = [
     label: 'Nexa', icon: CalendarDays,
     items: [
       { icon: CalendarDays, label: 'Atividades', path: '/nexa/agenda', moduleName: 'nexa_agenda' },
+      { icon: Target, label: 'Metas', path: '/nexa/metas', moduleName: 'nexa_metas' },
+      { icon: FileText, label: 'Acesso a Propostas', path: '/nexa/propostas-acesso', moduleName: 'nexa_propostas_acesso' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa_disponibilidade' },
       {
         icon: FileText, label: 'Contratos', children: [

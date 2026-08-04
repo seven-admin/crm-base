@@ -39,6 +39,7 @@ export default function NexaContratoTemplateEditor() {
   const [isActive, setIsActive] = useState(true);
   const [marcaDaguaUrl, setMarcaDaguaUrl] = useState('');
   const [marcaDaguaOpacidade, setMarcaDaguaOpacidade] = useState(0.08);
+  const [marcaDaguaFundo, setMarcaDaguaFundo] = useState(false);
   const [margemTopo, setMargemTopo] = useState(20);
   const [margemDireita, setMargemDireita] = useState(20);
   const [margemBaixo, setMargemBaixo] = useState(20);
@@ -57,6 +58,7 @@ export default function NexaContratoTemplateEditor() {
       setIsActive(template.is_active);
       setMarcaDaguaUrl(template.marca_dagua_url || '');
       setMarcaDaguaOpacidade(template.marca_dagua_opacidade ?? 0.08);
+      setMarcaDaguaFundo(template.marca_dagua_fundo ?? false);
       setMargemTopo(template.margem_topo ?? 20);
       setMargemDireita(template.margem_direita ?? 20);
       setMargemBaixo(template.margem_baixo ?? 20);
@@ -90,6 +92,7 @@ export default function NexaContratoTemplateEditor() {
       variaveis: varsUsadas,
       marca_dagua_url: marcaDaguaUrl || null,
       marca_dagua_opacidade: marcaDaguaOpacidade,
+      marca_dagua_fundo: marcaDaguaFundo,
       margem_topo: margemTopo,
       margem_direita: margemDireita,
       margem_baixo: margemBaixo,
@@ -150,9 +153,11 @@ export default function NexaContratoTemplateEditor() {
               </div>
 
               <div className="border-t pt-3 space-y-2">
-                <Label>Marca d'água (todas as páginas)</Label>
+                <Label>Imagem do documento (todas as páginas)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Imagem sobreposta e centralizada em cada página do PDF gerado.
+                  {marcaDaguaFundo
+                    ? 'Fundo de página inteira (papel timbrado), atrás do texto.'
+                    : 'Marca d’água sobreposta e centralizada em cada página do PDF.'}
                 </p>
                 <FachadaImageUpload
                   empreendimentoId={empId || 'contratos-marca'}
@@ -161,18 +166,26 @@ export default function NexaContratoTemplateEditor() {
                   onRemove={() => setMarcaDaguaUrl('')}
                 />
                 {marcaDaguaUrl && (
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs">Opacidade</Label>
-                    <Input
-                      type="number"
-                      min={0.02}
-                      max={1}
-                      step={0.01}
-                      value={marcaDaguaOpacidade}
-                      onChange={(e) => setMarcaDaguaOpacidade(Number(e.target.value) || 0.08)}
-                      className="w-24"
-                    />
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={marcaDaguaFundo} onCheckedChange={setMarcaDaguaFundo} />
+                      <Label className="text-xs">Usar como fundo de página inteira (papel timbrado)</Label>
+                    </div>
+                    {!marcaDaguaFundo && (
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs">Opacidade</Label>
+                        <Input
+                          type="number"
+                          min={0.02}
+                          max={1}
+                          step={0.01}
+                          value={marcaDaguaOpacidade}
+                          onChange={(e) => setMarcaDaguaOpacidade(Number(e.target.value) || 0.08)}
+                          className="w-24"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

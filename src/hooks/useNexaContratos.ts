@@ -76,6 +76,7 @@ export interface ContratoTemplate {
   empreendimento_id: string | null;
   marca_dagua_url: string | null;
   marca_dagua_opacidade: number;
+  marca_dagua_fundo: boolean;
   margem_topo: number;
   margem_direita: number;
   margem_baixo: number;
@@ -132,6 +133,7 @@ export function useSaveContratoTemplate() {
         empreendimento_id: t.empreendimento_id || null,
         marca_dagua_url: t.marca_dagua_url ?? null,
         marca_dagua_opacidade: t.marca_dagua_opacidade ?? 0.08,
+        marca_dagua_fundo: t.marca_dagua_fundo ?? false,
         margem_topo: t.margem_topo ?? 20,
         margem_direita: t.margem_direita ?? 20,
         margem_baixo: t.margem_baixo ?? 20,

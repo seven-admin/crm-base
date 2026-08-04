@@ -219,7 +219,7 @@ export function LoginForm() {
             <p className="text-sm font-semibold">O que vamos</p>
             <p className="text-sm text-black/45">construir hoje?</p>
           </div>
-          <div className="absolute left-[46%] top-[31%] h-[38%] aspect-square rounded-full bg-[#ff7417]" />
+          <div className="absolute left-[46%] top-[31%] h-[38%] aspect-square rounded-full bg-[#ff7417]/60" />
           <div className="absolute left-[42%] top-[52%] h-12 w-12 -translate-y-1/2 rounded-full bg-[#f8f5f0] shadow-[0_10px_30px_rgba(0,0,0,.12)]" />
 
           <div className="login-date-panel absolute inset-y-6 left-6 flex w-[51%] flex-col rounded-[2.25rem] border border-white/60 bg-white/42 p-8 shadow-[18px_0_55px_rgba(34,23,14,.13)] backdrop-blur-xl xl:p-12">

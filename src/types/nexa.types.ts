@@ -48,6 +48,56 @@ export interface NexaWhatsappAtividade {
   updated_at: string;
 }
 
+// ============ Registro de atividades (Visitas / Atendimentos) ============
+export type NexaAtividadeTipo = 'visita' | 'atendimento';
+
+export interface NexaAtividade {
+  id: string;
+  tipo: NexaAtividadeTipo;
+  data_hora: string;
+  local: string | null;
+  qtd_pessoas: number | null;
+  observacoes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NexaAtividadeParticipante {
+  corretor_id: string;              // id do corretor no banco da NEXA (app_user_profiles)
+  corretor_nome: string | null;
+  imobiliaria_nome: string | null;
+}
+
+export interface NexaAtividadeWithRelations extends NexaAtividade {
+  participantes?: NexaAtividadeParticipante[];
+  criador?: { id: string; full_name: string; email: string } | null;
+}
+
+// ============ Metas semanais ============
+export interface NexaMeta {
+  id: string;
+  nome: string;
+  vigencia_inicio: string;
+  vigencia_fim: string | null;
+  meta_semanal_visitas: number;
+  meta_semanal_atendimentos: number;
+  meta_semanal_impacto: number;
+  meta_semanal_engajamento: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  usuarios?: Array<{
+    user_id: string;
+    profile?: { id: string; full_name: string; email: string } | null;
+  }>;
+}
+
+export const TIPO_ATIVIDADE_LABELS: Record<NexaAtividadeTipo, string> = {
+  visita: 'Visita',
+  atendimento: 'Atendimento',
+};
+
 export const NEXA_ROLES = ['nexa_admin', 'nexa_gestor', 'nexa_corretor'] as const;
 
 export const STATUS_LABELS: Record<NexaVisitaStatus, string> = {

@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { asBlob } from 'html-docx-js-typescript';
 
 /** Escapa caracteres HTML especiais — os valores de variáveis são sempre texto puro (nunca markup). */
 function escapeHtml(s: string): string {
@@ -159,6 +160,45 @@ function addImagemPaginaInteira(pdf: jsPDF, img: HTMLImageElement, pdfW: number,
   pdf.addImage(img, 'PNG', (pdfW - w) / 2, (pdfH - h) / 2, w, h);
 }
 
+/** Desenha a imagem cobrindo a página inteira (estilo "cover"), como papel timbrado. */
+function desenharFundoPagina(pdf: jsPDF, img: HTMLImageElement, pdfW: number, pdfH: number) {
+  const imgR = img.naturalWidth / img.naturalHeight;
+  const pageR = pdfW / pdfH;
+  let w: number, h: number;
+  if (imgR > pageR) { h = pdfH; w = h * imgR; } else { w = pdfW; h = w / imgR; }
+  pdf.addImage(img, 'PNG', (pdfW - w) / 2, (pdfH - h) / 2, w, h);
+}
+
+/**
+ * Paginação com FUNDO: o conteúdo é rasterizado com fundo transparente e sobreposto,
+ * página a página, sobre a imagem de fundo (papel timbrado). Cada fatia é recortada
+ * para a altura útil via canvas auxiliar (sem retângulos brancos, que esconderiam o fundo).
+ */
+function addConteudoComFundo(
+  pdf: jsPDF, canvas: HTMLCanvasElement, pdfW: number, pdfH: number,
+  isFirstPageOverall: boolean, m: Margens, desenharFundo: () => void,
+) {
+  const imgW = pdfW - m.esquerda - m.direita;
+  const usableHmm = pdfH - m.topo - m.baixo;
+  const pxPerMm = canvas.width / imgW;
+  const sliceHpx = Math.max(1, Math.floor(usableHmm * pxPerMm));
+
+  let sy = 0;
+  let primeiraFatia = true;
+  while (sy < canvas.height - 0.5) {
+    if (!isFirstPageOverall || !primeiraFatia) pdf.addPage();
+    primeiraFatia = false;
+    desenharFundo();
+    const hpx = Math.min(sliceHpx, canvas.height - sy);
+    const sub = document.createElement('canvas');
+    sub.width = canvas.width;
+    sub.height = hpx;
+    sub.getContext('2d')!.drawImage(canvas, 0, sy, canvas.width, hpx, 0, 0, canvas.width, hpx);
+    pdf.addImage(sub.toDataURL('image/png'), 'PNG', m.esquerda, m.topo, imgW, hpx / pxPerMm);
+    sy += hpx;
+  }
+}
+
 export interface Margens {
   topo: number;
   direita: number;
@@ -213,6 +253,8 @@ export interface GerarPdfOptions {
   numerarPaginas?: boolean;
   /** Marca d'água sobreposta em todas as páginas. */
   marcaDagua?: { url: string; opacidade: number };
+  /** Imagem de fundo de página inteira (papel timbrado), atrás do texto em todas as páginas. */
+  fundoPagina?: string;
   /** Imagens anexadas como páginas inteiras ao final (ex.: planta e garagem da unidade). */
   imagensFinais?: string[];
 }
@@ -257,20 +299,27 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
   const pdfH = pdf.internal.pageSize.getHeight();
   const m: Margens = { ...MARGENS_ZERO, topo: 20, direita: 20, baixo: 20, esquerda: 20, ...options?.margens };
 
+  // Com papel timbrado: conteúdo transparente sobre a imagem de fundo desenhada por página.
+  const fundoImg = options?.fundoPagina ? await carregarImagem(options.fundoPagina).catch(() => null) : null;
+  const bgColor = fundoImg ? null : '#ffffff';
+  const desenharFundo = fundoImg ? () => desenharFundoPagina(pdf, fundoImg, pdfW, pdfH) : undefined;
+
   try {
     let renderedAny = false;
     for (const seg of segments) {
       if (!seg.hasChildNodes()) continue;
       stage.innerHTML = '';
       stage.appendChild(seg);
-      const canvas = await html2canvas(stage, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      addImagePaginado(pdf, canvas, pdfW, pdfH, !renderedAny, m);
+      const canvas = await html2canvas(stage, { scale: 2, backgroundColor: bgColor, useCORS: true });
+      if (desenharFundo) addConteudoComFundo(pdf, canvas, pdfW, pdfH, !renderedAny, m, desenharFundo);
+      else addImagePaginado(pdf, canvas, pdfW, pdfH, !renderedAny, m);
       renderedAny = true;
     }
     if (!renderedAny) {
       // fallback: nenhum segmento tinha conteúdo (ex: elemento vazio) — captura como estava antes
-      const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      addImagePaginado(pdf, canvas, pdfW, pdfH, true, m);
+      const canvas = await html2canvas(element, { scale: 2, backgroundColor: bgColor, useCORS: true });
+      if (desenharFundo) addConteudoComFundo(pdf, canvas, pdfW, pdfH, true, m, desenharFundo);
+      else addImagePaginado(pdf, canvas, pdfW, pdfH, true, m);
     }
   } finally {
     document.body.removeChild(stage);
@@ -333,5 +382,44 @@ export async function gerarPdfDeHtml(element: HTMLElement, filename: string, opt
   const blob = pdf.output('blob');
   // download local também
   pdf.save(filename);
+  return blob;
+}
+
+/**
+ * Gera um .docx REAL (OOXML) a partir do HTML do contrato, editável no Word e no Google Docs,
+ * com texto selecionável e imagens embutidas. O fundo (papel timbrado) entra como background CSS.
+ */
+export async function gerarDocDeHtml(
+  html: string,
+  filename: string,
+  opts?: { titulo?: string; fundoUrl?: string },
+): Promise<Blob> {
+  const style = `
+    @page { size: A4; margin: 2cm; }
+    body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; color: #000;${
+      opts?.fundoUrl ? ` background-image: url('${opts.fundoUrl}'); background-size: cover; background-repeat: no-repeat;` : ''
+    } }
+    img { max-width: 100%; height: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #000; padding: 4px; }
+    h1, h2, h3 { font-family: 'Times New Roman', serif; }
+  `;
+  const doc = `<!DOCTYPE html><html><head><meta charset="utf-8">`
+    + `<title>${opts?.titulo ?? 'Contrato'}</title><style>${style}</style></head>`
+    + `<body>${html}</body></html>`;
+
+  const out = await asBlob(doc, { orientation: 'portrait', margins: { top: 720, right: 720, bottom: 720, left: 720 } });
+  const blob = out instanceof Blob
+    ? out
+    : new Blob([out as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename.endsWith('.docx') ? filename : `${filename}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
   return blob;
 }

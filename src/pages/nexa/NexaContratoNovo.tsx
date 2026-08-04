@@ -9,11 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
-import { ArrowLeft, ArrowRight, FileDown, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileDown, FileText, Loader2 } from 'lucide-react';
 import { useContratoTemplates, useContratoVariaveis, useSaveContrato, useUploadContratoPdf, marcarUnidadeEmContrato } from '@/hooks/useNexaContratos';
 import { usePropostasNexa, buscarPropostaPorCodigo, type PropostaListItem } from '@/hooks/useNexaPropostas';
 import { useEmpreendimentosAtivos } from '@/hooks/useNexa';
-import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, normalizarQuebras, resolverCondicionais } from '@/lib/contratoVariaveis';
+import { extrairVariaveis, resolverValoresAutomaticos, resolveVariaveis, gerarPdfDeHtml, gerarDocDeHtml, normalizarQuebras, resolverCondicionais } from '@/lib/contratoVariaveis';
 import { extrairBlocos, prepararConteudo } from '@/lib/contratoNumeracao';
 import { propostaParaVariaveis } from '@/lib/propostaParaVariaveis';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,6 +116,19 @@ export default function NexaContratoNovo() {
     [template, valores, blocosExcluidos],
   );
 
+  const baixarWord = async () => {
+    if (!template || !previewHtml) return;
+    const nomeArq = `contrato-${(clienteNome || template.nome || 'nexa').replace(/[^\w-]+/g, '_').toLowerCase()}`;
+    try {
+      await gerarDocDeHtml(previewHtml, nomeArq, {
+        titulo: template.nome,
+        fundoUrl: template.marca_dagua_fundo ? template.marca_dagua_url ?? undefined : undefined,
+      });
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao gerar Word');
+    }
+  };
+
   const gerar = async () => {
     if (!template || !previewRef.current) return;
     setGerando(true);
@@ -144,7 +157,8 @@ export default function NexaContratoNovo() {
           .maybeSingle();
         imagensFinais = [(u as any)?.imagem_planta_url, (u as any)?.imagem_garagem_url].filter(Boolean) as string[];
       }
-      const marcaDagua = template.marca_dagua_url
+      const usarFundo = !!template.marca_dagua_url && template.marca_dagua_fundo;
+      const marcaDagua = template.marca_dagua_url && !template.marca_dagua_fundo
         ? { url: template.marca_dagua_url, opacidade: template.marca_dagua_opacidade ?? 0.08 }
         : undefined;
 
@@ -159,6 +173,7 @@ export default function NexaContratoNovo() {
         rodape: template.rodape_texto ? resolveVariaveis(template.rodape_texto, valores) : undefined,
         numerarPaginas: template.numerar_paginas ?? false,
         marcaDagua,
+        fundoPagina: usarFundo ? template.marca_dagua_url! : undefined,
         imagensFinais,
       });
       await uploadPdf.mutateAsync({ contratoId, blob });
@@ -344,10 +359,15 @@ export default function NexaContratoNovo() {
           {step < 2 ? (
             <Button onClick={() => setStep(step + 1)} disabled={!canNext}>Próximo<ArrowRight className="h-4 w-4 ml-2" /></Button>
           ) : (
-            <Button onClick={gerar} disabled={gerando || !template}>
-              {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
-              Gerar PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={baixarWord} disabled={!template}>
+                <FileText className="h-4 w-4 mr-2" />Baixar .docx
+              </Button>
+              <Button onClick={gerar} disabled={gerando || !template}>
+                {gerando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}
+                Gerar PDF
+              </Button>
+            </div>
           )}
         </div>
       </div>
