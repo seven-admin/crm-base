@@ -12,6 +12,7 @@ import { useEmpreendimentosSelect } from '@/hooks/useEmpreendimentosSelect';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatarTelefone } from '@/lib/documentUtils';
+import { parseMoeda } from '@/lib/formatters';
 
 interface Row {
   nome: string;
@@ -40,8 +41,8 @@ function parseCSV(text: string): Row[] {
     const cols = lines[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
     const nome = iNome >= 0 ? cols[iNome] : '';
     if (!nome) continue;
-    const valStr = iVal >= 0 ? cols[iVal]?.replace(/\./g, '').replace(',', '.') : '';
-    const valor = valStr ? Number(valStr) : undefined;
+    const valorRaw = iVal >= 0 ? cols[iVal] : '';
+    const valor = valorRaw ? parseMoeda(valorRaw) : undefined;
     rows.push({
       nome,
       telefone: iTel >= 0 ? cols[iTel] || undefined : undefined,

@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import { useCreateBox, useUpdateBox } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { BOX_TIPO_LABELS, BOX_STATUS_LABELS, BoxTipo, BoxStatus, Box } from '@/types/empreendimentos.types';
+import { parseMoeda } from '@/lib/formatters';
 
 interface BoxFormProps {
   empreendimentoId: string;
@@ -46,7 +47,7 @@ export function BoxForm({ empreendimentoId, onSuccess, box }: BoxFormProps) {
       bloco_id: formData.bloco_id || undefined,
       tipo: formData.tipo,
       coberto: formData.coberto,
-      valor: formData.valor ? parseFloat(formData.valor.replace(',', '.')) : undefined,
+      valor: formData.valor ? parseMoeda(formData.valor) : undefined,
       observacoes: formData.observacoes || undefined,
     };
 

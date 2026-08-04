@@ -37,6 +37,7 @@ import { useCreateUnidadesBulk, useUnidades, useUpdateUnidadesBulk } from '@/hoo
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import type { UnidadeFormData, UnidadeStatus, Unidade } from '@/types/empreendimentos.types';
+import { parseMoeda } from '@/lib/formatters';
 
 interface ImportarUnidadesDialogProps {
   open: boolean;
@@ -408,9 +409,8 @@ export function ImportarUnidadesDialog({
       const areaRaw = mapeamentoColunas.area_privativa ? row[mapeamentoColunas.area_privativa] : undefined;
       let area: number | undefined;
       if (areaRaw) {
-        const areaStr = String(areaRaw).replace(',', '.');
-        area = parseFloat(areaStr);
-        if (isNaN(area)) {
+        area = parseMoeda(String(areaRaw));
+        if (area <= 0) {
           erros.push('Área deve ser numérica');
           area = undefined;
         }
@@ -420,9 +420,8 @@ export function ImportarUnidadesDialog({
       const valorRaw = mapeamentoColunas.valor ? row[mapeamentoColunas.valor] : undefined;
       let valor: number | undefined;
       if (valorRaw) {
-        const valorStr = String(valorRaw).replace(/[^\d.,]/g, '').replace(',', '.');
-        valor = parseFloat(valorStr);
-        if (isNaN(valor)) {
+        valor = parseMoeda(String(valorRaw));
+        if (valor <= 0) {
           erros.push('Valor deve ser numérico');
           valor = undefined;
         }

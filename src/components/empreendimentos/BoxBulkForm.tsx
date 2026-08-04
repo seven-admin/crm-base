@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 import { useCreateBoxesBulk } from '@/hooks/useBoxes';
 import { useBlocos } from '@/hooks/useBlocos';
 import { BOX_TIPO_LABELS, BoxTipo } from '@/types/empreendimentos.types';
+import { parseMoeda } from '@/lib/formatters';
 
 interface BoxBulkFormProps {
   empreendimentoId: string;
@@ -47,7 +48,7 @@ export function BoxBulkForm({ empreendimentoId, onSuccess }: BoxBulkFormProps) {
           bloco_id: formData.bloco_id || undefined,
           tipo: formData.tipo,
           coberto: formData.coberto,
-          valor: formData.valor ? parseFloat(formData.valor.replace(',', '.')) : undefined,
+          valor: formData.valor ? parseMoeda(formData.valor) : undefined,
         },
       },
       {
