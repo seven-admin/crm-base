@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   useNexaMetasDashboard,
+  aggregateConsultorCards,
   type NexaConsultorCard,
   type NexaMetricSet,
   type NexaPerfLevel,
@@ -75,7 +76,7 @@ function ConsultorCard({ card }: { card: NexaConsultorCard }) {
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-[#201a17] text-white"><UserRound className="h-5 w-5" /></span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-primary">Consultor(a)</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-primary">{card.userId === 'todos' ? 'Consolidado' : 'Consultor(a)'}</p>
             <p className="text-lg font-semibold tracking-[-0.02em]">{card.nome}</p>
             <p className="text-xs text-muted-foreground">Prioridades do dia · Atendimento ({card.hoje.atendimentos}) · Visita ({card.hoje.visitas})</p>
           </div>
@@ -163,10 +164,25 @@ export function NexaMetasDashboard() {
   const t: NexaMetricSet = totals.semana;
   const g: NexaMetricSet = totals.meta;
 
-  // Super admin pode focar num usuário; nesse caso escondemos os totais "(todos)".
+  // Super admin: 1 card consolidado (todos) por padrão, ou o card do usuário filtrado.
   const canFilter = isSuperAdmin() && userOptions.length > 0;
-  const filtrando = canFilter && selUser !== 'todos';
-  const visibleCards = filtrando ? cards.filter((c) => c.userId === selUser) : cards;
+  const emptyMsg = (
+    <Card className="p-10 text-center text-sm text-muted-foreground shadow-none">
+      Nenhuma meta vigente encontrada. Configure metas na aba "Configurar Metas".
+    </Card>
+  );
+
+  let cardsContent: React.ReactNode;
+  if (canFilter) {
+    const card = selUser === 'todos'
+      ? (cards.length ? aggregateConsultorCards(cards) : null)
+      : (cards.find((c) => c.userId === selUser) ?? null);
+    cardsContent = card ? <ConsultorCard card={card} /> : emptyMsg;
+  } else {
+    cardsContent = cards.length === 0
+      ? emptyMsg
+      : <div className="space-y-4">{cards.map((card) => <ConsultorCard key={card.userId} card={card} />)}</div>;
+  }
 
   return (
     <div className="space-y-5">
@@ -183,7 +199,8 @@ export function NexaMetasDashboard() {
         </div>
       )}
 
-      {seeAll && !filtrando && (
+      {/* Totais em tiles: só para gestores que veem tudo mas não têm o filtro (não super admin). */}
+      {seeAll && !canFilter && (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <TotalTile label="Visitas (todos)" icon={<CalendarCheck2 className="h-4 w-4 text-primary" />} done={t.visitas} goal={g.visitas} />
           <TotalTile label="Engajamento (todos)" icon={<Building2 className="h-4 w-4 text-primary" />} done={t.engajamento} goal={g.engajamento} />
@@ -192,15 +209,7 @@ export function NexaMetasDashboard() {
         </div>
       )}
 
-      {visibleCards.length === 0 ? (
-        <Card className="p-10 text-center text-sm text-muted-foreground shadow-none">
-          Nenhuma meta vigente encontrada. Configure metas na aba "Configurar Metas".
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {visibleCards.map((card) => <ConsultorCard key={card.userId} card={card} />)}
-        </div>
-      )}
+      {cardsContent}
     </div>
   );
 }

@@ -414,6 +414,35 @@ export function aggregateNexaMetas(
   return { cards, totals: { meta: sum((c) => c.meta), semana: sum((c) => c.semana), metaVgv: metaVgvTotal } };
 }
 
+// Consolida vários cards num único (soma métricas/metas); performance recalculada do total.
+export function aggregateConsultorCards(cards: NexaConsultorCard[], nome = 'Todos os usuários'): NexaConsultorCard {
+  const sumSet = (pick: (c: NexaConsultorCard) => NexaMetricSet) =>
+    cards.reduce((acc, c) => {
+      const v = pick(c);
+      acc.visitas += v.visitas; acc.atendimentos += v.atendimentos;
+      acc.impacto += v.impacto; acc.engajamento += v.engajamento;
+      return acc;
+    }, emptyMetrics());
+  const meta = sumSet((c) => c.meta);
+  const semana = sumSet((c) => c.semana);
+  const semanaAnterior = sumSet((c) => c.semanaAnterior);
+  const hoje = cards.reduce(
+    (a, c) => ({ visitas: a.visitas + c.hoje.visitas, atendimentos: a.atendimentos + c.hoje.atendimentos }),
+    { visitas: 0, atendimentos: 0 },
+  );
+  return {
+    userId: 'todos',
+    nome,
+    meta,
+    metaVgv: cards.reduce((a, c) => a + c.metaVgv, 0),
+    semana,
+    semanaAnterior,
+    hoje,
+    performanceAtual: performance(semana, meta),
+    performanceAnterior: performance(semanaAnterior, meta),
+  };
+}
+
 // ============ Dashboard hook ============
 const ADMIN_VIEW_ROLES = new Set(['admin', 'super_admin', 'nexa_admin', 'nexa_gestor']);
 
