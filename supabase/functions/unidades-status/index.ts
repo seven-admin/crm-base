@@ -7,6 +7,7 @@ interface Payload {
   reserved_until?: string;
   motivo?: string;
   atomico?: boolean;
+  observacoes?: string;
 }
 
 const STATUS_VALIDOS = ["disponivel", "reservada", "vendida", "desistida"];
@@ -47,6 +48,8 @@ Deno.serve(async (req) => {
     p_reserved_until: body.reserved_until ?? null,
     p_motivo: body.motivo ?? null,
     p_atomico: body.atomico ?? true,
+    // undefined = não altera observações; string (inclusive "") = sobrescreve.
+    p_observacoes: body.observacoes ?? null,
   });
   if (error) return json({ error: error.message }, 500);
 
