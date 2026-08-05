@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FileDown, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useEmpreendimentosAtivos, useUnidadesDisponiveis, useUpdateUnidadeStatus } from '@/hooks/useNexa';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEmpresaAccess } from '@/hooks/useEmpresaAccess';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +48,15 @@ const TIPOLOGIA_COLORS = [
   'bg-cyan-400', 'bg-rose-400', 'bg-lime-400', 'bg-violet-400',
 ];
 
+function Info({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-lg bg-muted/40 px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-medium">{value}</p>
+    </div>
+  );
+}
+
 export default function NexaDisponibilidade() {
   const { data: emps } = useEmpreendimentosAtivos();
   const [empId, setEmpId] = useState<string | undefined>();
@@ -59,6 +70,51 @@ export default function NexaDisponibilidade() {
   );
   const updateStatus = useUpdateUnidadeStatus();
   const [isExporting, setIsExporting] = useState(false);
+  const qc = useQueryClient();
+
+  // Modal de detalhe/observações da unidade (onde se anota a reserva).
+  const [selUnidade, setSelUnidade] = useState<NexaUnidadeDisponivel | null>(null);
+  const [obs, setObs] = useState('');
+  const [savingObs, setSavingObs] = useState(false);
+
+  const { data: obsAtual } = useQuery({
+    queryKey: ['nexa', 'unidade-obs', selUnidade?.unidade_id],
+    enabled: !!selUnidade,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('seven_unidades')
+        .select('observacoes')
+        .eq('id', selUnidade!.unidade_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.observacoes ?? '';
+    },
+  });
+  useEffect(() => { setObs(obsAtual ?? ''); }, [obsAtual, selUnidade?.unidade_id]);
+
+  const salvarObs = async () => {
+    if (!selUnidade) return;
+    setSavingObs(true);
+    try {
+      const { error } = await supabase
+        .from('seven_unidades')
+        .update({ observacoes: obs.trim() || null })
+        .eq('id', selUnidade.unidade_id);
+      if (error) throw error;
+      toast.success('Observações salvas');
+      qc.invalidateQueries({ queryKey: ['nexa', 'unidade-obs', selUnidade.unidade_id] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar observações');
+    } finally {
+      setSavingObs(false);
+    }
+  };
+
+  const mudarStatus = (status: string) => {
+    if (!selUnidade) return;
+    updateStatus.mutate({ unidadeId: selUnidade.unidade_id, status });
+    setSelUnidade({ ...selUnidade, status });
+  };
 
   const { data: boxesVinculados } = useQuery({
     queryKey: ['nexa', 'boxes-vinculados', empId],
@@ -165,7 +221,7 @@ export default function NexaDisponibilidade() {
   return (
     <MainLayout
       title="Unidades disponíveis"
-      subtitle={canEdit ? 'Clique no status para alterá-lo.' : 'Consulta em tempo real do banco.'}
+      subtitle={canEdit ? 'Clique na unidade para ver detalhes, alterar status e anotar a reserva.' : 'Clique na unidade para ver os detalhes.'}
     >
       <div className="space-y-6">
       <div className="page-toolbar flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -225,14 +281,14 @@ export default function NexaDisponibilidade() {
                         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
                           {items.map((unidade) => {
                             const tipologia = unidade.tipologia || 'Sem tipologia';
-                            const card = (
+                            return (
                               <button
+                                key={unidade.unidade_id}
                                 type="button"
-                                disabled={!canEdit || updateStatus.isPending}
+                                onClick={() => setSelUnidade(unidade)}
                                 className={cn(
-                                  'relative flex min-h-[4.75rem] min-w-0 flex-col items-center justify-center rounded-lg border p-2 text-center text-slate-800 transition-all',
+                                  'relative flex min-h-[4.75rem] min-w-0 cursor-pointer flex-col items-center justify-center rounded-lg border p-2 text-center text-slate-800 ring-primary ring-offset-2 transition-all hover:ring-2',
                                   STATUS_CARD_COLORS[unidade.status] || 'border-gray-300 bg-gray-100',
-                                  canEdit ? 'cursor-pointer ring-primary ring-offset-2 hover:ring-2' : 'cursor-default',
                                 )}
                                 title={`${unidade.unidade} · ${STATUS_MAP[unidade.status]?.label ?? unidade.status} · ${tipologia} · ${unidade.area_privativa ? `${unidade.area_privativa} m²` : 'área não informada'} · ${formatBRL(unidade.valor)}${boxesPorUnidade[unidade.unidade_id]?.length ? ` · Box(es): ${boxesPorUnidade[unidade.unidade_id].join(', ')}` : ''}`}
                               >
@@ -242,31 +298,6 @@ export default function NexaDisponibilidade() {
                                 </span>
                                 <span className="mt-1 max-w-full truncate text-[10px] uppercase leading-tight text-slate-600">{tipologia}</span>
                               </button>
-                            );
-
-                            if (!canEdit) return <div key={unidade.unidade_id}>{card}</div>;
-
-                            return (
-                              <Popover key={unidade.unidade_id}>
-                                <PopoverTrigger asChild>{card}</PopoverTrigger>
-                                <PopoverContent className="w-48 p-1" align="start">
-                                  <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">Alterar status</p>
-                                  {STATUS_OPTIONS.map((status) => (
-                                    <button
-                                      key={status.value}
-                                      type="button"
-                                      onClick={() => updateStatus.mutate({ unidadeId: unidade.unidade_id, status: status.value })}
-                                      className={cn(
-                                        'flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-xs transition-colors hover:bg-muted',
-                                        unidade.status === status.value && 'bg-muted font-medium',
-                                      )}
-                                    >
-                                      <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-                                      {status.label}
-                                    </button>
-                                  ))}
-                                </PopoverContent>
-                              </Popover>
                             );
                           })}
                         </div>
@@ -279,6 +310,73 @@ export default function NexaDisponibilidade() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={!!selUnidade} onOpenChange={(o) => !o && setSelUnidade(null)}>
+        <DialogContent className="max-w-lg">
+          {selUnidade && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Unidade {selUnidade.unidade}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <Info label="Bloco" value={selUnidade.bloco || '—'} />
+                  <Info label="Andar" value={selUnidade.andar ? `${selUnidade.andar}º` : 'Térreo'} />
+                  <Info label="Tipologia" value={selUnidade.tipologia || '—'} />
+                  <Info label="Área privativa" value={selUnidade.area_privativa ? `${selUnidade.area_privativa} m²` : '—'} />
+                  <Info label="Quartos / Suítes" value={`${selUnidade.quartos ?? '—'} / ${selUnidade.suites ?? '—'}`} />
+                  <Info label="Vagas" value={selUnidade.vagas ?? '—'} />
+                  <Info label="Valor" value={formatBRL(selUnidade.valor)} />
+                  <Info label="Box(es)" value={boxesPorUnidade[selUnidade.unidade_id]?.join(', ') || '—'} />
+                </div>
+
+                <div>
+                  <Label className="mb-1 block">Status</Label>
+                  {canEdit ? (
+                    <Select value={selUnidade.status} onValueChange={mudarStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>
+                            <span className="inline-flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${s.dot}`} />{s.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 text-sm">
+                      <span className={`h-2 w-2 rounded-full ${STATUS_MAP[selUnidade.status]?.dot ?? 'bg-slate-300'}`} />
+                      {STATUS_MAP[selUnidade.status]?.label ?? selUnidade.status}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="mb-1 block">
+                    Observações {canEdit && <span className="text-xs font-normal text-muted-foreground">(dados da reserva)</span>}
+                  </Label>
+                  <Textarea
+                    rows={5}
+                    value={obs}
+                    onChange={(e) => setObs(e.target.value)}
+                    disabled={!canEdit}
+                    placeholder={canEdit ? 'Anote aqui os dados da reserva...' : 'Sem observações.'}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelUnidade(null)}>Fechar</Button>
+                {canEdit && (
+                  <Button onClick={salvarObs} disabled={savingObs}>
+                    {savingObs && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Salvar observações
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
     </MainLayout>
   );

@@ -62,6 +62,16 @@ const formatDecimal = (value: number | null | undefined) => (
     : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 );
 
+const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+// Vitória do Sol é dividido em fases; a fase vem do nome do bloco ("Fase 1"/"Fase 2").
+function faseDoBloco(nome: string | null | undefined): 1 | 2 | null {
+  const n = norm(nome ?? '');
+  if (/\bfase\s*0*1\b/.test(n)) return 1;
+  if (/\bfase\s*0*2\b/.test(n)) return 2;
+  return null;
+}
+
 async function fetchAsDataURL(url: string): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Falha ao carregar imagem (${response.status})`);
@@ -156,7 +166,7 @@ export async function exportUnidadesPdf({
   const mensaisLabel = `${plano.mensais_qtd}x mensais`;
   const reforcosLabel = `${plano.reforcos_qtd} reforços`;
 
-  const body = ordenadas.map((unit) => {
+  const rowsFor = (units: ExportUnidadeInput[]) => units.map((unit) => {
     const base = [
       unit.andar != null ? `${unit.andar}º` : '-',
       unit.numero,
@@ -263,11 +273,11 @@ export async function exportUnidadesPdf({
     doc.line(marginX, 24, pageWidth - marginX, 24);
   };
 
-  autoTable(doc, {
-    startY: 30,
+  const runTable = (rows: unknown[], startY: number) => autoTable(doc, {
+    startY,
     margin: { top: 28, right: marginX, bottom: 17, left: marginX },
     head,
-    body,
+    body: rows as any,
     theme: 'plain',
     styles: {
       font: fontName,
@@ -309,6 +319,30 @@ export async function exportUnidadesPdf({
     },
     willDrawPage: () => drawHeader(),
   });
+
+  const faseCaption = (label: string) => {
+    doc.setFont(fontName, 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...NEXA_VIOLET);
+    doc.text(label, marginX, 29);
+  };
+
+  // Vitória do Sol: quebra de página entre as unidades da Fase 01 e da Fase 02.
+  const isVitoria = norm(empreendimento.nome).includes('vitoria do sol');
+  const fase2 = ordenadas.filter((u) => faseDoBloco(u.bloco?.nome) === 2);
+  const temFase1 = ordenadas.some((u) => faseDoBloco(u.bloco?.nome) === 1);
+  const quebrarPorFase = isVitoria && temFase1 && fase2.length > 0;
+
+  if (quebrarPorFase) {
+    const fase1 = ordenadas.filter((u) => faseDoBloco(u.bloco?.nome) !== 2); // fase 1 + sem fase
+    faseCaption('FASE 01');
+    runTable(rowsFor(fase1), 33);
+    doc.addPage('a4', 'landscape');
+    faseCaption('FASE 02');
+    runTable(rowsFor(fase2), 33);
+  } else {
+    runTable(rowsFor(ordenadas), 30);
+  }
 
   const tableDoc = doc as jsPDF & { lastAutoTable?: { finalY: number } };
   const bottomLimit = pageHeight - 17;
