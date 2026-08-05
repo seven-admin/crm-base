@@ -10,6 +10,7 @@ const SUPERADMIN_ONLY_MODULES = new Set([
   'nexa_contratos_modelos',
   'nexa_contratos_blocos',
   'nexa_contratos_variaveis',
+  'nexa_propostas_acesso',
 ]);
 
 interface UserModulePermissionData {

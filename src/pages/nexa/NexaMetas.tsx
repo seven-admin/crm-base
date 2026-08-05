@@ -2,7 +2,18 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NexaMetasDashboard } from '@/components/nexa/NexaMetasDashboard';
 import { NexaMetasManager } from '@/components/nexa/NexaMetasManager';
+import { PropostasNexaCard } from '@/pages/dashboard/components/PropostasNexaCard';
 import { usePermissions } from '@/hooks/usePermissions';
+
+// Metas é a inicial dos usuários NEXA: mostra desempenho da semana + feed de propostas.
+function MetasHome() {
+  return (
+    <div className="space-y-5">
+      <NexaMetasDashboard />
+      <PropostasNexaCard />
+    </div>
+  );
+}
 
 export default function NexaMetas() {
   const { isSuperAdmin } = usePermissions();
@@ -12,7 +23,7 @@ export default function NexaMetas() {
   if (!canConfig) {
     return (
       <MainLayout title="Metas Nexa" subtitle="Seu desempenho da semana">
-        <NexaMetasDashboard />
+        <MetasHome />
       </MainLayout>
     );
   }
@@ -24,7 +35,7 @@ export default function NexaMetas() {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="config">Configurar Metas</TabsTrigger>
         </TabsList>
-        <TabsContent value="dashboard"><NexaMetasDashboard /></TabsContent>
+        <TabsContent value="dashboard"><MetasHome /></TabsContent>
         <TabsContent value="config"><NexaMetasManager /></TabsContent>
       </Tabs>
     </MainLayout>
