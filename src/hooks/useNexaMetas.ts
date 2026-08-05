@@ -6,8 +6,10 @@ import { toast } from 'sonner';
 import type {
   NexaAtividade,
   NexaAtividadeTipo,
+  NexaAtividadeSubtipo,
   NexaAtividadeWithRelations,
   NexaMeta,
+  NexaVisitaStatus,
 } from '@/types/nexa.types';
 
 // As tabelas nexa_* desta entrega ainda não estão nos types gerados; casts `as any`
@@ -17,7 +19,11 @@ import type {
 const SELECT_ATIVIDADE = `
   *,
   participantes:nexa_atividade_participantes(corretor_id, corretor_nome, imobiliaria_nome),
-  criador:profiles!nexa_atividades_created_by_fkey(id, full_name, email)
+  criador:profiles!nexa_atividades_created_by_fkey(id, full_name, email),
+  cliente:seven_clientes(id, nome, telefone, email),
+  empreendimento:seven_empreendimentos(id, nome),
+  imobiliaria:seven_imobiliarias(id, nome),
+  corretor:seven_corretores(id, nome_completo)
 `;
 
 // ============ Registro de atividades ============
@@ -29,7 +35,7 @@ export function useNexaAtividades(filters?: { tipo?: NexaAtividadeTipo; mineOnly
         .select(SELECT_ATIVIDADE)
         .order('data_hora', { ascending: false });
       if (filters?.tipo) q = q.eq('tipo', filters.tipo);
-      if (filters?.mineOnly && filters.userId) q = q.eq('created_by', filters.userId);
+      if (filters?.userId) q = q.eq('created_by', filters.userId);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as NexaAtividadeWithRelations[];
@@ -45,12 +51,42 @@ export interface ParticipanteInput {
 
 type AtividadeInput = {
   tipo: NexaAtividadeTipo;
+  subtipo?: NexaAtividadeSubtipo | null;
   data_hora: string;
   local?: string | null;
   qtd_pessoas?: number | null;
   observacoes?: string | null;
   participantes: ParticipanteInput[];
+  // Atendimento (cliente):
+  cliente_id?: string | null;
+  visitante_nome?: string | null;
+  visitante_telefone?: string | null;
+  empreendimento_id?: string | null;
+  imobiliaria_id?: string | null;
+  corretor_id?: string | null;
+  status?: NexaVisitaStatus | null;
 };
+
+// Campos gravados conforme a categoria; o resto vai nulo.
+function atividadeColumns(input: AtividadeInput) {
+  const isMercado = input.tipo === 'visita';
+  const isAtend = input.tipo === 'atendimento';
+  return {
+    tipo: input.tipo,
+    subtipo: isMercado ? (input.subtipo ?? null) : null,
+    data_hora: input.data_hora,
+    local: isMercado ? (input.local ?? null) : null,
+    qtd_pessoas: isMercado ? (input.qtd_pessoas ?? null) : null,
+    observacoes: input.observacoes ?? null,
+    cliente_id: isAtend ? (input.cliente_id ?? null) : null,
+    visitante_nome: isAtend ? (input.visitante_nome ?? null) : null,
+    visitante_telefone: isAtend ? (input.visitante_telefone ?? null) : null,
+    empreendimento_id: isAtend ? (input.empreendimento_id ?? null) : null,
+    imobiliaria_id: isAtend ? (input.imobiliaria_id ?? null) : null,
+    corretor_id: isAtend ? (input.corretor_id ?? null) : null,
+    status: isAtend ? (input.status ?? 'agendada') : null,
+  };
+}
 
 async function syncParticipantes(atividadeId: string, participantes: ParticipanteInput[]) {
   await (supabase.from('nexa_atividade_participantes' as any) as any)
@@ -68,18 +104,18 @@ export function useCreateNexaAtividade() {
     mutationFn: async (input: AtividadeInput) => {
       const { data: u } = await supabase.auth.getUser();
       const { data, error } = await (supabase.from('nexa_atividades' as any) as any)
-        .insert({
-          tipo: input.tipo,
-          data_hora: input.data_hora,
-          local: input.tipo === 'visita' ? (input.local ?? null) : null,
-          qtd_pessoas: input.tipo === 'visita' ? (input.qtd_pessoas ?? null) : null,
-          observacoes: input.observacoes ?? null,
-          created_by: u.user?.id ?? null,
-        })
+        .insert({ ...atividadeColumns(input), created_by: u.user?.id ?? null })
         .select('id')
         .single();
       if (error) throw error;
       if (input.tipo === 'visita') await syncParticipantes(data.id, input.participantes);
+      if (input.tipo === 'atendimento') {
+        // Registra o histórico igual à antiga criação de visita.
+        await (supabase.from('nexa_visitas_eventos' as any) as any).insert({
+          visita_id: data.id, tipo_evento: 'criada', usuario_id: u.user?.id ?? null,
+          payload: { status: input.status ?? 'agendada' },
+        });
+      }
       return data;
     },
     onSuccess: () => {
@@ -96,13 +132,7 @@ export function useUpdateNexaAtividade() {
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: AtividadeInput }) => {
       const { error } = await (supabase.from('nexa_atividades' as any) as any)
-        .update({
-          tipo: input.tipo,
-          data_hora: input.data_hora,
-          local: input.tipo === 'visita' ? (input.local ?? null) : null,
-          qtd_pessoas: input.tipo === 'visita' ? (input.qtd_pessoas ?? null) : null,
-          observacoes: input.observacoes ?? null,
-        })
+        .update(atividadeColumns(input))
         .eq('id', id);
       if (error) throw error;
       await syncParticipantes(id, input.tipo === 'visita' ? input.participantes : []);
@@ -188,6 +218,7 @@ export function useSaveNexaMeta() {
       semanalAtendimentos: number;
       semanalImpacto: number;
       semanalEngajamento: number;
+      semanalVgv: number;
       isActive: boolean;
       userIds: string[];
     }) => {
@@ -200,6 +231,7 @@ export function useSaveNexaMeta() {
         p_meta_semanal_atendimentos: payload.semanalAtendimentos,
         p_meta_semanal_impacto: payload.semanalImpacto,
         p_meta_semanal_engajamento: payload.semanalEngajamento,
+        p_meta_semanal_vgv: payload.semanalVgv,
         p_is_active: payload.isActive,
         p_user_ids: payload.userIds,
       } as any);
@@ -218,16 +250,17 @@ export function useSaveNexaMeta() {
 export function useDeleteNexaMeta() {
   const qc = useQueryClient();
   return useMutation({
+    // Hard delete via RPC super_admin: falha com erro (não silencioso) se sem permissão.
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('nexa_metas' as any) as any).delete().eq('id', id);
+      const { error } = await supabase.rpc('nexa_excluir_meta' as any, { p_meta_id: id } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['nexa', 'metas'] });
       qc.invalidateQueries({ queryKey: ['nexa', 'metas-dashboard'] });
-      toast.success('Meta removida');
+      toast.success('Meta excluída');
     },
-    onError: (e: any) => toast.error(e.message || 'Erro ao remover meta'),
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir meta'),
   });
 }
 
@@ -245,6 +278,7 @@ export interface NexaConsultorCard {
   userId: string;
   nome: string;
   meta: NexaMetricSet;
+  metaVgv: number;       // meta semanal de VGV (R$); realizado ainda sem fonte
   semana: NexaMetricSet;
   semanaAnterior: NexaMetricSet;
   hoje: { visitas: number; atendimentos: number };
@@ -254,7 +288,7 @@ export interface NexaConsultorCard {
 
 export interface NexaDashboardResult {
   cards: NexaConsultorCard[];
-  totals: { meta: NexaMetricSet; semana: NexaMetricSet };
+  totals: { meta: NexaMetricSet; semana: NexaMetricSet; metaVgv: number };
 }
 
 export type AtividadeParaAgregar = {
@@ -322,7 +356,7 @@ export function aggregateNexaMetas(
     .filter((m) => m.is_active && m.vigencia_inicio <= ref && (!m.vigencia_fim || m.vigencia_fim >= ref))
     .sort((a, b) => b.vigencia_inicio.localeCompare(a.vigencia_inicio));
 
-  const userMeta = new Map<string, { nome: string; meta: NexaMetricSet }>();
+  const userMeta = new Map<string, { nome: string; meta: NexaMetricSet; metaVgv: number }>();
   for (const meta of activeMetas) {
     for (const u of meta.usuarios ?? []) {
       if (userMeta.has(u.user_id)) continue; // lista desc → primeira é a mais recente
@@ -334,6 +368,7 @@ export function aggregateNexaMetas(
           impacto: meta.meta_semanal_impacto,
           engajamento: meta.meta_semanal_engajamento,
         },
+        metaVgv: meta.meta_semanal_vgv ?? 0,
       });
     }
   }
@@ -358,6 +393,7 @@ export function aggregateNexaMetas(
       userId,
       nome: info?.nome ?? 'Usuário',
       meta,
+      metaVgv: info?.metaVgv ?? 0,
       semana,
       semanaAnterior,
       hoje: { visitas: hojeMetrics.visitas, atendimentos: hojeMetrics.atendimentos },
@@ -374,7 +410,8 @@ export function aggregateNexaMetas(
       return acc;
     }, emptyMetrics());
 
-  return { cards, totals: { meta: sum((c) => c.meta), semana: sum((c) => c.semana) } };
+  const metaVgvTotal = cards.reduce((acc, c) => acc + c.metaVgv, 0);
+  return { cards, totals: { meta: sum((c) => c.meta), semana: sum((c) => c.semana), metaVgv: metaVgvTotal } };
 }
 
 // ============ Dashboard hook ============

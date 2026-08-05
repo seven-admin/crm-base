@@ -12,6 +12,16 @@ const SELECT_VISITA = `
   criador:profiles!nexa_visitas_created_by_fkey(id, full_name, email)
 `;
 
+// Após a fusão, o detalhe lê da tabela única nexa_atividades (Atendimento = cliente).
+const SELECT_ATIVIDADE_DETALHE = `
+  *,
+  cliente:seven_clientes(id, nome, telefone, email),
+  empreendimento:seven_empreendimentos(id, nome),
+  imobiliaria:seven_imobiliarias(id, nome),
+  corretor:seven_corretores(id, nome_completo),
+  criador:profiles!nexa_atividades_created_by_fkey(id, full_name, email)
+`;
+
 // ============ Visitas ============
 export function useNexaVisitas(filters?: {
   empreendimento_id?: string;
@@ -48,7 +58,7 @@ export function useNexaVisita(id?: string) {
     queryKey: ['nexa', 'visita', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase.from('nexa_visitas').select(SELECT_VISITA).eq('id', id!).maybeSingle();
+      const { data, error } = await (supabase.from('nexa_atividades' as any) as any).select(SELECT_ATIVIDADE_DETALHE).eq('id', id!).maybeSingle();
       if (error) throw error;
       return data as unknown as NexaVisitaWithRelations | null;
     },
@@ -102,7 +112,7 @@ export function useUpdateVisitaStatus() {
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: NexaVisitaStatus }) => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await supabase.from('nexa_visitas').update({ status }).eq('id', id);
+      const { error } = await (supabase.from('nexa_atividades' as any) as any).update({ status }).eq('id', id);
       if (error) throw error;
       await supabase.from('nexa_visitas_eventos').insert({
         visita_id: id,

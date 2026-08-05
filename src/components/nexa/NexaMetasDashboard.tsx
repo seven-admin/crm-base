@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react';
 import { Building2, CalendarCheck2, Handshake, TrendingUp, UserRound, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   useNexaMetasDashboard,
   type NexaConsultorCard,
@@ -15,8 +18,12 @@ const PERF: Record<NexaPerfLevel, { emoji: string; label: string; cls: string }>
   sem_meta: { emoji: '⚪', label: 'Sem meta', cls: 'text-muted-foreground' },
 };
 
-// Placeholder até definirmos a origem de vendas/VGV/carteira (decisão do usuário).
+// Placeholder até definirmos a origem de vendas/VGV/carteira realizados (decisão do usuário).
 const PLACEHOLDER = '—';
+
+function brl(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+}
 
 function pct(done: number, goal: number) {
   return goal > 0 ? Math.round((done / goal) * 100) : null;
@@ -83,9 +90,9 @@ function ConsultorCard({ card }: { card: NexaConsultorCard }) {
         <div className="rounded-2xl border border-black/[.07] p-4">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta semanal</p>
           <MetricRow label="Visitas" done={card.semana.visitas} goal={card.meta.visitas} />
-          <MetricRow label="Atendimento" done={card.semana.atendimentos} goal={card.meta.atendimentos} />
-          <MetricRow label="Impacto global" hint="corretores distintos" done={card.semana.impacto} goal={card.meta.impacto} />
           <MetricRow label="Engajamento real" hint="corretores em 2+ atividades" done={card.semana.engajamento} goal={card.meta.engajamento} />
+          <MetricRow label="Impacto global" hint="corretores distintos" done={card.semana.impacto} goal={card.meta.impacto} />
+          <MetricRow label="Atendimento" done={card.semana.atendimentos} goal={card.meta.atendimentos} />
           <div className="flex items-center justify-between gap-3 py-2 text-muted-foreground">
             <p className="text-sm font-medium">Venda</p>
             <span className="text-sm">{PLACEHOLDER}</span>
@@ -109,7 +116,7 @@ function ConsultorCard({ card }: { card: NexaConsultorCard }) {
             <div className="rounded-2xl border border-black/[.07] p-4">
               <p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">VGV — R$</p>
               <p className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{PLACEHOLDER}</p>
-              <p className="text-xs text-muted-foreground">Meta semanal a definir</p>
+              <p className="text-xs text-muted-foreground">Meta semanal {card.metaVgv > 0 ? brl(card.metaVgv) : 'a definir'}</p>
             </div>
             <div className="rounded-2xl border border-black/[.07] p-4">
               <p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Unidades vendidas</p>
@@ -141,31 +148,57 @@ function TotalTile({ label, icon, done, goal }: { label: string; icon: React.Rea
 
 export function NexaMetasDashboard() {
   const { data, isLoading } = useNexaMetasDashboard();
+  const { isSuperAdmin } = usePermissions();
+  const [selUser, setSelUser] = useState('todos');
+
+  const cards = data?.cards ?? [];
+  const userOptions = useMemo(
+    () => cards.map((c) => ({ id: c.userId, nome: c.nome })).sort((a, b) => a.nome.localeCompare(b.nome)),
+    [cards],
+  );
 
   if (isLoading || !data) return <Skeleton className="h-96 rounded-[2rem]" />;
 
-  const { cards, totals, seeAll } = data;
+  const { totals, seeAll } = data;
   const t: NexaMetricSet = totals.semana;
   const g: NexaMetricSet = totals.meta;
 
+  // Super admin pode focar num usuário; nesse caso escondemos os totais "(todos)".
+  const canFilter = isSuperAdmin() && userOptions.length > 0;
+  const filtrando = canFilter && selUser !== 'todos';
+  const visibleCards = filtrando ? cards.filter((c) => c.userId === selUser) : cards;
+
   return (
     <div className="space-y-5">
-      {seeAll && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <TotalTile label="Visitas (todos)" icon={<CalendarCheck2 className="h-4 w-4 text-primary" />} done={t.visitas} goal={g.visitas} />
-          <TotalTile label="Atendimentos (todos)" icon={<Handshake className="h-4 w-4 text-primary" />} done={t.atendimentos} goal={g.atendimentos} />
-          <TotalTile label="Impacto (todos)" icon={<Users className="h-4 w-4 text-primary" />} done={t.impacto} goal={g.impacto} />
-          <TotalTile label="Engajamento (todos)" icon={<Building2 className="h-4 w-4 text-primary" />} done={t.engajamento} goal={g.engajamento} />
+      {canFilter && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Usuário</span>
+          <Select value={selUser} onValueChange={setSelUser}>
+            <SelectTrigger className="w-[240px]"><SelectValue placeholder="Usuário" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os usuários</SelectItem>
+              {userOptions.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {cards.length === 0 ? (
+      {seeAll && !filtrando && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <TotalTile label="Visitas (todos)" icon={<CalendarCheck2 className="h-4 w-4 text-primary" />} done={t.visitas} goal={g.visitas} />
+          <TotalTile label="Engajamento (todos)" icon={<Building2 className="h-4 w-4 text-primary" />} done={t.engajamento} goal={g.engajamento} />
+          <TotalTile label="Impacto (todos)" icon={<Users className="h-4 w-4 text-primary" />} done={t.impacto} goal={g.impacto} />
+          <TotalTile label="Atendimentos (todos)" icon={<Handshake className="h-4 w-4 text-primary" />} done={t.atendimentos} goal={g.atendimentos} />
+        </div>
+      )}
+
+      {visibleCards.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted-foreground shadow-none">
           Nenhuma meta vigente encontrada. Configure metas na aba "Configurar Metas".
         </Card>
       ) : (
         <div className="space-y-4">
-          {cards.map((card) => <ConsultorCard key={card.userId} card={card} />)}
+          {visibleCards.map((card) => <ConsultorCard key={card.userId} card={card} />)}
         </div>
       )}
     </div>

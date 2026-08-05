@@ -24,6 +24,7 @@ type MetaForm = {
   semanalAtendimentos: number;
   semanalImpacto: number;
   semanalEngajamento: number;
+  semanalVgv: number;
   isActive: boolean;
   userIds: string[];
 };
@@ -32,7 +33,7 @@ function emptyForm(): MetaForm {
   return {
     nome: '', vigenciaInicio: today(), vigenciaFim: '',
     semanalVisitas: 0, semanalAtendimentos: 0, semanalImpacto: 0, semanalEngajamento: 0,
-    isActive: true, userIds: [],
+    semanalVgv: 0, isActive: true, userIds: [],
   };
 }
 
@@ -63,6 +64,7 @@ export function NexaMetasManager() {
       semanalAtendimentos: meta.meta_semanal_atendimentos,
       semanalImpacto: meta.meta_semanal_impacto,
       semanalEngajamento: meta.meta_semanal_engajamento,
+      semanalVgv: meta.meta_semanal_vgv,
       isActive: meta.is_active,
       userIds: meta.usuarios?.map((u) => u.user_id) ?? [],
     });
@@ -117,11 +119,17 @@ export function NexaMetasManager() {
                       {users.join(', ') || 'Nenhum usuário'}
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Semana: {meta.meta_semanal_visitas} visitas · {meta.meta_semanal_atendimentos} atendimentos · {meta.meta_semanal_impacto} impacto · {meta.meta_semanal_engajamento} engajamento
+                      Semana: {meta.meta_semanal_visitas} visitas · {meta.meta_semanal_engajamento} engajamento · {meta.meta_semanal_impacto} impacto · {meta.meta_semanal_atendimentos} atendimentos
+                      {meta.meta_semanal_vgv > 0 && ` · VGV ${meta.meta_semanal_vgv.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}`}
                     </p>
                   </div>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(meta)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => confirm('Remover esta meta?') && del.mutate(meta.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    disabled={del.isPending}
+                    onClick={() => confirm('Excluir permanentemente esta meta? Esta ação não pode ser desfeita.') && del.mutate(meta.id)}
+                  >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -164,13 +172,29 @@ export function NexaMetasManager() {
               <Label>Engajamento — corretores/semana</Label>
               <Input type="number" min={0} value={form.semanalEngajamento} onChange={(e) => setForm({ ...form, semanalEngajamento: Math.max(0, Number(e.target.value)) })} />
             </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Meta de VGV por semana (R$)</Label>
+              <Input type="number" min={0} step={1000} value={form.semanalVgv} onChange={(e) => setForm({ ...form, semanalVgv: Math.max(0, Number(e.target.value)) })} placeholder="Ex.: 500000" />
+            </div>
           </div>
 
           <div className="space-y-3 rounded-2xl border border-black/[.07] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <Label>Usuários atribuídos *</Label>
-                <p className="mt-1 text-xs text-muted-foreground">{form.userIds.length} selecionado(s)</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.userIds.length} selecionado(s)
+                  <button
+                    type="button"
+                    className="ml-2 font-medium text-primary underline-offset-2 hover:underline"
+                    onClick={() => setForm((cur) => ({
+                      ...cur,
+                      userIds: cur.userIds.length === profiles.length ? [] : profiles.map((p) => p.id),
+                    }))}
+                  >
+                    {form.userIds.length === profiles.length ? 'Limpar' : 'Selecionar todos'}
+                  </button>
+                </p>
               </div>
               <Input className="max-w-xs" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} placeholder="Buscar usuário..." />
             </div>

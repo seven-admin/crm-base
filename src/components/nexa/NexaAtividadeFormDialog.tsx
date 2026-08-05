@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 import { useCreateNexaAtividade, useUpdateNexaAtividade, useNexaCorretoresPorImobiliaria } from '@/hooks/useNexaMetas';
-import type { NexaAtividadeTipo, NexaAtividadeWithRelations } from '@/types/nexa.types';
-import { TIPO_ATIVIDADE_LABELS } from '@/types/nexa.types';
+import { useEmpreendimentosAtivos, useImobiliariasAtivas, getOrCreatePessoa } from '@/hooks/useNexa';
+import type { NexaAtividadeTipo, NexaAtividadeSubtipo, NexaAtividadeWithRelations, NexaVisitaStatus } from '@/types/nexa.types';
+import { TIPO_ATIVIDADE_LABELS, NEXA_SUBTIPO_LABELS, STATUS_LABELS } from '@/types/nexa.types';
 
 interface Props {
   open: boolean;
@@ -30,15 +32,27 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
   const create = useCreateNexaAtividade();
   const update = useUpdateNexaAtividade();
   const { data: corretores = [] } = useNexaCorretoresPorImobiliaria();
+  const { data: emps = [] } = useEmpreendimentosAtivos();
+  const { data: imobs = [] } = useImobiliariasAtivas();
   const isEdit = !!atividade;
 
   const [tipo, setTipo] = useState<NexaAtividadeTipo>('visita');
   const [dataHora, setDataHora] = useState('');
+  const [obs, setObs] = useState('');
+  // Mercado
+  const [subtipo, setSubtipo] = useState<NexaAtividadeSubtipo | ''>('');
   const [local, setLocal] = useState('');
   const [qtdPessoas, setQtdPessoas] = useState('');
-  const [obs, setObs] = useState('');
   const [corretorIds, setCorretorIds] = useState<string[]>([]);
   const [busca, setBusca] = useState('');
+  // Atendimento (cliente)
+  const [jaLead, setJaLead] = useState(false);
+  const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [email, setEmail] = useState('');
+  const [empId, setEmpId] = useState('');
+  const [imobId, setImobId] = useState('');
+  const [status, setStatus] = useState<NexaVisitaStatus>('agendada');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,12 +60,22 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
     if (atividade) {
       setTipo(atividade.tipo);
       setDataHora(toLocalInput(atividade.data_hora));
+      setObs(atividade.observacoes ?? '');
+      setSubtipo(atividade.subtipo ?? '');
       setLocal(atividade.local ?? '');
       setQtdPessoas(atividade.qtd_pessoas != null ? String(atividade.qtd_pessoas) : '');
-      setObs(atividade.observacoes ?? '');
       setCorretorIds((atividade.participantes ?? []).map((p) => p.corretor_id));
+      setJaLead(!!atividade.cliente_id);
+      setNome(atividade.cliente?.nome || atividade.visitante_nome || '');
+      setTelefone(atividade.cliente?.telefone || atividade.visitante_telefone || '');
+      setEmail(atividade.cliente?.email || '');
+      setEmpId(atividade.empreendimento_id ?? '');
+      setImobId(atividade.imobiliaria_id ?? '');
+      setStatus(atividade.status ?? 'agendada');
     } else {
-      setTipo('visita'); setDataHora(''); setLocal(''); setQtdPessoas(''); setObs(''); setCorretorIds([]);
+      setTipo('visita'); setDataHora(''); setObs('');
+      setSubtipo(''); setLocal(''); setQtdPessoas(''); setCorretorIds([]);
+      setJaLead(false); setNome(''); setTelefone(''); setEmail(''); setEmpId(''); setImobId(''); setStatus('agendada');
     }
     setBusca('');
   }, [open, atividade]);
@@ -77,7 +101,10 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
 
   const submit = async () => {
     if (!dataHora) return toast.error('Informe data e hora.');
-    if (tipo === 'visita' && !local.trim()) return toast.error('Informe o local da visita.');
+    if (tipo === 'visita' && !subtipo) return toast.error('Selecione o tipo da atividade de mercado.');
+    if (tipo === 'atendimento' && (!nome.trim() || !telefone.trim() || !empId)) {
+      return toast.error('Informe nome, telefone e empreendimento.');
+    }
     setSaving(true);
     try {
       const optById = new Map(corretores.map((c) => [c.id, c]));
@@ -91,13 +118,36 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
           imobiliaria_nome: opt?.imobiliaria?.nome ?? snap?.imobiliaria_nome ?? null,
         };
       });
+
+      // Atendimento: vincula a lead do grupo se marcado, senão guarda nome/telefone soltos.
+      let cliente_id: string | null = atividade?.cliente_id ?? null;
+      let visitante_nome: string | null = null;
+      let visitante_telefone: string | null = null;
+      if (tipo === 'atendimento') {
+        if (jaLead) {
+          cliente_id = cliente_id ?? (await getOrCreatePessoa(nome.trim(), telefone.trim(), email.trim() || undefined));
+        } else {
+          cliente_id = null;
+          visitante_nome = nome.trim();
+          visitante_telefone = telefone.trim();
+        }
+      }
+
       const input = {
         tipo,
+        subtipo: tipo === 'visita' ? (subtipo || null) : null,
         data_hora: new Date(dataHora).toISOString(),
         local: local.trim() || null,
         qtd_pessoas: qtdPessoas ? Math.max(0, Number(qtdPessoas)) : null,
         observacoes: obs.trim() || null,
         participantes,
+        cliente_id,
+        visitante_nome,
+        visitante_telefone,
+        empreendimento_id: tipo === 'atendimento' ? (empId || null) : null,
+        imobiliaria_id: tipo === 'atendimento' ? (imobId || null) : null,
+        corretor_id: null,
+        status: tipo === 'atendimento' ? status : null,
       };
       if (isEdit && atividade) await update.mutateAsync({ id: atividade.id, input });
       else await create.mutateAsync(input);
@@ -119,7 +169,7 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Tipo *</Label>
+              <Label>Categoria *</Label>
               <Select value={tipo} onValueChange={(v) => setTipo(v as NexaAtividadeTipo)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -135,11 +185,24 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
             </div>
           </div>
 
+          {/* ===== Atividade (mercado) ===== */}
           {tipo === 'visita' && (
             <>
+              <div>
+                <Label>Tipo da atividade *</Label>
+                <Select value={subtipo} onValueChange={(v) => setSubtipo(v as NexaAtividadeSubtipo)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(NEXA_SUBTIPO_LABELS).map(([k, l]) => (
+                      <SelectItem key={k} value={k}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-[1fr_140px] gap-3">
                 <div>
-                  <Label>Local *</Label>
+                  <Label>Local</Label>
                   <Input value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Ex.: Imobiliária X, estande, sala de treinamento" />
                 </div>
                 <div>
@@ -174,6 +237,72 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
                     </div>
                   ))}
                 </div>
+              </div>
+            </>
+          )}
+
+          {/* ===== Atendimento (cliente) ===== */}
+          {tipo === 'atendimento' && (
+            <>
+              {!isEdit && (
+                <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+                  <div>
+                    <Label htmlFor="jalead" className="font-medium">Este cliente já é um lead do grupo?</Label>
+                    <p className="text-xs text-muted-foreground">Se sim, vinculamos ao cadastro de clientes. Se não, guardamos só nome e telefone.</p>
+                  </div>
+                  <Switch id="jalead" checked={jaLead} onCheckedChange={setJaLead} />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Nome *</Label>
+                  <Input value={nome} onChange={(e) => setNome(e.target.value)} disabled={isEdit && !!atividade?.cliente_id} />
+                </div>
+                <div>
+                  <Label>Telefone *</Label>
+                  <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} disabled={isEdit && !!atividade?.cliente_id} />
+                </div>
+              </div>
+
+              {!isEdit && jaLead && (
+                <div>
+                  <Label>E-mail (opcional)</Label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Empreendimento *</Label>
+                  <Select value={empId} onValueChange={setEmpId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {emps.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Imobiliária parceira (opcional)</Label>
+                  <Select value={imobId} onValueChange={setImobId}>
+                    <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                    <SelectContent>
+                      {imobs.map((i: { id: string; nome: string }) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as NexaVisitaStatus)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(STATUS_LABELS).map(([k, l]) => (
+                      <SelectItem key={k} value={k}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}

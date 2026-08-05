@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Toggle } from '@/components/ui/toggle';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -51,6 +52,16 @@ const TIPOLOGIA_COLORS = [
   'bg-lime-400', 'bg-violet-400', 'bg-amber-400', 'bg-sky-400'
 ];
 
+const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+// Vitória do Sol é dividido em fases; a fase vem do nome do bloco ("Fase 1"/"Fase 2").
+function faseDoBloco(nome: string | null | undefined): 1 | 2 | null {
+  const n = norm(nome ?? '');
+  if (/\bfase\s*0*1\b/.test(n)) return 1;
+  if (/\bfase\s*0*2\b/.test(n)) return 2;
+  return null;
+}
+
 interface UnidadesTabProps {
   empreendimentoId: string;
 }
@@ -70,6 +81,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const [statusLoteOpen, setStatusLoteOpen] = useState(false);
   const [tipologiaLoteOpen, setTipologiaLoteOpen] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [faseDialogOpen, setFaseDialogOpen] = useState(false);
   const [selectedUnidade, setSelectedUnidade] = useState<Unidade | null>(null);
   const [legendaTipologiasOpen, setLegendaTipologiasOpen] = useState(false);
   
@@ -80,6 +92,11 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
   const tiposComMapa = ['loteamento', 'condominio'];
   const usaMapa = empreendimento && tiposComMapa.includes(empreendimento.tipo);
   const [viewMode, setViewMode] = useState<'grid' | 'mapa'>(usaMapa ? 'mapa' : 'grid');
+
+  // Vitória do Sol gera a tabela de vendas dividida por fase (blocos "Fase 1/2").
+  const temFases = !!empreendimento
+    && norm(empreendimento.nome).includes('vitoria do sol')
+    && (blocos ?? []).some((b) => faseDoBloco(b.nome) !== null);
 
   const isLoteamento = empreendimento?.tipo === 'loteamento' || empreendimento?.tipo === 'condominio';
   const agrupamentoLabel = isLoteamento ? 'Quadra' : 'Bloco';
@@ -196,18 +213,21 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
     handleExitSelectionMode();
   };
 
-  const handleExportarPdf = async () => {
+  const handleExportarPdf = async (fase?: 1 | 2) => {
     if (!unidades || !empreendimento) return;
     setIsExportingPdf(true);
     try {
+      const unidadesExport = fase
+        ? unidades.filter((u) => faseDoBloco(u.bloco?.nome) === fase)
+        : unidades;
       await exportUnidadesPdf({
         empreendimento: {
-          nome: empreendimento.nome,
+          nome: fase ? `${empreendimento.nome} — Fase 0${fase}` : empreendimento.nome,
           config_venda: empreendimento.config_venda ?? null,
           registro_incorporacao: empreendimento.registro_incorporacao ?? null,
           matricula_mae: empreendimento.matricula_mae ?? null,
         },
-        unidades: unidades.map((unit) => ({
+        unidades: unidadesExport.map((unit) => ({
           id: unit.id,
           numero: unit.numero,
           andar: unit.andar,
@@ -346,7 +366,7 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handleExportarPdf()} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
+                    <DropdownMenuItem onClick={() => (temFases ? setFaseDialogOpen(true) : handleExportarPdf())} disabled={isExportingPdf || unidadesDisponiveis.length === 0}>
                       {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
                       Exportar tabela de vendas (PDF)
                     </DropdownMenuItem>
@@ -605,6 +625,24 @@ export function UnidadesTab({ empreendimentoId }: UnidadesTabProps) {
           selectedIds={Array.from(selectedUnidadeIds)}
           onSuccess={handleExitSelectionMode}
         />
+        <Dialog open={faseDialogOpen} onOpenChange={setFaseDialogOpen}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Gerar tabela de vendas por fase</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              A tabela sai apenas com as unidades <strong>disponíveis</strong> da fase escolhida.
+            </p>
+            <DialogFooter className="gap-2 sm:justify-center">
+              <Button variant="outline" onClick={() => { setFaseDialogOpen(false); handleExportarPdf(1); }}>
+                Fase 01
+              </Button>
+              <Button onClick={() => { setFaseDialogOpen(false); handleExportarPdf(2); }}>
+                Fase 02
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

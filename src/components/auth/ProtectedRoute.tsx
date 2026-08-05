@@ -94,7 +94,7 @@ export function ProtectedRoute({
       return <Navigate to="/arqo/roleta" replace />;
     }
     if (empresa === 'nexa' && !path.startsWith('/nexa')) {
-      return <Navigate to="/nexa/agenda" replace />;
+      return <Navigate to="/nexa/metas" replace />;
     }
     if (empresa === 'incorporador') {
       return <Navigate to="/sem-acesso" replace />;
