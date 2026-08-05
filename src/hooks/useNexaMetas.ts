@@ -444,12 +444,11 @@ export function aggregateConsultorCards(cards: NexaConsultorCard[], nome = 'Todo
 }
 
 // ============ Dashboard hook ============
-const ADMIN_VIEW_ROLES = new Set(['admin', 'super_admin', 'nexa_admin', 'nexa_gestor']);
-
 export function useNexaMetasDashboard() {
   const { user, role } = useAuth();
   const userId = user?.id;
-  const seeAll = !!role && ADMIN_VIEW_ROLES.has(role);
+  // Só super_admin vê o consolidado/todos os usuários; os demais veem apenas o próprio card.
+  const seeAll = role === 'super_admin';
 
   const now = new Date();
   const week = { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
