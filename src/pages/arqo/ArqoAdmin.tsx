@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  useArqoLeads, useArqoGrupos, useArqoEtapas,
+  useArqoAdminDashboard, useArqoGrupos, useArqoEtapas,
 } from '@/hooks/useArqo';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +34,7 @@ function KpiCard({ label, value, icon: Icon, hint }: any) {
 }
 
 export default function ArqoAdmin() {
-  const { data: leads = [], isLoading } = useArqoLeads();
+  const { data: dash, isLoading } = useArqoAdminDashboard();
   const { data: grupos = [] } = useArqoGrupos();
   const { data: etapas = [] } = useArqoEtapas();
 
@@ -67,86 +67,45 @@ export default function ArqoAdmin() {
     return m;
   }, [profiles]);
 
-  const inicioMes = useMemo(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
-  }, []);
+  const kpis = {
+    totalAtivos: dash?.kpis?.total_ativos ?? 0,
+    semConsultor: dash?.kpis?.sem_consultor ?? 0,
+    emAtendimento: dash?.kpis?.em_atendimento ?? 0,
+    ganhosMes: dash?.kpis?.ganhos_mes ?? 0,
+    perdidosMes: dash?.kpis?.perdidos_mes ?? 0,
+  };
 
-  const kpis = useMemo(() => {
-    const ativos = leads.filter(l => !l.fechado_em);
-    const agora = Date.now();
-    const semConsultor = ativos.filter(l => (
-      !l.consultor_id && (!l.reserva_ate || new Date(l.reserva_ate).getTime() <= agora)
-    )).length;
-    const emAtendimento = ativos.filter(l => l.consultor_id).length;
-    const ganhosMes = leads.filter(l =>
-      l.etapa?.categoria === 'ganho' && l.fechado_em && l.fechado_em >= inicioMes,
-    ).length;
-    const perdidosMes = leads.filter(l =>
-      l.etapa?.categoria === 'perda' && l.fechado_em && l.fechado_em >= inicioMes,
-    ).length;
+  const porGrupo = useMemo(() => grupos.map(g => {
+    const membrosDoGrupo = membros.filter((m: any) => m.grupo_id === g.id && m.is_active).length;
+    const d = dash?.por_grupo?.[g.id];
     return {
-      totalAtivos: ativos.length,
-      semConsultor,
-      emAtendimento,
-      ganhosMes,
-      perdidosMes,
+      grupo: g,
+      membrosDoGrupo,
+      fila: d?.fila ?? 0,
+      emAtend: d?.em_atend ?? 0,
+      ganhos: d?.ganhos ?? 0,
+      perdas: d?.perdas ?? 0,
     };
-  }, [leads, inicioMes]);
+  }), [grupos, membros, dash]);
 
-  const porGrupo = useMemo(() => {
-    const agora = Date.now();
-    return grupos.map(g => {
-      const membrosDoGrupo = membros.filter((m: any) => m.grupo_id === g.id && m.is_active).length;
-      const leadsGrupo = leads.filter(l => l.grupo_id === g.id);
-      const fila = leadsGrupo.filter(l => (
-        !l.consultor_id
-        && !l.fechado_em
-        && (!l.reserva_ate || new Date(l.reserva_ate).getTime() <= agora)
-      )).length;
-      const emAtend = leadsGrupo.filter(l => l.consultor_id && !l.fechado_em).length;
-      const ganhos = leadsGrupo.filter(l => l.etapa?.categoria === 'ganho').length;
-      const perdas = leadsGrupo.filter(l => l.etapa?.categoria === 'perda').length;
-      return { grupo: g, membrosDoGrupo, fila, emAtend, ganhos, perdas };
-    });
-  }, [grupos, membros, leads]);
+  const porConsultor = useMemo(() => (
+    Object.entries(dash?.por_consultor ?? {}).map(([userId, v]) => ({
+      userId,
+      nome: profilesMap.get(userId)?.full_name ?? '—',
+      email: profilesMap.get(userId)?.email ?? '',
+      ativo: v.ativo,
+      atendidos: v.atendidos,
+      ganhos: v.ganhos,
+      perdas: v.perdas,
+      ultimoAtendimento: v.ultimo,
+    })).sort((a, b) => b.atendidos - a.atendidos)
+  ), [dash, profilesMap]);
 
-  const porConsultor = useMemo(() => {
-    const map = new Map<string, {
-      userId: string; nome: string; email: string;
-      ativo: number; atendidos: number; ganhos: number; perdas: number;
-      ultimoAtendimento: string | null;
-    }>();
-    leads.forEach(l => {
-      if (!l.consultor_id) return;
-      const info = profilesMap.get(l.consultor_id);
-      const cur = map.get(l.consultor_id) ?? {
-        userId: l.consultor_id,
-        nome: info?.full_name ?? '—',
-        email: info?.email ?? '',
-        ativo: 0, atendidos: 0, ganhos: 0, perdas: 0,
-        ultimoAtendimento: null as string | null,
-      };
-      cur.atendidos += 1;
-      if (!l.fechado_em) cur.ativo += 1;
-      if (l.etapa?.categoria === 'ganho') cur.ganhos += 1;
-      if (l.etapa?.categoria === 'perda') cur.perdas += 1;
-      if (l.updated_at && (!cur.ultimoAtendimento || l.updated_at > cur.ultimoAtendimento)) {
-        cur.ultimoAtendimento = l.updated_at;
-      }
-      map.set(l.consultor_id, cur);
-    });
-    return Array.from(map.values()).sort((a, b) => b.atendidos - a.atendidos);
-  }, [leads, profilesMap]);
-
-  const porEtapa = useMemo(() => {
-    return etapas
+  const porEtapa = useMemo(() => (
+    etapas
       .filter(e => e.categoria === 'ativa')
-      .map(e => ({
-        etapa: e,
-        total: leads.filter(l => l.etapa_id === e.id && !l.fechado_em).length,
-      }));
-  }, [etapas, leads]);
+      .map(e => ({ etapa: e, total: dash?.por_etapa?.[e.id] ?? 0 }))
+  ), [etapas, dash]);
 
   const maxEtapa = Math.max(1, ...porEtapa.map(p => p.total));
 

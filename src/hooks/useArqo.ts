@@ -55,6 +55,26 @@ export function useArqoGrupos() {
   });
 }
 
+export interface ArqoAdminDashboard {
+  kpis: { total_ativos: number; sem_consultor: number; em_atendimento: number; ganhos_mes: number; perdidos_mes: number };
+  por_etapa: Record<string, number>;
+  por_grupo: Record<string, { fila: number; em_atend: number; ganhos: number; perdas: number }>;
+  por_consultor: Record<string, { ativo: number; atendidos: number; ganhos: number; perdas: number; ultimo: string | null }>;
+}
+
+// Métricas do dashboard de Gestão Arqo agregadas no servidor (RPC), sem trombar no
+// limite de linhas — conta todos os leads, não só os 500 que useArqoLeads carrega.
+export function useArqoAdminDashboard() {
+  return useQuery({
+    queryKey: ['arqo', 'admin', 'dashboard'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('arqo_admin_dashboard');
+      if (error) throw error;
+      return data as ArqoAdminDashboard;
+    },
+  });
+}
+
 export function useArqoGrupoMembros(grupoId?: string) {
   return useQuery({
     queryKey: ['arqo', 'grupo-membros', grupoId],
