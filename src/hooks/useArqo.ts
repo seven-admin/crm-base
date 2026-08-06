@@ -380,8 +380,13 @@ export function useDeleteArqoConfig(table: ConfigTable) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from(table as any) as any).delete().eq('id', id);
+      // count:'exact' revela quantas linhas o RLS realmente apagou — sem isso um DELETE
+      // negado por permissão retorna "sucesso" com 0 linhas e o usuário acha que removeu.
+      const { error, count } = await (supabase.from(table as any) as any)
+        .delete({ count: 'exact' })
+        .eq('id', id);
       if (error) throw error;
+      if (!count) throw new Error('Nada foi removido — você pode não ter permissão para excluir este item.');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['arqo', invalidationKey[table]] });

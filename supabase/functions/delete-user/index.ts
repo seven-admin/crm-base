@@ -47,6 +47,10 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
       run: () => admin.from('seven_saldos_mensais').update({ created_by: null }).eq('created_by', userId) },
     { label: 'arqo_agendamentos.responsavel_id',
       run: () => admin.from('arqo_agendamentos').update({ responsavel_id: null }).eq('responsavel_id', userId) },
+    { label: 'arqo_agendamentos.closer_id', critical: true,
+      run: () => admin.from('arqo_agendamentos').update({ closer_id: null }).eq('closer_id', userId) },
+    { label: 'arqo_grupos_atendimento.closer_id', critical: true,
+      run: () => admin.from('arqo_grupos_atendimento').update({ closer_id: null }).eq('closer_id', userId) },
     { label: 'nexa_visitas_eventos.usuario_id',
       run: () => admin.from('nexa_visitas_eventos').update({ usuario_id: null }).eq('usuario_id', userId) },
     { label: 'seven_cliente_interacoes.user_id', critical: true,
@@ -61,6 +65,12 @@ async function cleanupReferences(admin: ReturnType<typeof createClient>, userId:
       run: () => admin.from('nexa_contrato_templates').update({ created_by: null }).eq('created_by', userId) },
     { label: 'nexa_contrato_blocos.created_by', critical: true,
       run: () => admin.from('nexa_contrato_blocos').update({ created_by: null }).eq('created_by', userId) },
+
+    // Delete em tabelas cujo dono é NOT NULL (não dá para anular; a linha é do usuário)
+    { label: 'arqo_atendimentos (consultor_id NOT NULL)', critical: true,
+      run: () => admin.from('arqo_atendimentos').delete().eq('consultor_id', userId) },
+    { label: 'arqo_calls (user_id NOT NULL)', critical: true,
+      run: () => admin.from('arqo_calls').delete().eq('user_id', userId) },
 
     // Delete em tabelas de vínculo
     { label: 'sistema_user_empreendimentos',
