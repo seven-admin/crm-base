@@ -19,17 +19,19 @@ interface ProtectedRouteProps {
   alternativeModules?: string[];
   requiredAction?: ActionType;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
 }
 
-export function ProtectedRoute({ 
-  children, 
-  moduleName, 
+export function ProtectedRoute({
+  children,
+  moduleName,
   alternativeModules,
   requiredAction = 'view',
-  adminOnly = false 
+  adminOnly = false,
+  superAdminOnly = false
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading: authLoading, role } = useAuth();
-  const { canAccessModule, isAdmin, isLoading: permLoading, permissions } = usePermissions();
+  const { canAccessModule, isAdmin, isSuperAdmin, isLoading: permLoading, permissions } = usePermissions();
   const { getDefaultRoute } = useDefaultRoute();
   const { empresa, isSeven } = useEmpresaAccess();
   const location = useLocation();
@@ -110,6 +112,20 @@ export function ProtectedRoute({
     return <Navigate to="/portal-corretor" replace />;
   }
 
+
+  // Check super-admin-only routes (mais estrito que adminOnly)
+  if (superAdminOnly && !isSuperAdmin()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Acesso Negado</h1>
+          <p className="text-muted-foreground">
+            Esta página é exclusiva para super administradores.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Check admin-only routes
   if (adminOnly && !isAdmin()) {

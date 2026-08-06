@@ -42,6 +42,7 @@ const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Incorporadoras = lazy(() => import("./pages/Incorporadoras"));
 const Imobiliarias = lazy(() => import("./pages/Imobiliarias"));
 const Corretores = lazy(() => import("./pages/Corretores"));
+const SevenCalendarios = lazy(() => import("./pages/SevenCalendarios"));
 
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/empreendimentos/:id" element={<ProtectedRoute moduleName="empreendimentos"><EmpreendimentoDetalhe /></ProtectedRoute>} />
                 <Route path="/mapa-unidades" element={<ProtectedRoute moduleName="unidades"><MapaUnidadesPage /></ProtectedRoute>} />
                 <Route path="/clientes" element={<ProtectedRoute moduleName="clientes"><Clientes /></ProtectedRoute>} />
+                <Route path="/calendarios" element={<ProtectedRoute superAdminOnly><SevenCalendarios /></ProtectedRoute>} />
                 <Route path="/usuarios" element={<ProtectedRoute moduleName="usuarios" adminOnly><Usuarios /></ProtectedRoute>} />
                <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
                <Route path="/imobiliarias" element={<ProtectedRoute moduleName="imobiliarias"><Imobiliarias /></ProtectedRoute>} />

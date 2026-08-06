@@ -31,6 +31,7 @@ interface MenuItem {
   path?: string;
   moduleName?: string;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
   description?: string;
   children?: MenuItem[];
 }
@@ -62,6 +63,12 @@ const sevenCategories: { label: string; items: MenuItem[] }[] = [
       { icon: Building2, label: 'Incorporadoras', path: '/incorporadoras', moduleName: 'incorporadoras', description: 'Empresas parceiras' },
       { icon: Handshake, label: 'Imobiliárias', path: '/imobiliarias', moduleName: 'imobiliarias', description: 'Rede parceira' },
       { icon: UserCog, label: 'Corretores', path: '/corretores', moduleName: 'corretores', description: 'Time comercial externo' },
+    ],
+  },
+  {
+    label: 'Calendários',
+    items: [
+      { icon: CalendarRange, label: 'Calendário geral', path: '/calendarios', superAdminOnly: true, description: 'Agenda Arqo + Nexa por usuário' },
     ],
   },
 ];
@@ -124,7 +131,7 @@ export function AppTopbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
-  const { canAccessModule, isAdmin } = usePermissions();
+  const { canAccessModule, isAdmin, isSuperAdmin } = usePermissions();
   const { isExterno, empresa, canAccessGroup } = useEmpresaAccess();
   const tenantLogo = empresa === 'arqo'
     ? { src: logoArqo, alt: 'Arqo', className: 'h-6' }
@@ -141,6 +148,7 @@ export function AppTopbar() {
     // deve aparecer para quem realmente tem vínculo com o grupo Nexa/Seven —
     // '__self__' era universal demais e vazava pra usuários Arqo.
     if (item.moduleName === '__nexa_only__') return isAdmin() || canAccessGroup('nexa');
+    if (item.superAdminOnly) return isSuperAdmin();
     if (item.adminOnly) return isAdmin();
     return canAccessModule(item.moduleName ?? '');
   };
