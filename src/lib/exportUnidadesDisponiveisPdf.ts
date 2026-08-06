@@ -160,14 +160,16 @@ export async function exportUnidadesPdf({
   }
 
   // Fluxo de entrada só aparece quando explicitamente ativado na config do empreendimento.
+  // Índices consideram a coluna "Bloco/Fase" como a primeira (0) da tabela.
   const showFluxo = plano.fluxo_ativo === true;
-  const fluxoBodyCols = showFluxo ? [5, 6, 7] : [];
-  const valorTotalCol = showFluxo ? 9 : 5;
+  const fluxoBodyCols = showFluxo ? [6, 7, 8] : [];
+  const valorTotalCol = showFluxo ? 10 : 6;
   const mensaisLabel = `${plano.mensais_qtd}x mensais`;
   const reforcosLabel = `${plano.reforcos_qtd} reforços`;
 
   const rowsFor = (units: ExportUnidadeInput[]) => units.map((unit) => {
     const base = [
+      unit.bloco?.nome || '-',
       unit.andar != null ? `${unit.andar}º` : '-',
       unit.numero,
       boxesByUnit.get(unit.id)?.join(', ') || '-',
@@ -187,6 +189,7 @@ export async function exportUnidadesPdf({
   });
 
   const headBase = (extra: any[]) => [
+    { content: 'Bloco/Fase', rowSpan: 2 },
     { content: 'Andar', rowSpan: 2 },
     { content: unidadeLabel, rowSpan: 2 },
     { content: 'Box', rowSpan: 2 },
@@ -209,24 +212,26 @@ export async function exportUnidadesPdf({
   // Larguras somam a contentWidth (273mm) para a tabela alinhar com o cabeçalho.
   const columnStyles: Record<number, Partial<Record<string, unknown>>> = showFluxo
     ? {
-        0: { cellWidth: 14 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 18 },
-        3: { cellWidth: 55 },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 28 },
-        7: { cellWidth: 28 },
-        8: { cellWidth: 31 },
-        9: { cellWidth: 31 },
+        0: { cellWidth: 22 },
+        1: { cellWidth: 13 },
+        2: { cellWidth: 16 },
+        3: { cellWidth: 16 },
+        4: { cellWidth: 48 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 27 },
+        7: { cellWidth: 27 },
+        8: { cellWidth: 27 },
+        9: { cellWidth: 30 },
+        10: { cellWidth: 27 },
       }
     : {
-        0: { cellWidth: 18 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 100 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 75 },
+        0: { cellWidth: 30 },
+        1: { cellWidth: 16 },
+        2: { cellWidth: 22 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 80 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 75 },
       };
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
@@ -320,11 +325,24 @@ export async function exportUnidadesPdf({
     willDrawPage: () => drawHeader(),
   });
 
-  const faseCaption = (label: string) => {
+  // Legenda de fase com destaque: faixa cheia na cor da marca, com a contagem à direita.
+  const faseCaption = (label: string, count: number) => {
+    const bannerY = 27;
+    const bannerH = 8.5;
+    doc.setFillColor(...NEXA_VIOLET);
+    doc.roundedRect(marginX, bannerY, contentWidth, bannerH, 1.5, 1.5, 'F');
     doc.setFont(fontName, 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...NEXA_VIOLET);
-    doc.text(label, marginX, 29);
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text(label, marginX + 4, bannerY + 5.9);
+    doc.setFont(fontName, 'normal');
+    doc.setFontSize(8);
+    doc.text(
+      `${count} ${unidadeLabel.toLowerCase()}${count === 1 ? '' : 's'}`,
+      pageWidth - marginX - 4,
+      bannerY + 5.7,
+      { align: 'right' },
+    );
   };
 
   // Vitória do Sol: quebra de página entre as unidades da Fase 01 e da Fase 02.
@@ -335,11 +353,11 @@ export async function exportUnidadesPdf({
 
   if (quebrarPorFase) {
     const fase1 = ordenadas.filter((u) => faseDoBloco(u.bloco?.nome) !== 2); // fase 1 + sem fase
-    faseCaption('FASE 01');
-    runTable(rowsFor(fase1), 33);
+    faseCaption('FASE 01', fase1.length);
+    runTable(rowsFor(fase1), 38);
     doc.addPage('a4', 'landscape');
-    faseCaption('FASE 02');
-    runTable(rowsFor(fase2), 33);
+    faseCaption('FASE 02', fase2.length);
+    runTable(rowsFor(fase2), 38);
   } else {
     runTable(rowsFor(ordenadas), 30);
   }
