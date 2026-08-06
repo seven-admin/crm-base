@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Map, Settings, LogOut, Menu, FileText,
-  UserCog, Shield, ChevronDown, Target, Kanban, GitBranch, CalendarDays,
+  UserCog, Shield, ChevronDown, Target, GitBranch, CalendarDays, CalendarRange,
   Home, Handshake, User as UserIcon, ExternalLink, PhoneCall,
   type LucideIcon,
 } from 'lucide-react';
@@ -70,10 +70,10 @@ const menuGroups: MenuGroup[] = [
   {
     label: 'Arqo', icon: Target,
     items: [
-      { icon: Kanban, label: 'Roleta', path: '/arqo/roleta', moduleName: 'arqo_roleta' },
-      { icon: PhoneCall, label: 'Atendimento', path: '/arqo/atendimento', moduleName: 'arqo_roleta' },
+      { icon: PhoneCall, label: 'Atendimento', path: '/arqo/roleta', moduleName: 'arqo_roleta' },
       { icon: GitBranch, label: 'Kanban de Leads', path: '/arqo/leads', moduleName: 'arqo_leads' },
       { icon: CalendarDays, label: 'Atividades', path: '/arqo/atividades', moduleName: 'arqo_atividades' },
+      { icon: CalendarRange, label: 'Calendário', path: '/arqo/calendario', moduleName: 'arqo_atividades' },
       { icon: Shield, label: 'Admin', path: '/arqo/admin', moduleName: 'arqo_admin' },
       { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo_config' },
     ],
@@ -82,6 +82,7 @@ const menuGroups: MenuGroup[] = [
     label: 'Nexa', icon: CalendarDays,
     items: [
       { icon: CalendarDays, label: 'Atividades', path: '/nexa/agenda', moduleName: 'nexa_agenda' },
+      { icon: CalendarRange, label: 'Calendário', path: '/nexa/calendario', moduleName: 'nexa_agenda' },
       { icon: Target, label: 'Metas', path: '/nexa/metas', moduleName: 'nexa_metas' },
       { icon: FileText, label: 'Acesso a Propostas', path: '/nexa/propostas-acesso', moduleName: 'nexa_propostas_acesso' },
       { icon: Map, label: 'Disponibilidade', path: '/nexa/disponibilidade', moduleName: 'nexa_disponibilidade' },

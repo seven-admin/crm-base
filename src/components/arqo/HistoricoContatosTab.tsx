@@ -56,7 +56,7 @@ export function HistoricoContatosTab() {
   const startNewAttendance = async (atendimentoId: string) => {
     try {
       const leadId = await reopen.mutateAsync(atendimentoId);
-      navigate(`/arqo/atendimento?lead=${leadId}`);
+      navigate(`/arqo/roleta?lead=${leadId}`);
     } catch {
       // A mutation já apresenta ao usuário a mensagem específica retornada pelo banco.
     }

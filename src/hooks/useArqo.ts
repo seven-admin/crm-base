@@ -649,6 +649,27 @@ export function useArqoAgendamentos(filters?: {
   });
 }
 
+// Agendamentos dentro de um intervalo (para a visão de calendário). Inclui a próxima
+// ação do atendimento, que também é gravada em arqo_agendamentos.
+export function useArqoAgendamentosCalendario(params: { from: string; to: string; mineUserId?: string | null }) {
+  const { from, to, mineUserId } = params;
+  return useQuery({
+    queryKey: ['arqo', 'agendamentos', 'calendario', from, to, mineUserId ?? 'todos'],
+    queryFn: async () => {
+      let q = supabase
+        .from('arqo_agendamentos')
+        .select(SELECT_AGENDAMENTO)
+        .gte('data_hora', from)
+        .lte('data_hora', to)
+        .order('data_hora', { ascending: true });
+      if (mineUserId) q = q.or(`responsavel_id.eq.${mineUserId},closer_id.eq.${mineUserId}`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as ArqoAgendamentoWithRelations[];
+    },
+  });
+}
+
 export function useCreateArqoAgendamento() {
   const qc = useQueryClient();
   return useMutation({

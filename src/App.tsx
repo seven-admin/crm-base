@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ArqoProtectedRoute } from "@/components/arqo/ArqoProtectedRoute";
@@ -11,7 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import React, { Suspense, lazy } from "react";
 
 const ArqoRoleta = lazy(() => import("./pages/arqo/ArqoRoleta"));
-const ArqoAtendimento = lazy(() => import("./pages/arqo/ArqoAtendimento"));
+const ArqoCalendario = lazy(() => import("./pages/arqo/ArqoCalendario"));
 const ArqoLeadsKanban = lazy(() => import("./pages/arqo/ArqoLeadsKanban"));
 const ArqoConfig = lazy(() => import("./pages/arqo/ArqoConfig"));
 const ArqoAtividades = lazy(() => import("./pages/arqo/ArqoAtividades"));
@@ -19,6 +19,7 @@ const ArqoLeadDetail = lazy(() => import("./pages/arqo/ArqoLeadDetail"));
 const ArqoAdmin = lazy(() => import("./pages/arqo/ArqoAdmin"));
 
 const NexaAtividades = lazy(() => import("./pages/nexa/NexaAtividades"));
+const NexaCalendario = lazy(() => import("./pages/nexa/NexaCalendario"));
 const NexaMetas = lazy(() => import("./pages/nexa/NexaMetas"));
 const NexaPropostasAcesso = lazy(() => import("./pages/nexa/NexaPropostasAcesso"));
 const NexaVisitaDetalhe = lazy(() => import("./pages/nexa/NexaVisitaDetalhe"));
@@ -106,15 +107,18 @@ const App = () => (
 
                 {/* Arqo */}
                 <Route path="/arqo/roleta" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoRoleta /></ArqoProtectedRoute>} />
-                <Route path="/arqo/atendimento" element={<ArqoProtectedRoute moduleName="arqo_roleta"><ArqoAtendimento /></ArqoProtectedRoute>} />
+                {/* Atendimento foi unificado na Roleta; mantém a rota antiga como redirect. */}
+                <Route path="/arqo/atendimento" element={<Navigate to="/arqo/roleta" replace />} />
                 <Route path="/arqo/leads" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadsKanban /></ArqoProtectedRoute>} />
                 <Route path="/arqo/leads/:id" element={<ArqoProtectedRoute moduleName="arqo_leads"><ArqoLeadDetail /></ArqoProtectedRoute>} />
                 <Route path="/arqo/config" element={<ArqoProtectedRoute moduleName="arqo_config"><ArqoConfig /></ArqoProtectedRoute>} />
                 <Route path="/arqo/admin" element={<ArqoProtectedRoute moduleName="arqo_admin"><ArqoAdmin /></ArqoProtectedRoute>} />
                 <Route path="/arqo/atividades" element={<ArqoProtectedRoute moduleName="arqo_atividades"><ArqoAtividades /></ArqoProtectedRoute>} />
+                <Route path="/arqo/calendario" element={<ArqoProtectedRoute moduleName="arqo_atividades"><ArqoCalendario /></ArqoProtectedRoute>} />
 
                 {/* Nexa */}
                 <Route path="/nexa/agenda" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaAtividades /></NexaProtectedRoute>} />
+                <Route path="/nexa/calendario" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaCalendario /></NexaProtectedRoute>} />
                 <Route path="/nexa/metas" element={<NexaProtectedRoute moduleName="nexa_metas"><NexaMetas /></NexaProtectedRoute>} />
                 <Route path="/nexa/propostas-acesso" element={<NexaProtectedRoute moduleName="nexa_propostas_acesso"><NexaPropostasAcesso /></NexaProtectedRoute>} />
                 <Route path="/nexa/visitas/:id" element={<NexaProtectedRoute moduleName="nexa_agenda"><NexaVisitaDetalhe /></NexaProtectedRoute>} />

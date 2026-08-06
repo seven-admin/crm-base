@@ -43,6 +43,25 @@ export function useNexaAtividades(filters?: { tipo?: NexaAtividadeTipo; mineOnly
   });
 }
 
+// Atividades/atendimentos dentro de um intervalo (para a visão de calendário).
+export function useNexaAtividadesCalendario(params: { from: string; to: string; mineUserId?: string | null }) {
+  const { from, to, mineUserId } = params;
+  return useQuery({
+    queryKey: ['nexa', 'atividades', 'calendario', from, to, mineUserId ?? 'todos'],
+    queryFn: async () => {
+      let q = (supabase.from('nexa_atividades' as any) as any)
+        .select(SELECT_ATIVIDADE)
+        .gte('data_hora', from)
+        .lte('data_hora', to)
+        .order('data_hora', { ascending: true });
+      if (mineUserId) q = q.eq('created_by', mineUserId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as NexaAtividadeWithRelations[];
+    },
+  });
+}
+
 export interface ParticipanteInput {
   corretor_id: string;
   corretor_nome: string | null;
