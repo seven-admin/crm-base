@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useDeleteArqoConfig } from '@/hooks/useArqo';
+import { useDeleteArqoMeta } from '@/hooks/useArqo';
 import { supabase } from '@/integrations/supabase/client';
 import type { ArqoMetaAtendimento } from '@/types/arqo.types';
 
@@ -73,7 +73,7 @@ export function ArqoMetasManager({ metas, profiles }: Props) {
   const [form, setForm] = useState<MetaForm>(emptyForm);
   const [userSearch, setUserSearch] = useState('');
   const queryClient = useQueryClient();
-  const del = useDeleteArqoConfig('arqo_metas_atendimento');
+  const del = useDeleteArqoMeta();
 
   const save = useMutation({
     mutationFn: async (payload: MetaForm) => {

@@ -102,6 +102,7 @@ const topMenus: TopMenu[] = [
       {
         label: 'Gestão',
         items: [
+          { icon: Target, label: 'Metas', path: '/arqo/metas', moduleName: 'arqo_metas', description: 'Metas de atendimento e desempenho' },
           { icon: LayoutDashboard, label: 'Gestão', path: '/arqo/admin', moduleName: 'arqo_admin', description: 'Filas, equipes e métricas' },
           { icon: Settings, label: 'Configurações', path: '/arqo/config', moduleName: 'arqo_config', description: 'Etapas, grupos e regras' },
         ],

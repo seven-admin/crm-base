@@ -42,35 +42,36 @@ export function useDashboardKPIs() {
       const mesAntInicio = startOfMonth(subMonths(now, 1)).toISOString();
       const mesAntFim = endOfMonth(subMonths(now, 1)).toISOString();
 
-      const [leadsMesRes, leadsAntRes, etapasRes, leadsGanhoRes, leadsGanhoAntRes, leadsTotalRes, leadsTotalAntRes, unidadesVgvRes, unidadesVendidasRes] = await Promise.all([
+      // Etapas de "ganho" primeiro: os ganhos são contados no servidor (count exato), não
+      // fatiando linhas no cliente — que estourava o limite de 1000 do PostgREST.
+      const etapasRes = await supabase.from('arqo_funil_etapas').select('id, categoria');
+      const ganhoIds = (etapasRes.data ?? []).filter((e: any) => e.categoria === 'ganho').map((e: any) => e.id);
+      const ganhoCount = (from: string, to: string) => (
+        ganhoIds.length === 0
+          ? Promise.resolve({ count: 0 } as { count: number | null })
+          : supabase.from('arqo_leads').select('id', { count: 'exact', head: true })
+              .in('etapa_id', ganhoIds).gte('created_at', from).lte('created_at', to)
+      );
+
+      const [leadsMesRes, leadsAntRes, ganhoMesRes, ganhoAntRes, unidadesVgvRes, unidadesVendidasRes] = await Promise.all([
         supabase.from('arqo_leads').select('id', { count: 'exact', head: true }).gte('created_at', mesInicio).lte('created_at', mesFim),
         supabase.from('arqo_leads').select('id', { count: 'exact', head: true }).gte('created_at', mesAntInicio).lte('created_at', mesAntFim),
-        supabase.from('arqo_funil_etapas').select('id, categoria'),
-        // ganho/total: leads fechados no mês vs abertos no mês
-        supabase.from('arqo_leads').select('id, etapa_id').gte('created_at', mesInicio).lte('created_at', mesFim),
-        supabase.from('arqo_leads').select('id, etapa_id').gte('created_at', mesAntInicio).lte('created_at', mesAntFim),
-        supabase.from('arqo_leads').select('id', { count: 'exact', head: true }).gte('created_at', mesInicio).lte('created_at', mesFim),
-        supabase.from('arqo_leads').select('id', { count: 'exact', head: true }).gte('created_at', mesAntInicio).lte('created_at', mesAntFim),
+        ganhoCount(mesInicio, mesFim),
+        ganhoCount(mesAntInicio, mesAntFim),
         supabase.from('seven_unidades').select('valor, status').in('status', VGV_STATUS).eq('is_active', true),
         supabase.from('seven_unidades').select('valor, data_venda').eq('status', 'vendida').gte('data_venda', mesInicio.slice(0, 10)).lte('data_venda', mesFim.slice(0, 10)),
       ]);
 
-      const etapasMap = new Map((etapasRes.data ?? []).map((e: any) => [e.id, e.categoria]));
-      const ganhoIds = new Set((etapasRes.data ?? []).filter((e: any) => e.categoria === 'ganho').map((e: any) => e.id));
-
-      const ganhoMes = (leadsGanhoRes.data ?? []).filter((l: any) => ganhoIds.has(l.etapa_id)).length;
-      const ganhoAnt = (leadsGanhoAntRes.data ?? []).filter((l: any) => ganhoIds.has(l.etapa_id)).length;
-      const totalMes = leadsTotalRes.count ?? 0;
-      const totalAnt = leadsTotalAntRes.count ?? 0;
+      const ganhoMes = ganhoMesRes.count ?? 0;
+      const ganhoAnt = ganhoAntRes.count ?? 0;
+      const totalMes = leadsMesRes.count ?? 0;
+      const totalAnt = leadsAntRes.count ?? 0;
 
       const vgv = (unidadesVgvRes.data ?? []).reduce((s: number, u: any) => s + Number(u.valor ?? 0), 0);
       const propostas = (unidadesVgvRes.data ?? []).filter((u: any) => u.status === 'negociacao' || u.status === 'contrato').length;
       const vendasArr = unidadesVendidasRes.data ?? [];
       const vendasValor = vendasArr.reduce((s: number, u: any) => s + Number(u.valor ?? 0), 0);
       const ticket = vendasArr.length > 0 ? vendasValor / vendasArr.length : 0;
-
-      // silence unused
-      void etapasMap;
 
       return {
         leadsMes: leadsMesRes.count ?? 0,
@@ -90,17 +91,17 @@ export function useFunilArqoReal() {
   return useQuery({
     queryKey: ['dashboard-home', 'funil'],
     queryFn: async (): Promise<FunilEtapaReal[]> => {
-      const [etapasRes, leadsRes] = await Promise.all([
+      // Contagem por etapa agregada no servidor (RPC): evita o corte de 1000 linhas do
+      // PostgREST que fazia o funil mostrar números errados com dezenas de milhares de leads.
+      const [etapasRes, countsRes] = await Promise.all([
         supabase.from('arqo_funil_etapas').select('id, nome, categoria, ordem').eq('is_active', true).order('ordem'),
-        supabase.from('arqo_leads').select('etapa_id').eq('is_active', true),
+        supabase.rpc('arqo_funil_contagem' as any),
       ]);
-      const counts = new Map<string, number>();
-      (leadsRes.data ?? []).forEach((l: any) => {
-        counts.set(l.etapa_id, (counts.get(l.etapa_id) ?? 0) + 1);
-      });
+      if (countsRes.error) throw countsRes.error;
+      const counts = (countsRes.data ?? {}) as Record<string, number>;
       return (etapasRes.data ?? []).map((e: any) => ({
         etapa: e.nome,
-        quantidade: counts.get(e.id) ?? 0,
+        quantidade: counts[e.id] ?? 0,
         tipo: e.categoria === 'ganho' ? 'ganho' : e.categoria === 'perda' || e.categoria === 'descartado' ? 'perdido' : 'ativo',
         ordem: e.ordem,
       }));

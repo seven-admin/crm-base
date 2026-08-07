@@ -639,6 +639,24 @@ export function useArqoMetasAtendimento() {
   });
 }
 
+// Exclusão via RPC SECURITY DEFINER: erro explícito se sem permissão (não falha silenciosa
+// como um DELETE de tabela barrado por RLS). Espelha o padrão do nexa_excluir_meta.
+export function useDeleteArqoMeta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc('arqo_excluir_meta' as any, { p_meta_id: id } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['arqo', 'metas-atendimento'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'metas-dashboard'] });
+      toast.success('Meta excluída');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao excluir meta'),
+  });
+}
+
 export function useArqoPerformanceConfigs() {
   return useQuery({
     queryKey: ['arqo', 'performance-config'],
