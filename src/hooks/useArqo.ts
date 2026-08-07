@@ -75,6 +75,20 @@ export function useArqoAdminDashboard() {
   });
 }
 
+// Contagem da fila por grupo do usuário (RPC leve) — a roleta usa isto no lugar de
+// varrer a tabela inteira de leads.
+export function useArqoFilaGrupos(userId?: string) {
+  return useQuery({
+    queryKey: ['arqo', 'fila-grupos', userId ?? null],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('arqo_fila_grupos');
+      if (error) throw error;
+      return (data ?? {}) as Record<string, number>;
+    },
+  });
+}
+
 export function useArqoGrupoMembros(grupoId?: string) {
   return useQuery({
     queryKey: ['arqo', 'grupo-membros', grupoId],
@@ -196,6 +210,7 @@ export function useAtribuirRoleta() {
       await qc.refetchQueries({ queryKey: ['arqo', 'leads'], type: 'active' });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-grupos'] });
       toast.success('Lead atribuído');
     },
     onError: (e: any) => toast.error(e.message ?? 'Roleta bloqueada — nenhum consultor livre'),
@@ -570,6 +585,7 @@ export function useConcluirArqoAtendimento() {
       qc.invalidateQueries({ queryKey: ['arqo', 'dashboard-atendimento'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'historico-contatos'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
+      qc.invalidateQueries({ queryKey: ['arqo', 'fila-grupos'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       toast.success('Atendimento registrado');
     },

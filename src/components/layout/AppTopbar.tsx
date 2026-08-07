@@ -43,6 +43,7 @@ interface MenuCategory {
 interface TopMenu {
   label: string;
   icon: LucideIcon;
+  group: 'seven' | 'arqo' | 'nexa';
   categories: MenuCategory[];
 }
 
@@ -50,7 +51,7 @@ interface TopMenu {
 // descrição), a mesma iconografia por conceito e a mesma ação (TopMegaMenu).
 const topMenus: TopMenu[] = [
   {
-    label: 'Seven', icon: Home,
+    label: 'Seven', icon: Home, group: 'seven',
     categories: [
       {
         label: 'Portfólio',
@@ -82,7 +83,7 @@ const topMenus: TopMenu[] = [
     ],
   },
   {
-    label: 'Arqo', icon: Target,
+    label: 'Arqo', icon: Target, group: 'arqo',
     categories: [
       {
         label: 'Operação',
@@ -108,7 +109,7 @@ const topMenus: TopMenu[] = [
     ],
   },
   {
-    label: 'Nexa', icon: Landmark,
+    label: 'Nexa', icon: Landmark, group: 'nexa',
     categories: [
       {
         label: 'Agenda',
@@ -184,8 +185,10 @@ export function AppTopbar() {
       .map((c) => ({ ...c, items: c.items.filter(canSeeLeaf) }))
       .filter((c) => c.items.length > 0);
 
-  // Menus de topo visíveis (Seven/Arqo/Nexa) já filtrados por permissão.
+  // Menus de topo visíveis (Seven/Arqo/Nexa): só o grupo ao qual o usuário pertence
+  // (Seven vê todos; admin também) e, dentro dele, apenas os itens permitidos.
   const visibleTopMenus = topMenus
+    .filter((m) => isAdmin() || canAccessGroup(m.group))
     .map((m) => {
       const categories = filterCategories(m.categories);
       const hasActive = categories.some((c) =>

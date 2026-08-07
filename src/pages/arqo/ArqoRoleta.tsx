@@ -5,9 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  useArqoLeads, useArqoLead, useAtribuirRoleta, useArqoEtapas, useMeusArqoGrupos,
+  useArqoLeads, useArqoLead, useAtribuirRoleta, useArqoEtapas, useMeusArqoGrupos, useArqoFilaGrupos,
 } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2, Phone, Upload, Users, Clock } from 'lucide-react';
 import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 import { ArqoAtendimentoFlow } from '@/components/arqo/ArqoAtendimentoFlow';
@@ -16,6 +17,8 @@ import { toast } from 'sonner';
 
 export default function ArqoRoleta() {
   const { user } = useAuth();
+  const { isSuperAdmin } = usePermissions();
+  const podeImportar = isSuperAdmin();
   const [searchParams] = useSearchParams();
   const requestedLeadId = searchParams.get('lead');
   const [importOpen, setImportOpen] = useState(false);
@@ -23,7 +26,10 @@ export default function ArqoRoleta() {
   const [leadEmTratamentoId, setLeadEmTratamentoId] = useState<string | null>(null);
 
   const { data: meusGrupos = [], isLoading: loadingGrupos } = useMeusArqoGrupos(user?.id);
-  const { data: allLeads = [], isLoading } = useArqoLeads();
+  // Só os leads do próprio consultor (leve e sempre completo) + contagem da fila por RPC —
+  // evita carregar a tabela inteira de leads, que travava com filas de milhares.
+  const { data: meusLeads = [], isLoading } = useArqoLeads(user?.id ? { consultorId: user.id } : undefined);
+  const { data: filaPorGrupo = {} } = useArqoFilaGrupos(user?.id);
   const { data: leadEmTratamento, isLoading: loadingLeadEmTratamento } = useArqoLead(leadEmTratamentoId ?? undefined);
   const { data: etapas = [] } = useArqoEtapas();
 
@@ -32,7 +38,7 @@ export default function ArqoRoleta() {
   // Leads em etapas com bloqueia_roleta=false (ex: Aguardando Followup, Reagendar) ficam
   // vinculados ao consultor como pendência, mas não impedem puxar um novo lead.
   const meuLeadAtivo = useMemo(() => {
-    const meus = allLeads.filter(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta !== false);
+    const meus = meusLeads.filter(l => !l.fechado_em && l.etapa?.bloqueia_roleta !== false);
 
     // Deep link vindo do histórico/agenda: prioriza o lead pedido na URL.
     if (requestedLeadId) {
@@ -48,29 +54,16 @@ export default function ArqoRoleta() {
     if (leadPuxadoValido) return leadEmTratamento;
 
     return meus[0];
-  }, [allLeads, leadEmTratamento, user, requestedLeadId]);
+  }, [meusLeads, leadEmTratamento, user, requestedLeadId]);
 
   const minhasPendencias = useMemo(
-    () => allLeads.filter(l => l.consultor_id === user?.id && !l.fechado_em && l.etapa?.bloqueia_roleta === false),
-    [allLeads, user],
+    () => meusLeads.filter(l => !l.fechado_em && l.etapa?.bloqueia_roleta === false),
+    [meusLeads],
   );
-
-  // Contagem de leads aguardando por grupo do usuário
-  const contagemPorGrupo = useMemo(() => {
-    const map = new Map<string, number>();
-    meusGrupos.forEach(g => map.set(g.id, 0));
-    allLeads.forEach(l => {
-      if (l.grupo_id && !l.consultor_id && map.has(l.grupo_id)) {
-        map.set(l.grupo_id, (map.get(l.grupo_id) ?? 0) + 1);
-      }
-    });
-    return map;
-  }, [allLeads, meusGrupos]);
 
   // Puxar próximo lead: a RPC escolhe e bloqueia o próximo lead disponível do grupo.
   const puxarProximo = (grupoId: string) => {
-    const temLeadNaFila = allLeads.some(l => l.grupo_id === grupoId && !l.consultor_id);
-    if (!temLeadNaFila) {
+    if ((filaPorGrupo[grupoId] ?? 0) <= 0) {
       toast.info('Nenhum lead disponível neste grupo no momento.');
       return;
     }
@@ -99,7 +92,7 @@ export default function ArqoRoleta() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {meusGrupos.map(g => {
-            const qtd = contagemPorGrupo.get(g.id) ?? 0;
+            const qtd = filaPorGrupo[g.id] ?? 0;
             return (
               <Card key={g.id} className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
@@ -149,13 +142,13 @@ export default function ArqoRoleta() {
     <MainLayout
       title="Arqo — Meu Atendimento"
       subtitle="Puxe o próximo lead do seu grupo e registre cada interação"
-      actions={
+      actions={podeImportar ? (
         <Button variant="outline" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4 mr-2" /> Importar leads
         </Button>
-      }
+      ) : undefined}
     >
-      <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />
+      {podeImportar && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
 
       {/* Grupos sempre no topo (puxar próximo lead); o atendimento em andamento logo abaixo. */}
       <div className="space-y-6">
