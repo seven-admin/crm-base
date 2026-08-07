@@ -97,7 +97,9 @@ export function valorExtenso(valor: number): string {
   let resultado = '';
   
   if (reais > 0) {
-    resultado = numeroExtenso(reais) + (reais === 1 ? ' real' : ' reais');
+    // Múltiplos exatos de milhão/bilhão levam "de reais" (ex.: dois milhões de reais).
+    const conector = reais >= 1000000 && reais % 1000000 === 0 ? ' de ' : ' ';
+    resultado = numeroExtenso(reais) + conector + (reais === 1 ? 'real' : 'reais');
   }
   
   if (centavos > 0) {

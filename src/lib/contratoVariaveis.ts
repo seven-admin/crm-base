@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { valorExtenso } from '@/lib/numeroExtenso';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { asBlob } from 'html-docx-js-typescript';
@@ -70,7 +71,7 @@ export const VARIAVEIS_AUTOMATICAS = [
   'nome_cliente', 'cpf_cliente', 'rg_cliente', 'email_cliente', 'telefone_cliente', 'endereco_cliente',
   'empreendimento',
   'unidade_numero', 'unidade_bloco', 'unidade_tipologia',
-  'valor_contrato',
+  'valor_contrato', 'valor_contrato_extenso', 'valor_contrato_completo',
 ] as const;
 
 export function isVariavelAutomatica(chave: string): boolean {
@@ -134,7 +135,10 @@ export async function resolverValoresAutomaticos(opts: {
   }
 
   if (opts.valorContrato != null) {
-    out.valor_contrato = fmtMoeda(Number(opts.valorContrato));
+    const n = Number(opts.valorContrato);
+    out.valor_contrato = fmtMoeda(n);                              // R$ 1.234.567,89
+    out.valor_contrato_extenso = valorExtenso(n);                 // um milhão... reais e oitenta e nove centavos
+    out.valor_contrato_completo = `${fmtMoeda(n)} (${valorExtenso(n)})`;
   }
 
   return out;
