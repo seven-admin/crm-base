@@ -4,31 +4,34 @@ import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-export interface SevenMenuItem {
+export interface MegaMenuItem {
   icon: LucideIcon;
   label: string;
   path: string;
-  moduleName: string;
   description?: string;
-  adminOnly?: boolean;
 }
 
-export interface SevenMenuCategory {
+export interface MegaMenuCategory {
   label: string;
-  items: SevenMenuItem[];
+  items: MegaMenuItem[];
 }
 
-interface SevenMegaMenuProps {
-  categories: SevenMenuCategory[];
+interface TopMegaMenuProps {
+  label: string;
+  categories: MegaMenuCategory[];
   hasActive: boolean;
   dark?: boolean;
 }
 
-export function SevenMegaMenu({ categories, hasActive, dark = false }: SevenMegaMenuProps) {
+// Menu de topo padrão (Seven, Arqo, Nexa): mesmo formato (categorias + ícone +
+// rótulo + descrição), mesma iconografia e a mesma ação (Popover).
+export function TopMegaMenu({ label, categories, hasActive, dark = false }: TopMegaMenuProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const visible = categories.filter((c) => c.items.length > 0);
   if (visible.length === 0) return null;
+
+  const cols = visible.length >= 3 ? 'grid-cols-3' : visible.length === 2 ? 'grid-cols-2' : 'grid-cols-1';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,16 +49,13 @@ export function SevenMegaMenu({ categories, hasActive, dark = false }: SevenMega
           )}
         >
           <span className="flex items-center gap-1.5">
-            Seven
+            {label}
             <ChevronDown className="h-3.5 w-3.5 opacity-60" />
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-[640px] max-w-[calc(100vw-2rem)] rounded-2xl p-4"
-      >
-        <div className={cn('grid gap-4', visible.length === 3 ? 'grid-cols-3' : visible.length === 2 ? 'grid-cols-2' : 'grid-cols-1')}>
+      <PopoverContent align="start" className="w-[640px] max-w-[calc(100vw-2rem)] rounded-2xl p-4">
+        <div className={cn('grid gap-4', cols)}>
           {visible.map((cat) => (
             <div key={cat.label} className="space-y-1">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-2 pb-1">
