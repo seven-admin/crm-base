@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarClock, Eye, Home, MapPin, Pencil, Plus, Trash2, User, Users } from 'lucide-react';
+import { Building2, CalendarClock, Eye, Home, MapPin, Pencil, Plus, Trash2, User, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -94,6 +94,11 @@ export function RegistroAtividadesTab() {
                       <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
                         {a.local || 'Sem local'}{a.qtd_pessoas != null && ` · ${a.qtd_pessoas} pessoa(s)`}
+                      </p>
+                    )}
+                    {a.tipo === 'visita' && a.imobiliaria?.nome && (
+                      <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5 shrink-0" /> {a.imobiliaria.nome}
                       </p>
                     )}
                     {participantes.length > 0 && (

@@ -51,6 +51,7 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [empId, setEmpId] = useState('');
+  const [cidadeImob, setCidadeImob] = useState(''); // chave cidade|uf normalizada
   const [imobId, setImobId] = useState('');
   const [status, setStatus] = useState<NexaVisitaStatus>('agendada');
   const [saving, setSaving] = useState(false);
@@ -70,12 +71,13 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
       setTelefone(atividade.cliente?.telefone || atividade.visitante_telefone || '');
       setEmail(atividade.cliente?.email || '');
       setEmpId(atividade.empreendimento_id ?? '');
+      setCidadeImob(''); // derivada da imobiliária pelo effect abaixo quando os dados chegarem
       setImobId(atividade.imobiliaria_id ?? '');
       setStatus(atividade.status ?? 'agendada');
     } else {
       setTipo('visita'); setDataHora(''); setObs('');
       setSubtipo(''); setLocal(''); setQtdPessoas(''); setCorretorIds([]);
-      setJaLead(false); setNome(''); setTelefone(''); setEmail(''); setEmpId(''); setImobId(''); setStatus('agendada');
+      setJaLead(false); setNome(''); setTelefone(''); setEmail(''); setEmpId(''); setCidadeImob(''); setImobId(''); setStatus('agendada');
     }
     setBusca('');
   }, [open, atividade]);
@@ -98,6 +100,37 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
   const toggle = (id: string) => {
     setCorretorIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   };
+
+  // Imobiliárias do banco (seven_imobiliarias via RPC) com cidade/UF, para o cascata cidade → imobiliária.
+  type ImobOpt = { id: string; nome: string; endereco_cidade?: string | null; endereco_uf?: string | null };
+  const cidadeKey = (i: ImobOpt) =>
+    `${(i.endereco_cidade ?? '').trim().toUpperCase()}|${(i.endereco_uf ?? '').trim().toUpperCase()}`;
+
+  const cidades = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const i of imobs as ImobOpt[]) {
+      const cidade = (i.endereco_cidade ?? '').trim();
+      if (!cidade) continue;
+      const uf = (i.endereco_uf ?? '').trim();
+      const key = cidadeKey(i);
+      if (!map.has(key)) map.set(key, uf ? `${cidade} - ${uf}` : cidade);
+    }
+    return [...map.entries()].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [imobs]);
+
+  const imobsDaCidade = useMemo(() => {
+    if (!cidadeImob) return [] as ImobOpt[];
+    return (imobs as ImobOpt[])
+      .filter((i) => cidadeKey(i) === cidadeImob)
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [imobs, cidadeImob]);
+
+  // Ao editar: deriva a cidade a partir da imobiliária já salva quando a lista carregar.
+  useEffect(() => {
+    if (!imobId || cidadeImob || !imobs.length) return;
+    const atual = (imobs as ImobOpt[]).find((i) => i.id === imobId);
+    if (atual) setCidadeImob(cidadeKey(atual));
+  }, [imobId, cidadeImob, imobs]);
 
   const submit = async () => {
     if (!dataHora) return toast.error('Informe data e hora.');
@@ -145,7 +178,8 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
         visitante_nome,
         visitante_telefone,
         empreendimento_id: tipo === 'atendimento' ? (empId || null) : null,
-        imobiliaria_id: tipo === 'atendimento' ? (imobId || null) : null,
+        // Imobiliária vale para mercado (relação da atividade) e para atendimento (parceira).
+        imobiliaria_id: (tipo === 'visita' || tipo === 'atendimento') ? (imobId || null) : null,
         corretor_id: null,
         status: tipo === 'atendimento' ? status : null,
       };
@@ -198,6 +232,37 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Imobiliária relacionada à atividade de mercado: cascata cidade → imobiliária. */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Cidade da imobiliária (opcional)</Label>
+                  <Select value={cidadeImob} onValueChange={(v) => { setCidadeImob(v); setImobId(''); }}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+                    <SelectContent>
+                      {cidades.map((c) => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Label>Imobiliária (opcional)</Label>
+                    <Select value={imobId} onValueChange={setImobId} disabled={!cidadeImob}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={cidadeImob ? 'Selecione a imobiliária' : 'Escolha a cidade primeiro'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {imobsDaCidade.map((i) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(cidadeImob || imobId) && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => { setCidadeImob(''); setImobId(''); }}>
+                      Limpar
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-[1fr_140px] gap-3">
@@ -287,7 +352,7 @@ export function NexaAtividadeFormDialog({ open, onOpenChange, atividade }: Props
                   <Select value={imobId} onValueChange={setImobId}>
                     <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                     <SelectContent>
-                      {imobs.map((i: { id: string; nome: string }) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
+                      {(imobs as ImobOpt[]).map((i) => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

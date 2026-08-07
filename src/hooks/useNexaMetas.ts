@@ -101,7 +101,7 @@ function atividadeColumns(input: AtividadeInput) {
     visitante_nome: isAtend ? (input.visitante_nome ?? null) : null,
     visitante_telefone: isAtend ? (input.visitante_telefone ?? null) : null,
     empreendimento_id: isAtend ? (input.empreendimento_id ?? null) : null,
-    imobiliaria_id: isAtend ? (input.imobiliaria_id ?? null) : null,
+    imobiliaria_id: (isMercado || isAtend) ? (input.imobiliaria_id ?? null) : null,
     corretor_id: isAtend ? (input.corretor_id ?? null) : null,
     status: isAtend ? (input.status ?? 'agendada') : null,
   };
