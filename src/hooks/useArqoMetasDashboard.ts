@@ -121,6 +121,7 @@ export function aggregateArqoMetas(
   reference: Date,
   config?: ArqoPerformanceConfig,
   names?: Map<string, string>,
+  extraUserIds?: string[],
 ): ArqoDashboardResult {
   const ref = reference.toISOString().slice(0, 10);
   const activeMetas = metas
@@ -154,7 +155,11 @@ export function aggregateArqoMetas(
     agendasByUser.set(a.responsavel_id, arr);
   }
 
-  const userIds = new Set<string>([...userMeta.keys(), ...callsByUser.keys(), ...agendasByUser.keys()]);
+  // extraUserIds = time da Arqo (por papel): garante que todo funcionário atribuído apareça,
+  // mesmo sem atividade ou meta ainda (card zerado).
+  const userIds = new Set<string>([
+    ...userMeta.keys(), ...callsByUser.keys(), ...agendasByUser.keys(), ...(extraUserIds ?? []),
+  ]);
   const cards: ArqoConsultorCard[] = [...userIds].map((userId) => {
     const info = userMeta.get(userId);
     const meta = info?.meta;
@@ -273,9 +278,28 @@ export function useArqoMetasDashboard() {
       const calls = (callsRes.data ?? []) as CallRow[];
       const agendas = (agendasRes.data ?? []) as AgendaRow[];
 
-      // Resolve o nome de todos os usuários envolvidos (inclusive quem tem atividade mas
-      // ainda não tem meta atribuída) para o filtro e os cards não caírem em "Usuário".
-      const involvedIds = new Set<string>();
+      // Roster do time da Arqo (por papel): super_admin vê todos os funcionários atribuídos,
+      // mesmo sem atividade/meta (card zerado); os demais veem apenas o próprio card.
+      let roster: string[] = [];
+      if (seeAll) {
+        const rolesRes = await supabase
+          .from('roles').select('id')
+          .in('name', ['arqo_admin', 'arqo_gestor', 'arqo_consultor', 'arqo_closer'])
+          .eq('is_active', true);
+        if (rolesRes.error) throw rolesRes.error;
+        const roleIds = (rolesRes.data ?? []).map((r) => r.id);
+        if (roleIds.length > 0) {
+          const ursRes = await supabase.from('user_roles').select('user_id').in('role_id', roleIds);
+          if (ursRes.error) throw ursRes.error;
+          roster = [...new Set((ursRes.data ?? []).map((u) => u.user_id))];
+        }
+      } else if (userId) {
+        roster = [userId];
+      }
+
+      // Resolve o nome de todos os usuários envolvidos (roster + atividade + metas) para o
+      // filtro e os cards não caírem em "Usuário".
+      const involvedIds = new Set<string>(roster);
       for (const c of calls) if (c.consultor_id) involvedIds.add(c.consultor_id);
       for (const a of agendas) if (a.responsavel_id) involvedIds.add(a.responsavel_id);
       for (const m of metas) {
@@ -286,14 +310,20 @@ export function useArqoMetasDashboard() {
       if (involvedIds.size > 0) {
         const profRes = await supabase
           .from('profiles')
-          .select('id, full_name')
+          .select('id, full_name, is_active')
           .in('id', [...involvedIds]);
         if (profRes.error) throw profRes.error;
-        for (const p of profRes.data ?? []) names.set(p.id, p.full_name ?? 'Usuário');
+        // Só mantém no roster quem tem profile ativo (evita cards de contas desativadas).
+        const activeIds = new Set<string>();
+        for (const p of profRes.data ?? []) {
+          names.set(p.id, p.full_name ?? 'Usuário');
+          if (p.is_active) activeIds.add(p.id);
+        }
+        roster = roster.filter((id) => activeIds.has(id));
       }
 
       return {
-        ...aggregateArqoMetas(calls, agendas, metas, week, prevWeek, today, now, config, names),
+        ...aggregateArqoMetas(calls, agendas, metas, week, prevWeek, today, now, config, names, roster),
         seeAll,
       };
     },
