@@ -6,10 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Phone, Mail, Upload, Pencil } from 'lucide-react';
+import { ArrowRight, Sparkles, Phone, Mail, Pencil } from 'lucide-react';
 import type { ArqoLeadWithRelations } from '@/types/arqo.types';
 import { formatarTelefone } from '@/lib/documentUtils';
-import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 import { ArqoEditarLeadDialog } from '@/components/arqo/ArqoEditarLeadDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +28,6 @@ export default function ArqoLeadsKanban() {
   const { data: etapas = [] } = useArqoEtapas();
   const transicionar = useTransicionarEtapa();
   const [dragging, setDragging] = useState<string | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
 
   // Mostra todas as etapas cadastradas (ativa/ganho/perda/descartado) como
@@ -61,11 +59,6 @@ export default function ArqoLeadsKanban() {
       subtitle={podeVerTudo
         ? 'Acompanhe oportunidades que já passaram pelo primeiro atendimento'
         : 'Acompanhe e atualize todos os leads da sua carteira'}
-      actions={role === 'super_admin' ? (
-        <Button variant="outline" size="sm" className="bg-card" onClick={() => setImportOpen(true)}>
-          <Upload className="h-4 w-4 mr-2" /> Importar CSV
-        </Button>
-      ) : undefined}
     >
       <div className="mb-4 flex items-center justify-between rounded-[1.25rem] border border-border/70 bg-card px-4 py-3 text-xs text-muted-foreground shadow-card">
         <span className="font-semibold uppercase tracking-[.14em] text-primary">Pipeline Arqo</span>
@@ -157,7 +150,6 @@ export default function ArqoLeadsKanban() {
           })}
         </div>
       )}
-      {role === 'super_admin' && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
       <ArqoEditarLeadDialog
         leadId={editingLeadId}
         open={!!editingLeadId}

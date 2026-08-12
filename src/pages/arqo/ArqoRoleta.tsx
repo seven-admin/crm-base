@@ -8,20 +8,15 @@ import {
   useArqoLeads, useArqoLead, useAtribuirRoleta, useArqoEtapas, useMeusArqoGrupos, useArqoFilaGrupos,
 } from '@/hooks/useArqo';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Loader2, Phone, Upload, Users, Clock } from 'lucide-react';
-import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
+import { Loader2, Phone, Users, Clock } from 'lucide-react';
 import { ArqoAtendimentoFlow } from '@/components/arqo/ArqoAtendimentoFlow';
 import { formatarTelefone } from '@/lib/documentUtils';
 import { toast } from 'sonner';
 
 export default function ArqoRoleta() {
   const { user } = useAuth();
-  const { isSuperAdmin } = usePermissions();
-  const podeImportar = isSuperAdmin();
   const [searchParams] = useSearchParams();
   const requestedLeadId = searchParams.get('lead');
-  const [importOpen, setImportOpen] = useState(false);
   const [grupoPuxandoId, setGrupoPuxandoId] = useState<string | null>(null);
   const [leadEmTratamentoId, setLeadEmTratamentoId] = useState<string | null>(null);
 
@@ -142,14 +137,7 @@ export default function ArqoRoleta() {
     <MainLayout
       title="Arqo — Meu Atendimento"
       subtitle="Puxe o próximo lead do seu grupo e registre cada interação"
-      actions={podeImportar ? (
-        <Button variant="outline" onClick={() => setImportOpen(true)}>
-          <Upload className="h-4 w-4 mr-2" /> Importar leads
-        </Button>
-      ) : undefined}
     >
-      {podeImportar && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
-
       {/* Grupos sempre no topo (puxar próximo lead); o atendimento em andamento logo abaixo. */}
       <div className="space-y-6">
         {gruposSection}

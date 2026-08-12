@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -10,12 +11,14 @@ import {
 import {
   useArqoAdminDashboard, useArqoGrupos, useArqoEtapas,
 } from '@/hooks/useArqo';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Users, UserCheck, Clock, TrendingUp, AlertCircle, Award, XCircle,
+  Users, UserCheck, Clock, TrendingUp, AlertCircle, Award, XCircle, Upload,
 } from 'lucide-react';
 import { ArqoGerenciarLeads } from './ArqoGerenciarLeads';
+import { ArqoImportarLeadsDialog } from '@/components/arqo/ArqoImportarLeadsDialog';
 
 function KpiCard({ label, value, icon: Icon, hint }: any) {
   return (
@@ -34,6 +37,9 @@ function KpiCard({ label, value, icon: Icon, hint }: any) {
 }
 
 export default function ArqoAdmin() {
+  const { isSuperAdmin } = usePermissions();
+  const podeImportar = isSuperAdmin();
+  const [importOpen, setImportOpen] = useState(false);
   const { data: dash, isLoading } = useArqoAdminDashboard();
   const { data: grupos = [] } = useArqoGrupos();
   const { data: etapas = [] } = useArqoEtapas();
@@ -113,7 +119,14 @@ export default function ArqoAdmin() {
     <MainLayout
       title="Gestão Arqo"
       subtitle="Visão gerencial de filas, equipes e oportunidades"
+      actions={podeImportar ? (
+        <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" /> Importar leads
+        </Button>
+      ) : undefined}
     >
+      {podeImportar && <ArqoImportarLeadsDialog open={importOpen} onOpenChange={setImportOpen} />}
+
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
