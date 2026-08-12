@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay,
   isSameMonth, startOfMonth, startOfWeek, subMonths,
@@ -25,6 +25,16 @@ interface EventCalendarProps {
   loading?: boolean;
   /** Máx. de eventos exibidos por dia antes de "+N". */
   maxPerDay?: number;
+  /** Rótulo exibido acima do mês (ex.: nome do módulo). */
+  title?: ReactNode;
+  /** Oculta os controles de navegação (útil quando outro calendário compartilha o mês). */
+  hideNav?: boolean;
+  /** Oculta todo o cabeçalho interno (título + mês + navegação). */
+  hideHeader?: boolean;
+  /** Modo compacto: exibe apenas marcadores nos dias com evento, sem título. */
+  compact?: boolean;
+  /** Cor do marcador no modo compacto (ex.: 'bg-blue-500'). */
+  markerClass?: string;
 }
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -33,7 +43,7 @@ function dayKey(date: Date) {
   return format(date, 'yyyy-MM-dd');
 }
 
-export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay = 3 }: EventCalendarProps) {
+export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay = 3, title, hideNav, hideHeader, compact, markerClass }: EventCalendarProps) {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const days = useMemo(() => {
@@ -58,20 +68,27 @@ export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold capitalize tracking-[-0.02em]">
-          {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
-        </h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => onMonthChange(new Date())}>Hoje</Button>
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(subMonths(month, 1))} aria-label="Mês anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(addMonths(month, 1))} aria-label="Próximo mês">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      {!hideHeader && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            {title && <p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">{title}</p>}
+            <h2 className="text-lg font-semibold capitalize tracking-[-0.02em]">
+              {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
+            </h2>
+          </div>
+          {!hideNav && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => onMonthChange(new Date())}>Hoje</Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(subMonths(month, 1))} aria-label="Mês anterior">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(addMonths(month, 1))} aria-label="Próximo mês">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       <Card className="relative overflow-hidden">
         {loading && (
@@ -98,7 +115,8 @@ export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay
                 key={day.toISOString()}
                 onClick={() => setSelectedDay(day)}
                 className={cn(
-                  'min-h-24 border-b border-r p-1.5 text-left align-top transition-colors last:border-r-0 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30',
+                  'border-b border-r p-1.5 text-left align-top transition-colors last:border-r-0 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30',
+                  compact ? 'min-h-14' : 'min-h-24',
                   outside && 'bg-muted/20 text-muted-foreground',
                   selectedDay && isSameDay(day, selectedDay) && 'ring-2 ring-inset ring-primary/40',
                 )}
@@ -109,25 +127,38 @@ export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay
                 )}>
                   {format(day, 'd')}
                 </span>
-                <div className="mt-1 space-y-1">
-                  {dayEvents.slice(0, maxPerDay).map((event) => (
-                    <div
-                      key={event.id}
-                      onClick={(e) => { e.stopPropagation(); event.onClick?.(); }}
-                      className={cn(
-                        'truncate rounded px-1.5 py-0.5 text-[11px] font-medium',
-                        event.colorClass ?? 'bg-primary/10 text-primary',
-                        event.onClick && 'cursor-pointer hover:opacity-80',
+                {compact ? (
+                  dayEvents.length > 0 && (
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      {dayEvents.slice(0, 4).map((event) => (
+                        <span key={event.id} className={cn('h-1.5 w-1.5 rounded-full', markerClass ?? 'bg-primary')} />
+                      ))}
+                      {dayEvents.length > 4 && (
+                        <span className="text-[9px] font-semibold leading-none text-muted-foreground">+{dayEvents.length - 4}</span>
                       )}
-                      title={`${format(event.date, 'HH:mm')} · ${event.title}`}
-                    >
-                      {format(event.date, 'HH:mm')} {event.title}
                     </div>
-                  ))}
-                  {overflow > 0 && (
-                    <div className="px-1.5 text-[11px] font-medium text-muted-foreground">+{overflow} mais</div>
-                  )}
-                </div>
+                  )
+                ) : (
+                  <div className="mt-1 space-y-1">
+                    {dayEvents.slice(0, maxPerDay).map((event) => (
+                      <div
+                        key={event.id}
+                        onClick={(e) => { e.stopPropagation(); event.onClick?.(); }}
+                        className={cn(
+                          'truncate rounded px-1.5 py-0.5 text-[11px] font-medium',
+                          event.colorClass ?? 'bg-primary/10 text-primary',
+                          event.onClick && 'cursor-pointer hover:opacity-80',
+                        )}
+                        title={`${format(event.date, 'HH:mm')} · ${event.title}`}
+                      >
+                        {format(event.date, 'HH:mm')} {event.title}
+                      </div>
+                    ))}
+                    {overflow > 0 && (
+                      <div className="px-1.5 text-[11px] font-medium text-muted-foreground">+{overflow} mais</div>
+                    )}
+                  </div>
+                )}
               </button>
             );
           })}

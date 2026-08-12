@@ -1,10 +1,26 @@
+import { Link } from 'react-router-dom';
+import { CalendarDays, PhoneCall } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArqoMetasDashboard } from '@/components/arqo/ArqoMetasDashboard';
 import { ArqoMetasManager } from '@/components/arqo/ArqoMetasManager';
 import { useArqoMetasAtendimento } from '@/hooks/useArqo';
 import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
 import { usePermissions } from '@/hooks/usePermissions';
+
+function MetasActions() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button asChild variant="outline" size="sm">
+        <Link to="/arqo/calendario"><CalendarDays className="mr-2 h-4 w-4" /> Calendário</Link>
+      </Button>
+      <Button asChild size="sm">
+        <Link to="/arqo/roleta"><PhoneCall className="mr-2 h-4 w-4" /> Atendimentos</Link>
+      </Button>
+    </div>
+  );
+}
 
 export default function ArqoMetas() {
   const { isSuperAdmin } = usePermissions();
@@ -17,14 +33,14 @@ export default function ArqoMetas() {
 
   if (!canConfig) {
     return (
-      <MainLayout title="Metas Arqo" subtitle="Seu desempenho da semana">
+      <MainLayout title="Metas Arqo" subtitle="Seu desempenho da semana" actions={<MetasActions />}>
         <ArqoMetasDashboard />
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout title="Metas Arqo" subtitle="Metas de atendimento e desempenho da equipe">
+    <MainLayout title="Metas Arqo" subtitle="Metas de atendimento e desempenho da equipe" actions={<MetasActions />}>
       <Tabs defaultValue="dashboard">
         <TabsList className="mb-5">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
