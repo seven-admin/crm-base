@@ -83,7 +83,7 @@ export function LeadIndicadoDialog({ open, onOpenChange, leadOrigemId, empreendi
             <Label htmlFor="indicacao-observacoes">Observações</Label>
             <Textarea id="indicacao-observacoes" value={observacoes} onChange={(event) => setObservacoes(event.target.value)} rows={3} />
           </div>
-          <p className="text-xs text-muted-foreground sm:col-span-2">Informe ao menos telefone ou e-mail. O novo lead será enviado para a fila do mesmo grupo.</p>
+          <p className="text-xs text-muted-foreground sm:col-span-2">Informe ao menos telefone ou e-mail. O novo lead já fica vinculado a você e entra na sua carteira.</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

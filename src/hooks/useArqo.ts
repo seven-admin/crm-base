@@ -619,7 +619,7 @@ export function useCriarLeadIndicado() {
       qc.invalidateQueries({ queryKey: ['arqo', 'leads'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'lead-counters'] });
       qc.invalidateQueries({ queryKey: ['arqo', 'fila-usuario'] });
-      toast.success('Lead indicado criado e enviado para a fila');
+      toast.success('Lead indicado criado e vinculado a você');
     },
     onError: (e: any) => toast.error(e.message ?? 'Erro ao gerar lead indicado'),
   });

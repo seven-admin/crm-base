@@ -13,10 +13,10 @@ import {
 } from '@/hooks/useArqoMetasDashboard';
 
 const PERF: Record<ArqoPerfLevel, { emoji: string; label: string; cls: string }> = {
-  bom: { emoji: '🟢', label: 'Bom', cls: 'text-emerald-700' },
-  atencao: { emoji: '🟠', label: 'Atenção', cls: 'text-amber-700' },
-  critico: { emoji: '🔴', label: 'Crítico', cls: 'text-red-600' },
-  sem_meta: { emoji: '⚪', label: 'Sem meta', cls: 'text-muted-foreground' },
+  bom: { emoji: '🤑', label: 'Bom', cls: 'text-emerald-700' },
+  atencao: { emoji: '😮‍💨', label: 'Atenção', cls: 'text-amber-700' },
+  critico: { emoji: '😱', label: 'Crítico', cls: 'text-red-600' },
+  sem_meta: { emoji: '😐', label: 'Sem meta', cls: 'text-muted-foreground' },
 };
 
 function pct(done: number, goal: number) {
@@ -38,54 +38,77 @@ function MetricRow({ label, done, goal }: { label: string; done: number; goal: n
   );
 }
 
-function PerfBadge({ title, level, score }: { title: string; level: ArqoPerfLevel; score: number | null }) {
+function MoodBadge({ title, level, score }: { title: string; level: ArqoPerfLevel; score: number | null }) {
   const p = PERF[level];
   return (
-    <div className="rounded-xl border border-black/[.07] bg-white px-3 py-2 text-center">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      <p className="mt-0.5 text-2xl leading-none">{p.emoji}</p>
-      <p className={`mt-1 text-[11px] font-semibold ${p.cls}`}>
-        {p.label}{score != null && ` · ${score.toFixed(0)}%`}
-      </p>
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.06] px-4 py-3">
+      <span className="text-3xl leading-none">{p.emoji}</span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">{title}</p>
+        <p className={`text-sm font-semibold ${p.cls} brightness-150`}>
+          {p.label}{score != null && ` · ${score.toFixed(0)}%`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PriorityTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border border-black/[.07] bg-[#f6f1eb] px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-[.14em] text-primary">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-[-0.05em] tabular-nums">{value}</p>
     </div>
   );
 }
 
 function ConsultorCard({ card }: { card: ArqoConsultorCard }) {
   return (
-    <Card className="p-5 shadow-none sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <Card className="overflow-hidden rounded-[1.75rem] border-black/[.07] shadow-none">
+      {/* Cabeçalho do especialista (fundo escuro, no estilo do atendimento) */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#201a17] p-5 text-white sm:p-6">
         <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-[#201a17] text-white"><UserRound className="h-5 w-5" /></span>
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white"><UserRound className="h-6 w-6" /></span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-primary">{card.userId === 'todos' ? 'Consolidado' : 'Consultor(a)'}</p>
-            <p className="text-lg font-semibold tracking-[-0.02em]">{card.nome}</p>
-            <p className="text-xs text-muted-foreground">
-              Hoje · Ligações ({card.hoje.ligacoes}) · Conversas ({card.hoje.conversas}) · Agendamentos ({card.hoje.agendamentos}) · Visitas ({card.hoje.visitasRealizadas})
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#ff8a39]">{card.userId === 'todos' ? 'Consolidado' : 'Especialista'}</p>
+            <p className="text-xl font-semibold tracking-[-0.03em]">{card.nome}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <PerfBadge title="Como vc está hoje?" level={card.performanceHoje.level} score={card.performanceHoje.score} />
-          <PerfBadge title="Semana anterior" level={card.performanceAnterior.level} score={card.performanceAnterior.score} />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <MoodBadge title="Como vc está hoje?" level={card.performanceHoje.level} score={card.performanceHoje.score} />
+          <MoodBadge title="Como fechou a semana anterior?" level={card.performanceAnterior.level} score={card.performanceAnterior.score} />
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-black/[.07] p-4">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta semanal</p>
-          <MetricRow label="Ligações" done={card.semana.ligacoes} goal={card.metaSemana.ligacoes} />
-          <MetricRow label="Conversas efetivadas" done={card.semana.conversas} goal={card.metaSemana.conversas} />
-          <MetricRow label="Agendamentos" done={card.semana.agendamentos} goal={card.metaSemana.agendamentos} />
-          <MetricRow label="Visitas realizadas" done={card.semana.visitasRealizadas} goal={card.metaSemana.visitasRealizadas} />
+      <div className="space-y-5 p-5 sm:p-6">
+        {/* Prioridades do dia */}
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Prioridades do dia</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <PriorityTile label="Atendimentos" value={card.hoje.ligacoes} />
+            <PriorityTile label="Conversas" value={card.hoje.conversas} />
+            <PriorityTile label="Agendamentos" value={card.hoje.agendamentos} />
+            <PriorityTile label="Visitas" value={card.hoje.visitasRealizadas} />
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-black/[.07] p-4">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta diária</p>
-          <MetricRow label="Ligações" done={card.hoje.ligacoes} goal={card.metaDia.ligacoes} />
-          <MetricRow label="Conversas efetivadas" done={card.hoje.conversas} goal={card.metaDia.conversas} />
-          <MetricRow label="Agendamentos" done={card.hoje.agendamentos} goal={card.metaDia.agendamentos} />
-          <MetricRow label="Visitas realizadas" done={card.hoje.visitasRealizadas} goal={card.metaDia.visitasRealizadas} />
+        {/* Metas: diária e semanal, done × meta */}
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="rounded-2xl border border-black/[.07] p-4">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta diária · seu resultado</p>
+            <MetricRow label="Ligações" done={card.hoje.ligacoes} goal={card.metaDia.ligacoes} />
+            <MetricRow label="Conversas efetivadas" done={card.hoje.conversas} goal={card.metaDia.conversas} />
+            <MetricRow label="Agendamentos" done={card.hoje.agendamentos} goal={card.metaDia.agendamentos} />
+            <MetricRow label="Visitas realizadas" done={card.hoje.visitasRealizadas} goal={card.metaDia.visitasRealizadas} />
+          </div>
+
+          <div className="rounded-2xl border border-black/[.07] p-4">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta semanal · seu resultado</p>
+            <MetricRow label="Ligações" done={card.semana.ligacoes} goal={card.metaSemana.ligacoes} />
+            <MetricRow label="Conversas efetivadas" done={card.semana.conversas} goal={card.metaSemana.conversas} />
+            <MetricRow label="Agendamentos" done={card.semana.agendamentos} goal={card.metaSemana.agendamentos} />
+            <MetricRow label="Visitas realizadas" done={card.semana.visitasRealizadas} goal={card.metaSemana.visitasRealizadas} />
+          </div>
         </div>
       </div>
     </Card>
