@@ -17,6 +17,8 @@ import { parseMoeda } from '@/lib/formatters';
 interface Row {
   nome: string;
   telefone?: string;
+  whatsapp?: string;
+  telefones_adicionais: string[];
   email?: string;
   origem?: string;
   empreendimento?: string;
@@ -29,13 +31,21 @@ function parseCSV(text: string): Row[] {
   if (lines.length === 0) return [];
   const sep = lines[0].includes(';') && !lines[0].includes(',') ? ';' : ',';
   const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
-  const idx = (name: string) => headers.findIndex(h => h === name || h.startsWith(name));
-  const iNome = idx('nome');
-  const iTel = idx('telefone');
-  const iEmail = idx('email');
-  const iOrig = idx('origem');
-  const iEmp = idx('empreendimento');
-  const iVal = idx('valor');
+  // Exato para não confundir 'telefone' com 'telefone_adicional_1'.
+  const idxExact = (name: string) => headers.findIndex(h => h === name);
+  const idxStarts = (name: string) => headers.findIndex(h => h === name || h.startsWith(name));
+  const iNome = idxStarts('nome');
+  const iTel = idxExact('telefone');
+  const iWhats = idxExact('whatsapp');
+  const iEmail = idxStarts('email');
+  const iOrig = idxStarts('origem');
+  const iEmp = idxStarts('empreendimento');
+  const iVal = idxStarts('valor');
+  // Todas as colunas 'telefone_adicional*' (na ordem em que aparecem).
+  const adicionaisIdx = headers
+    .map((h, i) => ({ h, i }))
+    .filter(({ h }) => h.startsWith('telefone_adicional') || h.startsWith('telefone_extra'))
+    .map(({ i }) => i);
   const rows: Row[] = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
@@ -43,9 +53,15 @@ function parseCSV(text: string): Row[] {
     if (!nome) continue;
     const valorRaw = iVal >= 0 ? cols[iVal] : '';
     const valor = valorRaw ? parseMoeda(valorRaw) : undefined;
+    const adicionais = adicionaisIdx
+      .map((ci) => cols[ci]?.trim())
+      .filter((v): v is string => !!v)
+      .slice(0, 4);
     rows.push({
       nome,
       telefone: iTel >= 0 ? cols[iTel] || undefined : undefined,
+      whatsapp: iWhats >= 0 ? cols[iWhats] || undefined : undefined,
+      telefones_adicionais: adicionais,
       email: iEmail >= 0 ? cols[iEmail] || undefined : undefined,
       origem: iOrig >= 0 ? cols[iOrig] || undefined : undefined,
       empreendimento: iEmp >= 0 ? cols[iEmp] || undefined : undefined,
@@ -89,7 +105,9 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
   };
 
   const downloadTemplate = () => {
-    const csv = 'nome,telefone,email,origem,empreendimento,valor_estimado\nJoão Silva,11999998888,joao@ex.com,Site,,500000\n';
+    const header = 'nome,telefone,whatsapp,telefone_adicional_1,telefone_adicional_2,telefone_adicional_3,telefone_adicional_4,email,origem,empreendimento,valor_estimado';
+    const exemplo = 'João Silva,11999998888,11988887777,1133334444,,,,joao@ex.com,Site,,500000';
+    const csv = `${header}\n${exemplo}\n`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -121,6 +139,7 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
           .insert({
             nome: row.nome,
             telefone: row.telefone ?? null,
+            whatsapp: row.whatsapp ?? null,
             email: row.email ?? null,
             nivel_cadastro: 'lead',
             origem: row.origem ?? null,
@@ -137,6 +156,7 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
             source_id: findSource(row.origem),
             empreendimento_id: findEmpreendimento(row.empreendimento),
             valor_estimado: row.valor_estimado ?? null,
+            telefones_adicionais: row.telefones_adicionais.slice(0, 4),
             grupo_id: grupoId !== 'none' ? grupoId : null,
             created_by: userId,
           })
@@ -172,7 +192,8 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Importar leads</DialogTitle>
           <DialogDescription>
-            Envie um CSV com as colunas: nome, telefone, email, origem, empreendimento, valor_estimado.
+            Envie um CSV com as colunas: nome, telefone, whatsapp, telefone_adicional_1 a telefone_adicional_4,
+            email, origem, empreendimento, valor_estimado. Baixe o modelo para o cabeçalho correto.
           </DialogDescription>
         </DialogHeader>
 
@@ -217,9 +238,11 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Telefone</TableHead>
+                    <TableHead>WhatsApp</TableHead>
+                    <TableHead>Adicionais</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Origem</TableHead>
-                    <TableHead>Empreendimento</TableHead>
+                    <TableHead>Empreend.</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -228,6 +251,12 @@ export function ArqoImportarLeadsDialog({ open, onOpenChange }: Props) {
                     <TableRow key={i}>
                       <TableCell className="font-medium">{r.nome}</TableCell>
                       <TableCell>{r.telefone ? formatarTelefone(r.telefone) : '—'}</TableCell>
+                      <TableCell>{r.whatsapp ? formatarTelefone(r.whatsapp) : '—'}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {r.telefones_adicionais.length > 0
+                          ? r.telefones_adicionais.map((t) => formatarTelefone(t)).join(', ')
+                          : '—'}
+                      </TableCell>
                       <TableCell>{r.email ?? '—'}</TableCell>
                       <TableCell>{r.origem ?? '—'}</TableCell>
                       <TableCell>{r.empreendimento ?? '—'}</TableCell>
