@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MonthPicker } from '@/components/shared/MonthPicker';
 import { CalendarPlus, ChevronDown, Pencil, PhoneCall, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,10 +36,13 @@ export function AgendaAtendimentosTab() {
   const [editing, setEditing] = useState<ArqoAgendamentoWithRelations | null>(null);
   const [toDelete, setToDelete] = useState<ArqoAgendamentoWithRelations | null>(null);
   const [statusFilter, setStatusFilter] = useState<'todos' | ArqoAgendamentoStatus>('todos');
+  const [month, setMonth] = useState(new Date());
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useArqoAgendamentos({
     status: statusFilter === 'todos' ? undefined : statusFilter,
+    from: startOfMonth(month).toISOString(),
+    to: endOfMonth(month).toISOString(),
     page,
     pageSize: 20,
   });
@@ -57,21 +61,24 @@ export function AgendaAtendimentosTab() {
   return (
     <div className="space-y-4">
       <div className="page-toolbar flex flex-wrap items-center justify-between gap-3">
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v as 'todos' | ArqoAgendamentoStatus);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            {Object.entries(AGENDAMENTO_STATUS_LABELS).map(([k, l]) => (
-              <SelectItem key={k} value={k}>{l}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <MonthPicker value={month} onChange={(m) => { setMonth(m); setPage(1); }} />
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => {
+              setStatusFilter(v as 'todos' | ArqoAgendamentoStatus);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              {Object.entries(AGENDAMENTO_STATUS_LABELS).map(([k, l]) => (
+                <SelectItem key={k} value={k}>{l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button>

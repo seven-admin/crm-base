@@ -1,12 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
-  addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay,
-  isSameMonth, startOfMonth, startOfWeek, subMonths,
+  eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay,
+  isSameMonth, startOfMonth, startOfWeek,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { MonthPicker } from '@/components/shared/MonthPicker';
 import { cn } from '@/lib/utils';
 
 export interface CalendarEvent {
@@ -76,17 +76,7 @@ export function EventCalendar({ events, month, onMonthChange, loading, maxPerDay
               {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
             </h2>
           </div>
-          {!hideNav && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => onMonthChange(new Date())}>Hoje</Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(subMonths(month, 1))} aria-label="Mês anterior">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onMonthChange(addMonths(month, 1))} aria-label="Próximo mês">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          {!hideNav && <MonthPicker value={month} onChange={onMonthChange} />}
         </div>
       )}
 

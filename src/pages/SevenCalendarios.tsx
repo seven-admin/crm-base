@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { addMonths, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarPlus } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EventCalendar, type CalendarEvent } from '@/components/shared/EventCalendar';
+import { MonthPicker } from '@/components/shared/MonthPicker';
 import { AgendamentoDetalheDialog } from '@/components/arqo/AgendamentoDetalheDialog';
 import { AtividadeDetalheDialog } from '@/components/nexa/AtividadeDetalheDialog';
 import { SevenAtividadeFormDialog } from '@/components/seven/SevenAtividadeFormDialog';
@@ -122,20 +123,12 @@ export default function SevenCalendarios() {
         </div>
       )}
     >
-      {/* Navegador de mês único, compartilhado pelos três calendários. */}
+      {/* Seletor de mês de referência, compartilhado pelos três calendários. */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold capitalize tracking-[-0.02em]">
           {format(month, "MMMM 'de' yyyy", { locale: ptBR })}
         </h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setMonth(new Date())}>Hoje</Button>
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setMonth(subMonths(month, 1))} aria-label="Mês anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setMonth(addMonths(month, 1))} aria-label="Próximo mês">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <MonthPicker value={month} onChange={setMonth} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">

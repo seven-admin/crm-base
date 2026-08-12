@@ -682,6 +682,8 @@ const SELECT_AGENDAMENTO = `
 
 export function useArqoAgendamentos(filters?: {
   status?: ArqoAgendamentoStatus;
+  from?: string;
+  to?: string;
   page?: number;
   pageSize?: number;
 }) {
@@ -696,6 +698,8 @@ export function useArqoAgendamentos(filters?: {
         .select(SELECT_AGENDAMENTO, { count: 'exact' })
         .order('data_hora', { ascending: false });
       if (filters?.status) q = q.eq('status', filters.status);
+      if (filters?.from) q = q.gte('data_hora', filters.from);
+      if (filters?.to) q = q.lte('data_hora', filters.to);
       const { data, error, count } = await q.range((page - 1) * pageSize, page * pageSize - 1);
       if (error) throw error;
       const total = count ?? 0;
