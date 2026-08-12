@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, CalendarClock, Eye, Home, MapPin, Pencil, Plus, Trash2, User, Users } from 'lucide-react';
+import { Building2, CalendarClock, Eye, Home, MapPin, Pencil, Plus, Trash2, User, Users, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NexaAtividadeFormDialog } from '@/components/nexa/NexaAtividadeFormDialog';
 import { useNexaAtividades, useDeleteNexaAtividade } from '@/hooks/useNexaMetas';
+import { useUpdateVisitaStatus } from '@/hooks/useNexa';
 import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { NexaAtividadeTipo, NexaAtividadeWithRelations } from '@/types/nexa.types';
@@ -29,8 +30,15 @@ export function RegistroAtividadesTab() {
     userId: superAdmin && userId !== 'todos' ? userId : undefined,
   });
   const del = useDeleteNexaAtividade();
+  const updateStatus = useUpdateVisitaStatus();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<NexaAtividadeWithRelations | null>(null);
+
+  const marcarNaoCompareceu = (a: NexaAtividadeWithRelations) => {
+    const nome = a.cliente?.nome || a.visitante_nome || 'o cliente';
+    if (!confirm(`Registrar que ${nome} não compareceu?`)) return;
+    updateStatus.mutate({ id: a.id, status: 'no_show' });
+  };
 
   const openNew = () => { setEditing(null); setOpen(true); };
   const openEdit = (a: NexaAtividadeWithRelations) => { setEditing(a); setOpen(true); };
@@ -77,7 +85,12 @@ export function RegistroAtividadesTab() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={a.tipo === 'visita' ? 'default' : 'secondary'}>{TIPO_ATIVIDADE_LABELS[a.tipo]}</Badge>
                       {a.subtipo && <Badge variant="outline">{NEXA_SUBTIPO_LABELS[a.subtipo]}</Badge>}
-                      {isAtend && a.status && <Badge className={STATUS_COLORS[a.status]}>{STATUS_LABELS[a.status]}</Badge>}
+                      {isAtend && a.status && (
+                        <Badge className={`gap-1 ${STATUS_COLORS[a.status]}`}>
+                          {a.status === 'no_show' && <UserX className="h-3 w-3" />}
+                          {STATUS_LABELS[a.status]}
+                        </Badge>
+                      )}
                       <span className="flex items-center gap-1 text-sm text-muted-foreground">
                         <CalendarClock className="h-3.5 w-3.5" /> {formatDataHora(a.data_hora)}
                       </span>
@@ -111,6 +124,11 @@ export function RegistroAtividadesTab() {
                     {a.criador && <p className="mt-2 text-[11px] text-muted-foreground/70">Registrado por {a.criador.full_name}</p>}
                   </div>
 
+                  {isAtend && (a.status === 'agendada' || a.status === 'confirmada') && (
+                    <Button size="icon" variant="ghost" onClick={() => marcarNaoCompareceu(a)} title="Marcar não compareceu" className="text-amber-600 hover:text-amber-700">
+                      <UserX className="h-4 w-4" />
+                    </Button>
+                  )}
                   {isAtend && (
                     <Button size="icon" variant="ghost" onClick={() => navigate(`/nexa/visitas/${a.id}`)} title="Ver detalhe">
                       <Eye className="h-4 w-4" />

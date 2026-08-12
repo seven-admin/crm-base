@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MonthPicker } from '@/components/shared/MonthPicker';
-import { CalendarPlus, ChevronDown, Pencil, PhoneCall, Plus, Trash2 } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Pencil, PhoneCall, Plus, Trash2, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { useArqoAgendamentos, useArqoAtividadeTipos, useDeleteArqoAgendamento } from '@/hooks/useArqo';
+import { useArqoAgendamentos, useArqoAtividadeTipos, useDeleteArqoAgendamento, useUpdateArqoAgendamento } from '@/hooks/useArqo';
 import { AgendamentoFormDialog } from '@/components/arqo/AgendamentoFormDialog';
 import {
   AGENDAMENTO_STATUS_LABELS, AGENDAMENTO_STATUS_COLORS,
@@ -47,7 +47,13 @@ export function AgendaAtendimentosTab() {
     pageSize: 20,
   });
   const del = useDeleteArqoAgendamento();
+  const updateStatus = useUpdateArqoAgendamento();
   const { data: tipos } = useArqoAtividadeTipos(true);
+
+  const marcarNaoCompareceu = (a: ArqoAgendamentoWithRelations) => {
+    if (!confirm(`Registrar que ${a.lead?.cliente?.nome ?? 'o lead'} não compareceu?`)) return;
+    updateStatus.mutate({ id: a.id, patch: { status: 'no_show' } });
+  };
 
   const filtered = useMemo(() => data?.agendamentos ?? [], [data?.agendamentos]);
   const tipoLabels = useMemo(
@@ -149,9 +155,19 @@ export function AgendaAtendimentosTab() {
                   <TableCell>{tipoLabels[a.tipo] ?? a.tipo}</TableCell>
                   <TableCell>{a.responsavel?.full_name || '—'}</TableCell>
                   <TableCell>{a.closer?.full_name || '—'}</TableCell>
-                  <TableCell><Badge className={AGENDAMENTO_STATUS_COLORS[a.status]}>{AGENDAMENTO_STATUS_LABELS[a.status]}</Badge></TableCell>
+                  <TableCell>
+                    <Badge className={`gap-1 ${AGENDAMENTO_STATUS_COLORS[a.status]}`}>
+                      {a.status === 'no_show' && <UserX className="h-3 w-3" />}
+                      {AGENDAMENTO_STATUS_LABELS[a.status]}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      {(a.status === 'agendado' || a.status === 'confirmado') && (
+                        <Button size="icon" variant="ghost" onClick={() => marcarNaoCompareceu(a)} title="Marcar não compareceu" className="text-amber-600 hover:text-amber-700">
+                          <UserX className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Editar">
                         <Pencil className="h-4 w-4" />
                       </Button>
