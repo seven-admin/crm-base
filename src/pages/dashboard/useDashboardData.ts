@@ -26,10 +26,7 @@ export interface TopEmpreendimentoReal {
   id: string;
   nome: string;
   tipo: string;
-  leadsAtivos: number;
-  propostas: number;
-  vendasMes: number;
-  vgvNegociado: number;
+  leadsMes: number;
 }
 
 export function useDashboardKPIs() {
@@ -87,16 +84,22 @@ export function useDashboardKPIs() {
   });
 }
 
+// Data 'YYYY-MM-01' do mês de referência, para os RPCs escoparem a janela do mês.
+function refParam(ref: Date) {
+  return `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
 export interface ArqoOperacao {
   producao: { prospeccao: number; agendamento: number; atendimento: number };
   carteira: { proposta_qtd: number; assinado_qtd: number; vgv: number };
 }
 
-export function useArqoOperacao() {
+export function useArqoOperacao(ref: Date) {
+  const p_ref = refParam(ref);
   return useQuery({
-    queryKey: ['dashboard-home', 'arqo-operacao'],
+    queryKey: ['dashboard-home', 'arqo-operacao', p_ref],
     queryFn: async (): Promise<ArqoOperacao> => {
-      const { data, error } = await supabase.rpc('arqo_dashboard_operacao' as any);
+      const { data, error } = await supabase.rpc('arqo_dashboard_operacao' as any, { p_ref });
       if (error) throw error;
       return data as ArqoOperacao;
     },
@@ -111,11 +114,12 @@ export interface TopConsultorArqo {
   vgv: number;
 }
 
-export function useTopConsultoresArqo(limit = 7) {
+export function useTopConsultoresArqo(ref: Date, limit = 7) {
+  const p_ref = refParam(ref);
   return useQuery({
-    queryKey: ['dashboard-home', 'top-consultores', limit],
+    queryKey: ['dashboard-home', 'top-consultores', p_ref, limit],
     queryFn: async (): Promise<TopConsultorArqo[]> => {
-      const { data, error } = await supabase.rpc('arqo_top_consultores' as any, { p_limit: limit });
+      const { data, error } = await supabase.rpc('arqo_top_consultores' as any, { p_limit: limit, p_ref });
       if (error) throw error;
       return (data ?? []).map((r: any) => ({ ...r, vgv: Number(r.vgv ?? 0) })) as TopConsultorArqo[];
     },
@@ -144,56 +148,25 @@ export function useFunilArqoReal() {
   });
 }
 
-export function useTopEmpreendimentosReal() {
+export function useTopEmpreendimentosReal(ref: Date) {
+  const p_ref = refParam(ref);
   return useQuery({
-    queryKey: ['dashboard-home', 'top-empreendimentos'],
+    queryKey: ['dashboard-home', 'top-empreendimentos', p_ref],
     queryFn: async (): Promise<TopEmpreendimentoReal[]> => {
-      const now = new Date();
-      const mesInicio = startOfMonth(now).toISOString().slice(0, 10);
-      const mesFim = endOfMonth(now).toISOString().slice(0, 10);
-
-      const [empsRes, unidadesRes, vendasRes, leadsRes] = await Promise.all([
+      const [empsRes, leadsRes] = await Promise.all([
         supabase.from('seven_empreendimentos').select('id, nome, tipo').eq('is_active', true),
-        supabase.from('seven_unidades').select('empreendimento_id, valor, status').in('status', VGV_STATUS).eq('is_active', true),
-        supabase.from('seven_unidades').select('empreendimento_id').eq('status', 'vendida').gte('data_venda', mesInicio).lte('data_venda', mesFim),
-        supabase.from('arqo_leads').select('empreendimento_id').eq('is_active', true).is('fechado_em', null),
+        supabase.rpc('arqo_leads_empreendimento_mes' as any, { p_ref }),
       ]);
 
-      const emps = empsRes.data ?? [];
-      const agg = new Map<string, { vgv: number; propostas: number; vendas: number; leads: number }>();
-      emps.forEach((e: any) => agg.set(e.id, { vgv: 0, propostas: 0, vendas: 0, leads: 0 }));
+      const leadCount = new Map<string, number>();
+      for (const r of (leadsRes.data ?? []) as any[]) leadCount.set(r.empreendimento_id, r.qtd);
 
-      (unidadesRes.data ?? []).forEach((u: any) => {
-        const a = agg.get(u.empreendimento_id);
-        if (!a) return;
-        a.vgv += Number(u.valor ?? 0);
-        if (u.status === 'negociacao' || u.status === 'contrato') a.propostas += 1;
-      });
-      (vendasRes.data ?? []).forEach((u: any) => {
-        const a = agg.get(u.empreendimento_id);
-        if (a) a.vendas += 1;
-      });
-      (leadsRes.data ?? []).forEach((l: any) => {
-        if (!l.empreendimento_id) return;
-        const a = agg.get(l.empreendimento_id);
-        if (a) a.leads += 1;
-      });
-
-      return emps
-        .map((e: any) => {
-          const a = agg.get(e.id)!;
-          return {
-            id: e.id,
-            nome: e.nome,
-            tipo: e.tipo ?? '—',
-            leadsAtivos: a.leads,
-            propostas: a.propostas,
-            vendasMes: a.vendas,
-            vgvNegociado: a.vgv,
-          };
-        })
-        .sort((a, b) => b.vgvNegociado - a.vgvNegociado)
-        .slice(0, 5);
+      return (empsRes.data ?? []).map((e: any) => ({
+        id: e.id,
+        nome: e.nome,
+        tipo: e.tipo ?? '—',
+        leadsMes: leadCount.get(e.id) ?? 0,
+      }));
     },
   });
 }

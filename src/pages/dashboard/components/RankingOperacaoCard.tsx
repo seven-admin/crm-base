@@ -13,8 +13,8 @@ function Pos({ n }: { n: number }) {
   );
 }
 
-function TopArqo() {
-  const { data = [], isLoading } = useTopConsultoresArqo(7);
+function TopArqo({ month }: { month: Date }) {
+  const { data = [], isLoading } = useTopConsultoresArqo(month, 7);
   return (
     <div className="flex h-full flex-col rounded-[1.75rem] border border-black/[.06] bg-[#fffdfa] p-6 md:p-7">
       <p className="text-[10px] font-bold uppercase tracking-[0.19em] text-[#f47418]">Top 07 · Arqo</p>
@@ -52,8 +52,8 @@ function TopArqo() {
   );
 }
 
-function TopNexa() {
-  const { data, isLoading } = useNexaDashboard();
+function TopNexa({ month }: { month: Date }) {
+  const { data, isLoading } = useNexaDashboard(month);
   const parceiros = data?.parceiros ?? [];
   return (
     <div className="flex h-full flex-col rounded-[1.75rem] border border-black/[.06] bg-[#201a17] p-6 text-white md:p-7">
@@ -85,11 +85,11 @@ function TopNexa() {
   );
 }
 
-export function RankingOperacaoCard() {
+export function RankingOperacaoCard({ month }: { month: Date }) {
   return (
     <section className="grid gap-5 lg:grid-cols-2" aria-label="Ranking de operação">
-      <TopArqo />
-      <TopNexa />
+      <TopArqo month={month} />
+      <TopNexa month={month} />
     </section>
   );
 }

@@ -31,9 +31,9 @@ function VgvTag({ valor }: { valor: number }) {
   );
 }
 
-export function OperacaoCard() {
-  const { data: arqo, isLoading: la } = useArqoOperacao();
-  const { data: nexa, isLoading: ln } = useNexaDashboard();
+export function OperacaoCard({ month }: { month: Date }) {
+  const { data: arqo, isLoading: la } = useArqoOperacao(month);
+  const { data: nexa, isLoading: ln } = useNexaDashboard(month);
 
   if (la || ln || !arqo || !nexa) return <Skeleton className="h-72 rounded-[2rem]" />;
 

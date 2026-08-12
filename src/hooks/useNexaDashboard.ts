@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 type PropostaRaw = {
   proposal_code: string;
   status: string;
+  created_at: string;
   external_unit_id: string | null;
   project_name: string | null;
   broker_name: string | null;
@@ -34,7 +35,8 @@ export interface NexaDashboard {
   producao: { propostas: number; analiseCredito: number };
   carteira: NexaCarteira;
   parceiros: NexaParceiro[];
-  porEmpreendimento: Map<string, number>; // empreendimento_id -> nº de propostas ativas
+  porEmpreendimento: Map<string, number>; // empreendimento_id -> nº de propostas no mês
+  vgvPorEmpreendimento: Map<string, number>; // empreendimento_id -> VGV das propostas no mês
 }
 
 const ATIVAS = new Set(['submitted', 'reserved', 'sold']);
@@ -43,14 +45,21 @@ const ATIVAS = new Set(['submitted', 'reserved', 'sold']);
 const isAnaliseCredito = (modality: string | null) =>
   !!modality && modality.trim().toLowerCase() !== 'fluxo direto';
 
-export function useNexaDashboard() {
+export function useNexaDashboard(ref: Date) {
+  const lo = new Date(ref.getFullYear(), ref.getMonth(), 1).getTime();
+  const hi = new Date(ref.getFullYear(), ref.getMonth() + 1, 1).getTime();
+  const refKey = `${ref.getFullYear()}-${ref.getMonth() + 1}`;
   return useQuery({
-    queryKey: ['dashboard-home', 'nexa-operacao'],
+    queryKey: ['dashboard-home', 'nexa-operacao', refKey],
     staleTime: 60_000,
     queryFn: async (): Promise<NexaDashboard> => {
       const { data, error } = await supabase.functions.invoke('propostas', { body: { list: true } });
       if (error) throw error;
-      const propostas = ((data?.items ?? []) as PropostaRaw[]).filter((p) => ATIVAS.has(p.status));
+      const propostas = ((data?.items ?? []) as PropostaRaw[]).filter((p) => {
+        if (!ATIVAS.has(p.status)) return false;
+        const t = new Date(p.created_at).getTime();
+        return t >= lo && t < hi;
+      });
 
       // valor + empreendimento das unidades ligadas às propostas
       const unitIds = [...new Set(propostas.map((p) => p.external_unit_id).filter(Boolean))] as string[];
@@ -71,6 +80,7 @@ export function useNexaDashboard() {
       const producao = { propostas: propostas.length, analiseCredito: 0 };
       const parceiroMap = new Map<string, NexaParceiro>();
       const porEmpreendimento = new Map<string, number>();
+      const vgvPorEmpreendimento = new Map<string, number>();
 
       for (const p of propostas) {
         const valor = p.external_unit_id ? (unitValor.get(p.external_unit_id) ?? 0) : 0;
@@ -81,7 +91,10 @@ export function useNexaDashboard() {
         carteira.vgv += valor;
 
         const empId = p.external_unit_id ? unitEmp.get(p.external_unit_id) : undefined;
-        if (empId) porEmpreendimento.set(empId, (porEmpreendimento.get(empId) ?? 0) + 1);
+        if (empId) {
+          porEmpreendimento.set(empId, (porEmpreendimento.get(empId) ?? 0) + 1);
+          vgvPorEmpreendimento.set(empId, (vgvPorEmpreendimento.get(empId) ?? 0) + valor);
+        }
 
         const nome = (p.broker_name ?? '').trim();
         if (nome) {
@@ -98,7 +111,7 @@ export function useNexaDashboard() {
         .sort((a, b) => b.vgv - a.vgv || b.propostas - a.propostas)
         .slice(0, 10);
 
-      return { producao, carteira, parceiros, porEmpreendimento };
+      return { producao, carteira, parceiros, porEmpreendimento, vgvPorEmpreendimento };
     },
   });
 }

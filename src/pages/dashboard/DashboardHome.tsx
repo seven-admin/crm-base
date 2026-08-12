@@ -1,9 +1,11 @@
-import { CalendarDays, CircleDollarSign } from 'lucide-react';
+import { useState } from 'react';
+import { CircleDollarSign } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { FunilArqoCard } from './components/FunilArqoCard';
 import { TopEmpreendimentosTable } from './components/TopEmpreendimentosTable';
 import { OperacaoCard } from './components/OperacaoCard';
 import { RankingOperacaoCard } from './components/RankingOperacaoCard';
+import { MonthPicker } from '@/components/shared/MonthPicker';
 import { useAuth } from '@/contexts/AuthContext';
 
 function saudacao(): string {
@@ -14,7 +16,7 @@ function saudacao(): string {
 }
 
 export function DashboardHome() {
-  const periodo = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const [month, setMonth] = useState(new Date());
   const { profile } = useAuth();
   const primeiroNome = profile?.full_name?.split(' ')[0];
 
@@ -30,17 +32,15 @@ export function DashboardHome() {
               {primeiroNome ? `${saudacao()}, ${primeiroNome}.` : 'Visão geral da operação.'}
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/55 px-3 py-2 text-xs font-medium capitalize text-black/55 backdrop-blur-md">
-            <CalendarDays className="h-3.5 w-3.5" /> {periodo}
-          </span>
+          <MonthPicker value={month} onChange={setMonth} />
         </div>
 
-        <OperacaoCard />
+        <OperacaoCard month={month} />
 
-        <RankingOperacaoCard />
+        <RankingOperacaoCard month={month} />
 
         <section aria-label="Portfólio de empreendimentos">
-          <TopEmpreendimentosTable />
+          <TopEmpreendimentosTable month={month} />
         </section>
 
         <section aria-label="Funil comercial">

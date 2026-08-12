@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { formatarMoedaCompacta } from '@/lib/formatters';
@@ -7,10 +8,25 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export function TopEmpreendimentosTable() {
-  const { data: rows = [], isLoading } = useTopEmpreendimentosReal();
-  const { data: nexa } = useNexaDashboard();
-  const nexaPorEmp = nexa?.porEmpreendimento;
+export function TopEmpreendimentosTable({ month }: { month: Date }) {
+  const { data: emps = [], isLoading } = useTopEmpreendimentosReal(month);
+  const { data: nexa } = useNexaDashboard(month);
+
+  // Junta ARQO (leads do mês) + NEXA (propostas e VGV do mês) por empreendimento
+  // e mostra os 5 com maior VGV no mês.
+  const rows = useMemo(() => {
+    const nexaCount = nexa?.porEmpreendimento;
+    const nexaVgv = nexa?.vgvPorEmpreendimento;
+    return emps
+      .map((e) => ({
+        ...e,
+        nexa: nexaCount?.get(e.id) ?? 0,
+        vgv: nexaVgv?.get(e.id) ?? 0,
+      }))
+      .filter((e) => e.leadsMes > 0 || e.nexa > 0 || e.vgv > 0)
+      .sort((a, b) => b.vgv - a.vgv || b.nexa - a.nexa)
+      .slice(0, 5);
+  }, [emps, nexa]);
 
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-black/[.06] bg-[#201a17] text-white">
@@ -45,10 +61,10 @@ export function TopEmpreendimentosTable() {
               <TableRow key={emp.id} className="border-white/10 hover:bg-white/[.04]">
                 <TableCell className="pl-6 font-medium text-white md:pl-7">{emp.nome}</TableCell>
                 <TableCell><Badge className="border-0 bg-white/[.08] text-[10px] text-white/60">{emp.tipo}</Badge></TableCell>
-                <TableCell className="text-right text-white/55 tabular-nums">{emp.leadsAtivos}</TableCell>
-                <TableCell className="text-right text-white/55 tabular-nums">{nexaPorEmp?.get(emp.id) ?? 0}</TableCell>
+                <TableCell className="text-right text-white/55 tabular-nums">{emp.leadsMes}</TableCell>
+                <TableCell className="text-right text-white/55 tabular-nums">{emp.nexa}</TableCell>
                 <TableCell className="pr-6 text-right font-semibold text-white tabular-nums md:pr-7">
-                  {formatarMoedaCompacta(emp.vgvNegociado)}
+                  {formatarMoedaCompacta(emp.vgv)}
                 </TableCell>
               </TableRow>
             ))}
