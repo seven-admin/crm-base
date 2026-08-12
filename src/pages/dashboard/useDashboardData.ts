@@ -87,6 +87,41 @@ export function useDashboardKPIs() {
   });
 }
 
+export interface ArqoOperacao {
+  producao: { prospeccao: number; agendamento: number; atendimento: number };
+  carteira: { proposta_qtd: number; assinado_qtd: number; vgv: number };
+}
+
+export function useArqoOperacao() {
+  return useQuery({
+    queryKey: ['dashboard-home', 'arqo-operacao'],
+    queryFn: async (): Promise<ArqoOperacao> => {
+      const { data, error } = await supabase.rpc('arqo_dashboard_operacao' as any);
+      if (error) throw error;
+      return data as ArqoOperacao;
+    },
+  });
+}
+
+export interface TopConsultorArqo {
+  consultor_id: string;
+  nome: string;
+  visitas: number;
+  qtd_leads: number;
+  vgv: number;
+}
+
+export function useTopConsultoresArqo(limit = 7) {
+  return useQuery({
+    queryKey: ['dashboard-home', 'top-consultores', limit],
+    queryFn: async (): Promise<TopConsultorArqo[]> => {
+      const { data, error } = await supabase.rpc('arqo_top_consultores' as any, { p_limit: limit });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ ...r, vgv: Number(r.vgv ?? 0) })) as TopConsultorArqo[];
+    },
+  });
+}
+
 export function useFunilArqoReal() {
   return useQuery({
     queryKey: ['dashboard-home', 'funil'],

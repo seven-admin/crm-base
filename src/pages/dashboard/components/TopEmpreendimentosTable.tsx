@@ -2,12 +2,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { formatarMoedaCompacta } from '@/lib/formatters';
 import { useTopEmpreendimentosReal } from '../useDashboardData';
+import { useNexaDashboard } from '@/hooks/useNexaDashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function TopEmpreendimentosTable() {
   const { data: rows = [], isLoading } = useTopEmpreendimentosReal();
+  const { data: nexa } = useNexaDashboard();
+  const nexaPorEmp = nexa?.porEmpreendimento;
 
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-black/[.06] bg-[#201a17] text-white">
@@ -31,10 +34,9 @@ export function TopEmpreendimentosTable() {
           <TableHeader>
             <TableRow className="border-white/10 hover:bg-transparent">
               <TableHead className="pl-6 text-[10px] uppercase tracking-[.12em] text-white/35 md:pl-7">Empreendimento</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-[.12em] text-white/35">Tipo</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-[.12em] text-white/35">Leads</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-[.12em] text-white/35">Prop.</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-[.12em] text-white/35">Vendas</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-[.12em] text-white/35">Tipologia</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-[.12em] text-[#ff8a39]/70">Arqo</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-[.12em] text-[#ff8a39]/70">Nexa</TableHead>
               <TableHead className="pr-6 text-right text-[10px] uppercase tracking-[.12em] text-white/35 md:pr-7">VGV</TableHead>
             </TableRow>
           </TableHeader>
@@ -44,8 +46,7 @@ export function TopEmpreendimentosTable() {
                 <TableCell className="pl-6 font-medium text-white md:pl-7">{emp.nome}</TableCell>
                 <TableCell><Badge className="border-0 bg-white/[.08] text-[10px] text-white/60">{emp.tipo}</Badge></TableCell>
                 <TableCell className="text-right text-white/55 tabular-nums">{emp.leadsAtivos}</TableCell>
-                <TableCell className="text-right text-white/55 tabular-nums">{emp.propostas}</TableCell>
-                <TableCell className="text-right text-white/55 tabular-nums">{emp.vendasMes}</TableCell>
+                <TableCell className="text-right text-white/55 tabular-nums">{nexaPorEmp?.get(emp.id) ?? 0}</TableCell>
                 <TableCell className="pr-6 text-right font-semibold text-white tabular-nums md:pr-7">
                   {formatarMoedaCompacta(emp.vgvNegociado)}
                 </TableCell>

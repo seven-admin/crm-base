@@ -46,6 +46,9 @@ Deno.serve(async (req) => {
         "project_name:data->broker->>projectName",
         "external_unit_id:data->unit->>externalUnitId",
         "modality:data->payment->>modality",
+        "broker_name:data->broker->>brokerName",
+        "broker_type:data->broker->>brokerType",
+        "real_estate_team:data->broker->>realEstateTeam",
       ].join(","));
       q.searchParams.set("order", "created_at.desc");
       q.searchParams.set("limit", "500");
