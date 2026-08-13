@@ -44,6 +44,7 @@ const Incorporadoras = lazy(() => import("./pages/Incorporadoras"));
 const Imobiliarias = lazy(() => import("./pages/Imobiliarias"));
 const Corretores = lazy(() => import("./pages/Corretores"));
 const SevenCalendarios = lazy(() => import("./pages/SevenCalendarios"));
+const Performance = lazy(() => import("./pages/Performance"));
 
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -99,6 +100,7 @@ const App = () => (
                 <Route path="/mapa-unidades" element={<ProtectedRoute moduleName="unidades"><MapaUnidadesPage /></ProtectedRoute>} />
                 <Route path="/clientes" element={<ProtectedRoute moduleName="clientes"><Clientes /></ProtectedRoute>} />
                 <Route path="/calendarios" element={<ProtectedRoute superAdminOnly><SevenCalendarios /></ProtectedRoute>} />
+                <Route path="/performance" element={<ProtectedRoute superAdminOnly><Performance /></ProtectedRoute>} />
                 <Route path="/usuarios" element={<ProtectedRoute moduleName="usuarios" adminOnly><Usuarios /></ProtectedRoute>} />
                <Route path="/incorporadoras" element={<ProtectedRoute moduleName="incorporadoras"><Incorporadoras /></ProtectedRoute>} />
                <Route path="/imobiliarias" element={<ProtectedRoute moduleName="imobiliarias"><Imobiliarias /></ProtectedRoute>} />

@@ -4,7 +4,7 @@ import {
   Building2, Users, Map, Settings, LogOut, Menu, FileText,
   UserCog, Shield, ChevronDown, Target, CalendarDays, CalendarRange,
   Home, Handshake, User as UserIcon, ExternalLink, PhoneCall,
-  Kanban, LayoutDashboard, Landmark, KeyRound, LayoutTemplate, Blocks, Variable,
+  Kanban, LayoutDashboard, Landmark, KeyRound, LayoutTemplate, Blocks, Variable, ChartNoAxesCombined,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -78,6 +78,12 @@ const topMenus: TopMenu[] = [
         label: 'Calendários',
         items: [
           { icon: CalendarRange, label: 'Calendário geral', path: '/calendarios', superAdminOnly: true, description: 'Agenda Arqo + Nexa por usuário' },
+        ],
+      },
+      {
+        label: 'Gestão',
+        items: [
+          { icon: ChartNoAxesCombined, label: 'Performance', path: '/performance', superAdminOnly: true, description: 'Indicadores por empreendimento' },
         ],
       },
     ],

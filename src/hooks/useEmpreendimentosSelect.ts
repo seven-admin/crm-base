@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface EmpreendimentoSelect {
   id: string;
   nome: string;
+  incorporadora_id: string | null;
 }
 
 type Options = {
@@ -24,7 +25,7 @@ export function useEmpreendimentosSelect(options: Options = {}) {
     queryFn: async (): Promise<EmpreendimentoSelect[]> => {
       const { data, error } = await supabase
         .from('seven_empreendimentos')
-        .select('id, nome')
+        .select('id, nome, incorporadora_id')
         .eq('is_active', true)
         .order('nome', { ascending: true });
 
