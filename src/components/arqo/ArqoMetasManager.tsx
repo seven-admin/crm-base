@@ -37,6 +37,12 @@ type MetaForm = {
   semanalConversas: number;
   semanalAgendamentos: number;
   semanalVisitas: number;
+  diariaProspeccao: number;
+  semanalProspeccao: number;
+  diariaAcoes: number;
+  semanalAcoes: number;
+  diariaVgv: number;
+  semanalVgv: number;
   isActive: boolean;
   userIds: string[];
 };
@@ -56,6 +62,12 @@ function emptyForm(): MetaForm {
     semanalConversas: 0,
     semanalAgendamentos: 0,
     semanalVisitas: 0,
+    diariaProspeccao: 0,
+    semanalProspeccao: 0,
+    diariaAcoes: 0,
+    semanalAcoes: 0,
+    diariaVgv: 0,
+    semanalVgv: 0,
     isActive: true,
     userIds: [],
   };
@@ -66,6 +78,9 @@ const metricFields: Array<{ daily: keyof MetaForm; weekly: keyof MetaForm; label
   { daily: 'diariaConversas', weekly: 'semanalConversas', label: 'Meta 02 · Conversas efetivadas' },
   { daily: 'diariaAgendamentos', weekly: 'semanalAgendamentos', label: 'Meta 03 · Agendamentos' },
   { daily: 'diariaVisitas', weekly: 'semanalVisitas', label: 'Meta 04 · Visitas realizadas' },
+  { daily: 'diariaProspeccao', weekly: 'semanalProspeccao', label: 'Meta 05 · Prospecção' },
+  { daily: 'diariaAcoes', weekly: 'semanalAcoes', label: 'Meta 06 · Ações' },
+  { daily: 'diariaVgv', weekly: 'semanalVgv', label: 'Meta 07 · VGV (R$)' },
 ];
 
 export function ArqoMetasManager({ metas, profiles }: Props) {
@@ -90,6 +105,12 @@ export function ArqoMetasManager({ metas, profiles }: Props) {
         p_meta_semanal_conversas: payload.semanalConversas,
         p_meta_semanal_agendamentos: payload.semanalAgendamentos,
         p_meta_semanal_visitas_realizadas: payload.semanalVisitas,
+        p_meta_diaria_prospeccao: payload.diariaProspeccao,
+        p_meta_semanal_prospeccao: payload.semanalProspeccao,
+        p_meta_diaria_acoes: payload.diariaAcoes,
+        p_meta_semanal_acoes: payload.semanalAcoes,
+        p_meta_diaria_vgv: payload.diariaVgv,
+        p_meta_semanal_vgv: payload.semanalVgv,
         p_is_active: payload.isActive,
         p_user_ids: payload.userIds,
       });
@@ -133,6 +154,12 @@ export function ArqoMetasManager({ metas, profiles }: Props) {
       semanalConversas: meta.meta_semanal_conversas,
       semanalAgendamentos: meta.meta_semanal_agendamentos,
       semanalVisitas: meta.meta_semanal_visitas_realizadas,
+      diariaProspeccao: meta.meta_diaria_prospeccao ?? 0,
+      semanalProspeccao: meta.meta_semanal_prospeccao ?? 0,
+      diariaAcoes: meta.meta_diaria_acoes ?? 0,
+      semanalAcoes: meta.meta_semanal_acoes ?? 0,
+      diariaVgv: meta.meta_diaria_vgv ?? 0,
+      semanalVgv: meta.meta_semanal_vgv ?? 0,
       isActive: meta.is_active,
       userIds: meta.usuarios?.map((item) => item.user_id) ?? (meta.user_id ? [meta.user_id] : []),
     });

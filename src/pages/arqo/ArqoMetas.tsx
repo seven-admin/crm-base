@@ -4,6 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArqoMetasDashboard } from '@/components/arqo/ArqoMetasDashboard';
+import { ArqoHomeConsultor } from '@/components/arqo/ArqoHomeConsultor';
 import { ArqoMetasManager } from '@/components/arqo/ArqoMetasManager';
 import { useArqoMetasAtendimento } from '@/hooks/useArqo';
 import { useProfilesByRoles } from '@/hooks/useFuncionariosSeven';
@@ -34,7 +35,7 @@ export default function ArqoMetas() {
   if (!canConfig) {
     return (
       <MainLayout title="Metas Arqo" subtitle="Seu desempenho da semana" actions={<MetasActions />}>
-        <ArqoMetasDashboard />
+        <ArqoHomeConsultor />
       </MainLayout>
     );
   }

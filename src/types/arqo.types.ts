@@ -126,6 +126,12 @@ export interface ArqoMetaAtendimento {
   meta_semanal_conversas: number;
   meta_semanal_agendamentos: number;
   meta_semanal_visitas_realizadas: number;
+  meta_diaria_prospeccao?: number;
+  meta_semanal_prospeccao?: number;
+  meta_diaria_acoes?: number;
+  meta_semanal_acoes?: number;
+  meta_diaria_vgv?: number;
+  meta_semanal_vgv?: number;
   is_active: boolean;
   usuarios?: Array<{
     user_id: string;
