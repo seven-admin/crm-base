@@ -93,7 +93,7 @@ export function ProtectedRoute({
       return <Navigate to="/sem-acesso" replace />;
     }
     if (empresa === 'arqo' && !path.startsWith('/arqo')) {
-      return <Navigate to="/arqo/roleta" replace />;
+      return <Navigate to="/arqo/metas" replace />;
     }
     if (empresa === 'nexa' && !path.startsWith('/nexa')) {
       return <Navigate to="/nexa/metas" replace />;

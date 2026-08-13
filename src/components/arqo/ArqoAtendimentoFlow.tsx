@@ -110,10 +110,12 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
     return map;
   }, [options]);
 
-  const selectedStatus = options.find((option) => option.codigo === status);
   const selectedNextAction = options.find((option) => option.codigo === nextAction && option.grupo === 'proxima_acao');
   const answered = status === 'C07';
-  const terminalStatus = !!status && !answered && !!selectedStatus?.encerra_atendimento;
+  // Regra do backend (arqo_concluir_atendimento): só C07 é "atendeu"; qualquer outro status
+  // (C01–C06, C08 WhatsApp, etc.) é sem contato e conclui como "sem resposta". Não depende
+  // da flag encerra_atendimento — senão status adicionados via config (ex: C08) travam o fluxo.
+  const terminalStatus = !!status && !answered;
   const requiresActionDate = !!selectedNextAction?.exige_data;
   const validFutureActionDate = !!actionDate && new Date(actionDate).getTime() > Date.now();
   const temperatureOptions = temperatures.filter((item) => ['Quente', 'Morno', 'Frio', 'Morto'].includes(item.nome));
@@ -137,7 +139,6 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
   };
 
   const changeStatus = (value: string) => {
-    const statusOption = options.find((option) => option.codigo === value);
     setStatus(value);
     setQualification('');
     setInterest('');
@@ -145,7 +146,8 @@ export function ArqoAtendimentoFlow({ lead, etapas }: ArqoAtendimentoFlowProps) 
     setNextAction('');
     setActionDate('');
     setTemperatureId('');
-    setCurrentStep(value === 'C07' ? 'qualificacao' : statusOption?.encerra_atendimento ? 'conclusao' : 'status_ligacao');
+    // C07 abre o roteiro completo; qualquer outro status vai direto para a conclusão (sem resposta).
+    setCurrentStep(value === 'C07' ? 'qualificacao' : 'conclusao');
   };
 
   const changeNextAction = (value: string) => {

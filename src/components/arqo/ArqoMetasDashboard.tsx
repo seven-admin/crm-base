@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useArqoCarteira } from '@/hooks/useArqoCarteira';
+import { ArqoCarteiraCard } from '@/components/arqo/ArqoCarteiraCard';
 import {
   useArqoMetasDashboard,
   aggregateArqoCards,
@@ -135,6 +137,8 @@ export function ArqoMetasDashboard() {
   const { data, isLoading } = useArqoMetasDashboard();
   const { isSuperAdmin } = usePermissions();
   const [selUser, setSelUser] = useState('todos');
+  // Carteira segue o seletor de usuário: "todos" (sem filtro) ou o consultor selecionado.
+  const { data: carteira } = useArqoCarteira(selUser === 'todos' ? undefined : selUser);
 
   const cards = data?.cards ?? [];
   const userOptions = useMemo(
@@ -194,6 +198,15 @@ export function ArqoMetasDashboard() {
       )}
 
       {cardsContent}
+
+      {canFilter && carteira && (
+        <ArqoCarteiraCard
+          buckets={carteira.buckets}
+          subtitle={selUser === 'todos'
+            ? 'Funil de oportunidades em aberto · todos os usuários'
+            : 'Funil de oportunidades em aberto do usuário'}
+        />
+      )}
     </div>
   );
 }

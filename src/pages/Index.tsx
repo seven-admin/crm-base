@@ -21,7 +21,7 @@ const Index = () => {
   }
 
   if (empresa === 'arqo') {
-    return <Navigate to="/arqo/roleta" replace />;
+    return <Navigate to="/arqo/metas" replace />;
   }
 
   if (role === 'corretor' || role === 'gestor_imobiliaria') {

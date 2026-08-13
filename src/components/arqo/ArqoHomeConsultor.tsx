@@ -7,10 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatarMoedaCompacta } from '@/lib/formatters';
 import { useArqoConsultorHome } from '@/hooks/useArqoConsultorHome';
-import { useSevenCarteira } from '@/hooks/useSevenCarteira';
+import { useArqoCarteira } from '@/hooks/useArqoCarteira';
 import { useArqoMetasDashboard, type ArqoPerfLevel } from '@/hooks/useArqoMetasDashboard';
 import { useMeusArqoGrupos, useArqoFilaGrupos } from '@/hooks/useArqo';
 import { ArqoNovoLeadDialog } from '@/components/arqo/ArqoNovoLeadDialog';
+import { ArqoCarteiraCard } from '@/components/arqo/ArqoCarteiraCard';
 
 const PERF: Record<ArqoPerfLevel, { emoji: string; label: string; cls: string }> = {
   bom: { emoji: '🤑', label: 'Bom', cls: 'text-emerald-400' },
@@ -49,16 +50,6 @@ function PriorityTile({ label, value, accent }: { label: string; value: number; 
   );
 }
 
-function CarteiraCol({ titulo, qtd, vgv, danger }: { titulo: string; qtd: number; vgv: number; danger?: boolean }) {
-  return (
-    <div className="space-y-1">
-      <p className={`text-sm font-medium ${danger ? 'text-red-600' : 'text-[#181613]'}`}>{titulo}</p>
-      <p className="text-xs text-muted-foreground">QTD <span className="font-semibold text-[#181613] tabular-nums">{qtd}</span></p>
-      <p className="text-xs text-muted-foreground">VGV <span className="font-semibold text-[#181613] tabular-nums">{formatarMoedaCompacta(vgv)}</span></p>
-    </div>
-  );
-}
-
 function MetaSemanalRow({ label, meta, feito }: { label: string; meta: number; feito: number }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-black/[.06] px-3 py-2">
@@ -81,7 +72,7 @@ export function ArqoHomeConsultor() {
   const [novoLeadOpen, setNovoLeadOpen] = useState(false);
 
   const { data: home, isLoading: lh } = useArqoConsultorHome();
-  const { data: carteira, isLoading: lc } = useSevenCarteira();
+  const { data: carteira, isLoading: lc } = useArqoCarteira(user?.id);
   const { data: metasDash } = useArqoMetasDashboard();
   const { data: meusGrupos = [] } = useMeusArqoGrupos(user?.id);
   const { data: fila = {} } = useArqoFilaGrupos(user?.id);
@@ -166,16 +157,7 @@ export function ArqoHomeConsultor() {
           </div>
         </Card>
 
-        <Card className="p-5 shadow-none">
-          <div className="rounded-xl bg-[#bcd7f2] px-4 py-2 text-sm font-semibold text-[#173a5e]">Carteira de Negócios</div>
-          <p className="mt-2 text-[11px] text-muted-foreground">Pipeline imobiliário da Seven (global)</p>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <CarteiraCol titulo="Reservas" qtd={carteira.reservas.qtd} vgv={carteira.reservas.vgv} />
-            <CarteiraCol titulo="Em negociação" qtd={carteira.negociacao.qtd} vgv={carteira.negociacao.vgv} />
-            <CarteiraCol titulo="Em contrato" qtd={carteira.contrato.qtd} vgv={carteira.contrato.vgv} />
-            <CarteiraCol titulo="Em Análise" qtd={carteira.analise.qtd} vgv={carteira.analise.vgv} danger />
-          </div>
-        </Card>
+        <ArqoCarteiraCard buckets={carteira.buckets} subtitle="Seu funil de oportunidades em aberto" />
       </div>
 
       {/* Prospectar (roleta) + Meta semanal novos clientes */}
