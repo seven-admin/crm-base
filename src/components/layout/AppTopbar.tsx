@@ -21,9 +21,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TopMegaMenu, type MegaMenuCategory } from './TopMegaMenu';
-import logoSeven from '@/assets/logo-sevengroup.png';
-import logoArqo from '@/assets/logo-arqo.png';
-import logoNexa from '@/assets/logo-nexa.png';
+import logoSeven from '@/assets/header-logo-seven.png';
+import logoArqo from '@/assets/header-logo-arqo.png';
+import logoNexa from '@/assets/header-logo-nexa.png';
 
 interface MenuItem {
   icon: LucideIcon;
@@ -221,7 +221,7 @@ export function AppTopbar() {
     <header className="sticky top-0 z-40 w-full border-b border-white/[.06] bg-[#171411]/95 text-white shadow-topbar backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-4 px-4 md:px-6 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center rounded-full bg-[#f7f3ed] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7417]/60" aria-label="Ir para a página inicial">
+        <Link to="/" className="flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff7417]/60" aria-label="Ir para a página inicial">
           <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
         </Link>
 
@@ -272,7 +272,7 @@ export function AppTopbar() {
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 bg-card">
-              <div className="flex h-16 items-center border-b border-border px-4 pr-16">
+              <div className="flex h-16 items-center border-b border-white/[.06] bg-[#171411] px-4 pr-16">
                 <img src={tenantLogo.src} alt={tenantLogo.alt} className={tenantLogo.className} />
               </div>
               <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
