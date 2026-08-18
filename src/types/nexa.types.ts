@@ -111,6 +111,7 @@ export interface NexaMeta {
   meta_semanal_atendimentos: number;
   meta_semanal_impacto: number;
   meta_semanal_engajamento: number;
+  meta_semanal_unidades_vendidas: number;
   meta_semanal_vgv: number;
   is_active: boolean;
   created_at: string;

@@ -63,6 +63,7 @@ export default function NexaCalendario() {
       <EventCalendar events={events} month={month} onMonthChange={setMonth} loading={isLoading} />
       <AtividadeDetalheDialog
         atividade={selected}
+        returnTo="/nexa/calendario"
         onOpenChange={(open) => { if (!open) setSelected(null); }}
       />
     </MainLayout>

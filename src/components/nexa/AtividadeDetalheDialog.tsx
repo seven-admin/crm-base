@@ -14,6 +14,7 @@ import {
 interface Props {
   atividade: NexaAtividadeWithRelations | null;
   onOpenChange: (open: boolean) => void;
+  returnTo?: string;
 }
 
 function Field({ label, value }: { label: string; value: unknown }) {
@@ -27,7 +28,7 @@ function Field({ label, value }: { label: string; value: unknown }) {
   );
 }
 
-export function AtividadeDetalheDialog({ atividade, onOpenChange }: Props) {
+export function AtividadeDetalheDialog({ atividade, onOpenChange, returnTo = '/nexa/agenda' }: Props) {
   const navigate = useNavigate();
   const a = atividade;
   const participantes = (a?.participantes ?? [])
@@ -77,7 +78,7 @@ export function AtividadeDetalheDialog({ atividade, onOpenChange }: Props) {
             )}
 
             <div className="flex justify-end border-t pt-4">
-              <Button onClick={() => navigate(`/nexa/visitas/${a.id}`)}>
+              <Button onClick={() => navigate(`/nexa/visitas/${a.id}`, { state: { from: returnTo } })}>
                 <ExternalLink className="mr-2 h-4 w-4" /> Abrir detalhe completo
               </Button>
             </div>

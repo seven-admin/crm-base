@@ -153,6 +153,7 @@ export default function SevenCalendarios() {
       />
       <AtividadeDetalheDialog
         atividade={selectedNexa}
+        returnTo="/calendarios"
         onOpenChange={(open) => { if (!open) setSelectedNexa(null); }}
       />
       <SevenAtividadeFormDialog open={novaOpen} onOpenChange={setNovaOpen} />

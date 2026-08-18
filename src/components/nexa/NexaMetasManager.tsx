@@ -24,6 +24,7 @@ type MetaForm = {
   semanalAtendimentos: number;
   semanalImpacto: number;
   semanalEngajamento: number;
+  semanalUnidadesVendidas: number;
   semanalVgv: number;
   isActive: boolean;
   userIds: string[];
@@ -33,7 +34,7 @@ function emptyForm(): MetaForm {
   return {
     nome: '', vigenciaInicio: today(), vigenciaFim: '',
     semanalVisitas: 0, semanalAtendimentos: 0, semanalImpacto: 0, semanalEngajamento: 0,
-    semanalVgv: 0, isActive: true, userIds: [],
+    semanalUnidadesVendidas: 0, semanalVgv: 0, isActive: true, userIds: [],
   };
 }
 
@@ -64,6 +65,7 @@ export function NexaMetasManager() {
       semanalAtendimentos: meta.meta_semanal_atendimentos,
       semanalImpacto: meta.meta_semanal_impacto,
       semanalEngajamento: meta.meta_semanal_engajamento,
+      semanalUnidadesVendidas: meta.meta_semanal_unidades_vendidas ?? 0,
       semanalVgv: meta.meta_semanal_vgv,
       isActive: meta.is_active,
       userIds: meta.usuarios?.map((u) => u.user_id) ?? [],
@@ -88,7 +90,7 @@ export function NexaMetasManager() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold">Metas semanais</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Meta de visitas e atendimentos por semana. Pode ser atribuída a vários usuários.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Metas comerciais por semana. Podem ser atribuídas a vários usuários.</p>
         </div>
         <Button size="sm" onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Nova meta</Button>
       </div>
@@ -119,7 +121,7 @@ export function NexaMetasManager() {
                       {users.join(', ') || 'Nenhum usuário'}
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Semana: {meta.meta_semanal_visitas} visitas · {meta.meta_semanal_engajamento} engajamento · {meta.meta_semanal_impacto} impacto · {meta.meta_semanal_atendimentos} atendimentos
+                      Semana: {meta.meta_semanal_visitas} visitas · {meta.meta_semanal_impacto} impacto · {meta.meta_semanal_engajamento} engajamento · {meta.meta_semanal_atendimentos} atendimentos · {meta.meta_semanal_unidades_vendidas ?? 0} vendas
                       {meta.meta_semanal_vgv > 0 && ` · VGV ${meta.meta_semanal_vgv.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}`}
                     </p>
                   </div>
@@ -161,10 +163,6 @@ export function NexaMetasManager() {
               <Input type="number" min={0} value={form.semanalVisitas} onChange={(e) => setForm({ ...form, semanalVisitas: Math.max(0, Number(e.target.value)) })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Atendimentos por semana</Label>
-              <Input type="number" min={0} value={form.semanalAtendimentos} onChange={(e) => setForm({ ...form, semanalAtendimentos: Math.max(0, Number(e.target.value)) })} />
-            </div>
-            <div className="space-y-1.5">
               <Label>Impacto — corretores/semana</Label>
               <Input type="number" min={0} value={form.semanalImpacto} onChange={(e) => setForm({ ...form, semanalImpacto: Math.max(0, Number(e.target.value)) })} />
             </div>
@@ -172,7 +170,15 @@ export function NexaMetasManager() {
               <Label>Engajamento — corretores/semana</Label>
               <Input type="number" min={0} value={form.semanalEngajamento} onChange={(e) => setForm({ ...form, semanalEngajamento: Math.max(0, Number(e.target.value)) })} />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
+              <Label>Atendimentos por semana</Label>
+              <Input type="number" min={0} value={form.semanalAtendimentos} onChange={(e) => setForm({ ...form, semanalAtendimentos: Math.max(0, Number(e.target.value)) })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Unidades vendidas por semana</Label>
+              <Input type="number" min={0} step={1} value={form.semanalUnidadesVendidas} onChange={(e) => setForm({ ...form, semanalUnidadesVendidas: Math.max(0, Math.floor(Number(e.target.value))) })} />
+            </div>
+            <div className="space-y-1.5">
               <Label>Meta de VGV por semana (R$)</Label>
               <Input type="number" min={0} step={1000} value={form.semanalVgv} onChange={(e) => setForm({ ...form, semanalVgv: Math.max(0, Number(e.target.value)) })} placeholder="Ex.: 500000" />
             </div>

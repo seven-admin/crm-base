@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { NexaVisita, NexaVisitaWithRelations, NexaEvento, NexaVisitaStatus, NexaWhatsappAtividade } from '@/types/nexa.types';
+import type { NexaAtividadeWithRelations, NexaVisita, NexaVisitaWithRelations, NexaEvento, NexaVisitaStatus, NexaWhatsappAtividade } from '@/types/nexa.types';
 
 const SELECT_VISITA = `
   *,
@@ -15,6 +15,7 @@ const SELECT_VISITA = `
 // Após a fusão, o detalhe lê da tabela única nexa_atividades (Atendimento = cliente).
 const SELECT_ATIVIDADE_DETALHE = `
   *,
+  participantes:nexa_atividade_participantes(corretor_id, corretor_nome, imobiliaria_nome),
   cliente:seven_clientes(id, nome, telefone, email),
   empreendimento:seven_empreendimentos(id, nome),
   imobiliaria:seven_imobiliarias(id, nome),
@@ -60,7 +61,7 @@ export function useNexaVisita(id?: string) {
     queryFn: async () => {
       const { data, error } = await (supabase.from('nexa_atividades' as any) as any).select(SELECT_ATIVIDADE_DETALHE).eq('id', id!).maybeSingle();
       if (error) throw error;
-      return data as unknown as NexaVisitaWithRelations | null;
+      return data as unknown as NexaAtividadeWithRelations | null;
     },
   });
 }

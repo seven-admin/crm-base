@@ -26,11 +26,11 @@ function brl(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 }
 
-function pct(done: number, goal: number) {
-  return goal > 0 ? Math.round((done / goal) * 100) : null;
+function pct(done: number | null, goal: number) {
+  return done != null && goal > 0 ? Math.round((done / goal) * 100) : null;
 }
 
-function MetricRow({ label, hint, done, goal }: { label: string; hint?: string; done: number; goal: number }) {
+function MetricRow({ label, hint, done, goal }: { label: string; hint?: string; done: number | null; goal: number }) {
   const p = pct(done, goal);
   const cls = p == null ? 'text-muted-foreground' : p >= 100 ? 'text-emerald-700' : p >= 70 ? 'text-amber-700' : 'text-red-600';
   return (
@@ -40,7 +40,7 @@ function MetricRow({ label, hint, done, goal }: { label: string; hint?: string; 
         {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
       </div>
       <div className="shrink-0 text-right tabular-nums">
-        <span className="text-base font-semibold">{done}</span>
+        <span className="text-base font-semibold">{done ?? PLACEHOLDER}</span>
         <span className="text-sm text-muted-foreground"> / {goal}</span>
         {p != null && <span className={`ml-2 text-xs font-semibold ${cls}`}>{p}%</span>}
       </div>
@@ -90,14 +90,11 @@ function ConsultorCard({ card }: { card: NexaConsultorCard }) {
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <div className="rounded-2xl border border-black/[.07] p-4">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-primary">Meta semanal</p>
-          <MetricRow label="Visitas" done={card.semana.visitas} goal={card.meta.visitas} />
+          <MetricRow label="Visita" done={card.semana.visitas} goal={card.meta.visitas} />
+          <MetricRow label="Impacto Global" hint="corretores distintos" done={card.semana.impacto} goal={card.meta.impacto} />
           <MetricRow label="Engajamento real" hint="corretores em 2+ atividades" done={card.semana.engajamento} goal={card.meta.engajamento} />
-          <MetricRow label="Impacto global" hint="corretores distintos" done={card.semana.impacto} goal={card.meta.impacto} />
           <MetricRow label="Atendimento" done={card.semana.atendimentos} goal={card.meta.atendimentos} />
-          <div className="flex items-center justify-between gap-3 py-2 text-muted-foreground">
-            <p className="text-sm font-medium">Venda</p>
-            <span className="text-sm">{PLACEHOLDER}</span>
-          </div>
+          <MetricRow label="Venda" hint="unidades vendidas" done={null} goal={card.metaUnidadesVendidas} />
         </div>
 
         <div className="space-y-4">
@@ -122,7 +119,7 @@ function ConsultorCard({ card }: { card: NexaConsultorCard }) {
             <div className="rounded-2xl border border-black/[.07] p-4">
               <p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Unidades vendidas</p>
               <p className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{PLACEHOLDER}</p>
-              <p className="text-xs text-muted-foreground">Meta semanal a definir</p>
+              <p className="text-xs text-muted-foreground">Meta semanal {card.metaUnidadesVendidas > 0 ? card.metaUnidadesVendidas : 'a definir'}</p>
             </div>
           </div>
         </div>
@@ -152,7 +149,7 @@ export function NexaMetasDashboard() {
   const { isSuperAdmin } = usePermissions();
   const [selUser, setSelUser] = useState('todos');
 
-  const cards = data?.cards ?? [];
+  const cards = useMemo(() => data?.cards ?? [], [data?.cards]);
   const userOptions = useMemo(
     () => cards.map((c) => ({ id: c.userId, nome: c.nome })).sort((a, b) => a.nome.localeCompare(b.nome)),
     [cards],

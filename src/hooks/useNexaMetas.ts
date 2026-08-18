@@ -237,6 +237,7 @@ export function useSaveNexaMeta() {
       semanalAtendimentos: number;
       semanalImpacto: number;
       semanalEngajamento: number;
+      semanalUnidadesVendidas: number;
       semanalVgv: number;
       isActive: boolean;
       userIds: string[];
@@ -250,6 +251,7 @@ export function useSaveNexaMeta() {
         p_meta_semanal_atendimentos: payload.semanalAtendimentos,
         p_meta_semanal_impacto: payload.semanalImpacto,
         p_meta_semanal_engajamento: payload.semanalEngajamento,
+        p_meta_semanal_unidades_vendidas: payload.semanalUnidadesVendidas,
         p_meta_semanal_vgv: payload.semanalVgv,
         p_is_active: payload.isActive,
         p_user_ids: payload.userIds,
@@ -297,6 +299,7 @@ export interface NexaConsultorCard {
   userId: string;
   nome: string;
   meta: NexaMetricSet;
+  metaUnidadesVendidas: number; // meta semanal; realizado ainda sem fonte
   metaVgv: number;       // meta semanal de VGV (R$); realizado ainda sem fonte
   semana: NexaMetricSet;
   semanaAnterior: NexaMetricSet;
@@ -307,7 +310,7 @@ export interface NexaConsultorCard {
 
 export interface NexaDashboardResult {
   cards: NexaConsultorCard[];
-  totals: { meta: NexaMetricSet; semana: NexaMetricSet; metaVgv: number };
+  totals: { meta: NexaMetricSet; semana: NexaMetricSet; metaUnidadesVendidas: number; metaVgv: number };
 }
 
 export type AtividadeParaAgregar = {
@@ -375,7 +378,7 @@ export function aggregateNexaMetas(
     .filter((m) => m.is_active && m.vigencia_inicio <= ref && (!m.vigencia_fim || m.vigencia_fim >= ref))
     .sort((a, b) => b.vigencia_inicio.localeCompare(a.vigencia_inicio));
 
-  const userMeta = new Map<string, { nome: string; meta: NexaMetricSet; metaVgv: number }>();
+  const userMeta = new Map<string, { nome: string; meta: NexaMetricSet; metaUnidadesVendidas: number; metaVgv: number }>();
   for (const meta of activeMetas) {
     for (const u of meta.usuarios ?? []) {
       if (userMeta.has(u.user_id)) continue; // lista desc → primeira é a mais recente
@@ -387,6 +390,7 @@ export function aggregateNexaMetas(
           impacto: meta.meta_semanal_impacto,
           engajamento: meta.meta_semanal_engajamento,
         },
+        metaUnidadesVendidas: meta.meta_semanal_unidades_vendidas ?? 0,
         metaVgv: meta.meta_semanal_vgv ?? 0,
       });
     }
@@ -412,6 +416,7 @@ export function aggregateNexaMetas(
       userId,
       nome: info?.nome ?? 'Usuário',
       meta,
+      metaUnidadesVendidas: info?.metaUnidadesVendidas ?? 0,
       metaVgv: info?.metaVgv ?? 0,
       semana,
       semanaAnterior,
@@ -429,8 +434,17 @@ export function aggregateNexaMetas(
       return acc;
     }, emptyMetrics());
 
+  const metaUnidadesVendidasTotal = cards.reduce((acc, c) => acc + c.metaUnidadesVendidas, 0);
   const metaVgvTotal = cards.reduce((acc, c) => acc + c.metaVgv, 0);
-  return { cards, totals: { meta: sum((c) => c.meta), semana: sum((c) => c.semana), metaVgv: metaVgvTotal } };
+  return {
+    cards,
+    totals: {
+      meta: sum((c) => c.meta),
+      semana: sum((c) => c.semana),
+      metaUnidadesVendidas: metaUnidadesVendidasTotal,
+      metaVgv: metaVgvTotal,
+    },
+  };
 }
 
 // Consolida vários cards num único (soma métricas/metas); performance recalculada do total.
@@ -453,6 +467,7 @@ export function aggregateConsultorCards(cards: NexaConsultorCard[], nome = 'Todo
     userId: 'todos',
     nome,
     meta,
+    metaUnidadesVendidas: cards.reduce((a, c) => a + c.metaUnidadesVendidas, 0),
     metaVgv: cards.reduce((a, c) => a + c.metaVgv, 0),
     semana,
     semanaAnterior,
