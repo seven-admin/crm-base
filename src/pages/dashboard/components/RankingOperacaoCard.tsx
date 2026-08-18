@@ -1,9 +1,13 @@
+import { useMemo } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatarMoedaCompacta } from '@/lib/formatters';
-import { useTopConsultoresArqo } from '../useDashboardData';
+import { useTopConsultoresArqo, type TopConsultorArqo } from '../useDashboardData';
 import { useNexaDashboard } from '@/hooks/useNexaDashboard';
+
+const EMPTY_TOP_ARQO: TopConsultorArqo[] = [];
+const ARQO_RANKING_CANDIDATES_LIMIT = 1000;
 
 function Pos({ n }: { n: number }) {
   return (
@@ -14,7 +18,32 @@ function Pos({ n }: { n: number }) {
 }
 
 function TopArqo({ month }: { month: Date }) {
-  const { data = [], isLoading } = useTopConsultoresArqo(month, 7);
+  const { data: arqoData = EMPTY_TOP_ARQO, isLoading: loadingArqo } = useTopConsultoresArqo(month, ARQO_RANKING_CANDIDATES_LIMIT);
+  const { data: nexaData, isLoading: loadingNexa } = useNexaDashboard(month);
+  const data = useMemo(() => {
+    const byConsultor = new Map(
+      arqoData.map((consultor) => [consultor.consultor_id, { ...consultor }]),
+    );
+
+    for (const proposta of nexaData?.arqo.consultores ?? []) {
+      const consultor = byConsultor.get(proposta.consultorId) ?? {
+        consultor_id: proposta.consultorId,
+        nome: proposta.nome,
+        visitas: 0,
+        qtd_leads: 0,
+        vgv: 0,
+      };
+      consultor.qtd_leads += proposta.propostas;
+      consultor.vgv += proposta.vgv;
+      byConsultor.set(proposta.consultorId, consultor);
+    }
+
+    return [...byConsultor.values()]
+      .sort((a, b) => b.vgv - a.vgv || b.visitas - a.visitas || b.qtd_leads - a.qtd_leads)
+      .slice(0, 7);
+  }, [arqoData, nexaData]);
+  const isLoading = loadingArqo || loadingNexa;
+
   return (
     <div className="flex h-full flex-col rounded-[1.75rem] border border-black/[.06] bg-[#fffdfa] p-6 md:p-7">
       <p className="text-[10px] font-bold uppercase tracking-[0.19em] text-[#f47418]">Top 07 · Arqo</p>

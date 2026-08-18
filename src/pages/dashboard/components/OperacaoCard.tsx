@@ -61,9 +61,9 @@ export function OperacaoCard({ month }: { month: Date }) {
         <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-[#f47418]">Carteira de negócios</p>
         <div className="grid flex-1 items-stretch gap-x-6 gap-y-2 sm:grid-cols-2">
           <Bloco marca="Arqo" className="h-full">
-            <Linha label="Proposta" valor={arqo.carteira.proposta_qtd} />
-            <Linha label="Assinado" valor={arqo.carteira.assinado_qtd} />
-            <VgvTag valor={arqo.carteira.vgv} />
+            <Linha label="Proposta" valor={arqo.carteira.proposta_qtd + nexa.arqo.carteira.propostaQtd} />
+            <Linha label="Assinado" valor={arqo.carteira.assinado_qtd + nexa.arqo.carteira.assinadoQtd} />
+            <VgvTag valor={arqo.carteira.vgv + nexa.arqo.carteira.vgv} />
           </Bloco>
           <Bloco marca="Nexa" className="h-full">
             <Linha label="Proposta" valor={nexa.carteira.propostaQtd} />
