@@ -87,11 +87,6 @@ function variableValue(contract: PerformanceContract, key: string) {
   return value == null ? '' : String(value).trim();
 }
 
-function contractValue(contract: PerformanceContract) {
-  const value = Number(contract.valor_contrato ?? contract.valor ?? 0);
-  return Number.isFinite(value) ? value : 0;
-}
-
 function contractStatusVariant(status: string): BadgeProps['variant'] {
   if (status === 'assinado' || status === 'aprovado') return 'success';
   if (status === 'cancelado' || status === 'reprovado') return 'destructive';
@@ -239,7 +234,19 @@ function PerformanceDashboard({
       accent: 'bg-primary',
     },
     { label: 'Meta comercial', value: 'R$ N/D', helper: 'Regra por empreendimento ainda não definida', icon: Target, accent: 'bg-warning' },
-    { label: 'Financiamento', value: 'R$ N/D', helper: 'Composição ainda não normalizada', icon: Landmark, accent: 'bg-info' },
+    {
+      label: 'Financiamento',
+      value: data.composicaoCobertura === 0 && data.contratosAssinados > 0
+        ? 'R$ N/D'
+        : `${formatCurrency(data.financiamentoConhecido)}${data.financiamentoCompleto ? '' : '+'}`,
+      helper: data.financiamentoCompleto
+        ? 'Total dos contratos assinados'
+        : data.composicaoCobertura > 0
+          ? `Mínimo conhecido · ${data.composicaoCobertura} de ${data.contratosAssinados} contratos`
+          : 'Nenhum plano de pagamento disponível',
+      icon: Landmark,
+      accent: 'bg-info',
+    },
     { label: 'Visitas', value: String(data.visitas), helper: 'Atendimentos vinculados ao empreendimento', icon: CalendarCheck2, accent: 'bg-success' },
     { label: 'Aprovados sem venda', value: 'N/D', helper: 'Status de crédito ainda não disponível', icon: BadgeCheck, accent: 'bg-[hsl(var(--chart-5))]' },
     { label: 'Fila de documentação', value: 'N/D', helper: 'Checklist documental ainda não disponível', icon: FileClock, accent: 'bg-destructive' },
@@ -254,6 +261,11 @@ function PerformanceDashboard({
         <span className="text-xs text-muted-foreground">/</span>
         <Badge variant="default">{empreendimento}</Badge>
         <Badge variant="success" className="ml-auto">Dados operacionais</Badge>
+        {data.contratosAssinados > 0 && (
+          <Badge variant={data.financiamentoCompleto ? 'success' : 'warning'}>
+            Composição {data.composicaoCobertura}/{data.contratosAssinados}
+          </Badge>
+        )}
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Indicadores principais">
@@ -277,15 +289,51 @@ function PerformanceDashboard({
 
       <DashboardCard
         title="Composição do preço por unidade"
-        description="Valor contratado dividido entre recursos próprios, financiamento, FGTS e subsídios."
+        description="Contratos assinados com plano de pagamento disponível, sem estimar os contratos incompletos."
         icon={<BarChart3 className="h-4 w-4" />}
       >
-        <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-primary" />Recursos próprios</span>
+        <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-primary" />Recursos próprios / outros</span>
           <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-[hsl(var(--chart-2))]" />Financiamento</span>
           <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />FGTS + subsídio</span>
+          {data.contratosAssinados > 0 && (
+            <Badge variant={data.financiamentoCompleto ? 'success' : 'warning'} className="ml-auto">
+              Cobertura {data.composicaoCobertura} de {data.contratosAssinados}
+            </Badge>
+          )}
         </div>
-        <EmptyChart variant="columns" height="h-72 md:h-80" />
+        {data.composicaoPorUnidade.length ? (
+          <div className="overflow-x-auto pb-2">
+            <div
+              className="h-72 md:h-80"
+              style={{ minWidth: Math.max(720, data.composicaoPorUnidade.length * 84) }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={data.composicaoPorUnidade} margin={{ top: 8, right: 8, left: 18, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="unidade" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={(value) => formatCompactCurrency(Number(value))} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
+                  <Tooltip
+                    formatter={(value, name) => {
+                      const labels: Record<string, string> = {
+                        recursosProprios: 'Recursos próprios / outros',
+                        financiamento: 'Financiamento',
+                        beneficios: 'FGTS + subsídio',
+                      };
+                      return [formatCurrency(Number(value)), labels[String(name)] || String(name)];
+                    }}
+                    contentStyle={{ borderRadius: 12, borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}
+                  />
+                  <Bar dataKey="recursosProprios" stackId="preco" fill="hsl(var(--primary))" />
+                  <Bar dataKey="financiamento" stackId="preco" fill="hsl(var(--chart-2))" />
+                  <Bar dataKey="beneficios" stackId="preco" fill="hsl(var(--success))" radius={[7, 7, 0, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <NoRecords label="Nenhum contrato assinado possui composição financeira disponível." />
+        )}
       </DashboardCard>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -368,16 +416,21 @@ function PerformanceDashboard({
                 const channel = [realEstate, broker].filter(Boolean).join(' · ') || 'Não informado';
                 const unit = contract.unidade?.numero || variableValue(contract, 'unidade_numero') || '—';
                 const buyer = contract.cliente?.nome || contract.cliente_nome || variableValue(contract, 'nome_cliente') || '—';
+                const financial = data.financeiroPorContrato[contract.id];
                 return (
                   <TableRow key={contract.id}>
                     <TableCell className="whitespace-nowrap font-medium">{unit}</TableCell>
                     <TableCell className="min-w-48">{buyer}</TableCell>
                     <TableCell className="min-w-48 text-muted-foreground">{channel}</TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {contract.valor_contrato != null || contract.valor != null ? formatCurrency(contractValue(contract)) : 'N/D'}
+                      {financial?.total > 0 ? formatCurrency(financial.total) : 'N/D'}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">N/D</TableCell>
-                    <TableCell className="text-muted-foreground">N/D</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {financial?.disponivel ? formatCurrency(financial.recursosProprios) : 'N/D'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {financial?.disponivel ? formatCurrency(financial.financiamento) : 'N/D'}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">N/D</TableCell>
                     <TableCell className="whitespace-nowrap">{formatDate(contract.data_assinatura)}</TableCell>
                     <TableCell>
@@ -392,7 +445,7 @@ function PerformanceDashboard({
           </Table>
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          Recursos próprios, financiamento e desconto permanecem N/D até a composição financeira ser normalizada.
+          Valores financeiros são exibidos somente quando o contrato possui plano de pagamento. O desconto permanece N/D por não existir um campo contratual confiável.
         </p>
       </DashboardCard>
 
@@ -421,11 +474,38 @@ function PerformanceDashboard({
         </DashboardCard>
 
         <DashboardCard
-          title="Esteira de crédito"
-          description="Posição das propostas em cada etapa da análise de financiamento."
+          title="Funil de propostas financiadas"
+          description="Propostas com modalidade financiada, agrupadas pelo status comercial no mês atual."
           icon={<WalletCards className="h-4 w-4" />}
         >
-          <EmptyChart variant="pipeline" />
+          {!data.funilPropostasDisponivel ? (
+            <EmptyChart variant="pipeline" />
+          ) : data.propostasFinanciadas > 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2">
+                {data.funilPropostas.map((stage) => (
+                  <div key={stage.status} className="rounded-xl border border-border/70 bg-secondary/20 p-3 text-center">
+                    <strong className="block text-xl font-semibold tabular-nums">{stage.quantidade}</strong>
+                    <span className="text-[10px] text-muted-foreground">{stage.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="h-36 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart data={data.funilPropostas} layout="vertical" margin={{ top: 0, right: 10, left: 4, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={72} />
+                    <Tooltip
+                      formatter={(value) => [Number(value), 'Propostas']}
+                      contentStyle={{ borderRadius: 12, borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    />
+                    <Bar dataKey="quantidade" fill="hsl(var(--chart-2))" radius={[0, 8, 8, 0]} />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          ) : <NoRecords label="Nenhuma proposta financiada registrada no mês atual." />}
         </DashboardCard>
       </div>
 
@@ -463,10 +543,15 @@ function PerformanceDashboard({
       >
         <div className="grid gap-3 md:grid-cols-2">
           {[
-            { label: 'Resgates imediatos', icon: ListChecks, value: 'N/D', helper: 'Critério ainda não definido' },
+            { label: 'Retornos de no-show', icon: ListChecks, value: String(data.visitasNoShow), helper: 'Atendimentos sem comparecimento' },
             { label: 'Fila de documentação', icon: ClipboardCheck, value: 'N/D', helper: 'Checklist ainda não disponível' },
             { label: 'Visitas em acompanhamento', icon: CalendarCheck2, value: String(data.visitasEmAcompanhamento), helper: 'Agendadas ou confirmadas' },
-            { label: 'Decisões pendentes', icon: Clock3, value: 'N/D', helper: 'Critério ainda não definido' },
+            {
+              label: 'Propostas financiadas em aberto',
+              icon: Clock3,
+              value: data.funilPropostasDisponivel ? String(data.propostasFinanciadasEmAberto) : 'N/D',
+              helper: 'Enviadas ou reservadas no mês atual',
+            },
           ].map((item) => {
             const Icon = item.icon;
             return (
